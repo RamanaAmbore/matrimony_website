@@ -1,0 +1,26 @@
+{
+  "id": "marathakalyanam-deploy",
+  "execute-command": "/opt/marathakalyanam/deploy/webhook-deploy.sh",
+  "command-working-directory": "/opt/marathakalyanam",
+  "include-command-output-in-response": false,
+  "include-command-output-in-response-on-error": true,
+  "response-message": "Deploy queued",
+  "trigger-rule": {
+    "and": [
+      {
+        "match": {
+          "type": "payload-hmac-sha256",
+          "secret": "__WEBHOOK_SECRET__",
+          "parameter": { "source": "header", "name": "X-Hub-Signature-256" }
+        }
+      },
+      {
+        "match": {
+          "type": "value",
+          "value": "refs/heads/master",
+          "parameter": { "source": "payload", "name": "ref" }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+[Unit]
+Description=marathakalyanam SvelteKit (adapter-node, port 3003)
+After=network.target marathakalyanam_api.service
+Wants=marathakalyanam_api.service
+
+[Service]
+WorkingDirectory=/opt/marathakalyanam/frontend
+User=www-data
+Group=www-data
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3003
+Environment=ORIGIN=https://marathakalyanam.com
+Environment=BODY_SIZE_LIMIT=12000000
+ExecStart=/usr/bin/node build
+Restart=always
+RestartSec=5
+StandardOutput=append:/opt/marathakalyanam/.log/web.log
+StandardError=append:/opt/marathakalyanam/.log/web.err
+
+[Install]
+WantedBy=multi-user.target
