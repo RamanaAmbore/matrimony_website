@@ -40,13 +40,13 @@
 	/>
 
 	<div class="relative mx-auto max-w-3xl">
-		<!-- Devanagari subtitle -->
-		<p class="mb-2 font-serif text-base text-saffron/80 md:text-lg">
-			तेलुगु–मराठा विवाह सेवा
+		<!-- Telugu subtitle -->
+		<p class="mb-2 font-serif text-base text-saffron/80 md:text-lg" lang="te">
+			తెలుగు–మరాఠా వివాహ సేవ
 		</p>
 
-		<h1 class="mb-4 font-serif text-4xl font-bold text-cream md:text-6xl">
-			मराठा <span class="text-saffron">कल्याणम्</span>
+		<h1 class="mb-4 font-serif text-4xl font-bold text-cream md:text-6xl" lang="te">
+			మరాఠా <span class="text-saffron">కల్యాణం</span>
 		</h1>
 		<p class="mb-2 text-xl text-cream/70 md:text-2xl">
 			<em>Maratha Kalyanam</em>

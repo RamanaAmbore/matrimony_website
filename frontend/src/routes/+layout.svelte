@@ -88,7 +88,7 @@
 		>
 			<Heart size={22} class="text-saffron" fill="currentColor" />
 			<span class="font-serif text-lg font-semibold leading-tight text-cream">
-				<span class="text-saffron">मराठा</span> कल्याणम्
+				<span class="text-saffron" lang="te">మరాఠా</span> <span lang="te">కల్యాణం</span>
 				<span class="ml-1 hidden text-sm font-normal text-cream/70 sm:inline">
 					· Maratha Kalyanam
 				</span>
@@ -156,7 +156,7 @@
 	>
 		<!-- Drawer header -->
 		<div class="flex items-center justify-between border-b border-gold/30 bg-maroon px-4 py-3">
-			<span class="font-serif text-lg text-cream">मराठा कल्याणम्</span>
+			<span class="font-serif text-lg text-cream" lang="te">మరాఠా కల్యాణం</span>
 			<button
 				onclick={closeDrawer}
 				class="rounded p-1.5 text-cream hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-saffron"
@@ -229,7 +229,7 @@
 	<div class="mx-auto max-w-7xl px-4">
 		<div class="flex flex-col items-center gap-4 text-center md:flex-row md:justify-between md:text-left">
 			<div>
-				<p class="font-serif text-lg font-semibold text-maroon">मराठा कल्याणम्</p>
+				<p class="font-serif text-lg font-semibold text-maroon" lang="te">మరాఠా కల్యాణం</p>
 				<p class="text-sm text-ink/60">Telugu-Maratha matrimonial site</p>
 			</div>
 			<div class="flex flex-wrap justify-center gap-4 text-sm text-ink/60 md:justify-end">

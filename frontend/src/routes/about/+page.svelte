@@ -8,7 +8,7 @@
 
 <div class="mx-auto max-w-3xl px-4 py-16">
 	<h1 class="mb-2 font-serif text-4xl font-bold text-maroon">About Us</h1>
-	<p class="mb-8 text-ink/60">मराठा कल्याणम् — Our Story</p>
+	<p class="mb-8 text-ink/60"><span lang="te">మరాఠా కల్యాణం</span> — Our Story</p>
 
 	<KalashaDivider />
 
