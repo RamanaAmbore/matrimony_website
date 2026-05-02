@@ -28,11 +28,17 @@ def upgrade() -> None:
     profile_status_enum = postgresql.ENUM("draft", "pending", "approved", "rejected", name="profile_status_enum", create_type=False)
     request_status_enum = postgresql.ENUM("pending", "approved", "rejected", name="request_status_enum", create_type=False)
 
-    op.execute("CREATE TYPE gender_enum AS ENUM ('bride', 'groom')")
-    op.execute("CREATE TYPE manglik_enum AS ENUM ('yes', 'no', 'partial', 'unknown')")
-    op.execute("CREATE TYPE diet_enum AS ENUM ('veg', 'non-veg', 'eggetarian')")
-    op.execute("CREATE TYPE profile_status_enum AS ENUM ('draft', 'pending', 'approved', 'rejected')")
-    op.execute("CREATE TYPE request_status_enum AS ENUM ('pending', 'approved', 'rejected')")
+    # Postgres has no CREATE TYPE IF NOT EXISTS, so wrap each in a DO block
+    # that swallows the duplicate_object exception. Keeps the migration safe
+    # to re-run after a partial failure.
+    for ddl in (
+        "CREATE TYPE gender_enum AS ENUM ('bride', 'groom')",
+        "CREATE TYPE manglik_enum AS ENUM ('yes', 'no', 'partial', 'unknown')",
+        "CREATE TYPE diet_enum AS ENUM ('veg', 'non-veg', 'eggetarian')",
+        "CREATE TYPE profile_status_enum AS ENUM ('draft', 'pending', 'approved', 'rejected')",
+        "CREATE TYPE request_status_enum AS ENUM ('pending', 'approved', 'rejected')",
+    ):
+        op.execute(f"DO $$ BEGIN {ddl}; EXCEPTION WHEN duplicate_object THEN null; END $$;")
 
     # users table
     op.create_table(
