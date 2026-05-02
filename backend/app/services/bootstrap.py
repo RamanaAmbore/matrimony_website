@@ -41,16 +41,16 @@ async def bootstrap(session: AsyncSession) -> None:
         session.add(admin)
         await session.commit()
 
+        sep = "=" * 60
         logger.warning(
-            "\n"
-            "=" * 60 + "\n"
-            "BOOTSTRAP ADMIN CREATED\n"
+            "\n%s\nBOOTSTRAP ADMIN CREATED\n"
             "Email: %s\n"
             "Temporary password: %s\n"
             "One-time reset token: %s\n"
-            "Change your password immediately after first login.\n"
-            "=" * 60,
+            "Change your password immediately after first login.\n%s",
+            sep,
             OWNER_EMAIL,
             temp_password,
             reset_token,
+            sep,
         )

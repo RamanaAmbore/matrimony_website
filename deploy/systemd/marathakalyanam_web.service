@@ -12,7 +12,7 @@ Environment=HOST=127.0.0.1
 Environment=PORT=3003
 Environment=ORIGIN=https://marathakalyanam.com
 Environment=BODY_SIZE_LIMIT=12000000
-ExecStart=/usr/bin/node build
+ExecStart=/usr/local/bin/node build
 Restart=always
 RestartSec=5
 StandardOutput=append:/opt/marathakalyanam/.log/web.log
