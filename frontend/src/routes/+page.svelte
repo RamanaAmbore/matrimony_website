@@ -1,61 +1,23 @@
 <script lang="ts">
-	import { Search, Users, Shield, CheckCircle, Eye, Lock, UserPlus, Star, Mail } from 'lucide-svelte';
+	// Utility icons with no Indian equivalent — kept as lucide generics
+	import { Search, UserPlus } from 'lucide-svelte';
+
+	// Indian-themed custom icon set
+	import Diya from '$lib/components/icons/Diya.svelte';
+	import KalashaCheck from '$lib/components/icons/KalashaCheck.svelte';
+	import TempleBell from '$lib/components/icons/TempleBell.svelte';
+	import PalmLeafScroll from '$lib/components/icons/PalmLeafScroll.svelte';
+	import Akshat from '$lib/components/icons/Akshat.svelte';
+	import Lotus from '$lib/components/icons/Lotus.svelte';
+	import Shankha from '$lib/components/icons/Shankha.svelte';
+	import MangoLeafGarland from '$lib/components/icons/MangoLeafGarland.svelte';
+
 	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 	import PaisleyAccent from '$lib/components/PaisleyAccent.svelte';
 	import Logo from '$lib/components/Logo.svelte';
+	import HeroIllustration from '$lib/components/HeroIllustration.svelte';
 
 	let { data } = $props();
-
-	// India-specific Unsplash photos — all verified 200
-	const heroPhotos = [
-		{
-			id: 'photo-1583939003579-730e3918a45a',
-			alt: 'Indian wedding mandap decorated with flowers and lights'
-		},
-		{
-			id: 'photo-1606800052052-a08af7148866',
-			alt: 'South Indian bride in traditional wedding attire'
-		},
-		{
-			id: 'photo-1583939411023-14783179e581',
-			alt: 'Indian wedding couple in traditional attire'
-		},
-		{
-			id: 'photo-1622383563227-04401ab4e5ea',
-			alt: 'Indian bride hands decorated with mehndi'
-		},
-		{
-			id: 'photo-1591025207163-942350e47db2',
-			alt: 'Mehndi ceremony for Indian wedding'
-		}
-	];
-
-	// Pick a random hero photo per page load (stable during SSR via index 0 fallback)
-	const heroPhoto = heroPhotos[Math.floor(Math.random() * heroPhotos.length)];
-	const heroUrl = `https://images.unsplash.com/${heroPhoto.id}?auto=format&fit=crop&w=1600&q=80`;
-
-	const howItWorks = [
-		{
-			title: 'Create Profile',
-			desc: 'Register and fill in your personal, astrological and family details.',
-			icon: 'user-plus'
-		},
-		{
-			title: 'Get Verified',
-			desc: 'Our admin team reviews and approves every profile before it goes live.',
-			icon: 'check-circle'
-		},
-		{
-			title: 'Search & Connect',
-			desc: 'Browse verified profiles. Filter by gotra, nakshatram, city and more.',
-			icon: 'search'
-		},
-		{
-			title: 'Receive Full Details',
-			desc: 'Express interest, admin approves, and contact info is emailed to you.',
-			icon: 'mail'
-		}
-	];
 </script>
 
 <svelte:head>
@@ -68,18 +30,15 @@
 
 <!-- ── Hero section ─────────────────────────────────────────────────────── -->
 <section class="relative min-h-[88vh] overflow-hidden">
-	<!-- Background photo -->
-	<img
-		src={heroUrl}
-		alt={heroPhoto.alt}
-		class="absolute inset-0 h-full w-full object-cover object-center"
-		fetchpriority="high"
-	/>
+	<!-- Pure SVG Indian-wedding illustration (replaces Unsplash photo carousel) -->
+	<div class="absolute inset-0" aria-hidden="true">
+		<HeroIllustration />
+	</div>
 
-	<!-- Warm saffron-tinted dark gradient overlay -->
+	<!-- Warm gradient overlay — dark at top for text legibility, opens to saffron at base -->
 	<div
 		class="absolute inset-0"
-		style="background: linear-gradient(160deg, rgba(43,10,14,0.72) 0%, rgba(199,91,18,0.55) 50%, rgba(255,140,50,0.45) 100%);"
+		style="background: linear-gradient(160deg, rgba(43,10,14,0.82) 0%, rgba(107,15,26,0.65) 45%, rgba(244,163,0,0.28) 100%);"
 	></div>
 
 	<!-- Paisley corner accents -->
@@ -112,18 +71,32 @@
 			</div>
 
 			<!-- Telugu subtitle -->
-			<p class="mb-3 font-serif text-base text-amber/90 drop-shadow md:text-lg" lang="te">
+			<p
+				class="mb-3 font-serif text-base text-saffron drop-shadow-md md:text-lg"
+				lang="te"
+				style="text-shadow: 0 2px 8px rgba(43,10,14,0.9), 0 1px 3px rgba(0,0,0,0.7);"
+			>
 				తెలుగు–మరాఠా కల్యాణ వేదిక
 			</p>
 
-			<h1 class="mb-4 font-serif text-4xl font-bold text-cream drop-shadow-lg md:text-6xl" lang="te">
-				తెలుగు–మరాఠా <span class="text-amber">కల్యాణ వేదిక</span>
+			<h1
+				class="mb-4 font-serif text-4xl font-bold text-cream md:text-6xl"
+				lang="te"
+				style="text-shadow: 0 3px 12px rgba(43,10,14,0.95), 0 1px 4px rgba(0,0,0,0.8);"
+			>
+				తెలుగు–మరాఠా <span class="text-marigold">కల్యాణ వేదిక</span>
 			</h1>
-			<p class="mb-2 text-xl text-cream/80 drop-shadow md:text-2xl">
+			<p
+				class="mb-2 text-xl text-cream drop-shadow-md md:text-2xl"
+				style="text-shadow: 0 2px 8px rgba(43,10,14,0.85);"
+			>
 				<em>Telugu–Maratha Kalyana Vedika</em>
 			</p>
 
-			<p class="mb-8 text-base text-cream/70 drop-shadow md:text-lg">
+			<p
+				class="mb-8 text-base text-cream drop-shadow-md md:text-lg"
+				style="text-shadow: 0 2px 6px rgba(43,10,14,0.85);"
+			>
 				The trusted matrimonial platform for Telugu-Maratha families.<br
 					class="hidden md:block"
 				/>
@@ -133,7 +106,7 @@
 			<div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
 				<a
 					href="/search"
-					class="inline-flex items-center gap-2 rounded-lg bg-kumkum px-6 py-3 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream"
+					class="inline-flex items-center gap-2 rounded-lg bg-maroon px-6 py-3 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream"
 				>
 					<Search size={18} />
 					Find Your Partner
@@ -142,7 +115,7 @@
 				{#if !data.user}
 					<a
 						href="/register"
-						class="inline-flex items-center gap-2 rounded-lg border-2 border-cream/70 px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream"
+						class="inline-flex items-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream"
 					>
 						<UserPlus size={18} />
 						Create Profile
@@ -150,7 +123,7 @@
 				{:else}
 					<a
 						href="/dashboard"
-						class="inline-flex items-center gap-2 rounded-lg border-2 border-cream/70 px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream"
+						class="inline-flex items-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream"
 					>
 						My Profiles
 					</a>
@@ -188,48 +161,48 @@
 	<div class="mx-auto max-w-5xl">
 		<KalashaDivider />
 
-		<h2 class="mt-6 mb-12 text-center font-serif text-3xl font-semibold text-terracotta md:text-4xl">
+		<h2 class="mt-6 mb-12 text-center font-serif text-3xl font-semibold text-maroon md:text-4xl">
 			Why Telugu–Maratha Kalyana Vedika?
 		</h2>
 
 		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-			<!-- Card 1 -->
+			<!-- Community-Focused — Diya (oil lamp) -->
 			<div class="card group text-center transition-all duration-200 hover:shadow-md">
 				<div
-					class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-tangerine/15 group-hover:bg-tangerine/25 transition-colors duration-200"
+					class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-maroon/10 group-hover:bg-maroon/20 transition-colors duration-200"
 				>
-					<Users size={28} class="text-tangerine" />
+					<Diya size={28} />
 				</div>
-				<h3 class="mb-2 font-serif text-xl font-semibold text-terracotta">Community-Focused</h3>
-				<p class="text-sm text-ink/70">
+				<h3 class="mb-2 font-serif text-xl font-semibold text-maroon">Community-Focused</h3>
+				<p class="text-sm text-ink/80">
 					Built specifically for Telugu-Maratha families with deep respect for gotra, nakshatram,
 					kuldevata, and devak traditions.
 				</p>
 			</div>
 
-			<!-- Card 2 -->
+			<!-- Admin-Verified — Kalasha with checkmark -->
 			<div class="card group text-center transition-all duration-200 hover:shadow-md">
 				<div
-					class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber/20 group-hover:bg-amber/35 transition-colors duration-200"
+					class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-saffron/15 group-hover:bg-saffron/28 transition-colors duration-200"
 				>
-					<Shield size={28} class="text-terracotta" />
+					<KalashaCheck size={28} />
 				</div>
-				<h3 class="mb-2 font-serif text-xl font-semibold text-terracotta">Admin-Verified</h3>
-				<p class="text-sm text-ink/70">
+				<h3 class="mb-2 font-serif text-xl font-semibold text-maroon">Admin-Verified</h3>
+				<p class="text-sm text-ink/80">
 					Every profile is reviewed and approved by our team. Contact details shared only after
 					mutual interest and admin approval.
 				</p>
 			</div>
 
-			<!-- Card 3 -->
+			<!-- Privacy First — Temple Bell -->
 			<div class="card group text-center transition-all duration-200 hover:shadow-md sm:col-span-2 lg:col-span-1">
 				<div
 					class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gold/15 group-hover:bg-gold/25 transition-colors duration-200"
 				>
-					<Eye size={28} class="text-gold" />
+					<TempleBell size={28} />
 				</div>
-				<h3 class="mb-2 font-serif text-xl font-semibold text-terracotta">Privacy First</h3>
-				<p class="text-sm text-ink/70">
+				<h3 class="mb-2 font-serif text-xl font-semibold text-maroon">Privacy First</h3>
+				<p class="text-sm text-ink/80">
 					Photos are blurred in search results. Full details — including passport photo — are emailed
 					only after admin approval of a request.
 				</p>
@@ -243,51 +216,79 @@
 <!-- ── How It Works ───────────────────────────────────────────────────────── -->
 <section class="px-4 py-16" style="background: linear-gradient(180deg, #fff8e7 0%, #ffe6a7 100%);">
 	<div class="mx-auto max-w-5xl">
-		<h2 class="mb-12 text-center font-serif text-3xl font-semibold text-terracotta md:text-4xl">
+		<h2 class="mb-12 text-center font-serif text-3xl font-semibold text-maroon md:text-4xl">
 			How It Works
 		</h2>
 
 		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-			{#each howItWorks as step, i}
-				<div class="relative flex flex-col items-center text-center">
-					<!-- Step number ring -->
-					<div
-						class="relative mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-tangerine/40 shadow-sm"
-						style="background: linear-gradient(135deg, #6B0F1A 0%, #8C1024 100%);"
-					>
-						<!-- Icon -->
-						{#if step.icon === 'user-plus'}
-							<UserPlus size={26} class="text-cream" />
-						{:else if step.icon === 'check-circle'}
-							<CheckCircle size={26} class="text-cream" />
-						{:else if step.icon === 'search'}
-							<Search size={26} class="text-cream" />
-						{:else}
-							<Mail size={26} class="text-cream" />
-						{/if}
-						<!-- Step number badge -->
-						<span
-							class="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-terracotta text-xs font-bold text-cream"
-						>
-							{i + 1}
-						</span>
-					</div>
-
-					<!-- Connector arrow (hidden on last item and on mobile) -->
-					{#if i < howItWorks.length - 1}
-						<div class="absolute top-8 left-[calc(50%+2rem)] hidden h-0.5 w-[calc(100%-4rem)] bg-gradient-to-r from-tangerine/40 to-transparent lg:block" aria-hidden="true"></div>
-					{/if}
-
-					<h3 class="mb-2 font-serif text-lg font-semibold text-terracotta">{step.title}</h3>
-					<p class="text-sm text-ink/70">{step.desc}</p>
+			<!-- Step 1: Create Profile — Palm-leaf scroll -->
+			<div class="relative flex flex-col items-center text-center">
+				<div
+					class="relative mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-saffron/40 shadow-sm"
+					style="background: linear-gradient(135deg, #6B0F1A 0%, #8C1024 100%);"
+				>
+					<PalmLeafScroll size={26} />
+					<span
+						class="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-maroon text-xs font-bold text-cream"
+					>1</span>
 				</div>
-			{/each}
+				<div class="absolute top-8 left-[calc(50%+2rem)] hidden h-0.5 w-[calc(100%-4rem)] bg-gradient-to-r from-saffron/40 to-transparent lg:block" aria-hidden="true"></div>
+				<h3 class="mb-2 font-serif text-lg font-semibold text-maroon">Create Profile</h3>
+				<p class="text-sm text-ink/80">Register and fill in your personal, astrological and family details.</p>
+			</div>
+
+			<!-- Step 2: Get Verified — Akshat (rice grains) -->
+			<div class="relative flex flex-col items-center text-center">
+				<div
+					class="relative mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-saffron/40 shadow-sm"
+					style="background: linear-gradient(135deg, #6B0F1A 0%, #8C1024 100%);"
+				>
+					<Akshat size={26} />
+					<span
+						class="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-maroon text-xs font-bold text-cream"
+					>2</span>
+				</div>
+				<div class="absolute top-8 left-[calc(50%+2rem)] hidden h-0.5 w-[calc(100%-4rem)] bg-gradient-to-r from-saffron/40 to-transparent lg:block" aria-hidden="true"></div>
+				<h3 class="mb-2 font-serif text-lg font-semibold text-maroon">Get Verified</h3>
+				<p class="text-sm text-ink/80">Our admin team reviews and approves every profile before it goes live.</p>
+			</div>
+
+			<!-- Step 3: Search & Connect — Lotus -->
+			<div class="relative flex flex-col items-center text-center">
+				<div
+					class="relative mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-saffron/40 shadow-sm"
+					style="background: linear-gradient(135deg, #6B0F1A 0%, #8C1024 100%);"
+				>
+					<Lotus size={26} />
+					<span
+						class="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-maroon text-xs font-bold text-cream"
+					>3</span>
+				</div>
+				<div class="absolute top-8 left-[calc(50%+2rem)] hidden h-0.5 w-[calc(100%-4rem)] bg-gradient-to-r from-saffron/40 to-transparent lg:block" aria-hidden="true"></div>
+				<h3 class="mb-2 font-serif text-lg font-semibold text-maroon">Search &amp; Connect</h3>
+				<p class="text-sm text-ink/80">Browse verified profiles. Filter by gotra, nakshatram, city and more.</p>
+			</div>
+
+			<!-- Step 4: Receive Full Details — Shankha (conch shell) -->
+			<div class="relative flex flex-col items-center text-center">
+				<div
+					class="relative mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-saffron/40 shadow-sm"
+					style="background: linear-gradient(135deg, #6B0F1A 0%, #8C1024 100%);"
+				>
+					<Shankha size={26} />
+					<span
+						class="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-maroon text-xs font-bold text-cream"
+					>4</span>
+				</div>
+				<h3 class="mb-2 font-serif text-lg font-semibold text-maroon">Receive Full Details</h3>
+				<p class="text-sm text-ink/80">Express interest, admin approves, and contact info is emailed to you.</p>
+			</div>
 		</div>
 
 		<div class="mt-12 text-center">
 			<a
 				href="/register"
-				class="inline-flex items-center gap-2 rounded-lg bg-kumkum px-8 py-3 font-semibold text-cream shadow-md transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-lg focus-visible:outline-2 focus-visible:outline-kumkum"
+				class="inline-flex items-center gap-2 rounded-lg bg-maroon px-8 py-3 font-semibold text-cream shadow-md transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-lg focus-visible:outline-2 focus-visible:outline-maroon"
 			>
 				<UserPlus size={18} />
 				Get Started Today
@@ -300,30 +301,30 @@
 <section class="border-y border-gold/30 bg-white px-4 py-8">
 	<div class="mx-auto max-w-4xl">
 		<div class="flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-around sm:text-left">
-			<!-- Item 1 -->
+			<!-- Item 1: All profiles admin-verified — Diya -->
 			<div class="flex items-center gap-3">
-				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-tangerine/15">
-					<Shield size={20} class="text-tangerine" />
+				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-maroon/10">
+					<Diya size={20} />
 				</div>
-				<p class="text-sm font-medium text-ink/80">All profiles admin-verified</p>
+				<p class="text-sm font-medium text-ink">All profiles admin-verified</p>
 			</div>
 			<!-- Divider -->
 			<div class="hidden h-8 w-px bg-gold/30 sm:block" aria-hidden="true"></div>
-			<!-- Item 2 -->
+			<!-- Item 2: Photos blurred — Lotus -->
 			<div class="flex items-center gap-3">
-				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber/20">
-					<Eye size={20} class="text-terracotta" />
+				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-saffron/15">
+					<Lotus size={20} />
 				</div>
-				<p class="text-sm font-medium text-ink/80">Photos blurred until you ask</p>
+				<p class="text-sm font-medium text-ink">Photos blurred until you ask</p>
 			</div>
 			<!-- Divider -->
 			<div class="hidden h-8 w-px bg-gold/30 sm:block" aria-hidden="true"></div>
-			<!-- Item 3 -->
+			<!-- Item 3: No data sharing — MangoLeafGarland -->
 			<div class="flex items-center gap-3">
 				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold/15">
-					<Lock size={20} class="text-gold" />
+					<MangoLeafGarland size={20} />
 				</div>
-				<p class="text-sm font-medium text-ink/80">No third-party data sharing</p>
+				<p class="text-sm font-medium text-ink">No third-party data sharing</p>
 			</div>
 		</div>
 	</div>

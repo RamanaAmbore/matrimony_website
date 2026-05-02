@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { search as searchApi, type SearchResult, type SearchParams } from '$lib/api';
+	import {
+		search as searchApi,
+		type SearchResult,
+		type PreviewSearchResult,
+		type SearchParams
+	} from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { SlidersHorizontal, ChevronLeft, ChevronRight, User, Loader, Search } from 'lucide-svelte';
 
@@ -31,13 +36,14 @@
 	let page = $state(1);
 	const PER_PAGE = 12;
 
-	let results = $state<SearchResult[]>([]);
+	let results = $state<(SearchResult | PreviewSearchResult)[]>([]);
 	let total = $state(0);
 	let loading = $state(false);
+	let isPreview = $state(false);   // true → anonymous preview tier (capped 6, no name/edu/job)
 	let sidebarOpen = $state(false);
 	let debounceTimer: ReturnType<typeof setTimeout>;
 
-	const totalPages = $derived(Math.ceil(total / PER_PAGE));
+	const totalPages = $derived(isPreview ? 1 : Math.ceil(total / PER_PAGE));
 
 	async function doSearch() {
 		loading = true;
@@ -57,6 +63,7 @@
 				per_page: PER_PAGE
 			};
 			const res = await searchApi.query(params);
+			isPreview = 'requires_registration' in res && res.requires_registration === true;
 			results = res.results;
 			total = res.total;
 		} catch {
@@ -263,17 +270,39 @@
 					<p class="mt-2 text-ink/60">Try adjusting your filters.</p>
 				</div>
 			{:else}
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-					{#each results as result (result.id)}
+				<!-- Preview banner -->
+				{#if isPreview}
+					<div class="mb-6 rounded-lg border border-saffron/40 bg-saffron/10 p-4">
+						<p class="font-serif text-lg font-semibold text-maroon">
+							Showing {results.length} of {total} matching profile{total === 1 ? '' : 's'}
+							<span class="font-sans text-sm font-normal text-ink/70" lang="te">
+								· {total} ప్రొఫైళ్లలో {results.length} చూపబడుతున్నవి
+							</span>
+						</p>
+						<p class="mt-1 text-sm text-ink/80">
+							Register for free to see all matches, full profile details, photos and contact your potential match.
+						</p>
 						<a
-							href="/profiles/{result.id}"
-							class="card group flex flex-col overflow-hidden p-0 transition-all duration-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-tangerine"
+							href="/register"
+							class="mt-3 inline-flex items-center gap-2 rounded-lg bg-maroon px-4 py-2 text-sm font-semibold text-cream transition-colors hover:bg-saffron hover:text-ink focus-visible:outline-2 focus-visible:outline-maroon"
+						>
+							Register Free · <span lang="te">ఉచిత నమోదు</span>
+						</a>
+					</div>
+				{/if}
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					{#each results as r (r.id)}
+						{@const card = r as PreviewSearchResult & SearchResult}
+						<a
+							href={isPreview ? '/register' : `/profiles/${r.id}`}
+							class="card group flex flex-col overflow-hidden p-0 transition-all duration-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-maroon"
 						>
 							<!-- Blurred photo -->
-							<div class="relative aspect-[4/3] overflow-hidden bg-honey/40">
-								{#if result.blurred_photo_url}
+							<div class="relative aspect-[4/3] overflow-hidden bg-marigold/15">
+								{#if card.blurred_url || card.blurred_photo_url}
 									<img
-										src={result.blurred_photo_url}
+										src={card.blurred_url || card.blurred_photo_url}
 										alt=""
 										role="presentation"
 										class="h-full w-full object-cover blur-sm scale-105 group-hover:blur-[6px] transition-all duration-300"
@@ -284,38 +313,42 @@
 										<User size={48} />
 									</div>
 								{/if}
-								<!-- Gender badge -->
-								<span class="absolute top-2 left-2 rounded bg-tangerine/90 px-2 py-0.5 text-xs font-medium text-cream capitalize">
-									{result.gender}
+								<span class="absolute top-2 left-2 rounded bg-maroon/90 px-2 py-0.5 text-xs font-medium text-cream capitalize">
+									{r.gender}
 								</span>
 							</div>
 
 							<!-- Info -->
-							<div class="p-4 space-y-1">
-								<h3 class="font-serif font-semibold text-terracotta text-lg">
-									{result.first_name}, {calcAge(result.dob)} yrs
+							<div class="space-y-1 p-4">
+								<h3 class="font-serif text-lg font-semibold text-maroon">
+									{#if isPreview}
+										{card.age} yrs
+									{:else}
+										{card.first_name}, {calcAge(card.dob)} yrs
+									{/if}
 								</h3>
-								<p class="text-sm text-ink/70">
-									{result.height_cm} cm · {result.diet}
+								<p class="text-sm text-ink/80">
+									{r.height_cm} cm{#if !isPreview} · {card.diet}{/if}
 								</p>
-								<p class="text-sm text-ink/70">{result.occupation}</p>
-								<p class="text-sm text-ink/60">{result.city}, {result.state}</p>
+								{#if !isPreview}
+									<p class="text-sm text-ink/80">{card.occupation}</p>
+								{/if}
+								<p class="text-sm text-ink/70">{r.city}, {r.state}</p>
 
-								<!-- Key match fields -->
 								<div class="mt-2 flex flex-wrap gap-1.5">
-									{#if result.gotra}
-										<span class="rounded-full bg-gold/10 px-2 py-0.5 text-xs text-terracotta border border-gold/20">
-											{result.gotra}
+									{#if r.gotra}
+										<span class="rounded-full border border-gold/20 bg-gold/10 px-2 py-0.5 text-xs text-maroon">
+											{r.gotra}
 										</span>
 									{/if}
-									{#if result.nakshatram}
-										<span class="rounded-full bg-tangerine/10 px-2 py-0.5 text-xs text-terracotta border border-tangerine/20">
-											{result.nakshatram}
+									{#if r.nakshatram}
+										<span class="rounded-full border border-saffron/30 bg-saffron/10 px-2 py-0.5 text-xs text-maroon">
+											{r.nakshatram}
 										</span>
 									{/if}
-									{#if result.manglik !== 'unknown'}
-										<span class="rounded-full bg-ink/5 px-2 py-0.5 text-xs text-ink/70 border border-ink/10">
-											Manglik: {result.manglik}
+									{#if !isPreview && card.manglik && card.manglik !== 'unknown'}
+										<span class="rounded-full border border-ink/10 bg-ink/5 px-2 py-0.5 text-xs text-ink/70">
+											Manglik: {card.manglik}
 										</span>
 									{/if}
 								</div>

@@ -5,7 +5,8 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
 	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
-	import { Loader, Edit, Send, User, Heart } from 'lucide-svelte';
+	import { Loader, Edit, Send, User } from 'lucide-svelte';
+	import Logo from '$lib/components/Logo.svelte';
 
 	let { data } = $props();
 	// id is fixed for the lifetime of this page — route params don't change without navigation
@@ -114,7 +115,7 @@
 							onclick={() => (showRequestForm = true)}
 							class="btn-primary flex w-full items-center justify-center gap-2"
 						>
-							<Heart size={16} />
+							<Logo size="sm" />
 							Request Full Details
 						</button>
 					{:else}

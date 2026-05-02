@@ -6,10 +6,11 @@ from datetime import date
 from typing import Any
 
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.main import app
 from app.models.profile import Profile, ProfileStatusEnum
 from app.models.user import User
 
@@ -101,7 +102,7 @@ async def test_search_returns_only_approved_profiles(
     # Create an approved profile (should appear)
     approved_id = await _create_approved_profile(client, db_session)
 
-    # Search
+    # Search (client is logged in from above)
     resp = await client.get("/search?gender=bride")
     assert resp.status_code == 200, resp.text
     data = resp.json()
@@ -240,21 +241,208 @@ async def test_search_results_hide_sensitive_fields(
     assert "last_name" not in result, "Should not expose last_name in search"
 
 
+# ── Updated test: anonymous callers now get the preview shape ─────────────────
+
 async def test_unauthenticated_search_sees_partial_info(
     client: AsyncClient, db_session: AsyncSession
 ) -> None:
-    """Unauthenticated user sees same partial info as authenticated."""
+    """Unauthenticated user gets preview shape: age and city present, no
+    last_name, no education, no occupation, no mother_tongue, no dob."""
     profile_id = await _create_approved_profile(client, db_session)
 
-    # Search without being logged in
+    # Log out so the next request is anonymous
+    await client.post("/auth/logout")
+
     resp = await client.get("/search?gender=bride")
     assert resp.status_code == 200
-    results = resp.json()["results"]
-    result = next((r for r in results if r["id"] == profile_id), None)
-    assert result is not None
+    data = resp.json()
 
-    # Should have partial fields
+    # Preview envelope fields
+    assert "requires_registration" in data, "Anonymous response must include requires_registration"
+    assert data["requires_registration"] is True
+
+    results = data["results"]
+    result = next((r for r in results if r["id"] == profile_id), None)
+    assert result is not None, "Approved profile must appear in anonymous preview"
+
+    # Fields that MUST be present
     assert "age" in result
     assert "city" in result
+    assert "gender" in result
+    assert "height_cm" in result
+    assert "gotra" in result
+    assert "nakshatram" in result
+
+    # Fields that must NOT be present (more restricted than PartialProfileResponse)
+    assert "dob" not in result, "dob must not be exposed"
+    assert "passport_url" not in result, "passport_url must not be exposed"
+    assert "last_name" not in result, "last_name must not be exposed"
+    assert "first_name" not in result, "first_name initial must not be exposed"
+    assert "education" not in result, "education must not be exposed to anonymous"
+    assert "occupation" not in result, "occupation must not be exposed to anonymous"
+    assert "mother_tongue" not in result, "mother_tongue must not be exposed to anonymous"
+
+
+# ── New tests: anonymous preview behaviour ────────────────────────────────────
+
+async def _fresh_anonymous_client() -> AsyncClient:
+    """Return a fresh client with no session cookies — truly anonymous."""
+    return AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://testserver",
+    )
+
+
+async def test_anonymous_preview_capped_at_six(db_session: AsyncSession) -> None:
+    """Anonymous search returns at most 6 results even when more exist."""
+    # Use a dedicated logged-in client only to create profiles, then query anonymously.
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://testserver"
+    ) as setup_client:
+        for i in range(8):
+            await _create_approved_profile(setup_client, db_session, first_name=f"AnonCap{i}")
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://testserver"
+    ) as anon_client:
+        resp = await anon_client.get("/search")
+        assert resp.status_code == 200
+        data = resp.json()
+
+    assert len(data["results"]) <= 6, f"Anonymous preview must return ≤ 6 results, got {len(data['results'])}"
+    assert data["per_page"] == 6
+    assert data["page"] == 1
+    assert data["requires_registration"] is True
+
+
+async def test_anonymous_preview_total_reflects_full_count(db_session: AsyncSession) -> None:
+    """Anonymous total reflects the true DB count even though only 6 results are returned."""
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://testserver"
+    ) as setup_client:
+        for i in range(8):
+            await _create_approved_profile(
+                setup_client, db_session, gender="bride", first_name=f"AnonTotal{i}"
+            )
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://testserver"
+    ) as anon_client:
+        resp = await anon_client.get("/search?gender=bride")
+        assert resp.status_code == 200
+        data = resp.json()
+
+    assert data["total"] >= 8, (
+        f"total should reflect the full matching count, got {data['total']}"
+    )
+    # The results list itself must be capped
+    assert len(data["results"]) <= 6
+
+
+async def test_anonymous_preview_honors_gender_filter(db_session: AsyncSession) -> None:
+    """Anonymous search filters by gender; results only contain matching gender."""
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://testserver"
+    ) as setup_client:
+        bride_id = await _create_approved_profile(
+            setup_client, db_session, gender="bride", first_name="AnonBride"
+        )
+        groom_id = await _create_approved_profile(
+            setup_client, db_session, gender="groom", first_name="AnonGroom"
+        )
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://testserver"
+    ) as anon_client:
+        resp = await anon_client.get("/search?gender=bride")
+        assert resp.status_code == 200
+        data = resp.json()
+
+    result_ids = [r["id"] for r in data["results"]]
+    assert bride_id in result_ids, "Bride profile should appear in bride filter"
+    assert groom_id not in result_ids, "Groom profile must not appear in bride filter"
+    # All returned items must be brides
+    assert all(r["gender"] == "bride" for r in data["results"])
+
+
+async def test_anonymous_preview_honors_gotra_filter(db_session: AsyncSession) -> None:
+    """Anonymous search filters by gotra correctly."""
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://testserver"
+    ) as setup_client:
+        target_id = await _create_approved_profile(
+            setup_client, db_session, gotra="Kashyapa", first_name="AnonGotra"
+        )
+        other_id = await _create_approved_profile(
+            setup_client, db_session, gotra="Vatsa", first_name="AnonOther"
+        )
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://testserver"
+    ) as anon_client:
+        resp = await anon_client.get("/search?gotra=Kashyapa")
+        assert resp.status_code == 200
+        data = resp.json()
+
+    result_ids = [r["id"] for r in data["results"]]
+    assert target_id in result_ids, "Profile with Kashyapa gotra should be returned"
+    assert other_id not in result_ids, "Profile with different gotra must not appear"
+
+
+async def test_anonymous_preview_response_shape(db_session: AsyncSession) -> None:
+    """Each item in an anonymous preview result has exactly the preview fields."""
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://testserver"
+    ) as setup_client:
+        await _create_approved_profile(setup_client, db_session, first_name="ShapeTest")
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://testserver"
+    ) as anon_client:
+        resp = await anon_client.get("/search")
+        assert resp.status_code == 200
+        data = resp.json()
+
+    assert data["requires_registration"] is True
+    assert len(data["results"]) >= 1
+
+    item = data["results"][0]
+    # Required preview fields
+    for field in ("id", "gender", "age", "height_cm", "city", "state", "gotra", "nakshatram"):
+        assert field in item, f"Preview result missing required field: {field}"
+    # Forbidden fields
+    for field in ("first_name", "last_name", "education", "occupation",
+                  "mother_tongue", "dob", "rashi", "manglik", "diet",
+                  "marital_status", "thumb_url", "passport_url"):
+        assert field not in item, f"Preview result must not expose: {field}"
+
+
+async def test_loggedin_search_returns_partial_profile_shape(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Logged-in search returns SearchResponse with PartialProfileResponse shape (no requires_registration)."""
+    profile_id = await _create_approved_profile(client, db_session)
+
+    resp = await client.get("/search?gender=bride")
+    assert resp.status_code == 200
+    data = resp.json()
+
+    # Must NOT include requires_registration key
+    assert "requires_registration" not in data, (
+        "Logged-in response must not contain requires_registration"
+    )
+
+    result = next((r for r in data["results"] if r["id"] == profile_id), None)
+    assert result is not None
+
+    # Partial profile fields that logged-in users get
+    assert "first_name" in result, "Logged-in user should see first_name initial"
+    assert "education" in result, "Logged-in user should see education"
+    assert "occupation" in result, "Logged-in user should see occupation"
+    assert "mother_tongue" in result, "Logged-in user should see mother_tongue"
+    assert "thumb_url" in result, "Logged-in user should see thumb_url"
+
+    # Still no sensitive fields
     assert "dob" not in result
+    assert "last_name" not in result
     assert "passport_url" not in result

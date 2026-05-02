@@ -1,0 +1,128 @@
+<!--
+  og-image.svg — 1200×630 branded Open Graph / Twitter card image.
+  NOTE: Most social crawlers (Facebook ≥2023, Twitter/X, WhatsApp, LinkedIn)
+  accept SVG for og:image. For maximum compatibility consider exporting a
+  PNG/JPG equivalent at 1200×630 and serving that as a fallback. The SVG
+  reference is fine for modern crawlers and all link-preview services tested
+  as of 2025.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2B0A0E"/>
+      <stop offset="45%" stop-color="#6B0F1A"/>
+      <stop offset="100%" stop-color="#F4A300"/>
+    </linearGradient>
+    <linearGradient id="kpot" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFB627"/>
+      <stop offset="100%" stop-color="#C9A227"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background gradient -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative corner ornaments -->
+  <!-- Top-left paisley-ish arc -->
+  <path d="M0 0 Q80 0 80 80 Q80 0 0 0Z" fill="#C9A227" opacity="0.2"/>
+  <path d="M0 0 Q50 0 50 50 Q50 0 0 0Z" fill="#C9A227" opacity="0.15"/>
+  <!-- Bottom-right -->
+  <path d="M1200 630 Q1120 630 1120 550 Q1120 630 1200 630Z" fill="#C9A227" opacity="0.2"/>
+  <!-- Top-right -->
+  <path d="M1200 0 Q1120 0 1120 80 Q1120 0 1200 0Z" fill="#FFB627" opacity="0.15"/>
+  <!-- Bottom-left -->
+  <path d="M0 630 Q80 630 80 550 Q80 630 0 630Z" fill="#FFB627" opacity="0.15"/>
+
+  <!-- Gold border frame -->
+  <rect x="20" y="20" width="1160" height="590" rx="8" fill="none" stroke="#C9A227" stroke-width="2" opacity="0.5"/>
+  <rect x="26" y="26" width="1148" height="578" rx="6" fill="none" stroke="#FFB627" stroke-width="1" opacity="0.3"/>
+
+  <!-- Rising sun (left of center) -->
+  <circle cx="600" cy="260" r="90" fill="#F4A300" opacity="0.15"/>
+  <circle cx="600" cy="260" r="60" fill="#F4A300" opacity="0.25"/>
+
+  <!-- Kalasha logo (large, centred) -->
+  <g transform="translate(510 80) scale(3.5)">
+    <!-- Mango leaves -->
+    <path d="M22 0 Q18 -8 20 -15 Q24 -12 22 0Z" fill="#C9A227" opacity="0.95"/>
+    <path d="M26 -4 Q26 -14 26 -18 Q26 -14 26 -4Z" fill="#C9A227" opacity="0.85"/>
+    <path d="M30 0 Q34 -8 32 -15 Q28 -12 30 0Z" fill="#C9A227" opacity="0.95"/>
+    <!-- Coconut -->
+    <circle cx="26" cy="3" r="7" fill="#C9A227"/>
+    <circle cx="26" cy="3" r="4.5" fill="#FFB627" opacity="0.5"/>
+    <!-- Neck -->
+    <rect x="22.5" y="9" width="7" height="4.5" rx="1.5" fill="#C9A227"/>
+    <!-- Pot body -->
+    <path d="M14 13 Q10 20 10 27 Q10 36 15 40 L37 40 Q42 36 42 27 Q42 20 38 13Z" fill="url(#kpot)"/>
+    <!-- Rim -->
+    <path d="M14 13 Q26 10.5 38 13" stroke="#C9A227" stroke-width="1.5" fill="none"/>
+    <!-- Belly band -->
+    <path d="M11 26 Q26 29 41 26" stroke="#C9A227" stroke-width="0.8" fill="none" opacity="0.7"/>
+    <!-- Base -->
+    <rect x="14" y="40" width="24" height="4.5" rx="2" fill="#C9A227"/>
+    <rect x="11" y="44.5" width="30" height="3" rx="1.5" fill="#C9A227" opacity="0.6"/>
+    <!-- Gold rim dots -->
+    <circle cx="14" cy="13" r="1.2" fill="#C9A227"/>
+    <circle cx="20" cy="11.5" r="1.2" fill="#C9A227"/>
+    <circle cx="26" cy="11" r="1.2" fill="#C9A227"/>
+    <circle cx="32" cy="11.5" r="1.2" fill="#C9A227"/>
+    <circle cx="38" cy="13" r="1.2" fill="#C9A227"/>
+  </g>
+
+  <!-- Brand name — Telugu -->
+  <text
+    x="600"
+    y="390"
+    text-anchor="middle"
+    font-family="'Tiro Telugu', Georgia, serif"
+    font-size="54"
+    font-weight="700"
+    fill="#FFF8E7"
+    letter-spacing="1"
+  >తెలుగు–మరాఠా కల్యాణ వేదిక</text>
+
+  <!-- Decorative gold rule -->
+  <line x1="250" y1="415" x2="950" y2="415" stroke="#C9A227" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Brand name — English -->
+  <text
+    x="600"
+    y="460"
+    text-anchor="middle"
+    font-family="'Cormorant Garamond', Georgia, serif"
+    font-size="38"
+    font-weight="400"
+    fill="#FFB627"
+    letter-spacing="2"
+  >Telugu–Maratha Kalyana Vedika</text>
+
+  <!-- Tagline -->
+  <text
+    x="600"
+    y="510"
+    text-anchor="middle"
+    font-family="'Inter', Arial, sans-serif"
+    font-size="22"
+    fill="#FFF8E7"
+    opacity="0.75"
+    letter-spacing="0.5"
+  >The trusted matrimonial platform for Telugu-Maratha families</text>
+
+  <!-- Domain watermark -->
+  <text
+    x="600"
+    y="570"
+    text-anchor="middle"
+    font-family="'Inter', Arial, sans-serif"
+    font-size="18"
+    fill="#C9A227"
+    opacity="0.6"
+    letter-spacing="1"
+  >marathakalyanam.com</text>
+
+  <!-- Small marigold petals decorating bottom edge -->
+  <ellipse cx="100" cy="590" rx="12" ry="7" fill="#FFB627" opacity="0.4" transform="rotate(-20 100 590)"/>
+  <ellipse cx="140" cy="595" rx="9"  ry="5" fill="#F4A300"  opacity="0.35" transform="rotate(15 140 595)"/>
+  <ellipse cx="1060" cy="595" rx="9" ry="5" fill="#F4A300"  opacity="0.35" transform="rotate(-15 1060 595)"/>
+  <ellipse cx="1100" cy="590" rx="12" ry="7" fill="#FFB627" opacity="0.4" transform="rotate(20 1100 590)"/>
+</svg>

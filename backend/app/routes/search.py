@@ -1,6 +1,6 @@
 """Search routes."""
 from datetime import date
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Optional, Union
 
 from litestar import Controller, get
 from litestar.connection import Request
@@ -19,6 +19,10 @@ from app.models.profile import (
     ProfileStatusEnum,
     TobaccoAlcoholEnum,
 )
+
+# Anonymous preview constants
+_PREVIEW_PAGE = 1
+_PREVIEW_PER_PAGE = 6
 
 
 def _compute_age(dob: date) -> int:
@@ -57,6 +61,123 @@ def _serialize_partial(profile: Profile, request: Request) -> dict[str, Any]:
     }
 
 
+def _serialize_preview(profile: Profile, request: Request) -> dict[str, Any]:
+    """Even more limited serialization for anonymous preview results."""
+    primary = next((p for p in profile.photos if p.is_primary), None)
+    if primary is None and profile.photos:
+        primary = profile.photos[0]
+    base = str(request.base_url).rstrip("/")
+    return {
+        "id": str(profile.id),
+        "gender": profile.gender.value,
+        "age": _compute_age(profile.dob),
+        "height_cm": profile.height_cm,
+        "city": profile.city,
+        "state": profile.state,
+        "gotra": profile.gotra,
+        "nakshatram": profile.nakshatram,
+        "blurred_url": f"{base}/media/{primary.blurred_path}" if primary else None,
+    }
+
+
+def _build_base_query(
+    gender: Optional[str],
+    age_min: Optional[int],
+    age_max: Optional[int],
+    gotra: Optional[str],
+    nakshatram: Optional[str],
+    rashi: Optional[str],
+    city: Optional[str],
+    state_filter: Optional[str],
+    manglik: Optional[str],
+    diet: Optional[str],
+    marital_status: Optional[str],
+    family_type: Optional[str],
+    smokes: Optional[str],
+    drinks: Optional[str],
+) -> Any:
+    """Build a filtered SQLAlchemy query for approved profiles (no order/limit)."""
+    query = (
+        select(Profile)
+        .where(Profile.status == ProfileStatusEnum.approved)
+        .options(selectinload(Profile.photos))
+    )
+
+    if gender:
+        try:
+            g = GenderEnum(gender)
+            query = query.where(Profile.gender == g)
+        except ValueError:
+            pass
+
+    if age_min is not None:
+        max_dob = date.today().replace(year=date.today().year - age_min)
+        query = query.where(Profile.dob <= max_dob)
+
+    if age_max is not None:
+        min_dob = date.today().replace(year=date.today().year - age_max - 1)
+        query = query.where(Profile.dob >= min_dob)
+
+    if gotra:
+        query = query.where(Profile.gotra.ilike(f"%{gotra}%"))
+
+    if nakshatram:
+        query = query.where(Profile.nakshatram.ilike(f"%{nakshatram}%"))
+
+    if rashi:
+        query = query.where(Profile.rashi.ilike(f"%{rashi}%"))
+
+    if city:
+        query = query.where(Profile.city.ilike(f"%{city}%"))
+
+    if state_filter:
+        query = query.where(Profile.state.ilike(f"%{state_filter}%"))
+
+    if manglik:
+        try:
+            m = ManglikEnum(manglik)
+            query = query.where(Profile.manglik == m)
+        except ValueError:
+            pass
+
+    if diet:
+        try:
+            d = DietEnum(diet)
+            query = query.where(Profile.diet == d)
+        except ValueError:
+            pass
+
+    if marital_status:
+        try:
+            ms = MaritalStatusEnum(marital_status)
+            query = query.where(Profile.marital_status == ms)
+        except ValueError:
+            pass
+
+    if family_type:
+        try:
+            ft = FamilyTypeEnum(family_type)
+            query = query.where(Profile.family_type == ft)
+        except ValueError:
+            pass
+
+    if smokes:
+        try:
+            s = TobaccoAlcoholEnum(smokes)
+            query = query.where(Profile.smokes == s)
+        except ValueError:
+            pass
+
+    if drinks:
+        try:
+            d_val = TobaccoAlcoholEnum(drinks)
+            query = query.where(Profile.drinks == d_val)
+        except ValueError:
+            pass
+
+    return query
+
+
 class SearchController(Controller):
     path = "/search"
 
@@ -85,103 +206,56 @@ class SearchController(Controller):
         page: int = 1,
         per_page: int = 20,
     ) -> dict[str, Any]:
-        query = (
-            select(Profile)
-            .where(Profile.status == ProfileStatusEnum.approved)
-            .options(selectinload(Profile.photos))
+        # Detect anonymous caller — session exists (cookie middleware always
+        # creates one) but user_id is absent until after login.
+        user_id = request.session.get("user_id")
+        is_anonymous = not user_id
+
+        query = _build_base_query(
+            gender=gender,
+            age_min=age_min,
+            age_max=age_max,
+            gotra=gotra,
+            nakshatram=nakshatram,
+            rashi=rashi,
+            city=city,
+            state_filter=state_filter,
+            manglik=manglik,
+            diet=diet,
+            marital_status=marital_status,
+            family_type=family_type,
+            smokes=smokes,
+            drinks=drinks,
         )
 
-        if gender:
-            try:
-                g = GenderEnum(gender)
-                query = query.where(Profile.gender == g)
-            except ValueError:
-                pass
+        # Count matching approved profiles (filter-respecting, before pagination)
+        count_query = select(func.count()).select_from(query.subquery())
+        total_result = await db.execute(count_query)
+        total = total_result.scalar_one()
 
-        if age_min is not None:
-            max_dob = date.today().replace(year=date.today().year - age_min)
-            query = query.where(Profile.dob <= max_dob)
+        # ── Anonymous preview path ────────────────────────────────────────────
+        if is_anonymous:
+            preview_query = (
+                query
+                .order_by(func.random())
+                .limit(_PREVIEW_PER_PAGE)
+            )
+            result = await db.execute(preview_query)
+            profiles = list(result.scalars().all())
 
-        if age_max is not None:
-            min_dob = date.today().replace(year=date.today().year - age_max - 1)
-            query = query.where(Profile.dob >= min_dob)
+            return {
+                "results": [_serialize_preview(p, request) for p in profiles],
+                "total": total,
+                "page": _PREVIEW_PAGE,
+                "per_page": _PREVIEW_PER_PAGE,
+                "requires_registration": True,
+            }
 
-        if gotra:
-            query = query.where(Profile.gotra.ilike(f"%{gotra}%"))
-
-        if nakshatram:
-            query = query.where(Profile.nakshatram.ilike(f"%{nakshatram}%"))
-
-        if rashi:
-            query = query.where(Profile.rashi.ilike(f"%{rashi}%"))
-
-        if city:
-            query = query.where(Profile.city.ilike(f"%{city}%"))
-
-        if state_filter:
-            query = query.where(Profile.state.ilike(f"%{state_filter}%"))
-
-        if manglik:
-            try:
-                m = ManglikEnum(manglik)
-                query = query.where(Profile.manglik == m)
-            except ValueError:
-                pass
-
-        if diet:
-            try:
-                d = DietEnum(diet)
-                query = query.where(Profile.diet == d)
-            except ValueError:
-                pass
-
-        # New filters
-        if marital_status:
-            try:
-                ms = MaritalStatusEnum(marital_status)
-                query = query.where(Profile.marital_status == ms)
-            except ValueError:
-                pass
-
-        if family_type:
-            try:
-                ft = FamilyTypeEnum(family_type)
-                query = query.where(Profile.family_type == ft)
-            except ValueError:
-                pass
-
-        if smokes:
-            try:
-                s = TobaccoAlcoholEnum(smokes)
-                query = query.where(Profile.smokes == s)
-            except ValueError:
-                pass
-
-        if drinks:
-            try:
-                d_val = TobaccoAlcoholEnum(drinks)
-                query = query.where(Profile.drinks == d_val)
-            except ValueError:
-                pass
-
+        # ── Logged-in path (existing behaviour) ──────────────────────────────
         # Parse requested keywords
         requested_keywords: set[str] = set()
         if interests:
             requested_keywords = {kw.strip().lower() for kw in interests.split(",") if kw.strip()}
-
-        # When keywords filter is active, require non-zero overlap
-        if requested_keywords:
-            # Filter: profile must have at least one keyword in common.
-            # Use PostgreSQL JSONB ? operator via raw SQL cast.
-            # We cannot do this purely in SQLAlchemy without a loop, so we
-            # fetch all matching (other filters applied) approved profiles
-            # and post-filter in Python.  This is acceptable because keyword
-            # search is inherently a scoring/ranking step done in memory.
-            pass  # post-filter applied below after fetch
-
-        count_query = select(func.count()).select_from(query.subquery())
-        total_result = await db.execute(count_query)
-        total = total_result.scalar_one()
 
         per_page = min(max(1, per_page), 100)
         page = max(1, page)

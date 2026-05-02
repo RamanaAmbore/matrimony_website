@@ -160,6 +160,29 @@ export interface SearchResponse {
 	per_page: number;
 }
 
+/** Minimal profile card returned to anonymous (unauthenticated) callers. */
+export interface PreviewSearchResult {
+	id: string;
+	gender: Gender;
+	age: number;
+	height_cm: number;
+	city: string;
+	state: string;
+	gotra: string;
+	nakshatram: string;
+	blurred_url: string | null;
+}
+
+/** Search envelope returned when the caller has no session. */
+export interface PreviewSearchResponse {
+	results: PreviewSearchResult[];
+	total: number;
+	page: number;
+	per_page: number;
+	/** Always true — discriminates from SearchResponse. */
+	requires_registration: true;
+}
+
 export interface Setting {
 	key: string;
 	value: string;
@@ -357,7 +380,7 @@ export const photos = {
 // ─── Search ───────────────────────────────────────────────────────────────────
 
 export const search = {
-	async query(params: SearchParams): Promise<SearchResponse> {
+	async query(params: SearchParams): Promise<SearchResponse | PreviewSearchResponse> {
 		return request(`/api/search${buildQuery(params as Record<string, unknown>)}`);
 	}
 };

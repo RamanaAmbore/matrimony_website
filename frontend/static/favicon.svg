@@ -1,25 +1,42 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
   <defs>
-    <linearGradient id="kg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF8C32"/>
-      <stop offset="100%" stop-color="#FFB627"/>
+    <linearGradient id="pot" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F4A300"/>
+      <stop offset="100%" stop-color="#C9A227"/>
     </linearGradient>
   </defs>
-  <!-- Mango leaves -->
-  <path d="M12 8 Q10 5 11 2 Q14 3 12 8Z" fill="#C9A227" opacity="0.9"/>
-  <path d="M16 6 Q16 2 16 1 Q16 2 16 6Z" fill="#C9A227" opacity="0.8"/>
-  <path d="M20 8 Q22 5 21 2 Q18 3 20 8Z" fill="#C9A227" opacity="0.9"/>
-  <!-- Coconut -->
-  <circle cx="16" cy="9" r="3.5" fill="#C9A227"/>
-  <!-- Neck -->
-  <rect x="13.5" y="11.5" width="5" height="3" rx="1" fill="#C9A227"/>
-  <!-- Pot body -->
-  <path d="M10 14.5 Q7 18 7 22 Q7 26 9.5 28 L22.5 28 Q25 26 25 22 Q25 18 22 14.5Z" fill="url(#kg)"/>
-  <!-- Rim line -->
-  <path d="M10 14.5 Q16 12.5 22 14.5" stroke="#C9A227" stroke-width="1" fill="none"/>
-  <!-- Decorative line -->
-  <path d="M8.5 20 Q16 22 23.5 20" stroke="#C9A227" stroke-width="0.6" fill="none" opacity="0.7"/>
-  <!-- Base -->
-  <rect x="10" y="28" width="12" height="2.5" rx="1" fill="#C9A227"/>
-  <rect x="8.5" y="30" width="15" height="1.5" rx="0.8" fill="#C9A227" opacity="0.6"/>
+  <!-- Three mango leaves -->
+  <path d="M10 8 Q8.5 5 9.5 2.5 Q12 3.5 10 8Z" fill="#C9A227" opacity="0.95"/>
+  <path d="M16 6.5 Q16 2.5 16 1 Q16 2.5 16 6.5Z" fill="#C9A227" opacity="0.85"/>
+  <path d="M22 8 Q23.5 5 22.5 2.5 Q20 3.5 22 8Z" fill="#C9A227" opacity="0.95"/>
+  <!-- Additional small leaves -->
+  <path d="M13 7 Q11.5 4 12.5 2 Q14.5 3 13 7Z" fill="#C9A227" opacity="0.7"/>
+  <path d="M19 7 Q20.5 4 19.5 2 Q17.5 3 19 7Z" fill="#C9A227" opacity="0.7"/>
+  <!-- Coconut — with eyes -->
+  <circle cx="16" cy="9.5" r="4" fill="#C9A227"/>
+  <circle cx="16" cy="9.5" r="2.5" fill="#FFB627" opacity="0.55"/>
+  <circle cx="14.8" cy="9" r="0.7" fill="#6B0F1A" opacity="0.5"/>
+  <circle cx="16.5" cy="8.6" r="0.7" fill="#6B0F1A" opacity="0.5"/>
+  <circle cx="17.8" cy="9.2" r="0.7" fill="#6B0F1A" opacity="0.5"/>
+  <!-- Neck — tapered -->
+  <path d="M13.5 13 Q13.2 12.2 14 11.8 L18 11.8 Q18.8 12.2 18.5 13 Q18.2 14.5 17.5 15 L14.5 15 Q13.8 14.5 13.5 13Z" fill="#C9A227"/>
+  <!-- Pot body — bulbous -->
+  <path d="M9.5 15 Q7 18.5 7 22 Q7 26.5 9.5 28.5 L22.5 28.5 Q25 26.5 25 22 Q25 18.5 22.5 15Z" fill="url(#pot)"/>
+  <!-- Rim arc -->
+  <path d="M9.5 15 Q16 13 22.5 15" stroke="#C9A227" stroke-width="1" fill="none"/>
+  <!-- Gold rim dots -->
+  <circle cx="9.5" cy="15" r="0.8" fill="#C9A227" opacity="0.9"/>
+  <circle cx="13"  cy="14" r="0.8" fill="#C9A227" opacity="0.9"/>
+  <circle cx="16"  cy="13.5" r="0.8" fill="#C9A227" opacity="0.9"/>
+  <circle cx="19"  cy="14" r="0.8" fill="#C9A227" opacity="0.9"/>
+  <circle cx="22.5" cy="15" r="0.8" fill="#C9A227" opacity="0.9"/>
+  <!-- Belly bands -->
+  <path d="M7.8 21 Q16 23 24.2 21" stroke="#C9A227" stroke-width="0.6" fill="none" opacity="0.7"/>
+  <path d="M7.5 25.5 Q16 27.5 24.5 25.5" stroke="#C9A227" stroke-width="0.6" fill="none" opacity="0.5"/>
+  <!-- Central lotus motif -->
+  <circle cx="16" cy="22" r="2.2" fill="#6B0F1A" opacity="0.25"/>
+  <circle cx="16" cy="22" r="1.2" fill="#C9A227" opacity="0.5"/>
+  <!-- Base plate -->
+  <rect x="10" y="28.5" width="12" height="2.5" rx="1" fill="#C9A227"/>
+  <rect x="8.5" y="31" width="15" height="1.5" rx="0.8" fill="#C9A227" opacity="0.6"/>
 </svg>

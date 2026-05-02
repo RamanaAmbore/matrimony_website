@@ -86,10 +86,12 @@
 	<meta property="og:title" content="Telugu–Maratha Kalyana Vedika · తెలుగు–మరాఠా కల్యాణ వేదిక" />
 	<meta property="og:description" content="Trusted matrimonial platform for Telugu-Maratha families across AP, Telangana and Maharashtra. Admin-verified profiles. Gotra, nakshatram and kuldevata matching. Privacy-first." />
 	<meta property="og:url" content="https://marathakalyanam.com/" />
-	<meta property="og:image" content="https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&h=630&q=80" />
+	<!-- SVG OG image — accepted by Facebook ≥2023, Twitter/X, WhatsApp, LinkedIn.
+	     For broadest crawler compat consider also generating a PNG at /og-image.png. -->
+	<meta property="og:image" content="https://marathakalyanam.com/og-image.svg" />
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />
-	<meta property="og:image:alt" content="Indian wedding mandap with flowers and lights" />
+	<meta property="og:image:alt" content="Telugu–Maratha Kalyana Vedika — kalasha logo on maroon-saffron gradient" />
 	<meta property="og:locale" content="en_IN" />
 	<meta property="og:locale:alternate" content="te_IN" />
 
@@ -97,8 +99,8 @@
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="Telugu–Maratha Kalyana Vedika · తెలుగు–మరాఠా కల్యాణ వేదిక" />
 	<meta name="twitter:description" content="Trusted matrimonial platform for Telugu-Maratha families. Admin-verified profiles. Privacy-first." />
-	<meta name="twitter:image" content="https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&h=630&q=80" />
-	<meta name="twitter:image:alt" content="Indian wedding mandap with flowers and lights" />
+	<meta name="twitter:image" content="https://marathakalyanam.com/og-image.svg" />
+	<meta name="twitter:image:alt" content="Telugu–Maratha Kalyana Vedika — kalasha logo on maroon-saffron gradient" />
 
 	<!-- Theme + canonical + crawling -->
 	<meta name="theme-color" content="#C8102E" />
@@ -344,9 +346,6 @@
 				<a href="mailto:admin@marathakalyanam.com" class="hover:text-tangerine">
 					admin@marathakalyanam.com
 				</a>
-			</p>
-			<p class="text-xs text-ink/30">
-				Hero photos via <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer" class="hover:text-tangerine underline">Unsplash</a>
 			</p>
 		</div>
 	</div>
