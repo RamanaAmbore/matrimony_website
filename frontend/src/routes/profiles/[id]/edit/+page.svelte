@@ -81,7 +81,7 @@
 	<title>Edit Profile — Maratha Kalyanam</title>
 </svelte:head>
 
-<div class="mx-auto max-w-3xl px-4 py-10">
+<div class="mx-auto max-w-5xl px-4 py-10">
 	{#if loading}
 		<div class="flex items-center justify-center py-24">
 			<Loader size={40} class="animate-spin text-saffron" />

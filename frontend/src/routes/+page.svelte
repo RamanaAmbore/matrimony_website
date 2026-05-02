@@ -253,7 +253,7 @@
 					<!-- Step number ring -->
 					<div
 						class="relative mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-tangerine/40 shadow-sm"
-						style="background: linear-gradient(135deg, #C8102E 0%, #F4A300 100%);"
+						style="background: linear-gradient(135deg, #6B0F1A 0%, #8C1024 100%);"
 					>
 						<!-- Icon -->
 						{#if step.icon === 'user-plus'}

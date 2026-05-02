@@ -142,7 +142,7 @@
 </svelte:head>
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
-<header class="shadow-md" style="background: linear-gradient(135deg, #C8102E 0%, #F4A300 100%);">
+<header class="shadow-md" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
 	<div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
 		<!-- Brand wordmark -->
 		<a
@@ -236,7 +236,7 @@
 		<!-- Drawer header -->
 		<div
 			class="flex items-center justify-between border-b border-gold/30 px-4 py-3"
-			style="background: linear-gradient(135deg, #C8102E 0%, #F4A300 100%);"
+			style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);"
 		>
 			<div class="flex items-center gap-2">
 				<Logo size="sm" />
