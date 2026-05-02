@@ -5,7 +5,8 @@
 	import { auth as authApi, type User } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
-	import { Menu, X, Heart } from 'lucide-svelte';
+	import Logo from '$lib/components/Logo.svelte';
+	import { Menu, X } from 'lucide-svelte';
 
 	let { data, children } = $props();
 
@@ -63,34 +64,34 @@
 
 	function navLinkClass(href: string) {
 		return isActive(href)
-			? 'text-saffron font-semibold border-b-2 border-saffron pb-0.5'
-			: 'text-cream/80 hover:text-saffron transition-colors duration-150';
+			? 'text-amber font-semibold border-b-2 border-amber pb-0.5'
+			: 'text-cream/80 hover:text-amber transition-colors duration-150';
 	}
 
 	function drawerLinkClass(href: string) {
 		return isActive(href)
-			? 'flex items-center gap-2 rounded-lg px-3 py-2.5 bg-saffron/20 text-saffron font-semibold'
-			: 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-ink hover:bg-saffron/10 hover:text-maroon transition-colors duration-150';
+			? 'flex items-center gap-2 rounded-lg px-3 py-2.5 bg-tangerine/20 text-tangerine font-semibold'
+			: 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-ink hover:bg-amber/20 hover:text-terracotta transition-colors duration-150';
 	}
 </script>
 
 <svelte:head>
-	<title>Maratha Kalyanam — Telugu-Maratha Matrimony</title>
+	<title>Telugu–Maratha Kalyana Vedika</title>
 </svelte:head>
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
-<header class="bg-maroon shadow-md">
+<header class="shadow-md" style="background: linear-gradient(135deg, #FF8C32 0%, #FFB627 100%);">
 	<div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
 		<!-- Brand wordmark -->
 		<a
 			href="/"
-			class="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-saffron"
+			class="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-cream"
 		>
-			<Heart size={22} class="text-saffron" fill="currentColor" />
+			<Logo size="sm" />
 			<span class="font-serif text-lg font-semibold leading-tight text-cream">
-				<span class="text-saffron" lang="te">మరాఠా</span> <span lang="te">కల్యాణం</span>
-				<span class="ml-1 hidden text-sm font-normal text-cream/70 sm:inline">
-					· Maratha Kalyanam
+				<span lang="te">తెలుగు–మరాఠా కల్యాణ వేదిక</span>
+				<span class="ml-1 hidden text-sm font-normal text-cream/75 sm:inline">
+					· Telugu–Maratha Kalyana Vedika
 				</span>
 			</span>
 		</a>
@@ -109,19 +110,19 @@
 				{/if}
 				<button
 					onclick={logout}
-					class="rounded border border-saffron/50 px-3 py-1 text-sm text-cream/80 hover:border-saffron hover:text-saffron focus-visible:outline-2 focus-visible:outline-saffron"
+					class="rounded border border-cream/50 px-3 py-1 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
 				>
 					Logout
 				</button>
 			{:else}
-				<a href="/login" class="btn-secondary text-sm">Login</a>
-				<a href="/register" class="btn-primary text-sm">Register</a>
+				<a href="/login" class="rounded border border-cream px-3 py-1.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">Login</a>
+				<a href="/register" class="rounded bg-cream px-3 py-1.5 text-sm font-medium text-tangerine transition-all duration-200 hover:bg-honey focus-visible:outline-2 focus-visible:outline-cream">Register</a>
 			{/if}
 		</nav>
 
 		<!-- Mobile hamburger -->
 		<button
-			class="rounded p-2 text-cream hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-saffron md:hidden"
+			class="rounded p-2 text-cream hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-cream md:hidden"
 			onclick={openDrawer}
 			aria-label="Open menu"
 			aria-expanded={drawerOpen}
@@ -155,11 +156,17 @@
 		class="fixed inset-y-0 right-0 z-50 flex w-72 flex-col bg-cream shadow-2xl focus:outline-none"
 	>
 		<!-- Drawer header -->
-		<div class="flex items-center justify-between border-b border-gold/30 bg-maroon px-4 py-3">
-			<span class="font-serif text-lg text-cream" lang="te">మరాఠా కల్యాణం</span>
+		<div
+			class="flex items-center justify-between border-b border-gold/30 px-4 py-3"
+			style="background: linear-gradient(135deg, #FF8C32 0%, #FFB627 100%);"
+		>
+			<div class="flex items-center gap-2">
+				<Logo size="sm" />
+				<span class="font-serif text-base leading-tight text-cream" lang="te">తెలుగు–మరాఠా<br />కల్యాణ వేదిక</span>
+			</div>
 			<button
 				onclick={closeDrawer}
-				class="rounded p-1.5 text-cream hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-saffron"
+				class="rounded p-1.5 text-cream hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-cream"
 				aria-label="Close menu"
 			>
 				<X size={22} />
@@ -200,7 +207,7 @@
 				<div class="my-2 h-px bg-gold/20"></div>
 				<button
 					onclick={logout}
-					class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-vermilion hover:bg-vermilion/10 focus-visible:outline-2 focus-visible:outline-saffron"
+					class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-vermilion hover:bg-vermilion/10 focus-visible:outline-2 focus-visible:outline-tangerine"
 				>
 					Logout
 				</button>
@@ -209,7 +216,7 @@
 				<a href="/login" class={drawerLinkClass('/login')} onclick={closeDrawer}>Login</a>
 				<a
 					href="/register"
-					class="flex items-center gap-2 rounded-lg bg-maroon px-3 py-2.5 text-cream hover:bg-maroon/90"
+					class="flex items-center gap-2 rounded-lg bg-tangerine px-3 py-2.5 text-cream hover:bg-marigold hover:text-ink"
 					onclick={closeDrawer}
 				>
 					Register
@@ -225,26 +232,35 @@
 </main>
 
 <!-- ── Footer ─────────────────────────────────────────────────────────────── -->
-<footer class="border-t border-gold/20 bg-maroon/5 py-8">
+<footer class="border-t border-gold/30 bg-honey/60 py-8">
 	<div class="mx-auto max-w-7xl px-4">
 		<div class="flex flex-col items-center gap-4 text-center md:flex-row md:justify-between md:text-left">
-			<div>
-				<p class="font-serif text-lg font-semibold text-maroon" lang="te">మరాఠా కల్యాణం</p>
-				<p class="text-sm text-ink/60">Telugu-Maratha matrimonial site</p>
+			<div class="flex items-center gap-3">
+				<Logo size="sm" />
+				<div>
+					<p class="font-serif text-lg font-semibold text-terracotta" lang="te">తెలుగు–మరాఠా కల్యాణ వేదిక</p>
+					<p class="text-xs text-ink/50">Telugu–Maratha Kalyana Vedika</p>
+					<p class="text-sm text-ink/60">Telugu-Maratha matrimonial site</p>
+				</div>
 			</div>
 			<div class="flex flex-wrap justify-center gap-4 text-sm text-ink/60 md:justify-end">
-				<a href="/about" class="hover:text-maroon">About</a>
-				<a href="/search" class="hover:text-maroon">Search</a>
-				<a href="/contact" class="hover:text-maroon">Contact</a>
-				<a href="/privacy" class="hover:text-maroon">Privacy</a>
+				<a href="/about" class="hover:text-tangerine">About</a>
+				<a href="/search" class="hover:text-tangerine">Search</a>
+				<a href="/contact" class="hover:text-tangerine">Contact</a>
+				<a href="/privacy" class="hover:text-tangerine">Privacy</a>
 			</div>
 		</div>
-		<p class="mt-6 text-center text-xs text-ink/40">
-			© 2026 Maratha Kalyanam · marathakalyanam.com ·
-			<a href="mailto:admin@marathakalyanam.com" class="hover:text-maroon">
-				admin@marathakalyanam.com
-			</a>
-		</p>
+		<div class="mt-4 flex flex-col items-center gap-1 text-center">
+			<p class="text-xs text-ink/40">
+				© 2026 Telugu–Maratha Kalyana Vedika · marathakalyanam.com ·
+				<a href="mailto:admin@marathakalyanam.com" class="hover:text-tangerine">
+					admin@marathakalyanam.com
+				</a>
+			</p>
+			<p class="text-xs text-ink/30">
+				Hero photos via <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer" class="hover:text-tangerine underline">Unsplash</a>
+			</p>
+		</div>
 	</div>
 </footer>
 

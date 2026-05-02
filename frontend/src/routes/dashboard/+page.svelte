@@ -60,7 +60,7 @@
 <div class="mx-auto max-w-5xl px-4 py-10">
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="font-serif text-3xl font-bold text-maroon">My Profiles</h1>
+			<h1 class="font-serif text-3xl font-bold text-terracotta">My Profiles</h1>
 			<p class="mt-1 text-sm text-ink/60">Manage your matrimonial profiles</p>
 		</div>
 		<a href="/profiles/new" class="btn-primary flex items-center gap-2">
@@ -73,7 +73,7 @@
 
 	{#if loading}
 		<div class="flex items-center justify-center py-20">
-			<Loader size={36} class="animate-spin text-saffron" />
+			<Loader size={36} class="animate-spin text-tangerine" />
 		</div>
 	{:else if error}
 		<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">
@@ -81,8 +81,11 @@
 		</div>
 	{:else if profileList.length === 0}
 		<div class="py-16 text-center">
-			<User size={56} class="mx-auto text-gold/40" />
-			<h2 class="mt-4 font-serif text-xl font-semibold text-maroon">No profiles yet</h2>
+			<!-- Decorative empty-state kalasha-ish circle -->
+			<div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-honey/60 border-2 border-gold/30">
+				<User size={40} class="text-gold/50" />
+			</div>
+			<h2 class="mt-2 font-serif text-xl font-semibold text-terracotta">No profiles yet</h2>
 			<p class="mt-2 text-ink/60">Create your first profile to start appearing in search results.</p>
 			<a href="/profiles/new" class="btn-primary mt-6 inline-flex items-center gap-2">
 				<Plus size={18} />
@@ -95,7 +98,7 @@
 				<div class="card flex flex-col gap-3">
 					<div class="flex items-start justify-between">
 						<div>
-							<h2 class="font-serif text-lg font-semibold text-maroon">
+							<h2 class="font-serif text-lg font-semibold text-terracotta">
 								{profile.first_name} {profile.last_name}
 							</h2>
 							<p class="text-sm text-ink/60 capitalize">

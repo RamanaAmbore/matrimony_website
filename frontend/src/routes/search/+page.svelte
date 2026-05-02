@@ -114,7 +114,7 @@
 
 <div class="mx-auto max-w-7xl px-4 py-8">
 	<div class="mb-6 flex items-center justify-between">
-		<h1 class="font-serif text-3xl font-bold text-maroon">Find Your Partner</h1>
+		<h1 class="font-serif text-3xl font-bold text-terracotta">Find Your Partner</h1>
 		<!-- Mobile filter toggle -->
 		<button
 			onclick={() => (sidebarOpen = !sidebarOpen)}
@@ -132,7 +132,7 @@
 				{sidebarOpen ? 'block' : 'hidden md:block'}"
 		>
 			<div class="card space-y-4 sticky top-4">
-				<h2 class="font-serif text-lg font-semibold text-maroon">Filters</h2>
+				<h2 class="font-serif text-lg font-semibold text-terracotta">Filters</h2>
 
 				<!-- Gender -->
 				<div>
@@ -150,11 +150,11 @@
 					<div class="space-y-2 mt-1">
 						<div class="flex items-center gap-2">
 							<span class="text-xs w-8 text-ink/50">Min</span>
-							<input type="range" min="18" max="80" step="1" bind:value={age_min} class="flex-1 accent-maroon" />
+							<input type="range" min="18" max="80" step="1" bind:value={age_min} class="flex-1 accent-tangerine" />
 						</div>
 						<div class="flex items-center gap-2">
 							<span class="text-xs w-8 text-ink/50">Max</span>
-							<input type="range" min="18" max="80" step="1" bind:value={age_max} class="flex-1 accent-maroon" />
+							<input type="range" min="18" max="80" step="1" bind:value={age_max} class="flex-1 accent-tangerine" />
 						</div>
 					</div>
 				</div>
@@ -252,12 +252,14 @@
 
 			{#if loading}
 				<div class="flex items-center justify-center py-24">
-					<Loader size={36} class="animate-spin text-saffron" />
+					<Loader size={36} class="animate-spin text-tangerine" />
 				</div>
 			{:else if results.length === 0}
 				<div class="py-20 text-center">
-					<Search size={48} class="mx-auto text-gold/30" />
-					<h2 class="mt-4 font-serif text-xl font-semibold text-maroon">No profiles found</h2>
+					<div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-honey/60 border-2 border-gold/30">
+						<Search size={36} class="text-gold/50" />
+					</div>
+					<h2 class="mt-2 font-serif text-xl font-semibold text-terracotta">No profiles found</h2>
 					<p class="mt-2 text-ink/60">Try adjusting your filters.</p>
 				</div>
 			{:else}
@@ -265,10 +267,10 @@
 					{#each results as result (result.id)}
 						<a
 							href="/profiles/{result.id}"
-							class="card group flex flex-col overflow-hidden p-0 transition-shadow duration-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-saffron"
+							class="card group flex flex-col overflow-hidden p-0 transition-all duration-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-tangerine"
 						>
 							<!-- Blurred photo -->
-							<div class="relative aspect-[4/3] overflow-hidden bg-cream">
+							<div class="relative aspect-[4/3] overflow-hidden bg-honey/40">
 								{#if result.blurred_photo_url}
 									<img
 										src={result.blurred_photo_url}
@@ -283,14 +285,14 @@
 									</div>
 								{/if}
 								<!-- Gender badge -->
-								<span class="absolute top-2 left-2 rounded bg-maroon/80 px-2 py-0.5 text-xs font-medium text-cream capitalize">
+								<span class="absolute top-2 left-2 rounded bg-tangerine/90 px-2 py-0.5 text-xs font-medium text-cream capitalize">
 									{result.gender}
 								</span>
 							</div>
 
 							<!-- Info -->
 							<div class="p-4 space-y-1">
-								<h3 class="font-serif font-semibold text-maroon text-lg">
+								<h3 class="font-serif font-semibold text-terracotta text-lg">
 									{result.first_name}, {calcAge(result.dob)} yrs
 								</h3>
 								<p class="text-sm text-ink/70">
@@ -302,12 +304,12 @@
 								<!-- Key match fields -->
 								<div class="mt-2 flex flex-wrap gap-1.5">
 									{#if result.gotra}
-										<span class="rounded-full bg-gold/10 px-2 py-0.5 text-xs text-maroon border border-gold/20">
+										<span class="rounded-full bg-gold/10 px-2 py-0.5 text-xs text-terracotta border border-gold/20">
 											{result.gotra}
 										</span>
 									{/if}
 									{#if result.nakshatram}
-										<span class="rounded-full bg-saffron/10 px-2 py-0.5 text-xs text-maroon border border-saffron/20">
+										<span class="rounded-full bg-tangerine/10 px-2 py-0.5 text-xs text-terracotta border border-tangerine/20">
 											{result.nakshatram}
 										</span>
 									{/if}
@@ -337,7 +339,7 @@
 						{#each Array.from({ length: totalPages }, (_, i) => i + 1) as p}
 							<button
 								onclick={() => goToPage(p)}
-								class="px-3 py-1.5 rounded text-sm font-medium transition-colors {p === page ? 'bg-maroon text-cream' : 'hover:bg-maroon/10 text-ink'}"
+								class="px-3 py-1.5 rounded text-sm font-medium transition-colors {p === page ? 'bg-tangerine text-cream' : 'hover:bg-tangerine/10 text-ink'}"
 							>
 								{p}
 							</button>
