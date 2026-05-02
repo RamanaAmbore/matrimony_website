@@ -15,8 +15,6 @@
 	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 	import PaisleyAccent from '$lib/components/PaisleyAccent.svelte';
 	import Logo from '$lib/components/Logo.svelte';
-	import HeroIllustration from '$lib/components/HeroIllustration.svelte';
-
 	let { data } = $props();
 </script>
 
@@ -30,15 +28,19 @@
 
 <!-- ── Hero section ─────────────────────────────────────────────────────── -->
 <section class="relative min-h-[88vh] overflow-hidden">
-	<!-- Pure SVG Indian-wedding illustration (replaces Unsplash photo carousel) -->
-	<div class="absolute inset-0" aria-hidden="true">
-		<HeroIllustration />
-	</div>
+	<!-- Custom hero photograph (provided by user) -->
+	<img
+		src="/bg/home.jpg"
+		alt=""
+		role="presentation"
+		class="absolute inset-0 h-full w-full object-cover object-center"
+		fetchpriority="high"
+	/>
 
-	<!-- Warm gradient overlay — dark at top for text legibility, opens to saffron at base -->
+	<!-- Warm gradient overlay — keeps photo visible while ensuring text legibility -->
 	<div
 		class="absolute inset-0"
-		style="background: linear-gradient(160deg, rgba(43,10,14,0.82) 0%, rgba(107,15,26,0.65) 45%, rgba(244,163,0,0.28) 100%);"
+		style="background: linear-gradient(180deg, rgba(43,10,14,0.55) 0%, rgba(43,10,14,0.35) 35%, rgba(107,15,26,0.45) 75%, rgba(43,10,14,0.65) 100%);"
 	></div>
 
 	<!-- Paisley corner accents -->

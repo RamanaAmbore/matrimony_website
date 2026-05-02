@@ -317,7 +317,21 @@
 {/if}
 
 <!-- ── Main content ──────────────────────────────────────────────────────── -->
-<main class="min-h-[calc(100vh-64px-80px)]">
+<!-- Subtle inner-page background image (hidden on home, which has its own hero) -->
+{#if currentPath !== '/'}
+	<div class="pointer-events-none fixed inset-0 -z-10" aria-hidden="true">
+		<img
+			src="/bg/inner.jpg"
+			alt=""
+			class="h-full w-full object-cover object-center"
+			loading="lazy"
+		/>
+		<!-- Heavy cream wash so forms and body text remain readable -->
+		<div class="absolute inset-0 bg-cream/88"></div>
+	</div>
+{/if}
+
+<main class="relative z-0 min-h-[calc(100vh-64px-80px)]">
 	{@render children()}
 </main>
 
