@@ -1,41 +1,81 @@
 """Profile schemas."""
 from __future__ import annotations
 
-from datetime import date, datetime
 from typing import Any
 
 import msgspec
 
-from app.models.profile import DietEnum, GenderEnum, ManglikEnum, ProfileStatusEnum
+from app.models.profile import (
+    BloodGroupEnum,
+    BodyTypeEnum,
+    DietEnum,
+    FamilyStatusEnum,
+    FamilyTypeEnum,
+    FamilyValuesEnum,
+    GenderEnum,
+    ManglikEnum,
+    MaritalStatusEnum,
+    ProfileStatusEnum,
+    TobaccoAlcoholEnum,
+)
 
 
 class ProfileCreateRequest(msgspec.Struct, kw_only=True):
+    # --- Existing required fields ---
     gender: str
     first_name: str
     last_name: str
-    dob: str  # ISO date string
+    dob: str  # ISO date string YYYY-MM-DD
     height_cm: int
     complexion: str
     education: str
     occupation: str
-    annual_income_inr: int | None = None
     city: str
     state: str
-    country: str = "India"
     gotra: str
     kuldevata: str
     devak: str
     surname_clan: str
     nakshatram: str
     rashi: str
+    diet: str
+
+    # --- Existing optional fields ---
+    annual_income_inr: int | None = None
+    country: str = "India"
     manglik: str = "unknown"
     mother_tongue: str = "Telugu"
-    diet: str
     about: str = ""
     partner_expectations: str = ""
 
+    # --- New fields ---
+    marital_status: str = "never_married"
+    sub_caste: str | None = None
+    weight_kg: int | None = None
+    body_type: str | None = None
+    blood_group: str | None = None
+    time_of_birth: str | None = None  # HH:MM or HH:MM:SS string
+    place_of_birth: str | None = None
+    father_occupation: str | None = None
+    mother_occupation: str | None = None
+    num_brothers: int | None = None
+    num_sisters: int | None = None
+    num_brothers_married: int | None = None
+    num_sisters_married: int | None = None
+    family_type: str | None = None
+    family_status: str | None = None
+    family_values: str | None = None
+    native_place: str | None = None
+    college_university: str | None = None
+    employer: str | None = None
+    work_location: str | None = None
+    smokes: str | None = None
+    drinks: str | None = None
+    hobbies: str | None = None
+
 
 class ProfilePatchRequest(msgspec.Struct, kw_only=True):
+    # --- Existing fields ---
     gender: str | None = None
     first_name: str | None = None
     last_name: str | None = None
@@ -60,12 +100,37 @@ class ProfilePatchRequest(msgspec.Struct, kw_only=True):
     about: str | None = None
     partner_expectations: str | None = None
 
+    # --- New fields ---
+    marital_status: str | None = None
+    sub_caste: str | None = None
+    weight_kg: int | None = None
+    body_type: str | None = None
+    blood_group: str | None = None
+    time_of_birth: str | None = None
+    place_of_birth: str | None = None
+    father_occupation: str | None = None
+    mother_occupation: str | None = None
+    num_brothers: int | None = None
+    num_sisters: int | None = None
+    num_brothers_married: int | None = None
+    num_sisters_married: int | None = None
+    family_type: str | None = None
+    family_status: str | None = None
+    family_values: str | None = None
+    native_place: str | None = None
+    college_university: str | None = None
+    employer: str | None = None
+    work_location: str | None = None
+    smokes: str | None = None
+    drinks: str | None = None
+    hobbies: str | None = None
+
 
 class PhotoSchema(msgspec.Struct):
     id: str
     profile_id: str
     original_filename: str
-    passport_url: str
+    passport_url: str | None
     blurred_url: str
     thumb_url: str
     byte_size: int
@@ -74,6 +139,7 @@ class PhotoSchema(msgspec.Struct):
 
 
 class FullProfileResponse(msgspec.Struct):
+    # --- Existing fields ---
     id: str
     owner_user_id: str
     gender: str
@@ -106,6 +172,32 @@ class FullProfileResponse(msgspec.Struct):
     updated_at: str
     photos: list[PhotoSchema]
 
+    # --- New fields ---
+    marital_status: str
+    sub_caste: str | None
+    weight_kg: int | None
+    body_type: str | None
+    blood_group: str | None
+    time_of_birth: str | None
+    place_of_birth: str | None
+    father_occupation: str | None
+    mother_occupation: str | None
+    num_brothers: int | None
+    num_sisters: int | None
+    num_brothers_married: int | None
+    num_sisters_married: int | None
+    family_type: str | None
+    family_status: str | None
+    family_values: str | None
+    native_place: str | None
+    college_university: str | None
+    employer: str | None
+    work_location: str | None
+    smokes: str | None
+    drinks: str | None
+    hobbies: str | None
+    partner_preference_keywords: list[str] | None
+
 
 class PartialProfileResponse(msgspec.Struct):
     """Redacted profile for search results and non-approved viewers."""
@@ -126,3 +218,8 @@ class PartialProfileResponse(msgspec.Struct):
     mother_tongue: str
     blurred_url: str | None
     thumb_url: str | None
+    # New fields exposed in partial view (safe to share)
+    marital_status: str
+    family_type: str | None
+    smokes: str | None
+    drinks: str | None

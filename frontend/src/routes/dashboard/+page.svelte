@@ -5,6 +5,7 @@
 	import { ApiError } from '$lib/api';
 	import { Plus, User, Edit, Loader } from 'lucide-svelte';
 	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
+	import { T } from '$lib/i18n';
 
 	let profileList = $state<Profile[]>([]);
 	let loading = $state(true);
@@ -60,7 +61,10 @@
 <div class="mx-auto max-w-5xl px-4 py-10">
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="font-serif text-3xl font-bold text-terracotta">My Profiles</h1>
+			<h1 class="font-serif text-3xl font-bold text-terracotta">
+				{T.myProfiles.en}
+				<span class="ml-2 text-xl font-normal text-ink/50" lang="te">{T.myProfiles.te}</span>
+			</h1>
 			<p class="mt-1 text-sm text-ink/60">Manage your matrimonial profiles</p>
 		</div>
 		<a href="/profiles/new" class="btn-primary flex items-center gap-2">

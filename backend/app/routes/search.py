@@ -9,7 +9,16 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.profile import DietEnum, GenderEnum, ManglikEnum, Profile, ProfileStatusEnum
+from app.models.profile import (
+    DietEnum,
+    FamilyTypeEnum,
+    GenderEnum,
+    ManglikEnum,
+    MaritalStatusEnum,
+    Profile,
+    ProfileStatusEnum,
+    TobaccoAlcoholEnum,
+)
 
 
 def _compute_age(dob: date) -> int:
@@ -40,6 +49,11 @@ def _serialize_partial(profile: Profile, request: Request) -> dict[str, Any]:
         "mother_tongue": profile.mother_tongue,
         "blurred_url": f"{base}/media/{primary.blurred_path}" if primary else None,
         "thumb_url": f"{base}/media/{primary.thumb_path}" if primary else None,
+        # New fields safe for partial view
+        "marital_status": profile.marital_status.value,
+        "family_type": profile.family_type.value if profile.family_type else None,
+        "smokes": profile.smokes.value if profile.smokes else None,
+        "drinks": profile.drinks.value if profile.drinks else None,
     }
 
 
@@ -61,6 +75,13 @@ class SearchController(Controller):
         state_filter: Annotated[Optional[str], Parameter(query="state")] = None,
         manglik: Optional[str] = None,
         diet: Optional[str] = None,
+        # New filters
+        marital_status: Optional[str] = None,
+        family_type: Optional[str] = None,
+        smokes: Optional[str] = None,
+        drinks: Optional[str] = None,
+        # Keyword/interests filter (comma-separated)
+        interests: Optional[str] = None,
         page: int = 1,
         per_page: int = 20,
     ) -> dict[str, Any]:
@@ -114,6 +135,50 @@ class SearchController(Controller):
             except ValueError:
                 pass
 
+        # New filters
+        if marital_status:
+            try:
+                ms = MaritalStatusEnum(marital_status)
+                query = query.where(Profile.marital_status == ms)
+            except ValueError:
+                pass
+
+        if family_type:
+            try:
+                ft = FamilyTypeEnum(family_type)
+                query = query.where(Profile.family_type == ft)
+            except ValueError:
+                pass
+
+        if smokes:
+            try:
+                s = TobaccoAlcoholEnum(smokes)
+                query = query.where(Profile.smokes == s)
+            except ValueError:
+                pass
+
+        if drinks:
+            try:
+                d_val = TobaccoAlcoholEnum(drinks)
+                query = query.where(Profile.drinks == d_val)
+            except ValueError:
+                pass
+
+        # Parse requested keywords
+        requested_keywords: set[str] = set()
+        if interests:
+            requested_keywords = {kw.strip().lower() for kw in interests.split(",") if kw.strip()}
+
+        # When keywords filter is active, require non-zero overlap
+        if requested_keywords:
+            # Filter: profile must have at least one keyword in common.
+            # Use PostgreSQL JSONB ? operator via raw SQL cast.
+            # We cannot do this purely in SQLAlchemy without a loop, so we
+            # fetch all matching (other filters applied) approved profiles
+            # and post-filter in Python.  This is acceptable because keyword
+            # search is inherently a scoring/ranking step done in memory.
+            pass  # post-filter applied below after fetch
+
         count_query = select(func.count()).select_from(query.subquery())
         total_result = await db.execute(count_query)
         total = total_result.scalar_one()
@@ -122,9 +187,31 @@ class SearchController(Controller):
         page = max(1, page)
         offset = (page - 1) * per_page
 
-        query = query.order_by(Profile.created_at.desc()).offset(offset).limit(per_page)
-        result = await db.execute(query)
-        profiles = result.scalars().all()
+        if requested_keywords:
+            # For keyword-scored search: fetch all results (no DB-level pagination),
+            # score and sort in Python, then slice.
+            all_query = query.order_by(Profile.created_at.desc())
+            result = await db.execute(all_query)
+            all_profiles = result.scalars().all()
+
+            # Score by keyword intersection
+            def _score(p: Profile) -> int:
+                kws: list[str] = p.partner_preference_keywords or []
+                return len(set(kws) & requested_keywords)
+
+            scored = [(p, _score(p)) for p in all_profiles]
+            # Keep only profiles with at least 1 keyword match
+            scored = [(p, s) for p, s in scored if s > 0]
+            # Sort by score desc, then created_at desc
+            scored.sort(key=lambda x: (-x[1], x[0].created_at), reverse=False)
+
+            total = len(scored)
+            sliced = scored[offset: offset + per_page]
+            profiles = [p for p, _ in sliced]
+        else:
+            query = query.order_by(Profile.created_at.desc()).offset(offset).limit(per_page)
+            result = await db.execute(query)
+            profiles = list(result.scalars().all())
 
         return {
             "results": [_serialize_partial(p, request) for p in profiles],

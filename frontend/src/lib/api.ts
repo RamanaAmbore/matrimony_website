@@ -24,35 +24,83 @@ export interface User {
 export type ProfileStatus = 'draft' | 'pending' | 'approved' | 'rejected';
 export type Gender = 'bride' | 'groom';
 export type Manglik = 'yes' | 'no' | 'partial' | 'unknown';
-export type Diet = 'veg' | 'non-veg' | 'eggetarian';
+export type Diet = 'veg' | 'non-veg' | 'eggetarian' | 'jain' | 'vegan';
+export type MaritalStatus = 'never_married' | 'divorced' | 'widowed' | 'awaiting_divorce';
+export type Complexion = 'very_fair' | 'fair' | 'wheatish' | 'dusky' | 'dark';
+export type BodyType = 'slim' | 'average' | 'athletic' | 'heavy';
+export type BloodGroup = 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-' | 'unknown';
+export type FamilyType = 'nuclear' | 'joint';
+export type FamilyStatus = 'middle_class' | 'upper_middle' | 'affluent' | 'rich';
+export type FamilyValues = 'orthodox' | 'traditional' | 'moderate' | 'liberal';
+export type SmokeDrink = 'no' | 'occasionally' | 'yes';
 
 export interface Profile {
 	id: string;
 	user_id: string;
 	status: ProfileStatus;
+
+	// Basic Information
 	gender: Gender;
 	first_name: string;
 	last_name: string;
 	dob: string; // ISO date string YYYY-MM-DD
+	marital_status?: MaritalStatus | null;
+	mother_tongue: string;
+	sub_caste?: string | null;
+	surname_clan: string;
+
+	// Physical
 	height_cm: number;
-	complexion: string;
-	education: string;
-	occupation: string;
-	annual_income_inr?: number | null;
-	city: string;
-	state: string;
-	country: string;
+	weight_kg?: number | null;
+	complexion?: Complexion | string | null;
+	body_type?: BodyType | null;
+	blood_group?: BloodGroup | null;
+
+	// Astrology
 	gotra: string;
 	kuldevata: string;
 	devak: string;
-	surname_clan: string;
 	nakshatram: string;
 	rashi: string;
 	manglik: Manglik;
-	mother_tongue: string;
+	time_of_birth?: string | null;
+	place_of_birth?: string | null;
+
+	// Education & Career
+	education: string;
+	college_university?: string | null;
+	occupation: string;
+	employer?: string | null;
+	annual_income_inr?: number | null;
+	work_location?: string | null;
+
+	// Family
+	father_occupation?: string | null;
+	mother_occupation?: string | null;
+	num_brothers?: number | null;
+	num_sisters?: number | null;
+	num_brothers_married?: number | null;
+	num_sisters_married?: number | null;
+	family_type?: FamilyType | null;
+	family_status?: FamilyStatus | null;
+	family_values?: FamilyValues | null;
+	native_place?: string | null;
+
+	// Lifestyle
 	diet: Diet;
+	smokes?: SmokeDrink | null;
+	drinks?: SmokeDrink | null;
+	hobbies?: string | null;
+
+	// Location
+	city: string;
+	state: string;
+	country: string;
+
+	// About
 	about: string;
 	partner_expectations: string;
+
 	created_at: string;
 	updated_at: string;
 }

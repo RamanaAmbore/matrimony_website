@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, time
 
 from sqlalchemy import (
     BigInteger,
@@ -15,9 +15,10 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    Time,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -39,6 +40,8 @@ class DietEnum(str, enum.Enum):
     veg = "veg"
     non_veg = "non-veg"
     eggetarian = "eggetarian"
+    jain = "jain"
+    vegan = "vegan"
 
 
 class ProfileStatusEnum(str, enum.Enum):
@@ -46,6 +49,57 @@ class ProfileStatusEnum(str, enum.Enum):
     pending = "pending"
     approved = "approved"
     rejected = "rejected"
+
+
+class MaritalStatusEnum(str, enum.Enum):
+    never_married = "never_married"
+    divorced = "divorced"
+    widowed = "widowed"
+    awaiting_divorce = "awaiting_divorce"
+
+
+class BodyTypeEnum(str, enum.Enum):
+    slim = "slim"
+    average = "average"
+    athletic = "athletic"
+    heavy = "heavy"
+
+
+class BloodGroupEnum(str, enum.Enum):
+    a_pos = "A+"
+    a_neg = "A-"
+    b_pos = "B+"
+    b_neg = "B-"
+    ab_pos = "AB+"
+    ab_neg = "AB-"
+    o_pos = "O+"
+    o_neg = "O-"
+    unknown = "unknown"
+
+
+class FamilyTypeEnum(str, enum.Enum):
+    nuclear = "nuclear"
+    joint = "joint"
+
+
+class FamilyStatusEnum(str, enum.Enum):
+    middle_class = "middle_class"
+    upper_middle = "upper_middle"
+    affluent = "affluent"
+    rich = "rich"
+
+
+class FamilyValuesEnum(str, enum.Enum):
+    orthodox = "orthodox"
+    traditional = "traditional"
+    moderate = "moderate"
+    liberal = "liberal"
+
+
+class TobaccoAlcoholEnum(str, enum.Enum):
+    no = "no"
+    occasionally = "occasionally"
+    yes = "yes"
 
 
 class Profile(Base):
@@ -95,6 +149,57 @@ class Profile(Base):
         default=ProfileStatusEnum.draft,
     )
     admin_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # --- New columns ---
+    marital_status: Mapped[MaritalStatusEnum] = mapped_column(
+        Enum(MaritalStatusEnum, name="marital_status_enum"),
+        nullable=False,
+        default=MaritalStatusEnum.never_married,
+        server_default="never_married",
+    )
+    sub_caste: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    weight_kg: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    body_type: Mapped[BodyTypeEnum | None] = mapped_column(
+        Enum(BodyTypeEnum, name="body_type_enum"), nullable=True
+    )
+    blood_group: Mapped[BloodGroupEnum | None] = mapped_column(
+        Enum(BloodGroupEnum, name="blood_group_enum"), nullable=True
+    )
+    time_of_birth: Mapped[time | None] = mapped_column(Time, nullable=True)
+    place_of_birth: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    father_occupation: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    mother_occupation: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    num_brothers: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    num_sisters: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    num_brothers_married: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    num_sisters_married: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    family_type: Mapped[FamilyTypeEnum | None] = mapped_column(
+        Enum(FamilyTypeEnum, name="family_type_enum"), nullable=True
+    )
+    family_status: Mapped[FamilyStatusEnum | None] = mapped_column(
+        Enum(FamilyStatusEnum, name="family_status_enum"), nullable=True
+    )
+    family_values: Mapped[FamilyValuesEnum | None] = mapped_column(
+        Enum(FamilyValuesEnum, name="family_values_enum"), nullable=True
+    )
+    native_place: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    college_university: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    employer: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    work_location: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    smokes: Mapped[TobaccoAlcoholEnum | None] = mapped_column(
+        Enum(TobaccoAlcoholEnum, name="tobacco_alcohol_enum"), nullable=True
+    )
+    drinks: Mapped[TobaccoAlcoholEnum | None] = mapped_column(
+        # Reuse same enum type — pass create_constraint=False so SQLAlchemy doesn't
+        # try to create a second type named tobacco_alcohol_enum for this column.
+        Enum(TobaccoAlcoholEnum, name="tobacco_alcohol_enum", create_constraint=False),
+        nullable=True,
+    )
+    hobbies: Mapped[str | None] = mapped_column(Text, nullable=True)
+    partner_preference_keywords: Mapped[list | None] = mapped_column(
+        JSON, nullable=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

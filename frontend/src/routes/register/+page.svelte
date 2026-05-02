@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { ApiError } from '$lib/api';
 	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
+	import { T } from '$lib/i18n';
 
 	let email = $state('');
 	let password = $state('');
@@ -48,13 +49,16 @@
 </script>
 
 <svelte:head>
-	<title>Register — Maratha Kalyanam</title>
+	<title>Register — Telugu–Maratha Kalyana Vedika</title>
 </svelte:head>
 
 <div class="mx-auto max-w-md px-4 py-16">
 	<div class="text-center">
-		<h1 class="font-serif text-3xl font-bold text-maroon">Create Account</h1>
-		<p class="mt-1 text-sm text-ink/60">Join the Maratha Kalyanam community</p>
+		<h1 class="font-serif text-3xl font-bold text-maroon">
+			{T.register.en}
+			<span class="ml-2 text-xl font-normal text-ink/50" lang="te">{T.register.te}</span>
+		</h1>
+		<p class="mt-1 text-sm text-ink/60">Join the Telugu–Maratha Kalyana Vedika community</p>
 	</div>
 
 	<KalashaDivider />
@@ -62,7 +66,10 @@
 	<form onsubmit={handleSubmit} novalidate class="mt-6 space-y-5">
 		<!-- Email -->
 		<div>
-			<label for="email" class="label">Email address</label>
+			<label for="email" class="label block">
+				<span class="block">Email address</span>
+				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">ఇమెయిల్ చిరునామా</span>
+			</label>
 			<input
 				id="email"
 				type="email"
@@ -79,7 +86,10 @@
 
 		<!-- Password -->
 		<div>
-			<label for="password" class="label">Password</label>
+			<label for="password" class="label block">
+				<span class="block">Password</span>
+				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">పాస్‌వర్డ్</span>
+			</label>
 			<input
 				id="password"
 				type="password"
@@ -96,7 +106,10 @@
 
 		<!-- Confirm password -->
 		<div>
-			<label for="confirm-password" class="label">Confirm password</label>
+			<label for="confirm-password" class="label block">
+				<span class="block">Confirm password</span>
+				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">పాస్‌వర్డ్ నిర్ధారించు</span>
+			</label>
 			<input
 				id="confirm-password"
 				type="password"
@@ -112,12 +125,18 @@
 		</div>
 
 		<button type="submit" class="btn-primary w-full py-3" disabled={loading}>
-			{loading ? 'Creating account…' : 'Register'}
+			{#if loading}
+				Creating account…
+			{:else}
+				{T.register.en} · <span lang="te">{T.register.te}</span>
+			{/if}
 		</button>
 	</form>
 
 	<p class="mt-6 text-center text-sm text-ink/60">
 		Already have an account?
-		<a href="/login" class="font-medium text-saffron hover:underline">Login</a>
+		<a href="/login" class="font-medium text-saffron hover:underline">
+			{T.login.en} · <span lang="te">{T.login.te}</span>
+		</a>
 	</p>
 </div>

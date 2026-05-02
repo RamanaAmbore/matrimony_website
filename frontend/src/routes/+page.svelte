@@ -6,7 +6,7 @@
 
 	let { data } = $props();
 
-	// All 4 Unsplash photos verified 200
+	// India-specific Unsplash photos — all verified 200
 	const heroPhotos = [
 		{
 			id: 'photo-1583939003579-730e3918a45a',
@@ -17,12 +17,16 @@
 			alt: 'South Indian bride in traditional wedding attire'
 		},
 		{
-			id: 'photo-1583846783214-7229a91b20ed',
-			alt: 'Marigold garland arrangements for Indian wedding'
+			id: 'photo-1583939411023-14783179e581',
+			alt: 'Indian wedding couple in traditional attire'
 		},
 		{
-			id: 'photo-1604017011826-d3b4c23f8914',
-			alt: 'Telugu wedding rituals and ceremony'
+			id: 'photo-1622383563227-04401ab4e5ea',
+			alt: 'Indian bride hands decorated with mehndi'
+		},
+		{
+			id: 'photo-1591025207163-942350e47db2',
+			alt: 'Mehndi ceremony for Indian wedding'
 		}
 	];
 
@@ -129,7 +133,7 @@
 			<div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
 				<a
 					href="/search"
-					class="inline-flex items-center gap-2 rounded-lg bg-tangerine px-6 py-3 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-marigold hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream"
+					class="inline-flex items-center gap-2 rounded-lg bg-kumkum px-6 py-3 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream"
 				>
 					<Search size={18} />
 					Find Your Partner
@@ -249,7 +253,7 @@
 					<!-- Step number ring -->
 					<div
 						class="relative mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-tangerine/40 shadow-sm"
-						style="background: linear-gradient(135deg, #FF8C32 0%, #FFB627 100%);"
+						style="background: linear-gradient(135deg, #C8102E 0%, #F4A300 100%);"
 					>
 						<!-- Icon -->
 						{#if step.icon === 'user-plus'}
@@ -283,7 +287,7 @@
 		<div class="mt-12 text-center">
 			<a
 				href="/register"
-				class="inline-flex items-center gap-2 rounded-lg bg-tangerine px-8 py-3 font-semibold text-cream shadow-md transition-all duration-200 hover:bg-marigold hover:text-ink hover:shadow-lg focus-visible:outline-2 focus-visible:outline-tangerine"
+				class="inline-flex items-center gap-2 rounded-lg bg-kumkum px-8 py-3 font-semibold text-cream shadow-md transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-lg focus-visible:outline-2 focus-visible:outline-kumkum"
 			>
 				<UserPlus size={18} />
 				Get Started Today

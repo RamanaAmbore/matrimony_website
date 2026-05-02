@@ -5,6 +5,8 @@
 	import { ApiError } from '$lib/api';
 	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 	import { invalidateAll } from '$app/navigation';
+	import { T } from '$lib/i18n';
+	import { asciiOnly } from '$lib/inputFilters';
 
 	let email = $state('');
 	let password = $state('');
@@ -48,13 +50,16 @@
 </script>
 
 <svelte:head>
-	<title>Login — Maratha Kalyanam</title>
+	<title>Login — Telugu–Maratha Kalyana Vedika</title>
 </svelte:head>
 
 <div class="mx-auto max-w-md px-4 py-16">
 	<div class="text-center">
-		<h1 class="font-serif text-3xl font-bold text-maroon">Welcome Back</h1>
-		<p class="mt-1 text-sm text-ink/60">Sign in to your Maratha Kalyanam account</p>
+		<h1 class="font-serif text-3xl font-bold text-maroon">
+			{T.login.en}
+			<span class="ml-2 text-xl font-normal text-ink/50" lang="te">{T.login.te}</span>
+		</h1>
+		<p class="mt-1 text-sm text-ink/60">Sign in to your Telugu–Maratha Kalyana Vedika account</p>
 	</div>
 
 	<KalashaDivider />
@@ -62,7 +67,10 @@
 	<form onsubmit={handleSubmit} novalidate class="mt-6 space-y-5">
 		<!-- Email -->
 		<div>
-			<label for="email" class="label">Email address</label>
+			<label for="email" class="label block">
+				<span class="block">Email address</span>
+				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">ఇమెయిల్ చిరునామా</span>
+			</label>
 			<input
 				id="email"
 				type="email"
@@ -79,7 +87,10 @@
 
 		<!-- Password -->
 		<div>
-			<label for="password" class="label">Password</label>
+			<label for="password" class="label block">
+				<span class="block">Password</span>
+				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">పాస్‌వర్డ్</span>
+			</label>
 			<input
 				id="password"
 				type="password"
@@ -94,12 +105,14 @@
 		</div>
 
 		<button type="submit" class="btn-primary w-full py-3" disabled={loading}>
-			{loading ? 'Signing in…' : 'Login'}
+			{loading ? 'Signing in…' : `${T.login.en} · `}<span lang="te">{loading ? '' : T.login.te}</span>
 		</button>
 	</form>
 
 	<p class="mt-6 text-center text-sm text-ink/60">
 		Don't have an account?
-		<a href="/register" class="font-medium text-saffron hover:underline">Register</a>
+		<a href="/register" class="font-medium text-saffron hover:underline">
+			{T.register.en} · <span lang="te">{T.register.te}</span>
+		</a>
 	</p>
 </div>

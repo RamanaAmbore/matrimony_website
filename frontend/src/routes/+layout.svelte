@@ -7,6 +7,7 @@
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import { Menu, X } from 'lucide-svelte';
+	import { T } from '$lib/i18n';
 
 	let { data, children } = $props();
 
@@ -77,10 +78,35 @@
 
 <svelte:head>
 	<title>Telugu–Maratha Kalyana Vedika</title>
+	<meta name="description" content="Telugu–Maratha Kalyana Vedika — the trusted matrimonial platform for Telugu-Maratha families across Andhra Pradesh, Telangana and Maharashtra. Find your perfect life partner with admin-verified profiles, gotra/nakshatram matching, and privacy-first photo sharing." />
+
+	<!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="Telugu–Maratha Kalyana Vedika" />
+	<meta property="og:title" content="Telugu–Maratha Kalyana Vedika · తెలుగు–మరాఠా కల్యాణ వేదిక" />
+	<meta property="og:description" content="Trusted matrimonial platform for Telugu-Maratha families across AP, Telangana and Maharashtra. Admin-verified profiles. Gotra, nakshatram and kuldevata matching. Privacy-first." />
+	<meta property="og:url" content="https://marathakalyanam.com/" />
+	<meta property="og:image" content="https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&h=630&q=80" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:alt" content="Indian wedding mandap with flowers and lights" />
+	<meta property="og:locale" content="en_IN" />
+	<meta property="og:locale:alternate" content="te_IN" />
+
+	<!-- Twitter / X -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="Telugu–Maratha Kalyana Vedika · తెలుగు–మరాఠా కల్యాణ వేదిక" />
+	<meta name="twitter:description" content="Trusted matrimonial platform for Telugu-Maratha families. Admin-verified profiles. Privacy-first." />
+	<meta name="twitter:image" content="https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&h=630&q=80" />
+	<meta name="twitter:image:alt" content="Indian wedding mandap with flowers and lights" />
+
+	<!-- Theme + canonical -->
+	<meta name="theme-color" content="#C8102E" />
+	<link rel="canonical" href="https://marathakalyanam.com/" />
 </svelte:head>
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
-<header class="shadow-md" style="background: linear-gradient(135deg, #FF8C32 0%, #FFB627 100%);">
+<header class="shadow-md" style="background: linear-gradient(135deg, #C8102E 0%, #F4A300 100%);">
 	<div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
 		<!-- Brand wordmark -->
 		<a
@@ -98,25 +124,41 @@
 
 		<!-- Desktop nav -->
 		<nav class="hidden items-center gap-6 md:flex" aria-label="Main navigation">
-			<a href="/" class={navLinkClass('/')}>Home</a>
-			<a href="/search" class={navLinkClass('/search')}>Search</a>
-			<a href="/about" class={navLinkClass('/about')}>About</a>
+			<a href="/" class={navLinkClass('/')}>
+				{T.home.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.home.te}</span>
+			</a>
+			<a href="/search" class={navLinkClass('/search')}>
+				{T.search.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.search.te}</span>
+			</a>
+			<a href="/about" class={navLinkClass('/about')}>
+				{T.aboutPage.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.aboutPage.te}</span>
+			</a>
 
 			{#if user}
-				<a href="/dashboard" class={navLinkClass('/dashboard')}>My Profiles</a>
-				<a href="/requests" class={navLinkClass('/requests')}>Requests</a>
+				<a href="/dashboard" class={navLinkClass('/dashboard')}>
+					{T.myProfiles.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.myProfiles.te}</span>
+				</a>
+				<a href="/requests" class={navLinkClass('/requests')}>
+					{T.requests.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.requests.te}</span>
+				</a>
 				{#if user.is_admin}
-					<a href="/admin" class={navLinkClass('/admin')}>Admin</a>
+					<a href="/admin" class={navLinkClass('/admin')}>
+						{T.admin.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.admin.te}</span>
+					</a>
 				{/if}
 				<button
 					onclick={logout}
 					class="rounded border border-cream/50 px-3 py-1 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
 				>
-					Logout
+					{T.logout.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.logout.te}</span>
 				</button>
 			{:else}
-				<a href="/login" class="rounded border border-cream px-3 py-1.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">Login</a>
-				<a href="/register" class="rounded bg-cream px-3 py-1.5 text-sm font-medium text-tangerine transition-all duration-200 hover:bg-honey focus-visible:outline-2 focus-visible:outline-cream">Register</a>
+				<a href="/login" class="rounded border border-cream px-3 py-1.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">
+					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.login.te}</span>
+				</a>
+				<a href="/register" class="rounded bg-cream px-3 py-1.5 text-sm font-medium text-kumkum transition-all duration-200 hover:bg-haldi focus-visible:outline-2 focus-visible:outline-cream">
+					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.register.te}</span>
+				</a>
 			{/if}
 		</nav>
 
@@ -158,7 +200,7 @@
 		<!-- Drawer header -->
 		<div
 			class="flex items-center justify-between border-b border-gold/30 px-4 py-3"
-			style="background: linear-gradient(135deg, #FF8C32 0%, #FFB627 100%);"
+			style="background: linear-gradient(135deg, #C8102E 0%, #F4A300 100%);"
 		>
 			<div class="flex items-center gap-2">
 				<Logo size="sm" />
@@ -175,21 +217,29 @@
 
 		<!-- Drawer nav links -->
 		<nav class="flex flex-col gap-1 p-4" aria-label="Mobile navigation">
-			<a href="/" class={drawerLinkClass('/')} onclick={closeDrawer}>Home</a>
-			<a href="/search" class={drawerLinkClass('/search')} onclick={closeDrawer}>Search</a>
-			<a href="/about" class={drawerLinkClass('/about')} onclick={closeDrawer}>About</a>
+			<a href="/" class={drawerLinkClass('/')} onclick={closeDrawer}>
+				{T.home.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.home.te}</span>
+			</a>
+			<a href="/search" class={drawerLinkClass('/search')} onclick={closeDrawer}>
+				{T.search.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.search.te}</span>
+			</a>
+			<a href="/about" class={drawerLinkClass('/about')} onclick={closeDrawer}>
+				{T.aboutPage.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.aboutPage.te}</span>
+			</a>
 
 			{#if user}
 				<div class="my-2 h-px bg-gold/20"></div>
 				<a href="/dashboard" class={drawerLinkClass('/dashboard')} onclick={closeDrawer}>
-					My Profiles
+					{T.myProfiles.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.myProfiles.te}</span>
 				</a>
 				<a href="/requests" class={drawerLinkClass('/requests')} onclick={closeDrawer}>
-					Requests
+					{T.requests.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.requests.te}</span>
 				</a>
 				{#if user.is_admin}
 					<div class="my-2 h-px bg-gold/20"></div>
-					<p class="px-3 text-xs font-semibold tracking-wider text-ink/40 uppercase">Admin</p>
+					<p class="px-3 text-xs font-semibold tracking-wider text-ink/40 uppercase">
+						{T.admin.en}&nbsp;·&nbsp;<span lang="te" class="normal-case">{T.admin.te}</span>
+					</p>
 					<a href="/admin" class={drawerLinkClass('/admin')} onclick={closeDrawer}>Dashboard</a>
 					<a href="/admin/profiles" class={drawerLinkClass('/admin/profiles')} onclick={closeDrawer}>
 						Profiles
@@ -209,17 +259,19 @@
 					onclick={logout}
 					class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-vermilion hover:bg-vermilion/10 focus-visible:outline-2 focus-visible:outline-tangerine"
 				>
-					Logout
+					{T.logout.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.logout.te}</span>
 				</button>
 			{:else}
 				<div class="my-2 h-px bg-gold/20"></div>
-				<a href="/login" class={drawerLinkClass('/login')} onclick={closeDrawer}>Login</a>
+				<a href="/login" class={drawerLinkClass('/login')} onclick={closeDrawer}>
+					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.login.te}</span>
+				</a>
 				<a
 					href="/register"
 					class="flex items-center gap-2 rounded-lg bg-tangerine px-3 py-2.5 text-cream hover:bg-marigold hover:text-ink"
 					onclick={closeDrawer}
 				>
-					Register
+					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.register.te}</span>
 				</a>
 			{/if}
 		</nav>

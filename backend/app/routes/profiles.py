@@ -1,7 +1,7 @@
 """Profile CRUD routes."""
 
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Any
 
 from litestar import Controller, delete, get, patch, post
@@ -13,9 +13,40 @@ from sqlalchemy.orm import selectinload
 
 from app.config import MEDIA_ROOT
 from app.models.photo import Photo
-from app.models.profile import Profile, ProfileStatusEnum
+from app.models.profile import (
+    BloodGroupEnum,
+    BodyTypeEnum,
+    DietEnum,
+    FamilyStatusEnum,
+    FamilyTypeEnum,
+    FamilyValuesEnum,
+    GenderEnum,
+    ManglikEnum,
+    MaritalStatusEnum,
+    Profile,
+    ProfileStatusEnum,
+    TobaccoAlcoholEnum,
+)
 from app.schemas.profile import ProfileCreateRequest, ProfilePatchRequest
+from app.services.keywords import extract_keywords
 from app.services.settings import settings_service
+from app.services.validation import validate_ascii
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+_NON_ENGLISH_ERROR = {
+    "code": "non_english_input",
+    "message": "Please enter data in English only",
+}
+
+
+def _require_ascii(value: str | None, field: str) -> None:
+    """Raise 422 if *value* contains non-ASCII printable characters."""
+    if value and not validate_ascii(value):
+        raise HTTPException(status_code=422, detail=_NON_ENGLISH_ERROR)
 
 
 def _compute_age(dob: date) -> int:
@@ -78,6 +109,31 @@ def _serialize_full_profile(profile: Profile, request: Request) -> dict[str, Any
         "partner_expectations": profile.partner_expectations,
         "status": profile.status.value,
         "admin_notes": profile.admin_notes,
+        # New fields
+        "marital_status": profile.marital_status.value,
+        "sub_caste": profile.sub_caste,
+        "weight_kg": profile.weight_kg,
+        "body_type": profile.body_type.value if profile.body_type else None,
+        "blood_group": profile.blood_group.value if profile.blood_group else None,
+        "time_of_birth": profile.time_of_birth.isoformat() if profile.time_of_birth else None,
+        "place_of_birth": profile.place_of_birth,
+        "father_occupation": profile.father_occupation,
+        "mother_occupation": profile.mother_occupation,
+        "num_brothers": profile.num_brothers,
+        "num_sisters": profile.num_sisters,
+        "num_brothers_married": profile.num_brothers_married,
+        "num_sisters_married": profile.num_sisters_married,
+        "family_type": profile.family_type.value if profile.family_type else None,
+        "family_status": profile.family_status.value if profile.family_status else None,
+        "family_values": profile.family_values.value if profile.family_values else None,
+        "native_place": profile.native_place,
+        "college_university": profile.college_university,
+        "employer": profile.employer,
+        "work_location": profile.work_location,
+        "smokes": profile.smokes.value if profile.smokes else None,
+        "drinks": profile.drinks.value if profile.drinks else None,
+        "hobbies": profile.hobbies,
+        "partner_preference_keywords": profile.partner_preference_keywords,
         "created_at": profile.created_at.isoformat(),
         "updated_at": profile.updated_at.isoformat(),
         "photos": photos,
@@ -107,6 +163,11 @@ def _serialize_partial_profile(profile: Profile, request: Request) -> dict[str, 
         "mother_tongue": profile.mother_tongue,
         "blurred_url": f"{base}/media/{primary.blurred_path}" if primary else None,
         "thumb_url": f"{base}/media/{primary.thumb_path}" if primary else None,
+        # New fields safe for partial view
+        "marital_status": profile.marital_status.value,
+        "family_type": profile.family_type.value if profile.family_type else None,
+        "smokes": profile.smokes.value if profile.smokes else None,
+        "drinks": profile.drinks.value if profile.drinks else None,
     }
 
 
@@ -120,6 +181,57 @@ def _parse_enum(enum_cls: type, value: str, field: str) -> Any:
             detail={"code": "invalid_enum", "message": f"Invalid value for {field}. Must be one of: {valid}"},
         )
 
+
+def _parse_time(value: str | None, field: str = "time_of_birth") -> time | None:
+    """Parse HH:MM or HH:MM:SS string to time object."""
+    if value is None:
+        return None
+    try:
+        return time.fromisoformat(value)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "invalid_time", "message": f"{field} must be HH:MM or HH:MM:SS"},
+        )
+
+
+def _validate_free_text_fields(data: ProfileCreateRequest | ProfilePatchRequest) -> None:
+    """Validate all free-text and varchar fields are ASCII-only."""
+    text_fields: list[tuple[str, str | None]] = [
+        ("about", getattr(data, "about", None)),
+        ("partner_expectations", getattr(data, "partner_expectations", None)),
+        ("hobbies", getattr(data, "hobbies", None)),
+        ("first_name", getattr(data, "first_name", None)),
+        ("last_name", getattr(data, "last_name", None)),
+        ("complexion", getattr(data, "complexion", None)),
+        ("education", getattr(data, "education", None)),
+        ("occupation", getattr(data, "occupation", None)),
+        ("city", getattr(data, "city", None)),
+        ("state", getattr(data, "state", None)),
+        ("country", getattr(data, "country", None)),
+        ("gotra", getattr(data, "gotra", None)),
+        ("kuldevata", getattr(data, "kuldevata", None)),
+        ("devak", getattr(data, "devak", None)),
+        ("surname_clan", getattr(data, "surname_clan", None)),
+        ("nakshatram", getattr(data, "nakshatram", None)),
+        ("rashi", getattr(data, "rashi", None)),
+        ("mother_tongue", getattr(data, "mother_tongue", None)),
+        ("sub_caste", getattr(data, "sub_caste", None)),
+        ("place_of_birth", getattr(data, "place_of_birth", None)),
+        ("father_occupation", getattr(data, "father_occupation", None)),
+        ("mother_occupation", getattr(data, "mother_occupation", None)),
+        ("native_place", getattr(data, "native_place", None)),
+        ("college_university", getattr(data, "college_university", None)),
+        ("employer", getattr(data, "employer", None)),
+        ("work_location", getattr(data, "work_location", None)),
+    ]
+    for field, value in text_fields:
+        _require_ascii(value, field)
+
+
+# ---------------------------------------------------------------------------
+# Controller
+# ---------------------------------------------------------------------------
 
 class ProfileController(Controller):
     path = "/profiles"
@@ -159,7 +271,8 @@ class ProfileController(Controller):
                 detail={"code": "email_not_verified", "message": "Email verification required"},
             )
 
-        from app.models.profile import DietEnum, GenderEnum, ManglikEnum
+        # ASCII validation
+        _validate_free_text_fields(data)
 
         try:
             dob = date.fromisoformat(data.dob)
@@ -168,6 +281,9 @@ class ProfileController(Controller):
                 status_code=422,
                 detail={"code": "invalid_dob", "message": "dob must be an ISO date string (YYYY-MM-DD)"},
             )
+
+        # Extract keywords from partner_expectations
+        keywords = extract_keywords(data.partner_expectations) if data.partner_expectations else []
 
         profile = Profile(
             id=uuid.uuid4(),
@@ -195,7 +311,32 @@ class ProfileController(Controller):
             diet=_parse_enum(DietEnum, data.diet, "diet"),
             about=data.about,
             partner_expectations=data.partner_expectations,
+            partner_preference_keywords=keywords or None,
             status=ProfileStatusEnum.draft,
+            # New fields
+            marital_status=_parse_enum(MaritalStatusEnum, data.marital_status, "marital_status"),
+            sub_caste=data.sub_caste,
+            weight_kg=data.weight_kg,
+            body_type=_parse_enum(BodyTypeEnum, data.body_type, "body_type") if data.body_type else None,
+            blood_group=_parse_enum(BloodGroupEnum, data.blood_group, "blood_group") if data.blood_group else None,
+            time_of_birth=_parse_time(data.time_of_birth),
+            place_of_birth=data.place_of_birth,
+            father_occupation=data.father_occupation,
+            mother_occupation=data.mother_occupation,
+            num_brothers=data.num_brothers,
+            num_sisters=data.num_sisters,
+            num_brothers_married=data.num_brothers_married,
+            num_sisters_married=data.num_sisters_married,
+            family_type=_parse_enum(FamilyTypeEnum, data.family_type, "family_type") if data.family_type else None,
+            family_status=_parse_enum(FamilyStatusEnum, data.family_status, "family_status") if data.family_status else None,
+            family_values=_parse_enum(FamilyValuesEnum, data.family_values, "family_values") if data.family_values else None,
+            native_place=data.native_place,
+            college_university=data.college_university,
+            employer=data.employer,
+            work_location=data.work_location,
+            smokes=_parse_enum(TobaccoAlcoholEnum, data.smokes, "smokes") if data.smokes else None,
+            drinks=_parse_enum(TobaccoAlcoholEnum, data.drinks, "drinks") if data.drinks else None,
+            hobbies=data.hobbies,
         )
         db.add(profile)
         await db.commit()
@@ -266,9 +407,12 @@ class ProfileController(Controller):
         if str(profile.owner_user_id) != user["user_id"]:
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
 
-        from app.models.profile import DietEnum, GenderEnum, ManglikEnum
+        # ASCII validation
+        _validate_free_text_fields(data)
 
         changed = False
+
+        # --- Existing fields ---
         if data.gender is not None:
             profile.gender = _parse_enum(GenderEnum, data.gender, "gender")
             changed = True
@@ -340,6 +484,78 @@ class ProfileController(Controller):
             changed = True
         if data.partner_expectations is not None:
             profile.partner_expectations = data.partner_expectations
+            profile.partner_preference_keywords = extract_keywords(data.partner_expectations) or None
+            changed = True
+
+        # --- New fields ---
+        if data.marital_status is not None:
+            profile.marital_status = _parse_enum(MaritalStatusEnum, data.marital_status, "marital_status")
+            changed = True
+        if data.sub_caste is not None:
+            profile.sub_caste = data.sub_caste
+            changed = True
+        if data.weight_kg is not None:
+            profile.weight_kg = data.weight_kg
+            changed = True
+        if data.body_type is not None:
+            profile.body_type = _parse_enum(BodyTypeEnum, data.body_type, "body_type")
+            changed = True
+        if data.blood_group is not None:
+            profile.blood_group = _parse_enum(BloodGroupEnum, data.blood_group, "blood_group")
+            changed = True
+        if data.time_of_birth is not None:
+            profile.time_of_birth = _parse_time(data.time_of_birth)
+            changed = True
+        if data.place_of_birth is not None:
+            profile.place_of_birth = data.place_of_birth
+            changed = True
+        if data.father_occupation is not None:
+            profile.father_occupation = data.father_occupation
+            changed = True
+        if data.mother_occupation is not None:
+            profile.mother_occupation = data.mother_occupation
+            changed = True
+        if data.num_brothers is not None:
+            profile.num_brothers = data.num_brothers
+            changed = True
+        if data.num_sisters is not None:
+            profile.num_sisters = data.num_sisters
+            changed = True
+        if data.num_brothers_married is not None:
+            profile.num_brothers_married = data.num_brothers_married
+            changed = True
+        if data.num_sisters_married is not None:
+            profile.num_sisters_married = data.num_sisters_married
+            changed = True
+        if data.family_type is not None:
+            profile.family_type = _parse_enum(FamilyTypeEnum, data.family_type, "family_type")
+            changed = True
+        if data.family_status is not None:
+            profile.family_status = _parse_enum(FamilyStatusEnum, data.family_status, "family_status")
+            changed = True
+        if data.family_values is not None:
+            profile.family_values = _parse_enum(FamilyValuesEnum, data.family_values, "family_values")
+            changed = True
+        if data.native_place is not None:
+            profile.native_place = data.native_place
+            changed = True
+        if data.college_university is not None:
+            profile.college_university = data.college_university
+            changed = True
+        if data.employer is not None:
+            profile.employer = data.employer
+            changed = True
+        if data.work_location is not None:
+            profile.work_location = data.work_location
+            changed = True
+        if data.smokes is not None:
+            profile.smokes = _parse_enum(TobaccoAlcoholEnum, data.smokes, "smokes")
+            changed = True
+        if data.drinks is not None:
+            profile.drinks = _parse_enum(TobaccoAlcoholEnum, data.drinks, "drinks")
+            changed = True
+        if data.hobbies is not None:
+            profile.hobbies = data.hobbies
             changed = True
 
         # If was approved and now changed, reset to pending

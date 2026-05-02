@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { Loader, Inbox } from 'lucide-svelte';
 	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
+	import { T } from '$lib/i18n';
 
 	let requestList = $state<DetailRequest[]>([]);
 	let loading = $state(true);
@@ -50,7 +51,10 @@
 </svelte:head>
 
 <div class="mx-auto max-w-3xl px-4 py-10">
-	<h1 class="font-serif text-3xl font-bold text-maroon">My Requests</h1>
+	<h1 class="font-serif text-3xl font-bold text-maroon">
+		{T.requests.en}
+		<span class="ml-2 text-xl font-normal text-ink/50" lang="te">{T.requests.te}</span>
+	</h1>
 	<p class="mt-1 text-sm text-ink/60">Outbound detail requests you have sent</p>
 
 	<KalashaDivider />
