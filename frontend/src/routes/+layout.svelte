@@ -100,9 +100,45 @@
 	<meta name="twitter:image" content="https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&h=630&q=80" />
 	<meta name="twitter:image:alt" content="Indian wedding mandap with flowers and lights" />
 
-	<!-- Theme + canonical -->
+	<!-- Theme + canonical + crawling -->
 	<meta name="theme-color" content="#C8102E" />
 	<link rel="canonical" href="https://marathakalyanam.com/" />
+	<meta name="robots" content="index, follow, max-image-preview:large" />
+	<meta name="googlebot" content="index, follow" />
+	<meta name="author" content="Telugu–Maratha Kalyana Vedika" />
+	<meta name="publisher" content="Telugu–Maratha Kalyana Vedika" />
+	<meta name="keywords" content="Telugu Maratha matrimony, Maratha Kalyanam, Telugu matrimony, Maratha matrimony, Andhra Pradesh matrimony, Telangana matrimony, gotra matching, nakshatram matching, Telugu wedding, Maratha wedding, kuldevata, devak, Indian matrimony" />
+
+	<!-- JSON-LD structured data: Organization + WebSite (with sitelink search action) -->
+	<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "Organization",
+			"name": "Telugu–Maratha Kalyana Vedika",
+			"alternateName": "తెలుగు–మరాఠా కల్యాణ వేదిక",
+			"url": "https://marathakalyanam.com",
+			"logo": "https://marathakalyanam.com/favicon.svg",
+			"description": "Trusted matrimonial platform for Telugu-Maratha families across Andhra Pradesh, Telangana and Maharashtra.",
+			"areaServed": [
+				{ "@type": "AdministrativeArea", "name": "Andhra Pradesh" },
+				{ "@type": "AdministrativeArea", "name": "Telangana" },
+				{ "@type": "AdministrativeArea", "name": "Maharashtra" }
+			]
+		}
+	</script>
+	<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "WebSite",
+			"name": "Telugu–Maratha Kalyana Vedika",
+			"url": "https://marathakalyanam.com",
+			"potentialAction": {
+				"@type": "SearchAction",
+				"target": "https://marathakalyanam.com/search?gotra={search_term_string}",
+				"query-input": "required name=search_term_string"
+			}
+		}
+	</script>
 </svelte:head>
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->

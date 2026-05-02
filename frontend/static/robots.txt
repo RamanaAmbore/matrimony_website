@@ -1,3 +1,11 @@
-# allow crawling everything by default
 User-agent: *
-Disallow:
+Allow: /
+# Disallow private/auth-gated paths from crawling
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /requests
+Disallow: /profiles/
+Disallow: /api/
+Disallow: /media/
+
+Sitemap: https://marathakalyanam.com/sitemap.xml
