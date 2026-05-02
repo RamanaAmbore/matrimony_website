@@ -101,6 +101,11 @@ else
     log "$ENV_FILE already present — leaving in place"
 fi
 
+# --- 5a. Ownership ---
+log "Chowning $APP_DIR to $APP_USER:$APP_GROUP (excluding .env which stays 600)"
+chown -R "$APP_USER:$APP_GROUP" "$APP_DIR"
+chmod 600 "$ENV_FILE"
+
 # --- 5. Backend venv + migrate ---
 log "Installing backend (venv + Alembic)"
 sudo -u "$APP_USER" -H bash -c "
