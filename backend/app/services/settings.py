@@ -1,0 +1,118 @@
+"""SettingsService — in-process cached runtime configuration from DB."""
+from __future__ import annotations
+
+import asyncio
+import uuid
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.setting import Setting
+
+# Default settings seeded on first startup
+DEFAULT_SETTINGS: dict[str, Any] = {
+    "owner_email": "ramanamborespam@gmail.com",
+    "smtp_host": "localhost",
+    "smtp_port": 1025,
+    "smtp_user": "",
+    "smtp_password": "",
+    "smtp_from": "no-reply@marathakalyanam.com",
+    "photo_max_kb": 500,
+    "photo_passport_width": 413,
+    "photo_passport_height": 531,
+    "photo_blur_width": 600,
+    "photo_blur_radius": 14,
+    "photo_thumb_size": 150,
+    "photos_max_per_profile": 5,
+    "upload_max_mb": 10,
+    "require_face_detection": True,
+    "require_admin_approval_for_profiles": True,
+}
+
+SENSITIVE_KEYS = {"smtp_password"}
+
+
+class SettingsService:
+    """In-process cache for the settings table. Refresh on write."""
+
+    def __init__(self) -> None:
+        self._cache: dict[str, Any] = {}
+        self._lock = asyncio.Lock()
+        self._loaded = False
+
+    async def load(self, session: AsyncSession) -> None:
+        """Load all settings from DB into cache."""
+        async with self._lock:
+            rows = await session.execute(select(Setting))
+            self._cache = {row.key: row.value for row in rows.scalars()}
+            self._loaded = True
+
+    async def ensure_loaded(self, session: AsyncSession) -> None:
+        if not self._loaded:
+            await self.load(session)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._cache.get(key, DEFAULT_SETTINGS.get(key, default))
+
+    def get_str(self, key: str, default: str = "") -> str:
+        return str(self.get(key, default))
+
+    def get_int(self, key: str, default: int = 0) -> int:
+        return int(self.get(key, default))
+
+    def get_float(self, key: str, default: float = 0.0) -> float:
+        return float(self.get(key, default))
+
+    def get_bool(self, key: str, default: bool = False) -> bool:
+        val = self.get(key, default)
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, str):
+            return val.lower() in ("true", "1", "yes")
+        return bool(val)
+
+    async def set(self, key: str, value: Any, session: AsyncSession, updated_by: uuid.UUID | None = None) -> None:
+        """Upsert a single setting and refresh cache."""
+        existing = await session.get(Setting, key)
+        if existing is None:
+            setting = Setting(key=key, value=value, updated_by=updated_by)
+            session.add(setting)
+        else:
+            existing.value = value
+            existing.updated_by = updated_by
+        async with self._lock:
+            self._cache[key] = value
+
+    async def set_many(self, updates: dict[str, Any], session: AsyncSession, updated_by: uuid.UUID | None = None) -> None:
+        """Batch upsert settings."""
+        for key, value in updates.items():
+            await self.set(key, value, session, updated_by)
+
+    def all_public(self) -> dict[str, Any]:
+        """Return all settings, masking sensitive values."""
+        merged = {**DEFAULT_SETTINGS, **self._cache}
+        result = {}
+        for k, v in merged.items():
+            if k in SENSITIVE_KEYS:
+                result[k] = "***" if v else ""
+            else:
+                result[k] = v
+        return result
+
+    def invalidate(self) -> None:
+        """Force reload on next access."""
+        self._loaded = False
+
+    async def seed_defaults(self, session: AsyncSession) -> None:
+        """Insert default settings if not present."""
+        for key, value in DEFAULT_SETTINGS.items():
+            existing = await session.get(Setting, key)
+            if existing is None:
+                session.add(Setting(key=key, value=value))
+        await session.commit()
+        await self.load(session)
+
+
+# Global singleton
+settings_service = SettingsService()

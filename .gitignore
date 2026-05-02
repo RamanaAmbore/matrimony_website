@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.svelte-kit/
+build/
+dist/
+.vite/
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Media (uploaded photos — never commit)
+backend/media/
+backend/var/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Logs
+*.log

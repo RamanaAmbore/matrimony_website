@@ -1,0 +1,1 @@
+"""MarathaKalyanam backend application."""

@@ -1,0 +1,123 @@
+<script lang="ts">
+	import { auth } from '$lib/api';
+	import { toastStore } from '$lib/stores/toast.svelte';
+	import { goto } from '$app/navigation';
+	import { ApiError } from '$lib/api';
+	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
+
+	let email = $state('');
+	let password = $state('');
+	let confirmPassword = $state('');
+	let loading = $state(false);
+	let errors = $state<Record<string, string>>({});
+
+	function validate(): boolean {
+		const e: Record<string, string> = {};
+		if (!email.trim()) e.email = 'Email is required';
+		else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Enter a valid email';
+		if (!password) e.password = 'Password is required';
+		else if (password.length < 8) e.password = 'At least 8 characters required';
+		if (password !== confirmPassword) e.confirmPassword = 'Passwords do not match';
+		errors = e;
+		return Object.keys(e).length === 0;
+	}
+
+	async function handleSubmit(e: Event) {
+		e.preventDefault();
+		if (!validate()) return;
+
+		loading = true;
+		try {
+			await auth.register(email.trim(), password);
+			toastStore.success('Account created! Please check your email to verify.');
+			goto('/login');
+		} catch (err) {
+			if (err instanceof ApiError) {
+				if (err.status === 409) {
+					errors = { email: 'An account with this email already exists' };
+				} else {
+					toastStore.error(err.message.slice(0, 60));
+				}
+			} else {
+				toastStore.error('Registration failed. Try again.');
+			}
+		} finally {
+			loading = false;
+		}
+	}
+</script>
+
+<svelte:head>
+	<title>Register — Maratha Kalyanam</title>
+</svelte:head>
+
+<div class="mx-auto max-w-md px-4 py-16">
+	<div class="text-center">
+		<h1 class="font-serif text-3xl font-bold text-maroon">Create Account</h1>
+		<p class="mt-1 text-sm text-ink/60">Join the Maratha Kalyanam community</p>
+	</div>
+
+	<KalashaDivider />
+
+	<form onsubmit={handleSubmit} novalidate class="mt-6 space-y-5">
+		<!-- Email -->
+		<div>
+			<label for="email" class="label">Email address</label>
+			<input
+				id="email"
+				type="email"
+				autocomplete="email"
+				class="input"
+				class:border-vermilion={errors.email}
+				bind:value={email}
+				placeholder="you@example.com"
+			/>
+			{#if errors.email}
+				<p class="mt-1 text-xs text-vermilion">{errors.email}</p>
+			{/if}
+		</div>
+
+		<!-- Password -->
+		<div>
+			<label for="password" class="label">Password</label>
+			<input
+				id="password"
+				type="password"
+				autocomplete="new-password"
+				class="input"
+				class:border-vermilion={errors.password}
+				bind:value={password}
+				placeholder="Min. 8 characters"
+			/>
+			{#if errors.password}
+				<p class="mt-1 text-xs text-vermilion">{errors.password}</p>
+			{/if}
+		</div>
+
+		<!-- Confirm password -->
+		<div>
+			<label for="confirm-password" class="label">Confirm password</label>
+			<input
+				id="confirm-password"
+				type="password"
+				autocomplete="new-password"
+				class="input"
+				class:border-vermilion={errors.confirmPassword}
+				bind:value={confirmPassword}
+				placeholder="Re-enter password"
+			/>
+			{#if errors.confirmPassword}
+				<p class="mt-1 text-xs text-vermilion">{errors.confirmPassword}</p>
+			{/if}
+		</div>
+
+		<button type="submit" class="btn-primary w-full py-3" disabled={loading}>
+			{loading ? 'Creating account…' : 'Register'}
+		</button>
+	</form>
+
+	<p class="mt-6 text-center text-sm text-ink/60">
+		Already have an account?
+		<a href="/login" class="font-medium text-saffron hover:underline">Login</a>
+	</p>
+</div>

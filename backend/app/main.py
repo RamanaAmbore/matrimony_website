@@ -1,0 +1,109 @@
+"""ASGI application entry point."""
+from __future__ import annotations
+
+import logging
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Any
+
+from litestar import Litestar, get
+from litestar.config.cors import CORSConfig
+from litestar.middleware.session.client_side import CookieBackendConfig
+from litestar.openapi import OpenAPIConfig
+from litestar.stores.memory import MemoryStore
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config import CORS_ORIGINS, IS_PROD, SESSION_SECRET
+from app.db import AsyncSessionLocal, get_db_session
+from app.routes.auth import AuthController
+from app.routes.profiles import ProfileController
+from app.routes.photos import PhotoController
+from app.routes.search import SearchController
+from app.routes.requests import RequestController
+from app.routes.admin import AdminController
+from app.routes.media import serve_media
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: Litestar) -> AsyncGenerator[None, None]:
+    """Run bootstrap tasks on startup."""
+    from app.services.bootstrap import bootstrap
+    from app.services.settings import settings_service
+    from app.config import MEDIA_ROOT
+
+    MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+
+    async with AsyncSessionLocal() as session:
+        await bootstrap(session)
+        await settings_service.load(session)
+
+    logger.info("MarathaKalyanam backend started")
+    yield
+    logger.info("MarathaKalyanam backend shutting down")
+
+
+@get("/health", tags=["health"])
+async def health_check() -> dict[str, str]:
+    return {"status": "ok", "service": "marathakalyanam"}
+
+
+_secret_bytes = SESSION_SECRET.encode()
+# Pad/truncate to exactly 16 bytes (AES-128)
+_secret_key = (_secret_bytes + b"x" * 16)[:16]
+
+session_config = CookieBackendConfig(
+    secret=_secret_key,
+    key="mk_session",
+    httponly=True,
+    samesite="lax",
+    secure=IS_PROD,
+    max_age=86400 * 30,  # 30 days
+)
+
+cors_config = CORSConfig(
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+)
+
+
+async def db_session_dependency() -> AsyncGenerator[AsyncSession, None]:
+    """Provide DB session to route handlers."""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+
+
+app = Litestar(
+    route_handlers=[
+        health_check,
+        AuthController,
+        ProfileController,
+        PhotoController,
+        SearchController,
+        RequestController,
+        AdminController,
+        serve_media,
+    ],
+    middleware=[session_config.middleware],
+    cors_config=cors_config,
+    lifespan=[lifespan],
+    dependencies={"db": db_session_dependency},
+    openapi_config=OpenAPIConfig(
+        title="MarathaKalyanam API",
+        version="1.0.0",
+        path="/docs",
+    ),
+    debug=not IS_PROD,
+)

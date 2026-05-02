@@ -1,40 +1,34 @@
-# Matrimony Website
+# marathakalyanam
 
-This is a Django-based Matrimony website designed with a simple and intuitive interface for users to register, enter their profile details, search for prospective matches, and make payments for premium features. It includes Google authentication, WhatsApp OTP for mobile registration, and Razorpay integration for payments.
+Matrimonial site for Telugu-Maratha people settled in Andhra Pradesh and Telangana. Production domain: **marathakalyanam.com**.
 
-## Features
+## Stack
 
-- **User Authentication**:
-  - Google (Gmail) authentication.
-  - WhatsApp OTP for mobile registration.
-  
-- **Profile Management**:
-  - Users can add and update their profile details.
-  - Upload profile pictures and blurred images.
-  - Add and update the Nakshatram (Vedic astrology sign).
+- **Backend:** Python · Litestar (async ASGI) · SQLAlchemy 2.x · msgspec · Alembic · Pillow + OpenCV
+- **Frontend:** SvelteKit (Svelte 5) · TailwindCSS
+- **Database:** PostgreSQL 16
+- **Local dev infra:** docker-compose (Postgres + Mailhog)
 
-- **Search & Matching**:
-  - Search for prospective matches with blurred images by default.
-  - Full-size images available to approved users.
-  
-- **Admin Dashboard**:
-  - Admins can manage user registrations.
-  - Admins can approve other admins (requires site owner approval).
-  
-- **Payment Integration**:
-  - Razorpay integration for payments.
-  - Users can make payments for premium features.
+## Quick start
 
-## Prerequisites
-
-- Python 3.8+
-- Django 4.2+
-- Razorpay API Key (Sign up at [Razorpay](https://razorpay.com/))
-- WhatsApp OTP integration (for user phone verification)
-
-## Installation
-
-### Step 1: Clone the repository
 ```bash
-git clone <repository_url>
-cd matrimony_project
+# 1. Bring up local infra
+docker compose up -d
+
+# 2. Backend
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -e .
+cp ../.env.example ../.env
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
+
+# 3. Frontend (new terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+Then open <http://localhost:5173> for the site and <http://localhost:8025> for Mailhog (captures all outbound email in dev).
+
+See [CLAUDE.md](CLAUDE.md) for architecture and conventions.

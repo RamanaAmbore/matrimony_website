@@ -1,0 +1,390 @@
+// Typed API client — wraps fetch with credentials, JSON handling, typed errors.
+// All paths are relative so the Vite proxy handles /api/* -> localhost:8000.
+
+export class ApiError extends Error {
+	constructor(
+		public status: number,
+		public code: string,
+		message: string
+	) {
+		super(message);
+		this.name = 'ApiError';
+	}
+}
+
+// ─── Entity interfaces ────────────────────────────────────────────────────────
+
+export interface User {
+	user_id: string;
+	email: string;
+	is_admin: boolean;
+	email_verified: boolean;
+}
+
+export type ProfileStatus = 'draft' | 'pending' | 'approved' | 'rejected';
+export type Gender = 'bride' | 'groom';
+export type Manglik = 'yes' | 'no' | 'partial' | 'unknown';
+export type Diet = 'veg' | 'non-veg' | 'eggetarian';
+
+export interface Profile {
+	id: string;
+	user_id: string;
+	status: ProfileStatus;
+	gender: Gender;
+	first_name: string;
+	last_name: string;
+	dob: string; // ISO date string YYYY-MM-DD
+	height_cm: number;
+	complexion: string;
+	education: string;
+	occupation: string;
+	annual_income_inr?: number | null;
+	city: string;
+	state: string;
+	country: string;
+	gotra: string;
+	kuldevata: string;
+	devak: string;
+	surname_clan: string;
+	nakshatram: string;
+	rashi: string;
+	manglik: Manglik;
+	mother_tongue: string;
+	diet: Diet;
+	about: string;
+	partner_expectations: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface Photo {
+	id: string;
+	profile_id: string;
+	is_primary: boolean;
+	blurred_url: string;
+	passport_url?: string; // only visible to owner
+	thumb_url?: string; // admin
+	created_at: string;
+}
+
+export interface ProfileWithPhotos {
+	profile: Profile;
+	photos: Photo[];
+}
+
+export type RequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface DetailRequest {
+	id: string;
+	requester_user_id: string;
+	profile_id: string;
+	profile?: Partial<Profile>;
+	status: RequestStatus;
+	message?: string;
+	admin_notes?: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface SearchResult {
+	id: string;
+	gender: Gender;
+	first_name: string;
+	last_name: string;
+	dob: string;
+	height_cm: number;
+	education: string;
+	occupation: string;
+	city: string;
+	state: string;
+	gotra: string;
+	nakshatram: string;
+	rashi: string;
+	manglik: Manglik;
+	diet: Diet;
+	blurred_photo_url?: string;
+}
+
+export interface SearchResponse {
+	results: SearchResult[];
+	total: number;
+	page: number;
+	per_page: number;
+}
+
+export interface Setting {
+	key: string;
+	value: string;
+	description?: string;
+}
+
+export interface AdminStats {
+	total_users: number;
+	total_profiles: number;
+	pending_profiles: number;
+	approved_profiles: number;
+	rejected_profiles: number;
+	total_requests: number;
+	pending_requests: number;
+}
+
+// ─── Search params ────────────────────────────────────────────────────────────
+
+export interface SearchParams {
+	gender?: Gender;
+	age_min?: number;
+	age_max?: number;
+	gotra?: string;
+	nakshatram?: string;
+	rashi?: string;
+	city?: string;
+	state?: string;
+	manglik?: Manglik;
+	diet?: Diet;
+	page?: number;
+	per_page?: number;
+}
+
+// ─── Core fetch wrapper ───────────────────────────────────────────────────────
+
+async function request<T>(
+	path: string,
+	options: RequestInit = {}
+): Promise<T> {
+	const headers: Record<string, string> = {
+		...(options.body && !(options.body instanceof FormData)
+			? { 'Content-Type': 'application/json' }
+			: {}),
+		...(options.headers as Record<string, string>)
+	};
+
+	const res = await fetch(path, {
+		...options,
+		credentials: 'include',
+		headers
+	});
+
+	if (res.status === 204) {
+		return undefined as T;
+	}
+
+	let body: unknown;
+	const ct = res.headers.get('content-type') ?? '';
+	if (ct.includes('application/json')) {
+		body = await res.json();
+	} else {
+		body = await res.text();
+	}
+
+	if (!res.ok) {
+		// Try to extract structured error from backend
+		const err = body as { detail?: string | { message?: string }; error?: { code?: string; message?: string }; message?: string };
+		let code = 'unknown_error';
+		let message = 'An unexpected error occurred';
+
+		if (err?.error?.code) code = err.error.code;
+		if (err?.error?.message) message = err.error.message;
+		else if (typeof err?.detail === 'string') message = err.detail;
+		else if (typeof err?.detail === 'object' && err.detail?.message) message = err.detail.message;
+		else if (err?.message) message = err.message;
+
+		throw new ApiError(res.status, code, message);
+	}
+
+	return body as T;
+}
+
+function buildQuery(params: Record<string, unknown>): string {
+	const q = new URLSearchParams();
+	for (const [k, v] of Object.entries(params)) {
+		if (v !== undefined && v !== null && v !== '') {
+			q.set(k, String(v));
+		}
+	}
+	const s = q.toString();
+	return s ? `?${s}` : '';
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+export const auth = {
+	async register(email: string, password: string): Promise<{ user_id: string }> {
+		return request('/api/auth/register', {
+			method: 'POST',
+			body: JSON.stringify({ email, password })
+		});
+	},
+
+	async login(email: string, password: string): Promise<User> {
+		return request('/api/auth/login', {
+			method: 'POST',
+			body: JSON.stringify({ email, password })
+		});
+	},
+
+	async logout(): Promise<void> {
+		return request('/api/auth/logout', { method: 'POST' });
+	},
+
+	async verifyEmail(token: string): Promise<void> {
+		return request('/api/auth/verify-email', {
+			method: 'POST',
+			body: JSON.stringify({ token })
+		});
+	},
+
+	async me(): Promise<User> {
+		return request('/api/auth/me');
+	}
+};
+
+// ─── Profiles ─────────────────────────────────────────────────────────────────
+
+export type ProfilePayload = Omit<Profile, 'id' | 'user_id' | 'status' | 'created_at' | 'updated_at'>;
+
+export const profiles = {
+	async list(): Promise<Profile[]> {
+		return request('/api/profiles');
+	},
+
+	async create(data: Partial<ProfilePayload>): Promise<Profile> {
+		return request('/api/profiles', {
+			method: 'POST',
+			body: JSON.stringify(data)
+		});
+	},
+
+	async get(id: string): Promise<ProfileWithPhotos> {
+		return request(`/api/profiles/${id}`);
+	},
+
+	async update(id: string, data: Partial<ProfilePayload>): Promise<Profile> {
+		return request(`/api/profiles/${id}`, {
+			method: 'PATCH',
+			body: JSON.stringify(data)
+		});
+	},
+
+	async delete(id: string): Promise<void> {
+		return request(`/api/profiles/${id}`, { method: 'DELETE' });
+	},
+
+	async submit(id: string): Promise<Profile> {
+		return request(`/api/profiles/${id}/submit`, { method: 'POST' });
+	},
+
+	async requestDetails(id: string, message?: string): Promise<DetailRequest> {
+		return request(`/api/profiles/${id}/request`, {
+			method: 'POST',
+			body: JSON.stringify({ message })
+		});
+	}
+};
+
+// ─── Photos ───────────────────────────────────────────────────────────────────
+
+export const photos = {
+	async upload(profileId: string, file: File): Promise<Photo> {
+		const form = new FormData();
+		form.append('file', file);
+		return request(`/api/profiles/${profileId}/photos`, {
+			method: 'POST',
+			body: form
+		});
+	},
+
+	async delete(profileId: string, photoId: string): Promise<void> {
+		return request(`/api/profiles/${profileId}/photos/${photoId}`, {
+			method: 'DELETE'
+		});
+	},
+
+	async setPrimary(profileId: string, photoId: string): Promise<void> {
+		return request(`/api/profiles/${profileId}/photos/${photoId}/primary`, {
+			method: 'POST'
+		});
+	}
+};
+
+// ─── Search ───────────────────────────────────────────────────────────────────
+
+export const search = {
+	async query(params: SearchParams): Promise<SearchResponse> {
+		return request(`/api/search${buildQuery(params as Record<string, unknown>)}`);
+	}
+};
+
+// ─── Requests ─────────────────────────────────────────────────────────────────
+
+export const requests = {
+	async mine(): Promise<DetailRequest[]> {
+		return request('/api/requests/mine');
+	}
+};
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+export const admin = {
+	async getStats(): Promise<AdminStats> {
+		return request('/api/admin/stats');
+	},
+
+	profiles: {
+		async list(status?: string): Promise<Profile[]> {
+			const q = status ? `?status=${status}` : '';
+			return request(`/api/admin/profiles${q}`);
+		},
+		async approve(id: string, admin_notes?: string): Promise<void> {
+			return request(`/api/admin/profiles/${id}/approve`, {
+				method: 'POST',
+				body: JSON.stringify({ admin_notes })
+			});
+		},
+		async reject(id: string, admin_notes: string): Promise<void> {
+			return request(`/api/admin/profiles/${id}/reject`, {
+				method: 'POST',
+				body: JSON.stringify({ admin_notes })
+			});
+		}
+	},
+
+	requests: {
+		async list(status?: string): Promise<DetailRequest[]> {
+			const q = status ? `?status=${status}` : '';
+			return request(`/api/admin/requests${q}`);
+		},
+		async approve(id: string, admin_notes?: string): Promise<void> {
+			return request(`/api/admin/requests/${id}/approve`, {
+				method: 'POST',
+				body: JSON.stringify({ admin_notes })
+			});
+		},
+		async reject(id: string, admin_notes: string): Promise<void> {
+			return request(`/api/admin/requests/${id}/reject`, {
+				method: 'POST',
+				body: JSON.stringify({ admin_notes })
+			});
+		}
+	},
+
+	users: {
+		async list(): Promise<User[]> {
+			return request('/api/admin/users');
+		},
+		async promote(id: string): Promise<void> {
+			return request(`/api/admin/users/${id}/promote`, { method: 'POST' });
+		}
+	},
+
+	settings: {
+		async get(): Promise<Setting[]> {
+			return request('/api/admin/settings');
+		},
+		async update(settings: Record<string, string>): Promise<Setting[]> {
+			return request('/api/admin/settings', {
+				method: 'PUT',
+				body: JSON.stringify(settings)
+			});
+		}
+	}
+};

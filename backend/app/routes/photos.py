@@ -1,0 +1,240 @@
+"""Photo upload/management routes."""
+import uuid
+from pathlib import Path
+from typing import Annotated, Any
+
+from litestar import Controller, delete, post
+from litestar.connection import Request
+from litestar.datastructures import UploadFile
+from litestar.enums import RequestEncodingType
+from litestar.exceptions import HTTPException
+from litestar.params import Body
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.config import MEDIA_ROOT
+from app.models.photo import Photo
+from app.models.profile import Profile
+from app.services.images import PhotoValidationError, process_upload
+from app.services.settings import settings_service
+
+
+def _photo_to_dict(photo: Photo, request: Request) -> dict[str, Any]:
+    base = str(request.base_url).rstrip("/")
+    return {
+        "id": str(photo.id),
+        "profile_id": str(photo.profile_id),
+        "original_filename": photo.original_filename,
+        "passport_url": f"{base}/media/{photo.passport_path}",
+        "blurred_url": f"{base}/media/{photo.blurred_path}",
+        "thumb_url": f"{base}/media/{photo.thumb_path}",
+        "byte_size": photo.byte_size,
+        "is_primary": photo.is_primary,
+        "created_at": photo.created_at.isoformat(),
+    }
+
+
+class PhotoController(Controller):
+    path = "/profiles/{profile_id:str}/photos"
+
+    @post("", status_code=201)
+    async def upload_photo(
+        self,
+        profile_id: str,
+        request: Request,
+        db: AsyncSession,
+        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
+    ) -> dict[str, Any]:
+        user = request.session.get("user")
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail={"code": "unauthenticated", "message": "Authentication required"},
+            )
+
+        try:
+            pid = uuid.UUID(profile_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=404, detail={"code": "not_found", "message": "Profile not found"}
+            )
+
+        result = await db.execute(
+            select(Profile).where(Profile.id == pid).options(selectinload(Profile.photos))
+        )
+        profile = result.scalar_one_or_none()
+        if not profile:
+            raise HTTPException(
+                status_code=404, detail={"code": "not_found", "message": "Profile not found"}
+            )
+
+        if str(profile.owner_user_id) != user["user_id"]:
+            raise HTTPException(
+                status_code=403, detail={"code": "forbidden", "message": "Not your profile"}
+            )
+
+        max_photos = settings_service.get_int("photos_max_per_profile", 5)
+        if len(profile.photos) >= max_photos:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "photo_limit",
+                    "message": f"Maximum {max_photos} photos per profile",
+                },
+            )
+
+        file_bytes = await data.read()
+        filename = data.filename or "upload.jpg"
+
+        try:
+            passport_bytes, blurred_bytes, thumb_bytes = process_upload(file_bytes, filename)
+        except PhotoValidationError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "photo_validation_error", "message": exc.user_message},
+            )
+
+        photo_id = uuid.uuid4()
+        photo_dir = MEDIA_ROOT / "profiles" / str(pid) / str(photo_id)
+        photo_dir.mkdir(parents=True, exist_ok=True)
+
+        passport_rel = f"profiles/{pid}/{photo_id}/passport.jpg"
+        blurred_rel = f"profiles/{pid}/{photo_id}/blurred.jpg"
+        thumb_rel = f"profiles/{pid}/{photo_id}/thumb.jpg"
+
+        (photo_dir / "passport.jpg").write_bytes(passport_bytes)
+        (photo_dir / "blurred.jpg").write_bytes(blurred_bytes)
+        (photo_dir / "thumb.jpg").write_bytes(thumb_bytes)
+
+        is_primary = len(profile.photos) == 0
+
+        photo = Photo(
+            id=photo_id,
+            profile_id=pid,
+            original_filename=filename,
+            passport_path=passport_rel,
+            blurred_path=blurred_rel,
+            thumb_path=thumb_rel,
+            byte_size=len(passport_bytes),
+            is_primary=is_primary,
+        )
+        db.add(photo)
+        await db.commit()
+        await db.refresh(photo)
+
+        return _photo_to_dict(photo, request)
+
+    @delete("/{photo_id:str}", status_code=204)
+    async def delete_photo(
+        self,
+        profile_id: str,
+        photo_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> None:
+        user = request.session.get("user")
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail={"code": "unauthenticated", "message": "Authentication required"},
+            )
+
+        try:
+            pid = uuid.UUID(profile_id)
+            phid = uuid.UUID(photo_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=404, detail={"code": "not_found", "message": "Not found"}
+            )
+
+        result = await db.execute(select(Profile).where(Profile.id == pid))
+        profile = result.scalar_one_or_none()
+        if not profile:
+            raise HTTPException(
+                status_code=404, detail={"code": "not_found", "message": "Profile not found"}
+            )
+
+        if str(profile.owner_user_id) != user["user_id"]:
+            raise HTTPException(
+                status_code=403, detail={"code": "forbidden", "message": "Not your profile"}
+            )
+
+        result2 = await db.execute(
+            select(Photo).where(Photo.id == phid, Photo.profile_id == pid)
+        )
+        photo = result2.scalar_one_or_none()
+        if not photo:
+            raise HTTPException(
+                status_code=404, detail={"code": "not_found", "message": "Photo not found"}
+            )
+
+        for path_rel in [photo.passport_path, photo.blurred_path, photo.thumb_path]:
+            fpath = MEDIA_ROOT / path_rel
+            if fpath.exists():
+                fpath.unlink()
+
+        was_primary = photo.is_primary
+        await db.delete(photo)
+        await db.commit()
+
+        if was_primary:
+            result3 = await db.execute(
+                select(Photo).where(Photo.profile_id == pid).order_by(Photo.created_at)
+            )
+            remaining = result3.scalars().first()
+            if remaining:
+                remaining.is_primary = True
+                await db.commit()
+
+    @post("/{photo_id:str}/primary")
+    async def set_primary(
+        self,
+        profile_id: str,
+        photo_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        user = request.session.get("user")
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail={"code": "unauthenticated", "message": "Authentication required"},
+            )
+
+        try:
+            pid = uuid.UUID(profile_id)
+            phid = uuid.UUID(photo_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=404, detail={"code": "not_found", "message": "Not found"}
+            )
+
+        result = await db.execute(select(Profile).where(Profile.id == pid))
+        profile = result.scalar_one_or_none()
+        if not profile:
+            raise HTTPException(
+                status_code=404, detail={"code": "not_found", "message": "Profile not found"}
+            )
+
+        if str(profile.owner_user_id) != user["user_id"]:
+            raise HTTPException(
+                status_code=403, detail={"code": "forbidden", "message": "Not your profile"}
+            )
+
+        result2 = await db.execute(select(Photo).where(Photo.profile_id == pid))
+        all_photos = result2.scalars().all()
+        target = None
+        for p in all_photos:
+            if p.id == phid:
+                target = p
+            p.is_primary = p.id == phid
+
+        if target is None:
+            raise HTTPException(
+                status_code=404, detail={"code": "not_found", "message": "Photo not found"}
+            )
+
+        await db.commit()
+        await db.refresh(target)
+        return _photo_to_dict(target, request)

@@ -1,8 +1,0 @@
-Django
-razorpay
-django-allauth
-django-environ
-Pillow
-requests
-python-dotenv
-whatsapp-python

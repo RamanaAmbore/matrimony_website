@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile Approved — MarathaKalyanam</title>
+</head>
+<body style="font-family: Arial, sans-serif; background:#f9f6f1; padding:40px;">
+  <div style="max-width:560px;margin:auto;background:#fff;border-radius:8px;padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <h2 style="color:#2e7d32;margin-top:0;">Congratulations! Your profile is approved.</h2>
+    <p>Dear <strong>{{ first_name }}</strong>,</p>
+    <p>Your profile on <strong>MarathaKalyanam</strong> has been reviewed and <strong>approved</strong>.
+       It is now visible to other members in our search results.</p>
+    {% if admin_notes %}
+    <div style="background:#f1f8e9;border-left:4px solid #2e7d32;padding:12px 16px;border-radius:4px;margin:16px 0;">
+      <strong>Note from admin:</strong><br>{{ admin_notes }}
+    </div>
+    {% endif %}
+    <p>Log in to your account to view and manage your profile.</p>
+    <div style="text-align:center;margin:32px 0;">
+      <a href="http://localhost:5173/login"
+         style="background:#8B2500;color:#fff;padding:14px 32px;border-radius:6px;text-decoration:none;font-size:16px;font-weight:bold;">
+        View My Profile
+      </a>
+    </div>
+    <p style="color:#888;font-size:12px;margin-top:32px;">MarathaKalyanam — Where Telugu-Maratha families connect.</p>
+  </div>
+</body>
+</html>
