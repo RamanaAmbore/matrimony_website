@@ -57,7 +57,7 @@
 	   #c87800 is darker than saffron (#f4a300) and stays readable on cream (#fff8e7). */
 	[lang="te"] {
 		color: var(--color-marigold);
-		-webkit-text-stroke: 0.3px currentColor;
+		-webkit-text-stroke: 0.6px var(--color-maroon);
 		paint-order: stroke fill;
 	}
 
@@ -92,11 +92,11 @@
 		border-radius: 9999px;
 		overflow: hidden;
 		border: 2px solid rgba(255, 255, 255, 0.85);
-		padding: 2px;
-		box-shadow:
-			0 0 6px 2px rgba(255, 110, 0, 0.85),
-			0 0 18px 4px rgba(255, 80, 0, 0.5),
-			0 0 32px 6px rgba(255, 60, 0, 0.25);
+		padding: 3px;
+		/* Orange gradient fills the gap between image and white border = glow ring sits there */
+		background: linear-gradient(135deg, rgba(255, 120, 0, 0.95), rgba(255, 60, 0, 0.8));
+		/* Subtle outer halo */
+		box-shadow: 0 0 10px 2px rgba(255, 90, 0, 0.45);
 	}
 
 	/* Suppress browser autofill yellow background on cream inputs */
