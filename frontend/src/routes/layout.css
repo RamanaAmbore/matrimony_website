@@ -53,7 +53,7 @@
 
 @layer utilities {
 	[lang="te"] {
-		color: inherit;
+		color: rgba(43, 10, 14, 0.55);
 		-webkit-text-stroke: 0.55px var(--color-maroon);
 		paint-order: stroke fill;
 	}
