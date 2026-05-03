@@ -53,13 +53,6 @@
 	<!-- Hero text -->
 	<div class="relative z-10 flex min-h-[88vh] flex-col items-center justify-center px-4 text-center">
 		<div class="mx-auto max-w-3xl">
-			<!-- Logo -->
-			<div class="mb-6 flex justify-center">
-				<div class="rounded-full ring-2 ring-gold/40 p-1">
-					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-28 w-auto md:h-36 logo-glow" />
-				</div>
-			</div>
-
 			<!-- Platform description -->
 			<p
 				class="mb-2 max-w-lg text-sm text-cream/90 md:text-base"
@@ -76,29 +69,29 @@
 				ఆంధ్రప్రదేశ్, తెలంగాణ, మహారాష్ట్రలలో నివసించే మరాఠా కుటుంబాలకు విశ్వసనీయమైన వివాహ వేదిక. నిర్వాహకులు ధృవీకరించిన ప్రొఫైళ్లు. గోప్యత అగ్రగామి.
 			</p>
 
-			<div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
+			<div class="flex flex-col items-stretch justify-center gap-3 sm:flex-row">
 				<a
 					href="/search"
-					class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-maroon px-6 py-3 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-72"
+					class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-maroon px-6 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 				>
 					<Search size={18} />
-					Find Your Partner · <span lang="te" style="color:inherit">జీవిత భాగస్వామిని కనుగొనండి</span>
+					<span>Find Your Partner<br /><span class="text-xs font-normal" lang="te" style="color:inherit">జీవిత భాగస్వామిని కనుగొనండి</span></span>
 				</a>
 
 				{#if !data.user}
 					<a
 						href="/register"
-						class="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream sm:w-72"
+						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg border-2 border-cream px-6 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
 						<UserPlus size={18} />
-						Create Profile · <span lang="te" style="color:inherit">ప్రొఫైల్ సృష్టించండి</span>
+						<span>Create Profile<br /><span class="text-xs font-normal" lang="te" style="color:inherit">ప్రొఫైల్ సృష్టించండి</span></span>
 					</a>
 				{:else}
 					<a
 						href="/dashboard"
-						class="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream sm:w-72"
+						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg border-2 border-cream px-6 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
-						My Profiles · <span lang="te" style="color:inherit">నా ప్రొఫైళ్లు</span>
+						<span>My Profiles<br /><span class="text-xs font-normal" lang="te" style="color:inherit">నా ప్రొఫైళ్లు</span></span>
 					</a>
 				{/if}
 			</div>
