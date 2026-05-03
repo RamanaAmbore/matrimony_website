@@ -4,7 +4,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String, func
+from sqlalchemy import Boolean, DateTime, Index, String, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,10 +14,17 @@ from app.models.base import Base
 class User(Base):
     __tablename__ = "users"
 
+    __table_args__ = (
+        # Functional unique index for case-insensitive uniqueness on user_handle.
+        # PostgreSQL-specific; enforces lower(user_handle) UNIQUE.
+        Index("ix_users_user_handle_lower", text("lower(user_handle)"), unique=True),
+    )
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    user_handle: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(512), nullable=False)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     email_verification_token: Mapped[str | None] = mapped_column(String(64), nullable=True)

@@ -8,14 +8,14 @@
 	import { T } from '$lib/i18n';
 	import { asciiOnly } from '$lib/inputFilters';
 
-	let email = $state('');
+	let identifier = $state('');
 	let password = $state('');
 	let loading = $state(false);
 	let errors = $state<Record<string, string>>({});
 
 	function validate(): boolean {
 		const e: Record<string, string> = {};
-		if (!email.trim()) e.email = 'Email is required';
+		if (!identifier.trim()) e.identifier = 'User ID or email is required';
 		if (!password) e.password = 'Password is required';
 		errors = e;
 		return Object.keys(e).length === 0;
@@ -27,14 +27,14 @@
 
 		loading = true;
 		try {
-			await auth.login(email.trim(), password);
+			await auth.login(identifier.trim(), password);
 			await invalidateAll();
 			toastStore.success('Welcome back!');
 			goto('/dashboard');
 		} catch (err) {
 			if (err instanceof ApiError) {
 				if (err.status === 401) {
-					errors = { password: 'Invalid email or password' };
+					errors = { password: 'Invalid user ID / email or password' };
 				} else if (err.status === 403) {
 					toastStore.error('Please verify your email first');
 				} else {
@@ -65,23 +65,25 @@
 	<KalashaDivider />
 
 	<form onsubmit={handleSubmit} novalidate class="mt-6 space-y-5">
-		<!-- Email -->
+		<!-- User ID or Email -->
 		<div>
-			<label for="email" class="label block">
-				<span class="block">Email address</span>
-				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">ఇమెయిల్ చిరునామా</span>
+			<label for="identifier" class="label block">
+				<span class="block">{T.identifier.en}</span>
+				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">{T.identifier.te}</span>
 			</label>
 			<input
-				id="email"
-				type="email"
-				autocomplete="email"
+				id="identifier"
+				type="text"
+				autocomplete="username"
 				class="input"
-				class:border-vermilion={errors.email}
-				bind:value={email}
-				placeholder="you@example.com"
+				class:border-vermilion={errors.identifier}
+				bind:value={identifier}
+				oninput={(ev) => { identifier = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
+				placeholder="ramesh_kulkarni  or  you@example.com"
+				spellcheck="false"
 			/>
-			{#if errors.email}
-				<p class="mt-1 text-xs text-vermilion">{errors.email}</p>
+			{#if errors.identifier}
+				<p class="mt-1 text-xs text-vermilion">{errors.identifier}</p>
 			{/if}
 		</div>
 

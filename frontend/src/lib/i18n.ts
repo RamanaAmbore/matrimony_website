@@ -71,6 +71,10 @@ export const T = {
   familyValues: { en: 'Family Values', te: 'కుటుంబ విలువలు' },
   about: { en: 'About Yourself', te: 'మీ గురించి' },
   partnerExpectations: { en: 'What you are looking for in a partner', te: 'జీవిత భాగస్వామిలో మీరు కోరుకునేవి' },
+
+  // Auth fields
+  userHandle: { en: 'User ID', te: 'వాడుకరి ID' },
+  identifier: { en: 'User ID or Email', te: 'వాడుకరి ID లేదా ఇమెయిల్' },
 } as const;
 
 export type BilingualKey = keyof typeof T;

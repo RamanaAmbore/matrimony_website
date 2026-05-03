@@ -49,8 +49,9 @@ async def _create_verified_user(client: AsyncClient, db_session: AsyncSession) -
     """Create and verify a user, return (user_id, email)."""
     email = f"user_{uuid.uuid4().hex[:8]}@example.com"
     password = "ValidPass123!"
+    handle = f"u{uuid.uuid4().hex[:7]}"
 
-    resp = await client.post("/auth/register", json={"email": email, "password": password})
+    resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle})
     user_id = resp.json()["user_id"]
 
     # Verify email in DB
@@ -60,7 +61,7 @@ async def _create_verified_user(client: AsyncClient, db_session: AsyncSession) -
     await db_session.commit()
 
     # Login
-    await client.post("/auth/login", json={"email": email, "password": password})
+    await client.post("/auth/login", json={"identifier": email, "password": password})
     return user_id, email
 
 

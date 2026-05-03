@@ -39,13 +39,14 @@ def _sample_profile() -> dict[str, Any]:
 async def _create_verified_user(client: AsyncClient, db_session: AsyncSession) -> str:
     """Create and verify a user, return user_id."""
     email = f"user_{uuid.uuid4().hex[:8]}@example.com"
-    resp = await client.post("/auth/register", json={"email": email, "password": "ValidPass123!"})
+    handle = f"u{uuid.uuid4().hex[:7]}"
+    resp = await client.post("/auth/register", json={"email": email, "password": "ValidPass123!", "user_handle": handle})
     user_id = resp.json()["user_id"]
     result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_id)))
     user = result.scalar_one()
     user.email_verified = True
     await db_session.commit()
-    await client.post("/auth/login", json={"email": email, "password": "ValidPass123!"})
+    await client.post("/auth/login", json={"identifier": email, "password": "ValidPass123!"})
     return user_id
 
 

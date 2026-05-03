@@ -9,10 +9,12 @@ import msgspec
 class RegisterRequest(msgspec.Struct):
     email: str
     password: str
+    user_handle: str
+    phone_number: str
 
 
 class LoginRequest(msgspec.Struct):
-    email: str
+    identifier: str  # email address OR user_handle
     password: str
 
 
@@ -22,6 +24,7 @@ class VerifyEmailRequest(msgspec.Struct):
 
 class UserResponse(msgspec.Struct):
     user_id: str
+    user_handle: str
     email: str
     is_admin: bool
     email_verified: bool

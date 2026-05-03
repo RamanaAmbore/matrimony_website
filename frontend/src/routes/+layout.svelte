@@ -184,6 +184,7 @@
 						{T.admin.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.admin.te}</span>
 					</a>
 				{/if}
+				<span class="font-mono text-sm text-cream/60" title={user.email}>@{user.user_handle}</span>
 				<button
 					onclick={logout}
 					class="rounded border border-cream/50 px-3 py-1 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
@@ -293,6 +294,7 @@
 					</a>
 				{/if}
 				<div class="my-2 h-px bg-gold/20"></div>
+				<p class="px-3 py-1 font-mono text-sm text-ink/50" title={user.email}>@{user.user_handle}</p>
 				<button
 					onclick={logout}
 					class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-vermilion hover:bg-vermilion/10 focus-visible:outline-2 focus-visible:outline-tangerine"

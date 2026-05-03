@@ -28,7 +28,10 @@
 
 	const filtered = $derived(
 		search.trim()
-			? userList.filter((u) => u.email.toLowerCase().includes(search.toLowerCase()))
+			? userList.filter((u) =>
+					u.email.toLowerCase().includes(search.toLowerCase()) ||
+					u.user_handle?.toLowerCase().includes(search.toLowerCase())
+				)
 			: userList
 	);
 
@@ -66,7 +69,7 @@
 			type="search"
 			class="input max-w-sm"
 			bind:value={search}
-			placeholder="Search by email…"
+			placeholder="Search by user ID or email…"
 		/>
 	</div>
 
@@ -79,6 +82,7 @@
 			<table class="w-full text-sm">
 				<thead class="bg-cream border-b border-gold/20">
 					<tr>
+						<th class="px-4 py-3 text-left font-semibold text-ink/70">User ID</th>
 						<th class="px-4 py-3 text-left font-semibold text-ink/70">Email</th>
 						<th class="px-4 py-3 text-left font-semibold text-ink/70">Verified</th>
 						<th class="px-4 py-3 text-left font-semibold text-ink/70">Role</th>
@@ -88,6 +92,7 @@
 				<tbody class="divide-y divide-gold/10">
 					{#each filtered as user (user.user_id)}
 						<tr class="hover:bg-cream/50">
+							<td class="px-4 py-3 font-mono text-ink/80 text-sm">@{user.user_handle}</td>
 							<td class="px-4 py-3 text-ink">{user.email}</td>
 							<td class="px-4 py-3">
 								{#if user.email_verified}

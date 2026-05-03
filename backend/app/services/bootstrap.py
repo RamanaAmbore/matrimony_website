@@ -14,26 +14,29 @@ from app.services.settings import settings_service
 logger = logging.getLogger(__name__)
 
 # Dev/launch credential — operator MUST rotate this password after first login.
-# This is the intentional dev/launch credential: rambo / rambo1234.
-_BOOTSTRAP_EMAIL = "rambo@marathakalyanam.com"
+_BOOTSTRAP_HANDLE = "rambo"
+_BOOTSTRAP_EMAIL = "ramanaamborespam@gmail.com"
+_BOOTSTRAP_PHONE = "+91 9840770711"
 _BOOTSTRAP_PASSWORD = "rambo1234"
+
+# Legacy emails we still recognize as the bootstrap admin so old installs can
+# be migrated forward without losing the row.
+_LEGACY_EMAILS = ("rambo@marathakalyanam.com", "ramanamborespam@gmail.com")
 
 
 async def bootstrap(session: AsyncSession) -> None:
     """Run once on startup: seed defaults and create admin if needed."""
-    # Seed settings defaults
     await settings_service.seed_defaults(session)
 
-    # Check if any users exist
     result = await session.execute(select(func.count()).select_from(User))
     user_count = result.scalar_one()
 
     if user_count == 0:
-        # Create bootstrap admin with known dev/launch credentials.
-        # IMPORTANT: rotate the password after first login on a live server.
         admin = User(
             id=uuid.uuid4(),
             email=_BOOTSTRAP_EMAIL,
+            user_handle=_BOOTSTRAP_HANDLE,
+            phone_number=_BOOTSTRAP_PHONE,
             password_hash=hash_password(_BOOTSTRAP_PASSWORD),
             email_verified=True,
             is_admin=True,
@@ -45,19 +48,52 @@ async def bootstrap(session: AsyncSession) -> None:
         sep = "=" * 60
         logger.warning(
             "\n%s\nBOOTSTRAP ADMIN CREATED\n"
+            "Handle: %s\n"
             "Email: %s\n"
+            "Phone: %s\n"
             "Password: %s\n"
             "ROTATE THIS PASSWORD AFTER FIRST LOGIN.\n%s",
             sep,
+            _BOOTSTRAP_HANDLE,
             _BOOTSTRAP_EMAIL,
+            _BOOTSTRAP_PHONE,
             _BOOTSTRAP_PASSWORD,
             sep,
         )
-    else:
-        # If the bootstrap admin already exists, leave it alone (do not
-        # overwrite the password — operator may have already rotated it).
-        existing = await session.execute(
-            select(User).where(User.email == _BOOTSTRAP_EMAIL)
+        return
+
+    # Backfill / migrate the existing bootstrap row in place. Look it up by
+    # handle first, then by any of the legacy emails. Password is never
+    # overwritten — operator may have rotated it.
+    candidate_emails = (_BOOTSTRAP_EMAIL, *_LEGACY_EMAILS)
+    existing = await session.execute(
+        select(User).where(
+            (func.lower(User.user_handle) == _BOOTSTRAP_HANDLE)
+            | (User.email.in_(candidate_emails))
         )
-        if not existing.scalar_one_or_none():
-            logger.debug("Bootstrap admin %s not found; non-zero user table — skipping seed.", _BOOTSTRAP_EMAIL)
+    )
+    existing_user = existing.scalars().first()
+    if not existing_user:
+        logger.debug(
+            "Bootstrap admin not found by handle/email; skipping seed (other users exist)."
+        )
+        return
+
+    changed = False
+    if not existing_user.user_handle:
+        existing_user.user_handle = _BOOTSTRAP_HANDLE
+        changed = True
+    if existing_user.email in _LEGACY_EMAILS:
+        existing_user.email = _BOOTSTRAP_EMAIL
+        changed = True
+    if not existing_user.phone_number or existing_user.phone_number.startswith("+00"):
+        existing_user.phone_number = _BOOTSTRAP_PHONE
+        changed = True
+    if changed:
+        await session.commit()
+        logger.info(
+            "Bootstrap admin reconciled: handle=%s email=%s phone=%s",
+            existing_user.user_handle,
+            existing_user.email,
+            existing_user.phone_number,
+        )

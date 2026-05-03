@@ -1,12 +1,13 @@
 """Authentication routes."""
 
+import re
 import uuid
 from typing import Any
 
 from litestar import Controller, Response, get, post
 from litestar.connection import Request
 from litestar.exceptions import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import IS_PROD
@@ -25,6 +26,10 @@ from app.services.settings import settings_service
 
 _JWT_COOKIE = "mk_jwt"
 
+# ^[A-Za-z][A-Za-z0-9_]{2,29}$  →  starts with a letter, then 2–29 alphanumeric/underscore
+# total length: 3–30 characters
+_HANDLE_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]{2,29}$")
+
 
 class AuthController(Controller):
     path = "/auth"
@@ -36,13 +41,37 @@ class AuthController(Controller):
         db: AsyncSession,
         request: Request,
     ) -> dict[str, Any]:
-        # Check if email exists
-        result = await db.execute(select(User).where(User.email == data.email.lower()))
-        existing = result.scalar_one_or_none()
-        if existing:
+        # Validate handle format
+        if not _HANDLE_RE.match(data.user_handle):
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_handle",
+                    "message": (
+                        "Handle must be 3–30 characters, start with a letter, "
+                        "and contain only letters, digits, or underscores."
+                    ),
+                },
+            )
+
+        # Check handle uniqueness (case-insensitive)
+        handle_result = await db.execute(
+            select(User).where(func.lower(User.user_handle) == data.user_handle.lower())
+        )
+        if handle_result.scalar_one_or_none():
             raise HTTPException(
                 status_code=409,
-                detail={"code": "email_exists", "message": "Email already registered"},
+                detail={"code": "handle_taken", "message": "That handle is already taken"},
+            )
+
+        # Check email uniqueness (case-insensitive)
+        email_result = await db.execute(
+            select(User).where(func.lower(User.email) == data.email.lower())
+        )
+        if email_result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "email_taken", "message": "Email already registered"},
             )
 
         if len(data.password) < 8:
@@ -55,6 +84,7 @@ class AuthController(Controller):
         user = User(
             id=uuid.uuid4(),
             email=data.email.lower(),
+            user_handle=data.user_handle,  # preserve chosen casing for display
             password_hash=auth_svc.hash_password(data.password),
             email_verified=False,
             email_verification_token=token,
@@ -80,23 +110,34 @@ class AuthController(Controller):
         db: AsyncSession,
         request: Request,
     ) -> Response[dict[str, Any]]:
-        result = await db.execute(select(User).where(User.email == data.email.lower()))
+        # Route lookup: identifier containing '@' is treated as an email
+        if "@" in data.identifier:
+            result = await db.execute(
+                select(User).where(func.lower(User.email) == data.identifier.lower())
+            )
+        else:
+            result = await db.execute(
+                select(User).where(func.lower(User.user_handle) == data.identifier.lower())
+            )
         user = result.scalar_one_or_none()
 
         if not user or not auth_svc.verify_password(data.password, user.password_hash):
             raise HTTPException(
                 status_code=401,
-                detail={"code": "invalid_credentials", "message": "Invalid email or password"},
+                detail={"code": "invalid_credentials", "message": "Invalid identifier or password"},
             )
 
         token = mint_jwt(
             user_id=str(user.id),
+            handle=user.user_handle,
+            email=user.email,
             is_admin=user.is_admin,
             email_verified=user.email_verified,
         )
 
         body: dict[str, Any] = {
             "user_id": str(user.id),
+            "user_handle": user.user_handle,
             "email": user.email,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
@@ -152,6 +193,8 @@ class AuthController(Controller):
             )
         return {
             "user_id": payload["sub"],
+            "user_handle": payload.get("handle", ""),
+            "email": payload.get("email", ""),
             "is_admin": payload.get("is_admin", False),
             "email_verified": payload.get("email_verified", False),
         }

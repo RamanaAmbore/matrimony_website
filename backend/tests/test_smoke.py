@@ -13,6 +13,10 @@ from httpx import AsyncClient
 pytestmark = pytest.mark.asyncio
 
 
+def _unique_handle() -> str:
+    return f"u{uuid.uuid4().hex[:7]}"
+
+
 async def test_health(client: AsyncClient) -> None:
     resp = await client.get("/health")
     assert resp.status_code == 200
@@ -22,21 +26,23 @@ async def test_health(client: AsyncClient) -> None:
 
 async def test_register_and_login(client: AsyncClient) -> None:
     email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+    handle = _unique_handle()
     password = "TestPass123!"
 
     # Register
-    resp = await client.post("/auth/register", json={"email": email, "password": password})
+    resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle})
     assert resp.status_code == 201, resp.text
     data = resp.json()
     assert "user_id" in data
     user_id = data["user_id"]
 
     # Login
-    resp = await client.post("/auth/login", json={"email": email, "password": password})
+    resp = await client.post("/auth/login", json={"identifier": email, "password": password})
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["user_id"] == user_id
     assert data["email"] == email
+    assert data["user_handle"] == handle
     assert not data["is_admin"]
     assert not data["email_verified"]
 
@@ -56,15 +62,15 @@ async def test_register_and_login(client: AsyncClient) -> None:
 
 async def test_duplicate_email_rejected(client: AsyncClient) -> None:
     email = f"dup_{uuid.uuid4().hex[:8]}@example.com"
-    await client.post("/auth/register", json={"email": email, "password": "TestPass123!"})
-    resp = await client.post("/auth/register", json={"email": email, "password": "TestPass123!"})
+    await client.post("/auth/register", json={"email": email, "password": "TestPass123!", "user_handle": _unique_handle()})
+    resp = await client.post("/auth/register", json={"email": email, "password": "TestPass123!", "user_handle": _unique_handle()})
     assert resp.status_code == 409
 
 
 async def test_profile_requires_email_verified(client: AsyncClient) -> None:
     email = f"unverified_{uuid.uuid4().hex[:8]}@example.com"
-    await client.post("/auth/register", json={"email": email, "password": "TestPass123!"})
-    await client.post("/auth/login", json={"email": email, "password": "TestPass123!"})
+    await client.post("/auth/register", json={"email": email, "password": "TestPass123!", "user_handle": _unique_handle()})
+    await client.post("/auth/login", json={"identifier": email, "password": "TestPass123!"})
 
     profile_data = _sample_profile()
     resp = await client.post("/profiles", json=profile_data)
@@ -80,10 +86,11 @@ async def test_full_flow_register_verify_profile_admin(client: AsyncClient) -> N
     from sqlalchemy import select, update
 
     email = f"flow_{uuid.uuid4().hex[:8]}@example.com"
+    handle = _unique_handle()
     password = "FlowTest456!"
 
     # Register
-    resp = await client.post("/auth/register", json={"email": email, "password": password})
+    resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle})
     assert resp.status_code == 201
     user_id = resp.json()["user_id"]
 
@@ -95,7 +102,7 @@ async def test_full_flow_register_verify_profile_admin(client: AsyncClient) -> N
         await session.commit()
 
     # Login (now verified)
-    resp = await client.post("/auth/login", json={"email": email, "password": password})
+    resp = await client.post("/auth/login", json={"identifier": email, "password": password})
     assert resp.status_code == 200
 
     # Create profile
@@ -140,7 +147,7 @@ async def test_full_flow_register_verify_profile_admin(client: AsyncClient) -> N
     from httpx import ASGITransport
     from app.main import app as litestar_app
     async with AsyncClient(transport=ASGITransport(app=litestar_app), base_url="http://testserver") as admin_client:
-        resp = await admin_client.post("/auth/login", json={"email": admin_email, "password": admin_password})
+        resp = await admin_client.post("/auth/login", json={"identifier": admin_email, "password": admin_password})
         assert resp.status_code == 200, resp.text
         assert resp.json()["is_admin"]
 
@@ -200,7 +207,7 @@ async def test_admin_stats(client: AsyncClient) -> None:
     from httpx import ASGITransport
     from app.main import app as litestar_app
     async with AsyncClient(transport=ASGITransport(app=litestar_app), base_url="http://testserver") as admin_client:
-        await admin_client.post("/auth/login", json={"email": admin_email, "password": admin_password})
+        await admin_client.post("/auth/login", json={"identifier": admin_email, "password": admin_password})
         resp = await admin_client.get("/admin/stats")
         assert resp.status_code == 200
         data = resp.json()

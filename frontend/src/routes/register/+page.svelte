@@ -5,15 +5,42 @@
 	import { ApiError } from '$lib/api';
 	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 	import { T } from '$lib/i18n';
+	import { asciiOnly } from '$lib/inputFilters';
 
+	const HANDLE_RE = /^[A-Za-z][A-Za-z0-9_]{2,29}$/;
+
+	let user_handle = $state('');
 	let email = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
 	let loading = $state(false);
 	let errors = $state<Record<string, string>>({});
 
+	function validateHandle(value: string): string {
+		if (!value.trim()) return 'User ID is required';
+		if (!HANDLE_RE.test(value)) {
+			if (value.length < 3) return 'Must be at least 3 characters';
+			if (value.length > 30) return 'Must be 30 characters or fewer';
+			if (!/^[A-Za-z]/.test(value)) return 'Must start with a letter';
+			return 'Only letters, digits and underscore allowed';
+		}
+		return '';
+	}
+
+	function handleBlur() {
+		const msg = validateHandle(user_handle);
+		if (msg) {
+			errors = { ...errors, user_handle: msg };
+		} else {
+			const { user_handle: _, ...rest } = errors;
+			errors = rest;
+		}
+	}
+
 	function validate(): boolean {
 		const e: Record<string, string> = {};
+		const handleMsg = validateHandle(user_handle);
+		if (handleMsg) e.user_handle = handleMsg;
 		if (!email.trim()) e.email = 'Email is required';
 		else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Enter a valid email';
 		if (!password) e.password = 'Password is required';
@@ -29,13 +56,18 @@
 
 		loading = true;
 		try {
-			await auth.register(email.trim(), password);
+			await auth.register(email.trim(), password, user_handle.trim());
 			toastStore.success('Account created! Please check your email to verify.');
 			goto('/login');
 		} catch (err) {
 			if (err instanceof ApiError) {
 				if (err.status === 409) {
-					errors = { email: 'An account with this email already exists' };
+					if (err.code === 'handle_taken') {
+						errors = { user_handle: 'This user ID is already taken — pick another' };
+					} else {
+						// email_taken or generic 409
+						errors = { email: 'An account with this email already exists — login or use a different email' };
+					}
 				} else {
 					toastStore.error(err.message.slice(0, 60));
 				}
@@ -64,6 +96,35 @@
 	<KalashaDivider />
 
 	<form onsubmit={handleSubmit} novalidate class="mt-6 space-y-5">
+		<!-- User ID / handle -->
+		<div>
+			<label for="user_handle" class="label block">
+				<span class="block">{T.userHandle.en}</span>
+				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">{T.userHandle.te}</span>
+			</label>
+			<input
+				id="user_handle"
+				type="text"
+				autocomplete="username"
+				class="input font-mono"
+				class:border-vermilion={errors.user_handle}
+				bind:value={user_handle}
+				oninput={(ev) => { user_handle = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
+				onblur={handleBlur}
+				placeholder="ramesh_kulkarni"
+				maxlength="30"
+				spellcheck="false"
+			/>
+			{#if errors.user_handle}
+				<p class="mt-1 text-xs text-vermilion">{errors.user_handle}</p>
+			{:else}
+				<p class="mt-1 text-xs text-ink/50 leading-snug">
+					3–30 characters · letters, digits, underscore · must start with a letter<br />
+					<span lang="te">3–30 అక్షరాలు · అక్షరాలు, అంకెలు, అండర్‌స్కోర్ · అక్షరంతో ప్రారంభం</span>
+				</p>
+			{/if}
+		</div>
+
 		<!-- Email -->
 		<div>
 			<label for="email" class="label block">
