@@ -21,24 +21,26 @@ from app.models.profile import (
 
 
 class ProfileCreateRequest(msgspec.Struct, kw_only=True):
-    # --- Existing required fields ---
+    # --- Always required (wizard section 1) ---
     gender: str
     first_name: str
     last_name: str
     dob: str  # ISO date string YYYY-MM-DD
-    height_cm: int
-    complexion: str
-    education: str
-    occupation: str
-    city: str
-    state: str
-    gotra: str
-    kuldevata: str
-    devak: str
-    surname_clan: str
-    nakshatram: str
-    rashi: str
-    diet: str
+
+    # --- Optional at creation — filled across wizard sections ---
+    height_cm: int | None = None
+    complexion: str | None = None
+    education: str | None = None
+    occupation: str | None = None
+    city: str | None = None
+    state: str | None = None
+    gotra: str | None = None
+    kuldevata: str | None = None
+    devak: str | None = None
+    surname_clan: str | None = None
+    nakshatram: str | None = None
+    rashi: str | None = None
+    diet: str | None = None
 
     # --- Existing optional fields ---
     annual_income_inr: int | None = None
