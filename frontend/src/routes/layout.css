@@ -52,30 +52,19 @@
 }
 
 @layer utilities {
-	/* Telugu text always renders in dark amber — placed in utilities so it wins over
-	   Tailwind utility colour classes (e.g. text-ink/60) on the same element.
-	   #c87800 is darker than saffron (#f4a300) and stays readable on cream (#fff8e7). */
+	/* Telugu matches surrounding English text colour exactly.
+	   The maroon stroke (drawn under the fill via paint-order) provides the
+	   subtle visual distinction without a colour shift. */
 	[lang="te"] {
-		color: var(--color-marigold);
-		-webkit-text-stroke: 0.6px var(--color-maroon);
+		color: inherit;
+		-webkit-text-stroke: 0.55px var(--color-maroon);
 		paint-order: stroke fill;
 	}
 
-	/* Slightly stronger shadow on dark backgrounds for legibility */
+	/* On dark header/footer backgrounds a light text-shadow aids legibility */
 	header [lang="te"],
 	footer [lang="te"] {
-		color: var(--color-marigold);
-		text-shadow: 0 1px 1px rgba(0,0,0,0.4);
-	}
-
-	/* Inside buttons/links with their own text colour, Telugu inherits that colour
-	   so it stays readable on hover states (e.g. saffron-on-saffron = invisible). */
-	.btn-primary [lang="te"],
-	.btn-secondary [lang="te"],
-	.btn-danger [lang="te"],
-	a.btn-primary [lang="te"],
-	a.btn-secondary [lang="te"] {
-		color: inherit;
+		text-shadow: 0 1px 1px rgba(0,0,0,0.35);
 	}
 
 	/* Maroon headings — element+class specificity (0,1,1) beats any conflicting utility */

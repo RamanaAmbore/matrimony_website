@@ -12,10 +12,14 @@ from app.services.settings import settings_service
 logger = logging.getLogger(__name__)
 
 _IST = timezone(timedelta(hours=5, minutes=30))
+_EDT = timezone(timedelta(hours=-4))
 
 
-def _now_ist() -> str:
-    return datetime.now(_IST).strftime("%d %b %Y %I:%M %p IST")
+def _now_times() -> str:
+    now = datetime.now(timezone.utc)
+    ist = now.astimezone(_IST).strftime("%d %b %Y %I:%M %p IST")
+    edt = now.astimezone(_EDT).strftime("%I:%M %p EDT")
+    return f"{ist} · {edt}"
 
 
 async def _send(text: str) -> None:
@@ -48,7 +52,7 @@ async def _send(text: str) -> None:
 
 async def notify_user_registered(name: str, email: str, phone: str) -> None:
     asyncio.create_task(_send(
-        f"🆕 <b>New Registration</b>\n{name}\n{email} | {phone}\n{_now_ist()}"
+        f"🆕 <b>New Registration</b>\n{name}\n{email} | {phone}\n{_now_times()}"
     ))
 
 
@@ -56,39 +60,39 @@ async def notify_profile_submitted(profile_id: str, name: str, gender: str) -> N
     code = profile_id.replace("-", "")[:5].upper()
     mc_code = f"MC-{code}"
     asyncio.create_task(_send(
-        f"📋 <b>Profile Submitted</b>\n{mc_code} — {name} ({gender})\nAwaiting review\n{_now_ist()}"
+        f"📋 <b>Profile Submitted</b>\n{mc_code} — {name} ({gender})\nAwaiting review\n{_now_times()}"
     ))
 
 
 async def notify_profile_approved(name: str, admin_notes: str = "") -> None:
     notes = f"\n{admin_notes}" if admin_notes else ""
     asyncio.create_task(_send(
-        f"✅ <b>Profile Approved</b>\n{name}{notes}\n{_now_ist()}"
+        f"✅ <b>Profile Approved</b>\n{name}{notes}\n{_now_times()}"
     ))
 
 
 async def notify_profile_rejected(name: str, admin_notes: str = "") -> None:
     notes = f"\n{admin_notes}" if admin_notes else ""
     asyncio.create_task(_send(
-        f"❌ <b>Profile Rejected</b>\n{name}{notes}\n{_now_ist()}"
+        f"❌ <b>Profile Rejected</b>\n{name}{notes}\n{_now_times()}"
     ))
 
 
 async def notify_request_received(requester: str, profile_name: str) -> None:
     asyncio.create_task(_send(
-        f"👁 <b>View Request</b>\nFrom: {requester}\nFor: {profile_name}\n{_now_ist()}"
+        f"👁 <b>View Request</b>\nFrom: {requester}\nFor: {profile_name}\n{_now_times()}"
     ))
 
 
 async def notify_request_approved(requester: str, profile_name: str) -> None:
     asyncio.create_task(_send(
-        f"✅ <b>View Request Approved</b>\n{requester} → {profile_name}\n{_now_ist()}"
+        f"✅ <b>View Request Approved</b>\n{requester} → {profile_name}\n{_now_times()}"
     ))
 
 
 async def notify_request_rejected(requester: str, profile_name: str) -> None:
     asyncio.create_task(_send(
-        f"❌ <b>View Request Rejected</b>\n{requester} → {profile_name}\n{_now_ist()}"
+        f"❌ <b>View Request Rejected</b>\n{requester} → {profile_name}\n{_now_times()}"
     ))
 
 
