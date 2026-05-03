@@ -7,7 +7,7 @@
 		type SearchParams
 	} from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
-	import { SlidersHorizontal, ChevronLeft, ChevronRight, User, Loader, Search } from 'lucide-svelte';
+	import { ChevronLeft, ChevronRight, User, Loader, Search } from 'lucide-svelte';
 
 	const NAKSHATRAS = [
 		'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashirsha', 'Ardra',
@@ -40,7 +40,6 @@
 	let total = $state(0);
 	let loading = $state(false);
 	let isPreview = $state(false);   // true → anonymous preview tier (capped 6, no name/edu/job)
-	let sidebarOpen = $state(false);
 	let debounceTimer: ReturnType<typeof setTimeout>;
 
 	const totalPages = $derived(isPreview ? 1 : Math.ceil(total / PER_PAGE));
@@ -120,24 +119,18 @@
 </svelte:head>
 
 <div class="mx-auto max-w-7xl px-4 py-8">
-	<div class="mb-6 flex items-center justify-between">
-		<h1 class="font-serif text-3xl font-bold text-terracotta">Find Your Partner</h1>
-		<!-- Mobile filter toggle -->
-		<button
-			onclick={() => (sidebarOpen = !sidebarOpen)}
-			class="btn-secondary flex items-center gap-2 md:hidden"
-		>
-			<SlidersHorizontal size={18} />
-			Filters
-		</button>
+	<div class="mb-6">
+		<h1 class="font-serif text-3xl font-bold text-terracotta">
+			Find Your Partner
+			<span class="block text-base font-normal text-ink/60 sm:inline sm:ml-2" lang="te">
+				· జీవిత భాగస్వామిని కనుగొనండి
+			</span>
+		</h1>
 	</div>
 
 	<div class="flex flex-col gap-6 md:flex-row">
-		<!-- ── Sidebar filters ─────────────────────────────────────────────── -->
-		<aside
-			class="w-full md:w-64 shrink-0
-				{sidebarOpen ? 'block' : 'hidden md:block'}"
-		>
+		<!-- ── Filters sidebar — always visible (no toggle) ────────────────── -->
+		<aside class="w-full shrink-0 md:w-64">
 			<div class="card space-y-4 sticky top-4">
 				<h2 class="font-serif text-lg font-semibold text-terracotta">Filters</h2>
 

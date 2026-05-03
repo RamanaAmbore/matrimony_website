@@ -323,11 +323,11 @@
 		<img
 			src="/bg/inner.jpg"
 			alt=""
-			class="h-full w-full object-cover object-center"
+			class="h-full w-full object-cover object-center opacity-25"
 			loading="lazy"
 		/>
-		<!-- Heavy cream wash so forms and body text remain readable -->
-		<div class="absolute inset-0 bg-cream/88"></div>
+		<!-- Strong cream wash so forms and body text are clearly visible -->
+		<div class="absolute inset-0 bg-cream/95"></div>
 	</div>
 {/if}
 
