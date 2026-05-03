@@ -61,10 +61,12 @@
 		paint-order: stroke fill;
 	}
 
-	/* On dark header/footer backgrounds a light text-shadow aids legibility */
+	/* Navbar & footer Telugu: Ambore Software marigold (#ffb627).
+	   Buttons override this via inline style="color:inherit" so they are unaffected. */
 	header [lang="te"],
 	footer [lang="te"] {
-		text-shadow: 0 1px 1px rgba(0,0,0,0.35);
+		color: var(--color-marigold);
+		text-shadow: 0 1px 1px rgba(0,0,0,0.4);
 	}
 
 	/* Maroon headings — element+class specificity (0,1,1) beats any conflicting utility */
