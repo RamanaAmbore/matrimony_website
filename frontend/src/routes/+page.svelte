@@ -56,7 +56,7 @@
 			<!-- Platform description -->
 			<p
 				class="mb-2 max-w-lg text-base text-cream/95 md:text-lg"
-				style="text-shadow: 0 1px 6px rgba(43,10,14,0.95), 0 2px 12px rgba(43,10,14,0.7);"
+				style="text-shadow: 0 1px 2px rgba(43,10,14,0.6);"
 			>
 				The trusted matrimonial platform for the Maratha community settled across Andhra, Telangana,
 				Maharashtra and other states. Admin-verified profiles. Privacy-first photo sharing.
