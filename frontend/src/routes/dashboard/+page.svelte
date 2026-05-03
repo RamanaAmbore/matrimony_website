@@ -91,7 +91,7 @@
 			<p class="mt-2 text-ink/60">Create your first profile to start appearing in search results.</p>
 			<a href="/profiles/new" class="btn-primary mt-6 inline-flex items-center gap-2">
 				<Plus size={18} />
-				Create Profile
+				New Profile
 			</a>
 		</div>
 	{:else}
@@ -106,6 +106,7 @@
 							<p class="text-sm text-ink/60 capitalize">
 								{profile.gender} · {calcAge(profile.dob)} yrs
 							</p>
+							<span class="font-mono text-[0.65rem] text-maroon/60">MC-{profile.id.replace(/-/g, '').slice(0, 5).toUpperCase()}</span>
 						</div>
 						<span class={statusClass(profile.status)}>
 							{statusLabel(profile.status)}

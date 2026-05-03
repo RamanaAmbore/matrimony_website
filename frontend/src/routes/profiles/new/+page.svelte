@@ -65,12 +65,12 @@
 </svelte:head>
 
 <div class="mx-auto max-w-5xl px-4 py-10">
-	<h1 class="font-serif text-3xl font-bold text-maroon">Create New Profile</h1>
+	<h1 class="font-serif text-3xl font-bold text-maroon">New Profile</h1>
 
-	<!-- Profile ID — appears after first save -->
+	<!-- Profile code — appears after first save -->
 	{#if savedProfile}
 		<p class="mt-1 text-sm text-ink/50">
-			Profile ID: <span class="font-mono text-xs bg-ink/5 px-1.5 py-0.5 rounded select-all">{savedProfile.id}</span>
+			Profile: <span class="font-mono text-xs bg-maroon/10 text-maroon px-1.5 py-0.5 rounded select-all">MC-{savedProfile.id.replace(/-/g, '').slice(0, 5).toUpperCase()}</span>
 		</p>
 	{/if}
 

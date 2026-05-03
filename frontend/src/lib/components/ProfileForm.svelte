@@ -506,7 +506,7 @@
 		{@const locked = isSectionLocked(i)}
 		{@const done = completedSections.has(i)}
 		{@const open = activeSection === i && !locked}
-		<div id="wsec-{i}" class="rounded-lg border {done ? 'border-green-300 bg-green-50/40' : locked ? 'border-ink/10 bg-ink/3 opacity-60' : 'border-gold/40 bg-white'} overflow-hidden">
+		<div id="wsec-{i}" class="rounded-lg border {done ? 'border-gold/60 bg-saffron/5' : locked ? 'border-ink/10 bg-ink/3 opacity-60' : 'border-gold/40 bg-white'} overflow-hidden">
 			<!-- Section header -->
 			<button
 				type="button"
@@ -514,13 +514,13 @@
 				disabled={locked}
 				class="flex w-full items-center gap-3 px-4 py-3 text-left {locked ? 'cursor-not-allowed' : 'hover:bg-maroon/5'}"
 			>
-				<span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold {done ? 'bg-green-600 text-white' : locked ? 'bg-ink/15 text-ink/40' : 'bg-maroon/10 text-maroon'}">{i + 1}</span>
+				<span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold {done ? 'bg-maroon text-cream' : locked ? 'bg-ink/15 text-ink/40' : 'bg-maroon/10 text-maroon'}">{i + 1}</span>
 				<span class="flex-1">
 					<span class="font-serif font-semibold {locked ? 'text-ink/40' : 'text-maroon'}">{sec.label}</span>
 					<span class="ml-2 text-xs text-ink/50" lang="te">{sec.te}</span>
 				</span>
 				{#if done}
-					<span class="text-xs font-medium text-green-600">✓ Saved</span>
+					<span class="text-xs font-medium text-maroon">✓ Saved</span>
 				{:else if locked}
 					<span class="text-xs text-ink/35">Complete step {i} first</span>
 				{:else if open}

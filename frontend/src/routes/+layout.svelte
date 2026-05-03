@@ -151,19 +151,17 @@
 </svelte:head>
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
-<header class="shadow-md border-t-4 border-saffron border-b border-gold/40" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
+<header class="shadow-sm border-t-4 border-saffron border-b border-cream/25" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
 	<div class="mx-auto flex w-full max-w-5xl items-center justify-center gap-2 px-4 py-2">
 		<!-- Brand wordmark — shrink-0 keeps it from compressing -->
 		<a
 			href="/"
 			class="flex shrink-0 items-center gap-2 focus-visible:outline-2 focus-visible:outline-cream"
 		>
-			<div class="rounded-full ring-1 ring-gold/40 p-0.5">
-				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" />
-			</div>
+			<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" />
 			<span class="whitespace-nowrap font-serif text-base font-semibold leading-tight">
 				<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-				<span class="block text-[0.7rem] font-normal leading-tight" lang="te" style="color: #f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
+				<span class="block text-[0.7rem] font-normal leading-tight" lang="te" style="color: #f4a300; text-shadow: 0 0 4px rgba(244,163,0,0.5), 1px 1px 2px rgba(0,0,0,0.85);">మరాఠా కల్యాణం</span>
 			</span>
 		</a>
 
@@ -249,12 +247,10 @@
 			style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);"
 		>
 			<div class="flex items-center gap-2">
-				<div class="rounded-full ring-1 ring-gold/40 p-0.5">
-					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" />
-				</div>
+				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" />
 				<div class="font-serif leading-tight">
 					<span class="block text-sm font-semibold" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-					<span class="block text-xs font-normal" lang="te" style="color: #f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
+					<span class="block text-xs font-normal" lang="te" style="color: #f4a300; text-shadow: 0 0 4px rgba(244,163,0,0.5), 1px 1px 2px rgba(0,0,0,0.85);">మరాఠా కల్యాణం</span>
 				</div>
 			</div>
 			<button
@@ -337,11 +333,11 @@
 		<img
 			src="/bg/home.jpg"
 			alt=""
-			class="h-full w-full object-cover object-center opacity-45"
+			class="h-full w-full object-cover object-left opacity-55"
 			loading="lazy"
 		/>
 		<!-- Cream wash keeps text and forms readable while letting the photo show through -->
-		<div class="absolute inset-0 bg-cream/82"></div>
+		<div class="absolute inset-0 bg-cream/72"></div>
 	</div>
 {/if}
 
@@ -356,12 +352,10 @@
 			<!-- Brand column -->
 			<div class="md:col-span-2">
 				<div class="flex items-center gap-3">
-					<div class="rounded-full ring-1 ring-gold/40 p-0.5">
-						<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto logo-glow" />
-					</div>
+					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto logo-glow" />
 					<div>
 						<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
-						<p class="text-sm" lang="te" style="color: #f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</p>
+						<p class="text-sm" lang="te" style="color: #f4a300; text-shadow: 0 0 4px rgba(244,163,0,0.5), 1px 1px 2px rgba(0,0,0,0.85);">మరాఠా కల్యాణం</p>
 					</div>
 				</div>
 			</div>
