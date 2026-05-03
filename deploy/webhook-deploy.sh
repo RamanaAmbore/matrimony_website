@@ -27,7 +27,7 @@ cd "$REPO_DIR"
 log "Fetching $BRANCH"
 git fetch --quiet origin "$BRANCH"
 # Fix ownership of any root-created files so git reset can overwrite them
-sudo /usr/bin/chown -R www-data:www-data "$REPO_DIR" 2>/dev/null || true
+sudo /usr/local/sbin/mk-chown-repo 2>/dev/null || true
 git reset --hard "origin/$BRANCH"
 HEAD_SHA="$(git rev-parse --short HEAD)"
 log "Now at $HEAD_SHA"
@@ -77,9 +77,12 @@ if [[ -f "$DOTENV" ]]; then
     TG_CHAT="$(grep -E '^TELEGRAM_CHAT_ID=' "$DOTENV" | cut -d= -f2- | tr -d '[:space:]')"
     if [[ -n "$TG_TOKEN" && -n "$TG_CHAT" ]]; then
         IST="$(TZ='Asia/Kolkata' date '+%a, %d %b %Y %I:%M %p IST')"
-        MSG="<b>Maratha Kalyanam — Deploy OK</b>%0A${IST}%0A<code>SHA: ${HEAD_SHA}</code>"
+        MSG="<b>Maratha Kalyanam - Deploy OK</b>${IST} <code>${HEAD_SHA}</code>"
         curl -s -o /dev/null \
-            "https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT}&text=${MSG}&parse_mode=HTML" \
+            -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TG_CHAT}" \
+            --data-urlencode "text=${MSG}" \
+            --data-urlencode "parse_mode=HTML" \
             && log "Telegram notification sent" \
             || log "Telegram notification failed (non-fatal)"
     fi
