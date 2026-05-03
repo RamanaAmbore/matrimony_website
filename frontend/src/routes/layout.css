@@ -56,21 +56,11 @@
 	   #c87800 is darker than saffron (#f4a300) and stays readable on cream (#fff8e7). */
 	[lang="te"] {
 		color: #b8860b;  /* dark goldenrod — readable on cream */
-		text-shadow:
-			-1px -1px 0 rgba(0,0,0,0.10),
-			 1px -1px 0 rgba(0,0,0,0.10),
-			-1px  1px 0 rgba(0,0,0,0.10),
-			 1px  1px 0 rgba(0,0,0,0.10);
 	}
 
-	/* Telugu text on dark (maroon/header) backgrounds — orange with sharp edge */
+	/* Telugu text on dark (maroon/header) backgrounds — orange, no shadow */
 	header [lang="te"] {
 		color: #f4a300;
-		text-shadow:
-			-1px -1px 0 rgba(0,0,0,0.65),
-			 1px -1px 0 rgba(0,0,0,0.65),
-			-1px  1px 0 rgba(0,0,0,0.65),
-			 1px  1px 0 rgba(0,0,0,0.65);
 	}
 
 	/* Inside buttons/links with their own text colour, Telugu inherits that colour
