@@ -62,7 +62,7 @@
 				Maharashtra and other states. Admin-verified profiles. Privacy-first photo sharing.
 			</p>
 			<p
-				class="mb-8 max-w-lg text-sm md:text-base"
+				class="mb-8 max-w-lg text-base md:text-lg"
 				lang="te"
 				style="color: #ffb627; -webkit-text-stroke: 0.8px #f4a300; paint-order: stroke fill; text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.7);"
 			>
