@@ -55,23 +55,17 @@
 	<div class="relative z-10 flex min-h-[88vh] flex-col items-center justify-center px-4 text-center">
 		<div class="mx-auto max-w-3xl">
 			<!-- Site logo -->
-			<div class="mb-5 flex justify-center">
+			<div class="mb-4 flex justify-center">
 				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-24 w-auto md:h-28 drop-shadow-xl" />
 			</div>
 
-			<!-- Tagline -->
+			<!-- Platform description -->
 			<p
-				class="mb-1 text-base font-medium text-cream/90 drop-shadow-md md:text-lg"
-				style="text-shadow: 0 2px 6px rgba(43,10,14,0.85);"
+				class="mb-8 max-w-lg text-sm text-cream/90 md:text-base"
+				style="text-shadow: 0 1px 4px rgba(43,10,14,0.9);"
 			>
-				Rooted in Tradition · United by Values
-			</p>
-			<p
-				class="mb-8 text-sm font-light text-cream/70 drop-shadow-sm"
-				lang="te"
-				style="text-shadow: 0 1px 4px rgba(43,10,14,0.8);"
-			>
-				సంప్రదాయంలో పాతుకొని · విలువలతో కలిసి
+				The trusted matrimonial platform for the Maratha community settled across Andhra, Telangana,
+				Maharashtra and other states. Admin-verified profiles. Privacy-first photo sharing.
 			</p>
 
 			<div class="flex flex-col items-center justify-center gap-3 sm:flex-row">

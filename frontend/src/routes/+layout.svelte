@@ -342,38 +342,16 @@
 <!-- ── Footer ─────────────────────────────────────────────────────────────── -->
 <footer class="border-t border-gold/30 bg-maroon/95 py-10 text-cream">
 	<div class="mx-auto max-w-7xl px-4">
-		<div class="grid gap-8 md:grid-cols-4">
+		<div class="grid gap-8 md:grid-cols-3">
 			<!-- Brand column -->
 			<div class="md:col-span-2">
-				<div class="mb-3">
+				<div class="flex items-center gap-3">
 					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto logo-glow" />
+					<div>
+						<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
+						<p class="text-sm text-cream/75" lang="te">మరాఠా కల్యాణం</p>
+					</div>
 				</div>
-				<div class="mt-1">
-					<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
-					<p class="text-sm text-cream/75" lang="te">మరాఠా కల్యాణం</p>
-				</div>
-				<p class="mt-2 text-xs text-cream/60 italic">
-					Rooted in Tradition · United by Values<br />
-					<span lang="te">సంప్రదాయంలో పాతుకొని · విలువలతో కలిసి</span>
-				</p>
-				<p class="mt-3 max-w-md text-sm text-cream/70">
-					The trusted matrimonial platform for the Maratha community settled across Andhra, Telangana,
-					Maharashtra and other states. Admin-verified profiles. Privacy-first photo sharing.
-				</p>
-			</div>
-
-			<!-- Site links -->
-			<div>
-				<h3 class="mb-3 font-serif text-sm font-semibold tracking-wider text-marigold uppercase">
-					Site
-				</h3>
-				<ul class="space-y-2 text-sm text-cream/80">
-					<li><a href="/" class="hover:text-marigold">Home</a></li>
-					<li><a href="/search" class="hover:text-marigold">Search</a></li>
-					<li><a href="/about" class="hover:text-marigold">About</a></li>
-					<li><a href="/register" class="hover:text-marigold">Register</a></li>
-					<li><a href="/login" class="hover:text-marigold">Login</a></li>
-				</ul>
 			</div>
 
 			<!-- Contact -->
