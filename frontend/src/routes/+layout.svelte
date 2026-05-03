@@ -337,11 +337,11 @@
 		<img
 			src="/bg/home.jpg"
 			alt=""
-			class="h-full w-full object-cover object-center opacity-35"
+			class="h-full w-full object-cover object-center opacity-45"
 			loading="lazy"
 		/>
 		<!-- Cream wash keeps text and forms readable while letting the photo show through -->
-		<div class="absolute inset-0 bg-cream/88"></div>
+		<div class="absolute inset-0 bg-cream/82"></div>
 	</div>
 {/if}
 
