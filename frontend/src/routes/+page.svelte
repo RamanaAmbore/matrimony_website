@@ -89,7 +89,7 @@
 				{:else}
 					<a
 						href="/dashboard"
-						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-cream/25 bg-white/10 px-6 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream/45 hover:bg-white/18 focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
+						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-saffron px-6 font-semibold text-ink shadow-lg transition-all duration-200 hover:bg-marigold hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
 						<span>My Profiles<br /><span class="text-xs font-normal" lang="te" style="color:inherit">నా ప్రొఫైళ్లు</span></span>
 					</a>
