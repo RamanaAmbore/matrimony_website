@@ -346,7 +346,9 @@
 			<!-- Brand column -->
 			<div class="md:col-span-2">
 				<div class="flex items-center gap-3">
-					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto logo-glow" />
+					<div class="rounded-full ring-1 ring-gold/40 p-0.5">
+						<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto logo-glow" />
+					</div>
 					<div>
 						<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
 						<p class="text-sm text-cream/75" lang="te">మరాఠా కల్యాణం</p>

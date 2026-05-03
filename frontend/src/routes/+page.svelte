@@ -56,7 +56,9 @@
 		<div class="mx-auto max-w-3xl">
 			<!-- Site logo -->
 			<div class="mb-4 flex justify-center">
-				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-24 w-auto md:h-28 drop-shadow-xl" />
+				<div class="rounded-full ring-2 ring-gold/40 p-1">
+					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-24 w-auto md:h-28 logo-glow" />
+				</div>
 			</div>
 
 			<!-- Platform description -->
