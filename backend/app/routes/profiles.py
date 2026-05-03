@@ -678,6 +678,7 @@ class ProfileController(Controller):
         await db.refresh(profile, ["photos"])
 
         from app.services.telegram import notify_profile_submitted, notify_profile_approved
+        from app.services import email as email_svc
         asyncio.create_task(notify_profile_submitted(
             profile_id=str(profile.id),
             name=f"{profile.first_name} {profile.last_name or ''}".strip(),
@@ -689,5 +690,16 @@ class ProfileController(Controller):
                 name=f"{profile.first_name} {profile.last_name or ''}".strip(),
                 admin_notes="Auto-approved",
             ))
+
+        asyncio.create_task(email_svc.send_admin_profile_submitted(
+            profile_name=f"{profile.first_name} {profile.last_name or ''}".strip(),
+            gender=profile.gender.value if profile.gender else "unknown",
+            age=_compute_age(profile.dob),
+            city=profile.city or "",
+            state=profile.state or "",
+            gotra=profile.gotra or "",
+            occupation=profile.occupation or "",
+            profile_id=str(profile.id),
+        ))
 
         return _serialize_full_profile(profile, request)

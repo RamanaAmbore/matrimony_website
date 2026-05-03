@@ -90,18 +90,22 @@ class RequestController(Controller):
         await db.refresh(detail_req)
 
         # Notify admin
-        from app.models.setting import Setting
         from app.services import email as email_svc
-        from app.services.settings import settings_service
 
-        owner_email = settings_service.get_str("owner_email", "admin.marathakalyanam@gmail.com")
         result2 = await db.execute(select(User).where(User.id == requester_id))
         requester_user = result2.scalar_one_or_none()
-        requester_name = requester_user.email if requester_user else str(requester_id)
-        profile_name = profile.first_name
+        requester_name = requester_user.full_name or requester_user.email if requester_user else str(requester_id)
+        requester_email_addr = requester_user.email if requester_user else str(requester_id)
+        profile_full_name = f"{profile.first_name} {profile.last_name or ''}".strip()
 
         try:
-            await email_svc.send_detail_request_received(owner_email, requester_name, profile_name)
+            await email_svc.send_admin_view_request(
+                requester_name=requester_name,
+                requester_email=requester_email_addr,
+                profile_name=profile_full_name,
+                profile_id=str(profile.id),
+                message=data.message if hasattr(data, "message") else None,
+            )
         except Exception as exc:
             import logging
             logging.getLogger(__name__).warning("Failed to send request notification: %s", exc)
@@ -109,7 +113,7 @@ class RequestController(Controller):
         from app.services.telegram import notify_request_received
         asyncio.create_task(notify_request_received(
             requester=requester_name,
-            profile_name=f"{profile.first_name} {profile.last_name or ''}".strip(),
+            profile_name=profile_full_name,
         ))
 
         return _serialize_request(detail_req)

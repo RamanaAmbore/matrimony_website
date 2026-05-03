@@ -2,114 +2,335 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Profile Details Approved — MarathaKalyanam</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Profile details approved — Maratha Kalyanam</title>
 </head>
-<body style="font-family: Arial, sans-serif; background:#f9f6f1; padding:40px;">
-  <div style="max-width:640px;margin:auto;background:#fff;border-radius:8px;padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-    <h2 style="color:#2e7d32;margin-top:0;">Your Detail Request Has Been Approved!</h2>
-    <p>You have been granted access to the full profile details below.</p>
+<body style="margin:0;padding:0;background:#f5f0e8;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f0e8;padding:24px 0;">
+<tr><td align="center">
 
-    <div style="background:#f9f6f1;border-radius:8px;padding:24px;margin:24px 0;">
-      <h3 style="color:#8B2500;margin-top:0;">
-        {{ profile.first_name }} {{ profile.last_name }}
-      </h3>
-      <table style="width:100%;border-collapse:collapse;">
-        <tr>
-          <td style="padding:6px 12px;font-weight:bold;width:45%;color:#555;">Date of Birth:</td>
-          <td style="padding:6px 12px;">{{ profile.dob }}</td>
-        </tr>
-        <tr style="background:#f5f5f5;">
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Height:</td>
-          <td style="padding:6px 12px;">{{ profile.height_cm }} cm</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Complexion:</td>
-          <td style="padding:6px 12px;">{{ profile.complexion }}</td>
-        </tr>
-        <tr style="background:#f5f5f5;">
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Education:</td>
-          <td style="padding:6px 12px;">{{ profile.education }}</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Occupation:</td>
-          <td style="padding:6px 12px;">{{ profile.occupation }}</td>
-        </tr>
-        {% if profile.annual_income_inr %}
-        <tr style="background:#f5f5f5;">
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Annual Income:</td>
-          <td style="padding:6px 12px;">&#8377; {{ "{:,}".format(profile.annual_income_inr) }}</td>
-        </tr>
-        {% endif %}
-        <tr>
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Location:</td>
-          <td style="padding:6px 12px;">{{ profile.city }}, {{ profile.state }}, {{ profile.country }}</td>
-        </tr>
-        <tr style="background:#f5f5f5;">
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Gotra:</td>
-          <td style="padding:6px 12px;">{{ profile.gotra }}</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Kuldevata:</td>
-          <td style="padding:6px 12px;">{{ profile.kuldevata }}</td>
-        </tr>
-        <tr style="background:#f5f5f5;">
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Devak:</td>
-          <td style="padding:6px 12px;">{{ profile.devak }}</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Surname/Clan:</td>
-          <td style="padding:6px 12px;">{{ profile.surname_clan }}</td>
-        </tr>
-        <tr style="background:#f5f5f5;">
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Nakshatram:</td>
-          <td style="padding:6px 12px;">{{ profile.nakshatram }}</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Rashi:</td>
-          <td style="padding:6px 12px;">{{ profile.rashi }}</td>
-        </tr>
-        <tr style="background:#f5f5f5;">
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Manglik:</td>
-          <td style="padding:6px 12px;">{{ profile.manglik.value }}</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Diet:</td>
-          <td style="padding:6px 12px;">{{ profile.diet.value }}</td>
-        </tr>
-        <tr style="background:#f5f5f5;">
-          <td style="padding:6px 12px;font-weight:bold;color:#555;">Mother Tongue:</td>
-          <td style="padding:6px 12px;">{{ profile.mother_tongue }}</td>
-        </tr>
-      </table>
+  <!-- HEADER -->
+  <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#6b0f1a;border-radius:8px 8px 0 0;">
+  <tr><td style="padding:24px 32px;text-align:center;">
+    <div style="color:#fff8e7;font-size:22px;font-weight:bold;font-family:Georgia,serif;letter-spacing:0.5px;">Maratha Kalyanam</div>
+    <div style="color:#ffb627;font-size:13px;margin-top:4px;letter-spacing:0.3px;">मराठा कल्याणम् &nbsp;·&nbsp; Where Maratha Families Connect</div>
+  </td></tr>
+  </table>
 
-      {% if profile.about %}
-      <div style="margin-top:16px;">
-        <strong style="color:#555;">About:</strong>
-        <p style="margin:8px 0;">{{ profile.about }}</p>
-      </div>
+  <!-- BODY -->
+  <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-left:1px solid #e8dcc8;border-right:1px solid #e8dcc8;">
+  <tr><td style="padding:40px 40px 36px;">
+
+    <p style="margin:0 0 16px;font-size:16px;color:#1a1a1a;">Dear <strong>{{ requester_name if requester_name else "Member" }}</strong>,</p>
+
+    <p style="margin:0 0 24px;font-size:15px;color:#333;line-height:1.6;">
+      Your request to view the full profile of
+      <strong>{{ profile.first_name }} {{ profile.last_name or "" }}</strong>
+      has been approved.
+    </p>
+
+    <div style="height:1px;background:#e8dcc8;margin:24px 0;"></div>
+
+    <!-- Profile name heading -->
+    <h2 style="margin:0 0 20px;font-size:20px;color:#6b0f1a;font-family:Georgia,serif;">
+      {{ profile.first_name }} {{ profile.last_name or "" }}
+    </h2>
+
+    <!-- Profile details table -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:24px;">
+
+      <!-- Personal details -->
+      <tr><td colspan="2" style="padding:10px 12px 6px;background:#6b0f1a;color:#fff8e7;font-size:12px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">Personal</td></tr>
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;width:45%;font-size:14px;border-bottom:1px solid #f0e8d8;">Date of Birth</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.dob }}</td>
+      </tr>
+      {% if profile.height_cm %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Height</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.height_cm }} cm</td>
+      </tr>
+      {% endif %}
+      {% if profile.weight_kg %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Weight</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.weight_kg }} kg</td>
+      </tr>
+      {% endif %}
+      {% if profile.complexion %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Complexion</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.complexion }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.body_type %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Body Type</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.body_type.value }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.blood_group %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Blood Group</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.blood_group.value }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.marital_status %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Marital Status</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.marital_status.value }}</td>
+      </tr>
       {% endif %}
 
-      {% if profile.partner_expectations %}
-      <div style="margin-top:16px;">
-        <strong style="color:#555;">Partner Expectations:</strong>
-        <p style="margin:8px 0;">{{ profile.partner_expectations }}</p>
-      </div>
+      <!-- Location details -->
+      <tr><td colspan="2" style="padding:10px 12px 6px;background:#6b0f1a;color:#fff8e7;font-size:12px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">Location</td></tr>
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Location</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.city }}{% if profile.state %}, {{ profile.state }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}</td>
+      </tr>
+      {% if profile.pin_code %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">PIN Code</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.pin_code }}</td>
+      </tr>
       {% endif %}
+      {% if profile.native_place %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Native Place</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.native_place }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.place_of_birth %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Place of Birth</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.place_of_birth }}</td>
+      </tr>
+      {% endif %}
+
+      <!-- Education & Career -->
+      <tr><td colspan="2" style="padding:10px 12px 6px;background:#6b0f1a;color:#fff8e7;font-size:12px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">Education &amp; Career</td></tr>
+      {% if profile.education %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Education</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.education }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.college_university %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">College / University</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.college_university }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.occupation %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Occupation</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.occupation }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.employer %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Employer</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.employer }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.work_location %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Work Location</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.work_location }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.annual_income_inr %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Annual Income</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">&#8377; {{ "{:,}".format(profile.annual_income_inr) }}</td>
+      </tr>
+      {% endif %}
+
+      <!-- Astrology & Heritage -->
+      <tr><td colspan="2" style="padding:10px 12px 6px;background:#6b0f1a;color:#fff8e7;font-size:12px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">Astrology &amp; Heritage</td></tr>
+      {% if profile.gotra %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Gotra</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.gotra }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.sub_caste %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Sub-caste</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.sub_caste }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.kuldevata %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Kuldevata</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.kuldevata }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.devak %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Devak</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.devak }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.surname_clan %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Surname / Clan</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.surname_clan }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.nakshatram %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Nakshatram</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.nakshatram }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.rashi %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Rashi</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.rashi }}</td>
+      </tr>
+      {% endif %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Manglik</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.manglik.value }}</td>
+      </tr>
+      {% if profile.time_of_birth %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Time of Birth</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.time_of_birth }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.mother_tongue %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Mother Tongue</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.mother_tongue }}</td>
+      </tr>
+      {% endif %}
+
+      <!-- Family -->
+      <tr><td colspan="2" style="padding:10px 12px 6px;background:#6b0f1a;color:#fff8e7;font-size:12px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">Family</td></tr>
+      {% if profile.father_name %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Father's Name</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.father_name }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.mother_name %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Mother's Name</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.mother_name }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.father_occupation %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Father's Occupation</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.father_occupation }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.mother_occupation %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Mother's Occupation</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.mother_occupation }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.num_brothers is not none %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Brothers</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.num_brothers }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.num_sisters is not none %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Sisters</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.num_sisters }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.family_type %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Family Type</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.family_type.value }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.family_values %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Family Values</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.family_values.value }}</td>
+      </tr>
+      {% endif %}
+
+      <!-- Lifestyle -->
+      <tr><td colspan="2" style="padding:10px 12px 6px;background:#6b0f1a;color:#fff8e7;font-size:12px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">Lifestyle</td></tr>
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Diet</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.diet.value }}</td>
+      </tr>
+      {% if profile.smokes %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Smokes</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.smokes.value }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.drinks %}
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Drinks</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.drinks.value }}</td>
+      </tr>
+      {% endif %}
+      {% if profile.hobbies %}
+      <tr style="background:#fdf8f0;">
+        <td style="padding:8px 12px;font-weight:bold;color:#555;font-size:14px;border-bottom:1px solid #f0e8d8;">Hobbies</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.hobbies }}</td>
+      </tr>
+      {% endif %}
+
+    </table>
+
+    {% if profile.about %}
+    <div style="margin-bottom:20px;">
+      <div style="font-weight:bold;color:#6b0f1a;font-size:14px;margin-bottom:6px;">About</div>
+      <p style="margin:0;font-size:14px;color:#333;line-height:1.7;background:#fdf8f0;padding:12px 16px;border-radius:4px;border:1px solid #e8dcc8;">{{ profile.about }}</p>
     </div>
+    {% endif %}
+
+    {% if profile.partner_expectations %}
+    <div style="margin-bottom:24px;">
+      <div style="font-weight:bold;color:#6b0f1a;font-size:14px;margin-bottom:6px;">Partner Expectations</div>
+      <p style="margin:0;font-size:14px;color:#333;line-height:1.7;background:#fdf8f0;padding:12px 16px;border-radius:4px;border:1px solid #e8dcc8;">{{ profile.partner_expectations }}</p>
+    </div>
+    {% endif %}
 
     {% if photos %}
-    <h3 style="color:#8B2500;">Photos</h3>
-    <p style="color:#555;font-size:13px;">Clear passport photos are attached inline below:</p>
+    <div style="height:1px;background:#e8dcc8;margin:24px 0;"></div>
+    <h3 style="margin:0 0 12px;font-size:16px;color:#6b0f1a;font-family:Georgia,serif;">Photos</h3>
+    <p style="margin:0 0 16px;font-size:13px;color:#555;">Passport photos are attached inline below:</p>
     {% for photo in photos %}
     <div style="margin:16px 0;text-align:center;">
-      <img src="cid:photo_{{ photo.id }}" alt="Profile photo" style="max-width:413px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+      <img src="cid:photo_{{ photo.id }}" alt="Profile photo" style="max-width:413px;border-radius:6px;box-shadow:0 2px 12px rgba(107,15,26,0.15);border:2px solid #e8dcc8;">
     </div>
     {% endfor %}
     {% endif %}
 
-    <p style="color:#888;font-size:12px;margin-top:32px;">
-      This email was sent by MarathaKalyanam. Please treat the profile information with respect and confidentiality.
+    <div style="height:1px;background:#e8dcc8;margin:24px 0;"></div>
+
+    <p style="margin:0;font-size:13px;color:#888;line-height:1.6;">
+      Please treat this information with respect and confidentiality.
     </p>
-  </div>
+
+  </td></tr>
+  </table>
+
+  <!-- FOOTER -->
+  <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#f9f5ed;border:1px solid #e8dcc8;border-top:3px solid #ffb627;border-radius:0 0 8px 8px;">
+  <tr><td style="padding:16px 32px;text-align:center;">
+    <div style="color:#999;font-size:11px;line-height:1.8;">
+      {{ ist_time }} &nbsp;·&nbsp; {{ et_time }}<br>
+      <a href="{{ site_url }}" style="color:#6b0f1a;text-decoration:none;font-weight:bold;">marathakalyanam.com</a>
+      &nbsp;·&nbsp; Confidential matrimonial communication
+    </div>
+  </td></tr>
+  </table>
+
+</td></tr>
+</table>
 </body>
 </html>

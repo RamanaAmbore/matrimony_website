@@ -2,27 +2,73 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Profile Approved — MarathaKalyanam</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Your Maratha Kalyanam profile is approved</title>
 </head>
-<body style="font-family: Arial, sans-serif; background:#f9f6f1; padding:40px;">
-  <div style="max-width:560px;margin:auto;background:#fff;border-radius:8px;padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-    <h2 style="color:#2e7d32;margin-top:0;">Congratulations! Your profile is approved.</h2>
-    <p>Dear <strong>{{ first_name }}</strong>,</p>
-    <p>Your profile on <strong>MarathaKalyanam</strong> has been reviewed and <strong>approved</strong>.
-       It is now visible to other members in our search results.</p>
+<body style="margin:0;padding:0;background:#f5f0e8;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f0e8;padding:24px 0;">
+<tr><td align="center">
+
+  <!-- HEADER -->
+  <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#6b0f1a;border-radius:8px 8px 0 0;">
+  <tr><td style="padding:24px 32px;text-align:center;">
+    <div style="color:#fff8e7;font-size:22px;font-weight:bold;font-family:Georgia,serif;letter-spacing:0.5px;">Maratha Kalyanam</div>
+    <div style="color:#ffb627;font-size:13px;margin-top:4px;letter-spacing:0.3px;">मराठा कल्याणम् &nbsp;·&nbsp; Where Maratha Families Connect</div>
+  </td></tr>
+  </table>
+
+  <!-- BODY -->
+  <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-left:1px solid #e8dcc8;border-right:1px solid #e8dcc8;">
+  <tr><td style="padding:40px 40px 36px;">
+
+    <div style="font-size:40px;text-align:center;margin-bottom:16px;">&#127881;</div>
+
+    <p style="margin:0 0 16px;font-size:16px;color:#1a1a1a;">Dear <strong>{{ first_name }}</strong>,</p>
+
+    <p style="margin:0 0 16px;font-size:15px;color:#333;line-height:1.6;">
+      Congratulations! Your profile on <strong>Maratha Kalyanam</strong> has been reviewed and <strong>approved</strong>.
+    </p>
+
+    <p style="margin:0 0 24px;font-size:15px;color:#333;line-height:1.6;">
+      Your profile is now live and visible to other members in search results.
+    </p>
+
     {% if admin_notes %}
-    <div style="background:#f1f8e9;border-left:4px solid #2e7d32;padding:12px 16px;border-radius:4px;margin:16px 0;">
-      <strong>Note from admin:</strong><br>{{ admin_notes }}
+    <div style="background:#f1f8e9;border-left:4px solid #2e7d32;padding:12px 16px;border-radius:4px;margin:0 0 24px;">
+      <strong style="color:#2e7d32;">Note from our team:</strong><br>
+      <span style="color:#333;">{{ admin_notes }}</span>
     </div>
     {% endif %}
-    <p>Log in to your account to view and manage your profile.</p>
-    <div style="text-align:center;margin:32px 0;">
-      <a href="{{ site_url }}/login"
-         style="background:#8B2500;color:#fff;padding:14px 32px;border-radius:6px;text-decoration:none;font-size:16px;font-weight:bold;">
+
+    {% if profile_id %}
+    <p style="margin:0 0 24px;font-size:14px;color:#555;">
+      Profile code: <span style="font-family:monospace;background:#f9f5ed;padding:4px 10px;border-radius:4px;font-size:13px;border:1px solid #e8dcc8;">MC-{{ profile_id[:5].upper() }}</span>
+    </p>
+    {% endif %}
+
+    <!-- CTA Button -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:24px 0;">
+      <a href="{{ site_url }}/dashboard"
+         style="background:#6b0f1a;color:#fff8e7;padding:14px 32px;border-radius:6px;text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;">
         View My Profile
       </a>
+    </td></tr></table>
+
+  </td></tr>
+  </table>
+
+  <!-- FOOTER -->
+  <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#f9f5ed;border:1px solid #e8dcc8;border-top:3px solid #ffb627;border-radius:0 0 8px 8px;">
+  <tr><td style="padding:16px 32px;text-align:center;">
+    <div style="color:#999;font-size:11px;line-height:1.8;">
+      {{ ist_time }} &nbsp;·&nbsp; {{ et_time }}<br>
+      <a href="{{ site_url }}" style="color:#6b0f1a;text-decoration:none;font-weight:bold;">marathakalyanam.com</a>
+      &nbsp;·&nbsp; Confidential matrimonial communication
     </div>
-    <p style="color:#888;font-size:12px;margin-top:32px;">MarathaKalyanam — Where Telugu-Maratha families connect.</p>
-  </div>
+  </td></tr>
+  </table>
+
+</td></tr>
+</table>
 </body>
 </html>

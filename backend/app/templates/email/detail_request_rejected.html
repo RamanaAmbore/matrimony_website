@@ -2,21 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Detail Request Not Approved — MarathaKalyanam</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Detail request not approved — Maratha Kalyanam</title>
 </head>
-<body style="font-family: Arial, sans-serif; background:#f9f6f1; padding:40px;">
-  <div style="max-width:560px;margin:auto;background:#fff;border-radius:8px;padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-    <h2 style="color:#c62828;margin-top:0;">Detail Request Not Approved</h2>
-    <p>We regret to inform you that your request to view the full profile details
-    {% if profile_first_name %}for <strong>{{ profile_first_name }}</strong>{% endif %}
-    has not been approved at this time.</p>
+<body style="margin:0;padding:0;background:#f5f0e8;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f0e8;padding:24px 0;">
+<tr><td align="center">
+
+  <!-- HEADER -->
+  <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#6b0f1a;border-radius:8px 8px 0 0;">
+  <tr><td style="padding:24px 32px;text-align:center;">
+    <div style="color:#fff8e7;font-size:22px;font-weight:bold;font-family:Georgia,serif;letter-spacing:0.5px;">Maratha Kalyanam</div>
+    <div style="color:#ffb627;font-size:13px;margin-top:4px;letter-spacing:0.3px;">मराठा कल्याणम् &nbsp;·&nbsp; Where Maratha Families Connect</div>
+  </td></tr>
+  </table>
+
+  <!-- BODY -->
+  <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-left:1px solid #e8dcc8;border-right:1px solid #e8dcc8;">
+  <tr><td style="padding:40px 40px 36px;">
+
+    <p style="margin:0 0 16px;font-size:16px;color:#1a1a1a;">Dear member,</p>
+
+    <p style="margin:0 0 16px;font-size:15px;color:#333;line-height:1.6;">
+      Your request to view the profile of
+      <strong>{{ profile_first_name or "another member" }}</strong>
+      was not approved at this time.
+    </p>
+
     {% if admin_notes %}
-    <div style="background:#fce4e4;border-left:4px solid #c62828;padding:12px 16px;border-radius:4px;margin:16px 0;">
-      <strong>Reason:</strong><br>{{ admin_notes }}
+    <div style="background:#fdf3f3;border-left:4px solid #c62828;padding:12px 16px;border-radius:4px;margin:0 0 24px;">
+      <strong style="color:#c62828;">Reason:</strong><br>
+      <span style="color:#333;">{{ admin_notes }}</span>
     </div>
     {% endif %}
-    <p>You are welcome to browse other approved profiles on MarathaKalyanam and submit new requests.</p>
-    <p style="color:#888;font-size:12px;margin-top:32px;">MarathaKalyanam — Where Telugu-Maratha families connect.</p>
-  </div>
+
+    <p style="margin:0 0 24px;font-size:15px;color:#333;line-height:1.6;">
+      You may contact our admin team if you have questions.
+    </p>
+
+    <!-- CTA Button -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:24px 0;">
+      <a href="{{ site_url }}/requests"
+         style="background:#6b0f1a;color:#fff8e7;padding:14px 32px;border-radius:6px;text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;">
+        View My Requests
+      </a>
+    </td></tr></table>
+
+  </td></tr>
+  </table>
+
+  <!-- FOOTER -->
+  <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#f9f5ed;border:1px solid #e8dcc8;border-top:3px solid #ffb627;border-radius:0 0 8px 8px;">
+  <tr><td style="padding:16px 32px;text-align:center;">
+    <div style="color:#999;font-size:11px;line-height:1.8;">
+      {{ ist_time }} &nbsp;·&nbsp; {{ et_time }}<br>
+      <a href="{{ site_url }}" style="color:#6b0f1a;text-decoration:none;font-weight:bold;">marathakalyanam.com</a>
+      &nbsp;·&nbsp; Confidential matrimonial communication
+    </div>
+  </td></tr>
+  </table>
+
+</td></tr>
+</table>
 </body>
 </html>

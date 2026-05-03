@@ -5,6 +5,7 @@ If SMTP creds are missing or host unreachable, logs to stdout instead of raising
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timedelta, timezone
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -24,11 +25,21 @@ _jinja_env = Environment(
     autoescape=select_autoescape(["html"]),
 )
 
+_IST = timezone(timedelta(hours=5, minutes=30))
+_ET = timezone(timedelta(hours=-4))  # EDT; change to -5 for EST in winter
+
+
+def _timestamps() -> dict[str, str]:
+    now = datetime.now(timezone.utc)
+    ist = now.astimezone(_IST).strftime("%-d %b %Y, %-I:%M %p IST")
+    et = now.astimezone(_ET).strftime("%-d %b %Y, %-I:%M %p ET")
+    return {"ist_time": ist, "et_time": et}
+
 
 def _render(template_name: str, **ctx: object) -> str:
     tmpl = _jinja_env.get_template(template_name)
     site_url = settings_service.get_str("site_url", "https://marathakalyanam.com").rstrip("/")
-    return tmpl.render(site_url=site_url, **ctx)
+    return tmpl.render(site_url=site_url, **_timestamps(), **ctx)
 
 
 async def _send(
@@ -94,28 +105,38 @@ async def _send(
         )
 
 
-async def send_verification_email(to: str, token: str) -> None:
-    html = _render("verify_email.html", token=token, to=to)
-    await _send(to, "Verify your MarathaKalyanam email", html)
+async def send_verification_email(to: str, token: str, full_name: str = "") -> None:
+    ts = _timestamps()
+    html = _render("verify_email.html", token=token, full_name=full_name)
+    await _send(to, f"Verify your Maratha Kalyanam email · {ts['ist_time']}", html)
 
 
-async def send_profile_approved(to: str, profile_first_name: str, admin_notes: str | None) -> None:
-    html = _render("profile_approved.html", first_name=profile_first_name, admin_notes=admin_notes)
-    await _send(to, "Your profile has been approved — MarathaKalyanam", html)
+async def send_account_approved(to: str, full_name: str) -> None:
+    ts = _timestamps()
+    html = _render("account_approved.html", full_name=full_name)
+    await _send(to, f"Your account is approved — Maratha Kalyanam · {ts['ist_time']}", html)
+
+
+async def send_profile_approved(
+    to: str,
+    profile_first_name: str,
+    admin_notes: str | None,
+    profile_id: str = "",
+) -> None:
+    ts = _timestamps()
+    html = _render(
+        "profile_approved.html",
+        first_name=profile_first_name,
+        admin_notes=admin_notes,
+        profile_id=profile_id,
+    )
+    await _send(to, f"Your profile is approved — Maratha Kalyanam · {ts['ist_time']}", html)
 
 
 async def send_profile_rejected(to: str, profile_first_name: str, admin_notes: str) -> None:
+    ts = _timestamps()
     html = _render("profile_rejected.html", first_name=profile_first_name, admin_notes=admin_notes)
-    await _send(to, "Update required for your MarathaKalyanam profile", html)
-
-
-async def send_detail_request_received(to: str, requester_name: str, profile_name: str) -> None:
-    html = _render(
-        "detail_request_received.html",
-        requester_name=requester_name,
-        profile_name=profile_name,
-    )
-    await _send(to, "New detail request — MarathaKalyanam Admin", html)
+    await _send(to, f"Update required for your Maratha Kalyanam profile · {ts['ist_time']}", html)
 
 
 async def send_detail_request_rejected(
@@ -123,12 +144,13 @@ async def send_detail_request_rejected(
     profile_first_name: str | None,
     admin_notes: str | None,
 ) -> None:
+    ts = _timestamps()
     html = _render(
         "detail_request_rejected.html",
         profile_first_name=profile_first_name,
         admin_notes=admin_notes,
     )
-    await _send(to, "Your detail request was not approved — MarathaKalyanam", html)
+    await _send(to, f"Your detail request was not approved — Maratha Kalyanam · {ts['ist_time']}", html)
 
 
 async def send_detail_request_approved(
@@ -136,12 +158,15 @@ async def send_detail_request_approved(
     profile: object,
     photos: list[object],
     photo_bytes_map: dict[str, bytes],
+    requester_name: str = "",
 ) -> None:
     """Send full profile details with inline passport photos."""
+    ts = _timestamps()
     html = _render(
         "detail_request_approved.html",
         profile=profile,
         photos=photos,
+        requester_name=requester_name,
     )
     attachments: list[tuple[bytes, str, str]] = []
     for photo in photos:
@@ -150,4 +175,81 @@ async def send_detail_request_approved(
         if raw:
             attachments.append((raw, cid, "passport.jpg"))
 
-    await _send(to, "Profile details approved — MarathaKalyanam", html, attachments or None)
+    await _send(
+        to,
+        f"Profile details approved — Maratha Kalyanam · {ts['ist_time']}",
+        html,
+        attachments or None,
+    )
+
+
+async def send_admin_new_user(
+    full_name: str,
+    email: str,
+    phone: str,
+    user_handle: str,
+) -> None:
+    owner = settings_service.get_str("owner_email", "admin.marathakalyanam@gmail.com")
+    ts = _timestamps()
+    html = _render(
+        "admin_new_user.html",
+        full_name=full_name,
+        email=email,
+        phone=phone,
+        user_handle=user_handle,
+    )
+    await _send(owner, f"New registration: {full_name} — Maratha Kalyanam · {ts['ist_time']}", html)
+
+
+async def send_admin_profile_submitted(
+    profile_name: str,
+    gender: str,
+    age: int,
+    city: str,
+    state: str,
+    gotra: str,
+    occupation: str,
+    profile_id: str,
+) -> None:
+    owner = settings_service.get_str("owner_email", "admin.marathakalyanam@gmail.com")
+    ts = _timestamps()
+    html = _render(
+        "admin_profile_submitted.html",
+        profile_name=profile_name,
+        gender=gender,
+        age=age,
+        city=city,
+        state=state,
+        gotra=gotra,
+        occupation=occupation,
+        profile_id=profile_id,
+    )
+    await _send(
+        owner,
+        f"Profile submitted for review: {profile_name} — Maratha Kalyanam · {ts['ist_time']}",
+        html,
+    )
+
+
+async def send_admin_view_request(
+    requester_name: str,
+    requester_email: str,
+    profile_name: str,
+    profile_id: str,
+    message: str | None,
+) -> None:
+    owner = settings_service.get_str("owner_email", "admin.marathakalyanam@gmail.com")
+    ts = _timestamps()
+    html = _render(
+        "admin_view_request.html",
+        requester_name=requester_name,
+        requester_email=requester_email,
+        profile_name=profile_name,
+        profile_id=profile_id,
+        message=message,
+    )
+    await _send(
+        owner,
+        f"View request: {requester_name} → {profile_name} — Maratha Kalyanam · {ts['ist_time']}",
+        html,
+    )

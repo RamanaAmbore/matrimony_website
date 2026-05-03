@@ -264,7 +264,12 @@ class AdminController(Controller):
             owner_result = await db.execute(select(User).where(User.id == profile.owner_user_id))
             owner = owner_result.scalar_one_or_none()
             if owner:
-                await email_svc.send_profile_approved(owner.email, profile.first_name, data.admin_notes)
+                await email_svc.send_profile_approved(
+                    owner.email,
+                    profile.first_name,
+                    data.admin_notes,
+                    profile_id=str(profile.id)[:5],
+                )
         except Exception as exc:
             import logging
             logging.getLogger(__name__).warning("Failed to send approval email: %s", exc)
@@ -392,8 +397,13 @@ class AdminController(Controller):
                     if passport_file.exists():
                         photo_bytes_map[str(photo.id)] = passport_file.read_bytes()
 
+                requester_name = requester.full_name if requester.full_name else "Member"
                 await email_svc.send_detail_request_approved(
-                    requester.email, profile, profile.photos, photo_bytes_map
+                    requester.email,
+                    profile,
+                    profile.photos,
+                    photo_bytes_map,
+                    requester_name=requester_name,
                 )
         except Exception as exc:
             import logging
@@ -587,6 +597,8 @@ class AdminController(Controller):
 
         from app.services.telegram import notify_user_approved
         asyncio.create_task(notify_user_approved(name=user.full_name, email=user.email))
+
+        asyncio.create_task(email_svc.send_account_approved(user.email, user.full_name))
 
         return {
             "user_id": str(user.id),

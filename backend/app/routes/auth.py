@@ -177,7 +177,7 @@ class AuthController(Controller):
 
         # Send verification email (non-blocking failure)
         try:
-            await email_svc.send_verification_email(user.email, token)
+            await email_svc.send_verification_email(user.email, token, full_name=full_name)
         except Exception as exc:
             import logging
             logging.getLogger(__name__).warning("Failed to send verification email: %s", exc)
@@ -187,6 +187,13 @@ class AuthController(Controller):
             name=full_name,
             email=data.email,
             phone=normalized_phone,
+        ))
+
+        asyncio.create_task(email_svc.send_admin_new_user(
+            full_name=full_name,
+            email=data.email,
+            phone=normalized_phone,
+            user_handle=data.user_handle,
         ))
 
         return {"user_id": str(user.id)}
