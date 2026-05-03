@@ -149,9 +149,9 @@
 			class="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-cream"
 		>
 			<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-10 w-auto logo-glow" />
-			<span class="font-serif text-lg font-semibold leading-tight text-cream">
+			<span class="font-serif text-lg font-semibold leading-tight" style="color:#ff6a00; text-shadow: 0 0 8px rgba(255,255,255,0.95), 0 0 20px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.8);">
 				<span class="block leading-none">Maratha Kalyanam</span>
-				<span class="block text-xs font-normal text-cream/70 leading-tight" lang="te">మరాఠా కల్యాణం</span>
+				<span class="block text-xs font-normal leading-tight" lang="te" style="color:#ff6a00; text-shadow: 0 0 6px rgba(255,106,0,0.9), 0 0 16px rgba(255,106,0,0.5);">మరాఠా కల్యాణం</span>
 			</span>
 		</a>
 
@@ -238,9 +238,9 @@
 		>
 			<div class="flex items-center gap-2">
 				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" />
-				<div class="font-serif leading-tight text-cream">
+				<div class="font-serif leading-tight" style="color:#ff6a00; text-shadow: 0 0 8px rgba(255,255,255,0.95), 0 0 20px rgba(255,255,255,0.5);">
 					<span class="block text-sm font-semibold">Maratha Kalyanam</span>
-					<span class="block text-xs font-normal text-cream/70" lang="te">మరాఠా కల్యాణం</span>
+					<span class="block text-xs font-normal" lang="te" style="text-shadow: 0 0 6px rgba(255,106,0,0.9);">మరాఠా కల్యాణం</span>
 				</div>
 			</div>
 			<button

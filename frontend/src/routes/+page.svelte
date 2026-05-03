@@ -59,30 +59,6 @@
 				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-24 w-auto md:h-28 drop-shadow-xl" />
 			</div>
 
-			<!-- English brand name (first) -->
-			<h1
-				class="mb-1 font-serif text-4xl font-bold md:text-6xl"
-				style="color:#ff6a00; text-shadow:
-					0 0 12px rgba(255,255,255,0.95),
-					0 0 30px rgba(255,255,255,0.6),
-					0 5px 10px rgba(43,10,14,0.98),
-					0 2px 4px rgba(0,0,0,0.9);"
-			>
-				Maratha Kalyanam
-			</h1>
-
-			<!-- Telugu brand name (below) -->
-			<p
-				class="mb-4 font-serif text-base md:text-lg"
-				lang="te"
-				style="color:#ff6a00; text-shadow:
-					0 0 10px rgba(255,106,0,0.95),
-					0 0 24px rgba(255,106,0,0.55),
-					0 2px 6px rgba(43,10,14,0.9);"
-			>
-				మరాఠా కల్యాణం
-			</p>
-
 			<!-- Tagline -->
 			<p
 				class="mb-1 text-base font-medium text-cream/90 drop-shadow-md md:text-lg"
