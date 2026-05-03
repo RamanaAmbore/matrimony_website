@@ -56,9 +56,7 @@
 		<div class="mx-auto max-w-3xl">
 			<!-- Site logo -->
 			<div class="mb-5 flex justify-center">
-				<div class="rounded-xl bg-white/95 px-5 py-3 shadow-lg backdrop-blur-sm">
-					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto md:h-16" />
-				</div>
+				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-24 w-auto md:h-28 drop-shadow-xl" />
 			</div>
 
 			<!-- English brand name (first) -->

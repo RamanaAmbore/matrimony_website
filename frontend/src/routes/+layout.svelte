@@ -86,9 +86,9 @@
 	<meta property="og:description" content="Trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states. Admin-verified profiles. Gotra, nakshatram and kuldevata matching. Privacy-first." />
 	<meta property="og:url" content="https://marathakalyanam.com/" />
 	<meta property="og:image" content="https://marathakalyanam.com/brand/logo.png" />
-	<meta property="og:image:width" content="1000" />
-	<meta property="og:image:height" content="254" />
-	<meta property="og:image:alt" content="Maratha Kalyanam — Rambo Quant Analytics LLP" />
+	<meta property="og:image:width" content="1254" />
+	<meta property="og:image:height" content="1254" />
+	<meta property="og:image:alt" content="Maratha Kalyanam — Telugu Maratha Matrimony" />
 	<meta property="og:locale" content="en_IN" />
 	<meta property="og:locale:alternate" content="te_IN" />
 
@@ -97,7 +97,7 @@
 	<meta name="twitter:title" content="Maratha Kalyanam · మరాఠా కల్యాణం" />
 	<meta name="twitter:description" content="Trusted matrimonial platform for Maratha families. Admin-verified profiles. Privacy-first." />
 	<meta name="twitter:image" content="https://marathakalyanam.com/brand/logo.png" />
-	<meta name="twitter:image:alt" content="Maratha Kalyanam — Rambo Quant Analytics LLP" />
+	<meta name="twitter:image:alt" content="Maratha Kalyanam — Telugu Maratha Matrimony" />
 
 	<!-- Theme + canonical + crawling -->
 	<meta name="theme-color" content="#C8102E" />
@@ -148,9 +148,7 @@
 			href="/"
 			class="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-cream"
 		>
-			<div class="rounded-md bg-white px-2 py-1 shadow-sm">
-				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-8 w-auto" />
-			</div>
+			<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-10 w-auto drop-shadow-md" />
 			<span class="font-serif text-lg font-semibold leading-tight text-cream">
 				<span class="block leading-none">Maratha Kalyanam</span>
 				<span class="block text-xs font-normal text-cream/70 leading-tight" lang="te">మరాఠా కల్యాణం</span>
@@ -239,9 +237,7 @@
 			style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);"
 		>
 			<div class="flex items-center gap-2">
-				<div class="rounded-md bg-white px-2 py-0.5">
-					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-7 w-auto" />
-				</div>
+				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto drop-shadow-md" />
 				<div class="font-serif leading-tight text-cream">
 					<span class="block text-sm font-semibold">Maratha Kalyanam</span>
 					<span class="block text-xs font-normal text-cream/70" lang="te">మరాఠా కల్యాణం</span>
@@ -345,8 +341,8 @@
 		<div class="grid gap-8 md:grid-cols-4">
 			<!-- Brand column -->
 			<div class="md:col-span-2">
-				<div class="mb-3 inline-block rounded-lg bg-white px-3 py-2 shadow-sm">
-					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-10 w-auto" />
+				<div class="mb-3">
+					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto drop-shadow-lg" />
 				</div>
 				<div class="mt-1">
 					<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
