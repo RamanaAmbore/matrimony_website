@@ -72,7 +72,7 @@
 			<div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
 				<a
 					href="/search"
-					class="inline-flex items-center gap-2 rounded-lg bg-maroon px-6 py-3 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream"
+					class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-maroon px-6 py-3 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-72"
 				>
 					<Search size={18} />
 					Find Your Partner · <span lang="te" style="color:inherit">జీవిత భాగస్వామిని కనుగొనండి</span>
@@ -81,7 +81,7 @@
 				{#if !data.user}
 					<a
 						href="/register"
-						class="inline-flex items-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream"
+						class="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream sm:w-72"
 					>
 						<UserPlus size={18} />
 						Create Profile · <span lang="te" style="color:inherit">ప్రొఫైల్ సృష్టించండి</span>
@@ -89,7 +89,7 @@
 				{:else}
 					<a
 						href="/dashboard"
-						class="inline-flex items-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream"
+						class="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream sm:w-72"
 					>
 						My Profiles · <span lang="te" style="color:inherit">నా ప్రొఫైళ్లు</span>
 					</a>
