@@ -27,7 +27,8 @@ _jinja_env = Environment(
 
 def _render(template_name: str, **ctx: object) -> str:
     tmpl = _jinja_env.get_template(template_name)
-    return tmpl.render(**ctx)
+    site_url = settings_service.get_str("site_url", "https://marathakalyanam.com").rstrip("/")
+    return tmpl.render(site_url=site_url, **ctx)
 
 
 async def _send(
