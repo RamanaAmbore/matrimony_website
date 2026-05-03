@@ -150,6 +150,7 @@ class AuthController(Controller):
         user = User(
             id=uuid.uuid4(),
             email=data.email.lower(),
+            full_name=data.full_name,
             user_handle=data.user_handle,
             phone_number=normalized_phone,
             password_hash=auth_svc.hash_password(data.password),
@@ -170,7 +171,7 @@ class AuthController(Controller):
 
         from app.services.telegram import notify_user_registered
         asyncio.create_task(notify_user_registered(
-            name=data.user_handle,
+            name=data.full_name,
             email=data.email,
             phone=normalized_phone,
         ))
@@ -205,6 +206,7 @@ class AuthController(Controller):
             user_id=str(user.id),
             handle=user.user_handle,
             email=user.email,
+            full_name=user.full_name,
             is_admin=user.is_admin,
             email_verified=user.email_verified,
         )
@@ -213,6 +215,7 @@ class AuthController(Controller):
             "user_id": str(user.id),
             "user_handle": user.user_handle,
             "email": user.email,
+            "full_name": user.full_name,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
         }
@@ -269,6 +272,7 @@ class AuthController(Controller):
             "user_id": payload["sub"],
             "user_handle": payload.get("handle", ""),
             "email": payload.get("email", ""),
+            "full_name": payload.get("full_name", ""),
             "is_admin": payload.get("is_admin", False),
             "email_verified": payload.get("email_verified", False),
         }

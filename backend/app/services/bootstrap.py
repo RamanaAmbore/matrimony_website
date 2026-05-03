@@ -31,6 +31,7 @@ async def bootstrap(session: AsyncSession) -> None:
         admin = User(
             id=uuid.uuid4(),
             email=_BOOTSTRAP_EMAIL,
+            full_name="",
             user_handle=_BOOTSTRAP_HANDLE,
             phone_number=_BOOTSTRAP_PHONE,
             password_hash=hash_password(_BOOTSTRAP_PASSWORD),

@@ -621,19 +621,26 @@
 								<!-- Mother Tongue -->
 								<div>
 									<BilingualLabel key="motherTongue" for="mother_tongue" />
-									<input id="mother_tongue" type="text" class="input" bind:value={mother_tongue} oninput={(e) => (mother_tongue = asciiOnly(e.currentTarget.value))} placeholder="Telugu" />
+									<input id="mother_tongue" type="text" class="input" list="mother_tongue_opts" bind:value={mother_tongue} placeholder="Telugu" />
+									<datalist id="mother_tongue_opts">
+										<option value="Telugu" />
+										<option value="Marathi" />
+										<option value="Kannada" />
+										<option value="Tamil" />
+									</datalist>
 									<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 								</div>
 
 								<!-- Sub-caste (optional) -->
 								<div class="sm:col-span-2">
 									<BilingualLabel key="subCaste" for="sub_caste" />
-									<select id="sub_caste" class="input" bind:value={sub_caste}>
-										<option value="Maratha">Maratha</option>
-										<option value="Are Marathi">Are Marathi</option>
-										<option value="Are Kshatriya">Are Kshatriya</option>
-										<option value="Maratha Non-Brahmin">Maratha Non-Brahmin</option>
-									</select>
+									<input id="sub_caste" type="text" class="input" list="sub_caste_opts" bind:value={sub_caste} placeholder="Type or choose" />
+									<datalist id="sub_caste_opts">
+										<option value="Maratha" />
+										<option value="Are Marathi" />
+										<option value="Are Kshatriya" />
+										<option value="Maratha Non-Brahmin" />
+									</datalist>
 								</div>
 							</div>
 						</div>
@@ -1242,10 +1249,16 @@
 						id="mother_tongue"
 						type="text"
 						class="input"
+						list="mother_tongue_opts_edit"
 						bind:value={mother_tongue}
-						oninput={(e) => (mother_tongue = asciiOnly(e.currentTarget.value))}
 						placeholder="Telugu"
 					/>
+					<datalist id="mother_tongue_opts_edit">
+						<option value="Telugu" />
+						<option value="Marathi" />
+						<option value="Kannada" />
+						<option value="Tamil" />
+					</datalist>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 				</div>
 
@@ -1272,12 +1285,13 @@
 				<!-- Sub-caste (optional) -->
 				<div class="sm:col-span-2">
 					<BilingualLabel key="subCaste" for="sub_caste" />
-					<select id="sub_caste" class="input" bind:value={sub_caste}>
-						<option value="Maratha">Maratha</option>
-						<option value="Are Marathi">Are Marathi</option>
-						<option value="Are Kshatriya">Are Kshatriya</option>
-						<option value="Maratha Non-Brahmin">Maratha Non-Brahmin</option>
-					</select>
+					<input id="sub_caste" type="text" class="input" list="sub_caste_opts_edit" bind:value={sub_caste} placeholder="Type or choose" />
+					<datalist id="sub_caste_opts_edit">
+						<option value="Maratha" />
+						<option value="Are Marathi" />
+						<option value="Are Kshatriya" />
+						<option value="Maratha Non-Brahmin" />
+					</datalist>
 				</div>
 			</div>
 		</div>

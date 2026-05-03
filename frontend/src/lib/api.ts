@@ -19,6 +19,7 @@ export interface User {
 	user_handle: string;
 	email: string;
 	phone_number: string;
+	full_name: string;
 	is_admin: boolean;
 	email_verified: boolean;
 }
@@ -341,6 +342,7 @@ function buildQuery(params: Record<string, unknown>): string {
 
 export const auth = {
 	async register(
+		full_name: string,
 		email: string,
 		password: string,
 		user_handle: string,
@@ -348,7 +350,7 @@ export const auth = {
 	): Promise<{ user_id: string }> {
 		return request('/api/auth/register', {
 			method: 'POST',
-			body: JSON.stringify({ email, password, user_handle, phone_number })
+			body: JSON.stringify({ email, password, user_handle, phone_number, full_name })
 		});
 	},
 

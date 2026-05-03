@@ -30,7 +30,7 @@ async def test_register_and_login(client: AsyncClient) -> None:
     password = "TestPass123!"
 
     # Register
-    resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle})
+    resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
     assert resp.status_code == 201, resp.text
     data = resp.json()
     assert "user_id" in data
@@ -62,14 +62,14 @@ async def test_register_and_login(client: AsyncClient) -> None:
 
 async def test_duplicate_email_rejected(client: AsyncClient) -> None:
     email = f"dup_{uuid.uuid4().hex[:8]}@example.com"
-    await client.post("/auth/register", json={"email": email, "password": "TestPass123!", "user_handle": _unique_handle()})
-    resp = await client.post("/auth/register", json={"email": email, "password": "TestPass123!", "user_handle": _unique_handle()})
+    await client.post("/auth/register", json={"email": email, "password": "TestPass123!", "user_handle": _unique_handle(), "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
+    resp = await client.post("/auth/register", json={"email": email, "password": "TestPass123!", "user_handle": _unique_handle(), "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
     assert resp.status_code == 409
 
 
 async def test_profile_requires_email_verified(client: AsyncClient) -> None:
     email = f"unverified_{uuid.uuid4().hex[:8]}@example.com"
-    await client.post("/auth/register", json={"email": email, "password": "TestPass123!", "user_handle": _unique_handle()})
+    await client.post("/auth/register", json={"email": email, "password": "TestPass123!", "user_handle": _unique_handle(), "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
     await client.post("/auth/login", json={"identifier": email, "password": "TestPass123!"})
 
     profile_data = _sample_profile()
@@ -90,7 +90,7 @@ async def test_full_flow_register_verify_profile_admin(client: AsyncClient) -> N
     password = "FlowTest456!"
 
     # Register
-    resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle})
+    resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
     assert resp.status_code == 201
     user_id = resp.json()["user_id"]
 

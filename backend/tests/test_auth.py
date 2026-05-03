@@ -30,12 +30,14 @@ def _reg_payload(
     password: str = "ValidPass123!",
     handle: str | None = None,
     phone: str | None = None,
+    full_name: str = "Test User",
 ) -> dict:
     return {
         "email": email,
         "password": password,
         "user_handle": handle or _unique_handle(),
         "phone_number": phone or _unique_phone(),
+        "full_name": full_name,
     }
 
 

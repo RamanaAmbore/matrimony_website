@@ -12,6 +12,7 @@
 	const PASSWORD_LETTER_RE = /[A-Za-z]/;
 	const PASSWORD_DIGIT_RE = /\d/;
 
+	let full_name = $state('');
 	let user_handle = $state('');
 	let email = $state('');
 	let phone_number = $state('+91 ');
@@ -63,6 +64,9 @@
 
 	function validate(): boolean {
 		const e: Record<string, string> = {};
+		if (!full_name.trim()) e.full_name = 'Full name is required';
+		else if (full_name.trim().length < 2) e.full_name = 'Must be at least 2 characters';
+		else if (full_name.trim().length > 80) e.full_name = 'Must be 80 characters or fewer';
 		const handleMsg = validateHandle(user_handle);
 		if (handleMsg) e.user_handle = handleMsg;
 		if (!email.trim()) e.email = 'Email is required';
@@ -83,6 +87,7 @@
 		loading = true;
 		try {
 			await auth.register(
+				full_name.trim(),
 				email.trim(),
 				password,
 				user_handle.trim(),
@@ -135,6 +140,27 @@
 
 
 	<form onsubmit={handleSubmit} novalidate class="mt-6 space-y-5">
+		<!-- Full Name -->
+		<div>
+			<label for="full_name" class="label block">
+				<span class="block">Full Name</span>
+				<span class="block text-xs font-normal leading-tight" lang="te">పూర్తి పేరు</span>
+			</label>
+			<input
+				id="full_name"
+				type="text"
+				autocomplete="name"
+				class="input"
+				class:border-vermilion={errors.full_name}
+				bind:value={full_name}
+				placeholder="e.g. Ramana Ambore"
+				maxlength="80"
+			/>
+			{#if errors.full_name}
+				<p class="mt-1 text-xs text-vermilion">{errors.full_name}</p>
+			{/if}
+		</div>
+
 		<!-- User ID / handle -->
 		<div>
 			<label for="user_handle" class="label block">

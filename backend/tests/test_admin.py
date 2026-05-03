@@ -36,7 +36,7 @@ async def _create_verified_user(client: AsyncClient, db_session: AsyncSession) -
     """Create and verify a user."""
     email = f"user_{uuid.uuid4().hex[:8]}@example.com"
     handle = f"u{uuid.uuid4().hex[:7]}"
-    resp = await client.post("/auth/register", json={"email": email, "password": "ValidPass123!", "user_handle": handle})
+    resp = await client.post("/auth/register", json={"email": email, "password": "ValidPass123!", "user_handle": handle, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
     user_id = resp.json()["user_id"]
     result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_id)))
     user = result.scalar_one()
@@ -54,6 +54,8 @@ async def _get_admin(db_session: AsyncSession) -> tuple[str, str]:
         admin = User(
             id=uuid.uuid4(), email="admin@test.com",
             user_handle="admintest",
+            full_name="Admin Test",
+            phone_number="+10000000001",
             password_hash=hash_password("AdminPass123!"),
             email_verified=True, is_admin=True,
         )
@@ -260,7 +262,7 @@ async def test_admin_verify_email_flips_flag(
     # Create an unverified user
     email = f"unverified_{uuid.uuid4().hex[:8]}@example.com"
     handle = f"u{uuid.uuid4().hex[:7]}"
-    resp = await client.post("/auth/register", json={"email": email, "password": "ValidPass123!", "user_handle": handle})
+    resp = await client.post("/auth/register", json={"email": email, "password": "ValidPass123!", "user_handle": handle, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
     user_id = resp.json()["user_id"]
 
     # Confirm not verified

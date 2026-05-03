@@ -22,7 +22,7 @@ def _unique_handle() -> str:
 
 
 def _reg(email: str, handle: str, password: str = "ValidPass123!") -> dict:
-    return {"email": email, "password": password, "user_handle": handle}
+    return {"email": email, "password": password, "user_handle": handle, "phone_number": "+911234567890", "full_name": "Test User"}
 
 
 def _login(identifier: str, password: str = "ValidPass123!") -> dict:
@@ -41,6 +41,7 @@ def test_mint_and_decode_roundtrip() -> None:
         user_id=user_id,
         handle="rambo",
         email="rambo@example.com",
+        full_name="Rambo Test",
         is_admin=False,
         email_verified=True,
     )
@@ -76,6 +77,7 @@ def test_bad_signature_returns_none() -> None:
         user_id="user-x",
         handle="userx",
         email="x@example.com",
+        full_name="User X",
         is_admin=True,
         email_verified=True,
     )
@@ -97,6 +99,7 @@ def test_token_payload_fields() -> None:
         user_id="u",
         handle="testuser",
         email="testuser@example.com",
+        full_name="Test User",
         is_admin=False,
         email_verified=False,
     )

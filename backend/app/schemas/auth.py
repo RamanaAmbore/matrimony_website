@@ -11,6 +11,7 @@ class RegisterRequest(msgspec.Struct):
     password: str
     user_handle: str
     phone_number: str
+    full_name: str
 
 
 class LoginRequest(msgspec.Struct):
@@ -26,6 +27,7 @@ class UserResponse(msgspec.Struct):
     user_id: str
     user_handle: str
     email: str
+    full_name: str
     is_admin: bool
     email_verified: bool
 

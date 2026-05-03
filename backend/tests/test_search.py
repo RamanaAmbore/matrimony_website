@@ -59,7 +59,7 @@ async def _create_verified_user(client: AsyncClient, db_session: AsyncSession) -
     password = "ValidPass123!"
     handle = f"u{uuid.uuid4().hex[:7]}"
 
-    resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle})
+    resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
     user_id = resp.json()["user_id"]
 
     result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_id)))
