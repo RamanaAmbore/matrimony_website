@@ -83,7 +83,7 @@
 		<div>
 			<h1 class="font-serif text-3xl font-bold text-maroon">
 				{T.myProfiles.en}
-				<span class="ml-2 text-xl font-normal" lang="te">{T.myProfiles.te}</span>
+				<span class="ml-2 font-normal" lang="te">{T.myProfiles.te}</span>
 			</h1>
 			<p class="mt-1 text-sm text-ink/60">Manage your matrimonial profiles</p>
 		</div>
@@ -96,7 +96,7 @@
 	{#if data.user}
 		<div class="mt-4 rounded-lg border border-gold/30 bg-white px-5 py-4 text-sm">
 			<p class="font-medium text-maroon font-serif text-base mb-2">Account Details
-				<span class="ml-1 text-sm font-normal" lang="te">ఖాతా వివరాలు</span>
+				<span class="ml-1 font-normal" lang="te">ఖాతా వివరాలు</span>
 			</p>
 			<div class="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4 text-ink/70">
 				<div><span class="text-xs text-ink/50 block">Name</span>{data.user.full_name || '—'}</div>

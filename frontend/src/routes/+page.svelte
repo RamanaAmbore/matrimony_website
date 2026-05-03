@@ -125,10 +125,10 @@
 <section class="px-4 py-16">
 	<div class="mx-auto max-w-5xl">
 
-		<h2 class="mt-6 mb-1 text-center font-serif text-3xl font-semibold text-maroon md:text-4xl">
+		<h2 class="mt-6 mb-12 text-center font-serif text-3xl font-semibold text-maroon md:text-4xl">
 			Why Maratha Kalyanam?
+			<span class="block font-normal" lang="te">మరాఠా కల్యాణం ఎందుకు?</span>
 		</h2>
-		<p class="mb-12 text-center text-sm" lang="te">మరాఠా కల్యాణం ఎందుకు?</p>
 
 		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 			<!-- Community-Focused — oil lamp 🪔 -->
@@ -137,13 +137,15 @@
 					class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-maroon/10 text-3xl group-hover:bg-maroon/20 transition-colors duration-200"
 					aria-hidden="true"
 				>🪔</div>
-				<h3 class="mb-0.5 font-serif text-xl font-semibold text-maroon">Community-Focused</h3>
-				<p class="mb-2 text-xs" lang="te">సమాజ కేంద్రంగా</p>
+				<h3 class="mb-3 font-serif text-xl font-semibold text-maroon">
+					Community-Focused
+					<span class="block font-normal" lang="te">సమాజ కేంద్రంగా</span>
+				</h3>
 				<p class="text-sm text-ink/80">
 					Built for Maratha families with deep respect for gotra, nakshatram,
 					kuldevata, and devak traditions.
+					<span class="block mt-1" lang="te">గోత్రం, నక్షత్రం, కుల్‍దేవత మరియు దేవక్ సంప్రదాయాలను గౌరవించే మరాఠా కుటుంబాల కోసం నిర్మించబడింది.</span>
 				</p>
-				<p class="mt-1 text-xs" lang="te">గోత్రం, నక్షత్రం, కుల్‍దేవత మరియు దేవక్ సంప్రదాయాలను గౌరవించే మరాఠా కుటుంబాల కోసం నిర్మించబడింది.</p>
 			</div>
 
 			<!-- Admin-Verified — kalash pot 🪬 -->
@@ -152,13 +154,15 @@
 					class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-saffron/15 text-3xl group-hover:bg-saffron/25 transition-colors duration-200"
 					aria-hidden="true"
 				>🛕</div>
-				<h3 class="mb-0.5 font-serif text-xl font-semibold text-maroon">Admin-Verified</h3>
-				<p class="mb-2 text-xs" lang="te">నిర్వాహక ధృవీకరణ</p>
+				<h3 class="mb-3 font-serif text-xl font-semibold text-maroon">
+					Admin-Verified
+					<span class="block font-normal" lang="te">నిర్వాహక ధృవీకరణ</span>
+				</h3>
 				<p class="text-sm text-ink/80">
 					Every profile is reviewed and approved by our team before going live.
 					Contact details shared only after mutual interest.
+					<span class="block mt-1" lang="te">ప్రతి ప్రొఫైల్ మా బృందం ధృవీకరించిన తర్వాతే ప్రచురితమవుతుంది. పరస్పర ఆసక్తి తర్వాతే సంప్రదింపు వివరాలు అందుతాయి.</span>
 				</p>
-				<p class="mt-1 text-xs" lang="te">ప్రతి ప్రొఫైల్ మా బృందం ధృవీకరించిన తర్వాతే ప్రచురితమవుతుంది. పరస్పర ఆసక్తి తర్వాతే సంప్రదింపు వివరాలు అందుతాయి.</p>
 			</div>
 
 			<!-- Privacy First — lotus flower 🪷 -->
@@ -167,13 +171,15 @@
 					class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gold/15 text-3xl group-hover:bg-gold/25 transition-colors duration-200"
 					aria-hidden="true"
 				>🪷</div>
-				<h3 class="mb-0.5 font-serif text-xl font-semibold text-maroon">Privacy First</h3>
-				<p class="mb-2 text-xs" lang="te">గోప్యత అగ్రగామి</p>
+				<h3 class="mb-3 font-serif text-xl font-semibold text-maroon">
+					Privacy First
+					<span class="block font-normal" lang="te">గోప్యత అగ్రగామి</span>
+				</h3>
 				<p class="text-sm text-ink/80">
 					Photos are blurred in search results. Full details are shared only after
 					admin approval of a request.
+					<span class="block mt-1" lang="te">శోధన ఫలితాలలో ఫోటోలు బ్లర్ చేయబడతాయి. నిర్వాహకుని అనుమతి తర్వాతే పూర్తి వివరాలు అందుతాయి.</span>
 				</p>
-				<p class="mt-1 text-xs" lang="te">శోధన ఫలితాలలో ఫోటోలు బ్లర్ చేయబడతాయి. నిర్వాహకుని అనుమతి తర్వాతే పూర్తి వివరాలు అందుతాయి.</p>
 			</div>
 		</div>
 

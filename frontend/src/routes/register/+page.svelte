@@ -144,7 +144,7 @@
 		<div>
 			<label for="full_name" class="label block">
 				<span class="block">Full Name</span>
-				<span class="block text-xs font-normal leading-tight" lang="te">పూర్తి పేరు</span>
+				<span class="block font-normal leading-tight" lang="te">పూర్తి పేరు</span>
 			</label>
 			<input
 				id="full_name"
@@ -165,7 +165,7 @@
 		<div>
 			<label for="user_handle" class="label block">
 				<span class="block">{T.userHandle.en}</span>
-				<span class="block text-xs font-normal leading-tight" lang="te">{T.userHandle.te}</span>
+				<span class="block font-normal leading-tight" lang="te">{T.userHandle.te}</span>
 			</label>
 			<input
 				id="user_handle"
@@ -194,7 +194,7 @@
 		<div>
 			<label for="email" class="label block">
 				<span class="block">Email address</span>
-				<span class="block text-xs font-normal leading-tight" lang="te">ఇమెయిల్ చిరునామా</span>
+				<span class="block font-normal leading-tight" lang="te">ఇమెయిల్ చిరునామా</span>
 			</label>
 			<input
 				id="email"
@@ -214,7 +214,7 @@
 		<div>
 			<label for="phone_number" class="label block">
 				<span class="block">Phone number</span>
-				<span class="block text-xs font-normal leading-tight" lang="te">ఫోన్ నంబర్</span>
+				<span class="block font-normal leading-tight" lang="te">ఫోన్ నంబర్</span>
 			</label>
 			<input
 				id="phone_number"
@@ -240,7 +240,7 @@
 		<div>
 			<label for="password" class="label block">
 				<span class="block">Password</span>
-				<span class="block text-xs font-normal leading-tight" lang="te">పాస్‌వర్డ్</span>
+				<span class="block font-normal leading-tight" lang="te">పాస్‌వర్డ్</span>
 			</label>
 			<input
 				id="password"
@@ -264,7 +264,7 @@
 		<div>
 			<label for="confirm-password" class="label block">
 				<span class="block">Confirm password</span>
-				<span class="block text-xs font-normal leading-tight" lang="te">పాస్‌వర్డ్ నిర్ధారించు</span>
+				<span class="block font-normal leading-tight" lang="te">పాస్‌వర్డ్ నిర్ధారించు</span>
 			</label>
 			<input
 				id="confirm-password"
