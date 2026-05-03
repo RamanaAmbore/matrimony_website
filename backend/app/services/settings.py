@@ -31,6 +31,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "matrimony_tg_token": "",
     "matrimony_tg_chat_id": "",
     "matrimony_tg_enabled": True,
+    "is_prod": False,
 }
 
 SENSITIVE_KEYS = {"smtp_password", "matrimony_tg_token"}

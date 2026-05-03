@@ -485,6 +485,7 @@ class AdminController(Controller):
                 "phone_number": u.phone_number,
                 "is_admin": u.is_admin,
                 "email_verified": u.email_verified,
+                "is_approved": u.is_approved,
                 "created_at": u.created_at.isoformat(),
             }
             for u in users
@@ -520,6 +521,7 @@ class AdminController(Controller):
             "phone_number": user.phone_number,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
+            "is_approved": user.is_approved,
             "created_at": user.created_at.isoformat(),
         }
 
@@ -555,6 +557,82 @@ class AdminController(Controller):
             "phone_number": user.phone_number,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
+            "is_approved": user.is_approved,
+            "created_at": user.created_at.isoformat(),
+        }
+
+    @post("/users/{user_id:str}/approve")
+    async def approve_user(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Admin: mark a user as approved so they can create profiles."""
+        _require_admin(request)
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        user.is_approved = True
+        await db.commit()
+        await db.refresh(user)
+
+        from app.services.telegram import notify_user_approved
+        asyncio.create_task(notify_user_approved(name=user.full_name, email=user.email))
+
+        return {
+            "user_id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "user_handle": user.user_handle,
+            "phone_number": user.phone_number,
+            "is_admin": user.is_admin,
+            "email_verified": user.email_verified,
+            "is_approved": user.is_approved,
+            "created_at": user.created_at.isoformat(),
+        }
+
+    @post("/users/{user_id:str}/unapprove")
+    async def unapprove_user(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Admin: revoke approval from a user."""
+        _require_admin(request)
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        user.is_approved = False
+        await db.commit()
+        await db.refresh(user)
+
+        return {
+            "user_id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "user_handle": user.user_handle,
+            "phone_number": user.phone_number,
+            "is_admin": user.is_admin,
+            "email_verified": user.email_verified,
+            "is_approved": user.is_approved,
             "created_at": user.created_at.isoformat(),
         }
 

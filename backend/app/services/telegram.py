@@ -56,6 +56,12 @@ async def notify_user_registered(name: str, email: str, phone: str) -> None:
     )
 
 
+async def notify_user_approved(name: str, email: str) -> None:
+    await _send(
+        f"✅ <b>User Approved</b>\n{name}\n{email}\n{_now_times()}"
+    )
+
+
 async def notify_profile_submitted(profile_id: str, name: str, gender: str) -> None:
     code = profile_id.replace("-", "")[:5].upper()
     mc_code = f"MC-{code}"

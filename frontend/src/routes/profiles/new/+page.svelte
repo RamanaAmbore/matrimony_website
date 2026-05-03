@@ -1,9 +1,19 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { profiles as profilesApi, type Profile, type ProfilePayload } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { ApiError } from '$lib/api';
 	import { goto } from '$app/navigation';
 	import ProfileForm from '$lib/components/ProfileForm.svelte';
+
+	let { data } = $props();
+
+	onMount(() => {
+		if (data.user && !data.user.is_approved) {
+			toastStore.error('Account pending admin approval');
+			goto('/dashboard');
+		}
+	});
 
 	let submitting = $state(false);
 	let submittingForApproval = $state(false);

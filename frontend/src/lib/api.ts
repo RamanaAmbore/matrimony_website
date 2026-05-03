@@ -21,6 +21,7 @@ export interface User {
 	phone_number: string;
 	full_name: string;
 	is_admin: boolean;
+	is_approved: boolean;
 	email_verified: boolean;
 }
 
@@ -516,6 +517,12 @@ export const admin = {
 		},
 		async promote(id: string): Promise<void> {
 			return request(`/api/admin/users/${id}/promote`, { method: 'POST' });
+		},
+		async approve(id: string): Promise<User> {
+			return request(`/api/admin/users/${id}/approve`, { method: 'POST' });
+		},
+		async unapprove(id: string): Promise<User> {
+			return request(`/api/admin/users/${id}/unapprove`, { method: 'POST' });
 		},
 		async verifyEmail(userId: string): Promise<void> {
 			return request(`/api/admin/users/${userId}/verify_email`, { method: 'POST' });

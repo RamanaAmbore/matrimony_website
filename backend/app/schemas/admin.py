@@ -36,4 +36,5 @@ class AdminUserResponse(msgspec.Struct):
     phone_number: str
     is_admin: bool
     email_verified: bool
+    is_approved: bool
     created_at: str

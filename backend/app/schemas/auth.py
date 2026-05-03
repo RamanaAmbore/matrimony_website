@@ -30,6 +30,7 @@ class UserResponse(msgspec.Struct):
     full_name: str
     is_admin: bool
     email_verified: bool
+    is_approved: bool
 
 
 class RegisterResponse(msgspec.Struct):

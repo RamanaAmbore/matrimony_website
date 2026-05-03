@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community';
+	import 'ag-grid-community/styles/ag-grid.css';
+	import 'ag-grid-community/styles/ag-theme-quartz.css';
 	import {
 		admin as adminApi,
 		ApiError,
@@ -60,6 +63,12 @@
 	let allUsersLoading = $state(false);
 	let allUsersError = $state('');
 
+	// ag-Grid state
+	let usersGridDiv = $state<HTMLDivElement | undefined>(undefined);
+	let usersGridApi = $state<GridApi | undefined>(undefined);
+	let selectedUser = $state<User | null>(null);
+	let userActionLoading = $state(false);
+
 	// ── Mount: load pending dashboard ────────────────────────────────────────────
 
 	onMount(async () => {
@@ -115,7 +124,127 @@
 		} finally {
 			allUsersLoading = false;
 		}
+		// Grid initialised by $effect once usersGridDiv is bound and allUsers is populated
 	}
+
+	// Grid is created reactively when the div is available and data is loaded.
+	// The $effect cleanup (return fn) destroys the grid when the div unmounts
+	// (e.g. when the user switches away from the Users tab).
+	$effect(() => {
+		if (!usersGridDiv || !allUsers) return;
+		if (usersGridApi) {
+			// Already created — just refresh row data
+			usersGridApi.setGridOption('rowData', allUsers);
+			return;
+		}
+
+		const columnDefs = [
+			{ field: 'email', headerName: 'Email', flex: 2, filter: true, sortable: true },
+			{
+				field: 'user_handle', headerName: 'Handle', flex: 1, filter: true, sortable: true,
+				valueFormatter: (p: { value: string }) => `@${p.value}`
+			},
+			{ field: 'full_name', headerName: 'Name', flex: 1, filter: true, sortable: true },
+			{ field: 'phone_number', headerName: 'Phone', flex: 1 },
+			{
+				field: 'email_verified', headerName: 'Email Verified', width: 140, sortable: true,
+				cellRenderer: (p: { value: boolean }) => p.value ? '✓ Verified' : '⚠ Pending'
+			},
+			{
+				field: 'is_approved', headerName: 'Approved', width: 120, sortable: true,
+				cellRenderer: (p: { value: boolean }) => p.value ? '✓ Approved' : '— Pending'
+			},
+			{
+				field: 'is_admin', headerName: 'Admin', width: 90, sortable: true,
+				cellRenderer: (p: { value: boolean }) => p.value ? '★ Admin' : ''
+			}
+		];
+
+		const gridOptions: GridOptions = {
+			columnDefs,
+			rowData: allUsers,
+			rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
+			onRowClicked: (e) => { selectedUser = e.data as User; },
+			defaultColDef: { resizable: true },
+			pagination: true,
+			paginationPageSize: 20,
+			theme: 'legacy'
+		};
+
+		const api = createGrid(usersGridDiv, gridOptions);
+		usersGridApi = api;
+
+		return () => {
+			api.destroy();
+			usersGridApi = undefined;
+		};
+	});
+
+	// ── User action functions ─────────────────────────────────────────────────────
+
+	async function approveUser(u: User) {
+		userActionLoading = true;
+		try {
+			const updated = await adminApi.users.approve(u.user_id);
+			allUsers = allUsers!.map(x => x.user_id === u.user_id ? updated : x);
+			selectedUser = updated;
+			usersGridApi?.setGridOption('rowData', allUsers);
+			toastStore.success('User approved');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
+	async function unapproveUser(u: User) {
+		userActionLoading = true;
+		try {
+			const updated = await adminApi.users.unapprove(u.user_id);
+			allUsers = allUsers!.map(x => x.user_id === u.user_id ? updated : x);
+			selectedUser = updated;
+			usersGridApi?.setGridOption('rowData', allUsers);
+			toastStore.success('Approval revoked');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
+	async function promoteUserFromGrid(u: User) {
+		userActionLoading = true;
+		try {
+			await adminApi.users.promote(u.user_id);
+			allUsers = allUsers!.map(x => x.user_id === u.user_id ? { ...x, is_admin: true } : x);
+			selectedUser = { ...u, is_admin: true };
+			usersGridApi?.setGridOption('rowData', allUsers);
+			toastStore.success('Promoted to admin');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
+	async function verifyEmailFromGrid(u: User) {
+		userActionLoading = true;
+		try {
+			await adminApi.users.verifyEmail(u.user_id);
+			allUsers = allUsers!.map(x => x.user_id === u.user_id ? { ...x, email_verified: true } : x);
+			selectedUser = { ...u, email_verified: true };
+			usersGridApi?.setGridOption('rowData', allUsers);
+			toastStore.success('Email verified');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
+	onDestroy(() => {
+		usersGridApi?.destroy();
+	});
 
 	function selectTab(tab: Tab) {
 		activeTab = tab;
@@ -609,48 +738,70 @@
 			</div>
 		{:else if allUsersError}
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allUsersError}</div>
-		{:else if allUsers}
+		{:else if allUsers !== null}
 			<div class="mb-3 flex items-center justify-between">
 				<h2 class="font-serif text-xl font-semibold text-maroon">All Users</h2>
-				<span class="text-sm text-ink/50">{allUsers.length} total</span>
+				<span class="text-sm text-ink/50">{allUsers.length} total · click a row to act</span>
 			</div>
 			{#if allUsers.length === 0}
 				<div class="card text-sm text-ink/60">No users found.</div>
 			{:else}
-				<div class="overflow-x-auto rounded-lg border border-gold/30 bg-white shadow-sm">
-					<table class="w-full text-sm">
-						<thead>
-							<tr class="border-b border-gold/30 bg-cream/60 text-left text-xs font-semibold text-ink/60 uppercase tracking-wider">
-								<th class="px-4 py-3">Email</th>
-								<th class="px-4 py-3">Handle</th>
-								<th class="px-4 py-3">Verified</th>
-								<th class="px-4 py-3">Admin</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-gold/20">
-							{#each allUsers as u (u.user_id)}
-								<tr class="hover:bg-cream/40 transition-colors">
-									<td class="px-4 py-3 text-ink">{u.email}</td>
-									<td class="px-4 py-3 font-mono text-xs text-ink/70">@{u.user_handle}</td>
-									<td class="px-4 py-3">
-										{#if u.email_verified}
-											<span class="badge-approved">Verified</span>
-										{:else}
-											<span class="badge-pending">Unverified</span>
-										{/if}
-									</td>
-									<td class="px-4 py-3">
-										{#if u.is_admin}
-											<span class="badge-approved">Admin</span>
-										{:else}
-											<span class="text-ink/40 text-xs">—</span>
-										{/if}
-									</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
+				<!-- ag-Grid container -->
+				<div bind:this={usersGridDiv} class="ag-theme-quartz w-full" style="height: 480px;"></div>
+
+				<!-- Selected-user action panel -->
+				{#if selectedUser}
+					<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
+						<div class="min-w-0 flex-1">
+							<p class="font-medium text-ink truncate">{selectedUser.email}</p>
+							<p class="text-xs text-ink/50">
+								@{selectedUser.user_handle}
+								{#if selectedUser.is_admin} · <span class="text-saffron font-semibold">Admin</span>{/if}
+								{#if selectedUser.email_verified} · <span class="text-green-600">Email verified</span>{:else} · <span class="text-marigold">Unverified email</span>{/if}
+								{#if selectedUser.is_approved} · <span class="text-green-600">Approved</span>{:else} · <span class="text-marigold">Not approved</span>{/if}
+							</p>
+						</div>
+						<div class="flex flex-wrap gap-2 shrink-0">
+							{#if !selectedUser.is_approved}
+								<button
+									class="btn-primary text-sm px-4 py-1.5 flex items-center gap-1.5"
+									disabled={userActionLoading}
+									onclick={() => approveUser(selectedUser!)}
+								>
+									{#if userActionLoading}<Loader size={13} class="animate-spin" />{/if}
+									Approve User
+								</button>
+							{:else}
+								<button
+									class="btn-secondary text-sm px-4 py-1.5"
+									disabled={userActionLoading}
+									onclick={() => unapproveUser(selectedUser!)}
+								>
+									Revoke Approval
+								</button>
+							{/if}
+							{#if !selectedUser.email_verified}
+								<button
+									class="btn-secondary text-sm px-4 py-1.5 flex items-center gap-1.5"
+									disabled={userActionLoading}
+									onclick={() => verifyEmailFromGrid(selectedUser!)}
+								>
+									<ShieldCheck size={14} />
+									Verify Email
+								</button>
+							{/if}
+							{#if !selectedUser.is_admin}
+								<button
+									class="btn-secondary text-sm px-4 py-1.5"
+									disabled={userActionLoading}
+									onclick={() => promoteUserFromGrid(selectedUser!)}
+								>
+									Make Admin
+								</button>
+							{/if}
+						</div>
+					</div>
+				{/if}
 			{/if}
 		{/if}
 

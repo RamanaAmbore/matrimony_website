@@ -137,25 +137,26 @@ class AuthController(Controller):
                 detail={"code": "handle_taken", "message": "That handle is already taken"},
             )
 
-        # Check email uniqueness (case-insensitive)
-        email_result = await db.execute(
-            select(User).where(func.lower(User.email) == data.email.lower())
-        )
-        if email_result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=409,
-                detail={"code": "email_taken", "message": "Email already registered"},
+        # Check email/phone uniqueness — always enforced in prod, skipped in test mode
+        is_prod = settings_service.get_bool("is_prod", False)
+        if is_prod:
+            email_result = await db.execute(
+                select(User).where(func.lower(User.email) == data.email.lower())
             )
+            if email_result.scalar_one_or_none():
+                raise HTTPException(
+                    status_code=422,
+                    detail={"code": "email_taken", "message": "Email is already registered."},
+                )
 
-        # Check phone uniqueness
-        phone_result = await db.execute(
-            select(User).where(User.phone_number == normalized_phone)
-        )
-        if phone_result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=409,
-                detail={"code": "phone_taken", "message": "Phone number already registered"},
+            phone_result = await db.execute(
+                select(User).where(User.phone_number == normalized_phone)
             )
+            if phone_result.scalar_one_or_none():
+                raise HTTPException(
+                    status_code=422,
+                    detail={"code": "phone_taken", "message": "Phone number is already registered."},
+                )
 
         token = auth_svc.generate_token()
         user = User(
@@ -166,6 +167,7 @@ class AuthController(Controller):
             phone_number=normalized_phone,
             password_hash=auth_svc.hash_password(data.password),
             email_verified=False,
+            is_approved=False,
             email_verification_token=token,
             is_admin=False,
         )
@@ -220,6 +222,7 @@ class AuthController(Controller):
             full_name=user.full_name,
             is_admin=user.is_admin,
             email_verified=user.email_verified,
+            is_approved=user.is_approved,
         )
 
         body: dict[str, Any] = {
@@ -229,6 +232,7 @@ class AuthController(Controller):
             "full_name": user.full_name,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
+            "is_approved": user.is_approved,
         }
 
         response: Response[dict[str, Any]] = Response(content=body)
@@ -268,6 +272,7 @@ class AuthController(Controller):
         user.email_verified = True
         user.email_verification_token = None
         await db.commit()
+        await db.refresh(user)
 
         return {"message": "Email verified successfully"}
 
@@ -286,4 +291,5 @@ class AuthController(Controller):
             "full_name": payload.get("full_name", ""),
             "is_admin": payload.get("is_admin", False),
             "email_verified": payload.get("email_verified", False),
+            "is_approved": payload.get("is_approved", True),
         }

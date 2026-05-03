@@ -15,7 +15,7 @@ _ALGORITHM = "HS256"
 _EXPIRY_SECONDS = 86400 * 30  # 30 days
 
 
-def mint_jwt(user_id: str, handle: str, email: str, full_name: str, is_admin: bool, email_verified: bool) -> str:
+def mint_jwt(user_id: str, handle: str, email: str, full_name: str, is_admin: bool, email_verified: bool, is_approved: bool = False) -> str:
     """Create a signed JWT for the given user.
 
     Payload keys:
@@ -25,8 +25,9 @@ def mint_jwt(user_id: str, handle: str, email: str, full_name: str, is_admin: bo
         full_name      — user full name
         is_admin       — bool
         email_verified — bool
+        is_approved    — bool
         iat            — issued-at (UTC epoch)
-        exp            — expiry (iat + 24 h)
+        exp            — expiry (iat + 30 days)
     """
     now = datetime.now(timezone.utc)
     payload: dict[str, Any] = {
@@ -36,6 +37,7 @@ def mint_jwt(user_id: str, handle: str, email: str, full_name: str, is_admin: bo
         "full_name": full_name,
         "is_admin": is_admin,
         "email_verified": email_verified,
+        "is_approved": is_approved,
         "iat": now,
         "exp": now + timedelta(seconds=_EXPIRY_SECONDS),
     }

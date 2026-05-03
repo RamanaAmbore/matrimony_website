@@ -275,6 +275,11 @@ class ProfileController(Controller):
                 status_code=403,
                 detail={"code": "email_not_verified", "message": "Email verification required"},
             )
+        if not user.get("is_approved", True):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "not_approved", "message": "Your account is pending admin approval before you can create profiles."},
+            )
 
         # ASCII validation
         _validate_free_text_fields(data)

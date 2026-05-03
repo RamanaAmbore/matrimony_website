@@ -87,11 +87,30 @@
 			</h1>
 			<p class="mt-1 text-sm text-ink/60">Manage your matrimonial profiles</p>
 		</div>
-		<a href="/profiles/new" class="btn-primary flex items-center gap-2">
-			<Plus size={18} />
-			New Profile
-		</a>
+		{#if !data.user || data.user.is_approved}
+			<a href="/profiles/new" class="btn-primary flex items-center gap-2">
+				<Plus size={18} />
+				New Profile
+			</a>
+		{:else}
+			<button class="btn-primary flex items-center gap-2 opacity-50 cursor-not-allowed" disabled title="Account pending admin approval">
+				<Plus size={18} />
+				New Profile
+			</button>
+		{/if}
 	</div>
+
+	{#if data.user && data.user.email_verified && !data.user.is_approved}
+		<div class="mt-4 flex items-start gap-3 rounded-lg border border-saffron/40 bg-saffron/10 px-5 py-4">
+			<span class="mt-0.5 shrink-0 text-saffron" aria-hidden="true">
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+			</span>
+			<p class="text-sm text-ink/80">
+				<span class="font-semibold text-saffron">Account under review.</span>
+				Your account is pending admin approval. You will be notified once approved and can create profiles.
+			</p>
+		</div>
+	{/if}
 
 	{#if data.user}
 		<div class="mt-4 rounded-lg border border-gold/30 bg-white px-5 py-4 text-sm">
@@ -123,10 +142,14 @@
 			</div>
 			<h2 class="mt-2 font-serif text-xl font-semibold text-maroon">No profiles yet</h2>
 			<p class="mt-2 text-ink/60">Create your first profile to start appearing in search results.</p>
-			<a href="/profiles/new" class="btn-primary mt-6 inline-flex items-center gap-2">
-				<Plus size={18} />
-				New Profile
-			</a>
+			{#if !data.user || data.user.is_approved}
+				<a href="/profiles/new" class="btn-primary mt-6 inline-flex items-center gap-2">
+					<Plus size={18} />
+					New Profile
+				</a>
+			{:else}
+				<p class="mt-4 text-sm text-saffron font-medium">Your account is pending admin approval before you can create profiles.</p>
+			{/if}
 		</div>
 	{:else}
 		<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
