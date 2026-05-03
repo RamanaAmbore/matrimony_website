@@ -55,16 +55,16 @@
 		<div class="mx-auto max-w-3xl">
 			<!-- Platform description -->
 			<p
-				class="mb-2 max-w-lg text-sm text-cream/90 md:text-base"
-				style="text-shadow: 0 1px 4px rgba(43,10,14,0.9);"
+				class="mb-2 max-w-lg text-base text-cream/95 md:text-lg"
+				style="text-shadow: 0 1px 6px rgba(43,10,14,0.95), 0 2px 12px rgba(43,10,14,0.7);"
 			>
 				The trusted matrimonial platform for the Maratha community settled across Andhra, Telangana,
 				Maharashtra and other states. Admin-verified profiles. Privacy-first photo sharing.
 			</p>
 			<p
-				class="mb-8 max-w-lg text-sm md:text-base"
+				class="mb-8 max-w-lg text-base md:text-lg"
 				lang="te"
-				style="color: #f4a300; text-shadow: 0 1px 4px rgba(43,10,14,0.9);"
+				style="color: #ffe066; text-shadow: -1px -1px 0 rgba(43,10,14,0.95), 1px -1px 0 rgba(43,10,14,0.95), -1px 1px 0 rgba(43,10,14,0.95), 1px 1px 0 rgba(43,10,14,0.95), 0 0 10px rgba(255,176,0,0.6);"
 			>
 				ఆంధ్రప్రదేశ్, తెలంగాణ, మహారాష్ట్రలలో నివసించే మరాఠా కుటుంబాలకు విశ్వసనీయమైన వివాహ వేదిక. నిర్వాహకులు ధృవీకరించిన ప్రొఫైళ్లు. గోప్యత అగ్రగామి.
 			</p>
