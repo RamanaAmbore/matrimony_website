@@ -158,7 +158,7 @@
 			href="/"
 			class="flex shrink-0 items-center gap-2 focus-visible:outline-2 focus-visible:outline-cream"
 		>
-			<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" />
+			<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" /></div>
 			<span class="whitespace-nowrap font-serif text-base font-semibold leading-tight">
 				<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
 				<span class="block text-[0.7rem] font-normal leading-tight" lang="te" style="color: #f4a300; text-shadow: 0 0 4px rgba(244,163,0,0.5), 1px 1px 2px rgba(0,0,0,0.85);">మరాఠా కల్యాణం</span>
@@ -247,7 +247,7 @@
 			style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);"
 		>
 			<div class="flex items-center gap-2">
-				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" />
+				<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" /></div>
 				<div class="font-serif leading-tight">
 					<span class="block text-sm font-semibold" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
 					<span class="block text-xs font-normal" lang="te" style="color: #f4a300; text-shadow: 0 0 4px rgba(244,163,0,0.5), 1px 1px 2px rgba(0,0,0,0.85);">మరాఠా కల్యాణం</span>
@@ -352,7 +352,7 @@
 			<!-- Brand column -->
 			<div class="md:col-span-2">
 				<div class="flex items-center gap-3">
-					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto logo-glow" />
+					<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto logo-glow" /></div>
 					<div>
 						<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
 						<p class="text-sm" lang="te" style="color: #f4a300; text-shadow: 0 0 4px rgba(244,163,0,0.5), 1px 1px 2px rgba(0,0,0,0.85);">మరాఠా కల్యాణం</p>
