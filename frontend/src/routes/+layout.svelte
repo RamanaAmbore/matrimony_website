@@ -142,57 +142,57 @@
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
 <header class="shadow-md border-b border-gold/40" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
-	<div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-		<!-- Brand wordmark -->
+	<div class="mx-auto flex w-full max-w-[1440px] items-center justify-between px-4 py-2">
+		<!-- Brand wordmark — shrink-0 keeps it from compressing -->
 		<a
 			href="/"
-			class="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-cream"
+			class="flex shrink-0 items-center gap-2 focus-visible:outline-2 focus-visible:outline-cream"
 		>
 			<div class="rounded-full ring-1 ring-gold/40 p-0.5">
-				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-10 w-auto logo-glow" />
+				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" />
 			</div>
-			<span class="font-serif text-lg font-semibold leading-tight">
+			<span class="whitespace-nowrap font-serif text-base font-semibold leading-tight">
 				<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-				<span class="block text-xs font-normal leading-tight" lang="te" style="color: #f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
+				<span class="block text-[0.7rem] font-normal leading-tight" lang="te" style="color: #f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
 			</span>
 		</a>
 
-		<!-- Desktop nav -->
-		<nav class="hidden items-center gap-6 md:flex" aria-label="Main navigation">
-			<a href="/" class={navLinkClass('/')}>
+		<!-- Desktop nav — nowrap prevents each item from breaking across lines -->
+		<nav class="hidden items-center gap-4 md:flex" aria-label="Main navigation">
+			<a href="/" class="whitespace-nowrap text-sm {navLinkClass('/')}">
 				{T.home.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.home.te}</span>
 			</a>
-			<a href="/search" class={navLinkClass('/search')}>
+			<a href="/search" class="whitespace-nowrap text-sm {navLinkClass('/search')}">
 				{T.search.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.search.te}</span>
 			</a>
-			<a href="/about" class={navLinkClass('/about')}>
+			<a href="/about" class="whitespace-nowrap text-sm {navLinkClass('/about')}">
 				{T.aboutPage.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.aboutPage.te}</span>
 			</a>
 
 			{#if user}
-				<a href="/dashboard" class={navLinkClass('/dashboard')}>
+				<a href="/dashboard" class="whitespace-nowrap text-sm {navLinkClass('/dashboard')}">
 					{T.myProfiles.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.myProfiles.te}</span>
 				</a>
-				<a href="/requests" class={navLinkClass('/requests')}>
+				<a href="/requests" class="whitespace-nowrap text-sm {navLinkClass('/requests')}">
 					{T.requests.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.requests.te}</span>
 				</a>
 				{#if user.is_admin}
-					<a href="/admin" class={navLinkClass('/admin')}>
+					<a href="/admin" class="whitespace-nowrap text-sm {navLinkClass('/admin')}">
 						{T.admin.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.admin.te}</span>
 					</a>
 				{/if}
-				<span class="font-mono text-sm text-cream/60" title={user.email}>@{user.user_handle}</span>
+				<span class="hidden font-mono text-xs text-cream/50 xl:inline" title={user.email}>@{user.user_handle}</span>
 				<button
 					onclick={logout}
-					class="rounded border border-cream/50 px-3 py-1 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
+					class="whitespace-nowrap rounded border border-cream/50 px-3 py-1 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
 				>
 					{T.logout.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.logout.te}</span>
 				</button>
 			{:else}
-				<a href="/login" class="rounded border border-cream px-3 py-1.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">
+				<a href="/login" class="whitespace-nowrap rounded border border-cream px-3 py-1.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">
 					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.login.te}</span>
 				</a>
-				<a href="/register" class="rounded bg-cream px-3 py-1.5 text-sm font-medium text-kumkum transition-all duration-200 hover:bg-haldi focus-visible:outline-2 focus-visible:outline-cream">
+				<a href="/register" class="whitespace-nowrap rounded bg-cream px-3 py-1.5 text-sm font-medium text-kumkum transition-all duration-200 hover:bg-haldi focus-visible:outline-2 focus-visible:outline-cream">
 					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.register.te}</span>
 				</a>
 			{/if}
