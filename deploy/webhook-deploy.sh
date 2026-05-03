@@ -77,13 +77,13 @@ if [[ -f "$DOTENV" ]]; then
     TG_CHAT="$(grep -E '^TELEGRAM_CHAT_ID=' "$DOTENV" | cut -d= -f2- | tr -d '[:space:]')"
     if [[ -n "$TG_TOKEN" && -n "$TG_CHAT" ]]; then
         IST="$(TZ='Asia/Kolkata' date '+%a, %d %b %Y %I:%M %p IST')"
-        MSG="<b>Maratha Kalyanam - Deploy OK</b>${IST} <code>${HEAD_SHA}</code>"
-        curl -s -o /dev/null \
+        MSG="Maratha Kalyanam - Deploy OK ${IST} SHA: ${HEAD_SHA}"
+        TG_OUT="$(curl -s -w '\nHTTP:%{http_code}' \
             -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
-            --data-urlencode "chat_id=${TG_CHAT}" \
-            --data-urlencode "text=${MSG}" \
-            --data-urlencode "parse_mode=HTML" \
-            && log "Telegram notification sent" \
-            || log "Telegram notification failed (non-fatal)"
+            -d "chat_id=${TG_CHAT}" \
+            -d "parse_mode=HTML" \
+            --data-urlencode "text=${MSG}" 2>&1)" \
+            && log "Telegram: $(echo "$TG_OUT" | grep HTTP)" \
+            || log "Telegram failed: $(echo "$TG_OUT" | tail -2)"
     fi
 fi
