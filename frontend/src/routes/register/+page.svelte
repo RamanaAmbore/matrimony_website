@@ -125,6 +125,7 @@
 </svelte:head>
 
 <div class="mx-auto max-w-md px-4 py-16">
+	<div class="rounded-2xl bg-white shadow-xl ring-1 ring-maroon/10 px-8 py-10">
 	<div class="text-center">
 		<h1 class="font-serif text-3xl font-bold text-maroon">
 			{T.register.en}
@@ -270,4 +271,5 @@
 			{T.login.en} · <span lang="te">{T.login.te}</span>
 		</a>
 	</p>
+	</div>
 </div>
