@@ -273,11 +273,23 @@
 		'Uttar Pradesh',
 		'Uttarakhand',
 		'West Bengal',
+		'Andaman & Nicobar Islands',
+		'Chandigarh',
+		'Dadra & Nagar Haveli and Daman & Diu',
 		'Delhi',
 		'Jammu & Kashmir',
 		'Ladakh',
-		'Puducherry',
-		'Other'
+		'Lakshadweep',
+		'Puducherry'
+	];
+
+	const COUNTRIES_PRIORITY = ['India', 'United States', 'United Kingdom', 'United Arab Emirates'];
+	const COUNTRIES_OTHER = [
+		'Australia', 'Austria', 'Bahrain', 'Belgium', 'Canada', 'Denmark',
+		'Finland', 'France', 'Germany', 'Greece', 'Hong Kong', 'Ireland',
+		'Italy', 'Japan', 'Kuwait', 'Malaysia', 'Netherlands', 'New Zealand',
+		'Norway', 'Oman', 'Portugal', 'Qatar', 'Saudi Arabia', 'Singapore',
+		'South Africa', 'Spain', 'Sweden', 'Switzerland', 'Thailand'
 	];
 
 	const COMPLEXIONS = [
@@ -622,10 +634,17 @@
 									<BilingualLabel key="motherTongue" for="mother_tongue" />
 									<input id="mother_tongue" type="text" class="input" list="mother_tongue_opts" bind:value={mother_tongue} placeholder="Telugu" />
 									<datalist id="mother_tongue_opts">
-										<option value="Telugu" />
-										<option value="Marathi" />
-										<option value="Kannada" />
-										<option value="Tamil" />
+										<option value="Telugu"></option>
+										<option value="Marathi"></option>
+										<option value="Kannada"></option>
+										<option value="Tamil"></option>
+										<option value="Hindi"></option>
+										<option value="Malayalam"></option>
+										<option value="Gujarati"></option>
+										<option value="Bengali"></option>
+										<option value="Punjabi"></option>
+										<option value="Odia"></option>
+										<option value="Urdu"></option>
 									</datalist>
 									<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 								</div>
@@ -635,10 +654,10 @@
 									<BilingualLabel key="subCaste" for="sub_caste" />
 									<input id="sub_caste" type="text" class="input" list="sub_caste_opts" bind:value={sub_caste} placeholder="Type or choose" />
 									<datalist id="sub_caste_opts">
-										<option value="Maratha" />
-										<option value="Are Marathi" />
-										<option value="Are Kshatriya" />
-										<option value="Maratha Non-Brahmin" />
+										<option value="Maratha"></option>
+										<option value="Are Marathi"></option>
+										<option value="Are Kshatriya"></option>
+										<option value="Maratha Non-Brahmin"></option>
 									</datalist>
 								</div>
 							</div>
@@ -1035,10 +1054,25 @@
 
 							<!-- State -->
 							<div>
-								<BilingualLabel key="state" for="state" />
-								<select id="state" class="input" bind:value={state_field}>
+								<BilingualLabel key="state" for="state_w" />
+								<input id="state_w" type="text" class="input" list="states_opts" bind:value={state_field} placeholder="e.g. Telangana" />
+								<datalist id="states_opts">
 									{#each INDIA_STATES as s}
-										<option value={s}>{s}</option>
+										<option value={s}></option>
+									{/each}
+								</datalist>
+							</div>
+
+							<!-- Country -->
+							<div>
+								<BilingualLabel key="country" for="country_w" />
+								<select id="country_w" class="input" bind:value={country}>
+									{#each COUNTRIES_PRIORITY as c}
+										<option value={c}>{c}</option>
+									{/each}
+									<option disabled>──────────</option>
+									{#each COUNTRIES_OTHER as c}
+										<option value={c}>{c}</option>
 									{/each}
 								</select>
 							</div>
@@ -1050,13 +1084,6 @@
 									<span class="block text-xs leading-tight font-normal" lang="te">పిన్ కోడ్</span>
 								</label>
 								<input id="pin_code" type="text" inputmode="numeric" maxlength="10" class="input" bind:value={pin_code} placeholder="e.g. 500001" />
-							</div>
-
-							<!-- Country -->
-							<div>
-								<BilingualLabel key="country" for="country" />
-								<input id="country" type="text" class="input" bind:value={country} oninput={(e) => (country = asciiOnly(e.currentTarget.value))} placeholder="India" />
-								<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 							</div>
 						</div>
 
@@ -1253,10 +1280,17 @@
 						placeholder="Telugu"
 					/>
 					<datalist id="mother_tongue_opts_edit">
-						<option value="Telugu" />
-						<option value="Marathi" />
-						<option value="Kannada" />
-						<option value="Tamil" />
+						<option value="Telugu"></option>
+						<option value="Marathi"></option>
+						<option value="Kannada"></option>
+						<option value="Tamil"></option>
+						<option value="Hindi"></option>
+						<option value="Malayalam"></option>
+						<option value="Gujarati"></option>
+						<option value="Bengali"></option>
+						<option value="Punjabi"></option>
+						<option value="Odia"></option>
+						<option value="Urdu"></option>
 					</datalist>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 				</div>
@@ -1286,10 +1320,10 @@
 					<BilingualLabel key="subCaste" for="sub_caste" />
 					<input id="sub_caste" type="text" class="input" list="sub_caste_opts_edit" bind:value={sub_caste} placeholder="Type or choose" />
 					<datalist id="sub_caste_opts_edit">
-						<option value="Maratha" />
-						<option value="Are Marathi" />
-						<option value="Are Kshatriya" />
-						<option value="Maratha Non-Brahmin" />
+						<option value="Maratha"></option>
+						<option value="Are Marathi"></option>
+						<option value="Are Kshatriya"></option>
+						<option value="Maratha Non-Brahmin"></option>
 					</datalist>
 				</div>
 			</div>
@@ -2019,10 +2053,25 @@
 
 			<!-- State -->
 			<div>
-				<BilingualLabel key="state" for="state" />
-				<select id="state" class="input" bind:value={state_field}>
+				<BilingualLabel key="state" for="state_n" />
+				<input id="state_n" type="text" class="input" list="states_opts_edit" bind:value={state_field} placeholder="e.g. Telangana" />
+				<datalist id="states_opts_edit">
 					{#each INDIA_STATES as s}
-						<option value={s}>{s}</option>
+						<option value={s}></option>
+					{/each}
+				</datalist>
+			</div>
+
+			<!-- Country -->
+			<div>
+				<BilingualLabel key="country" for="country_n" />
+				<select id="country_n" class="input" bind:value={country}>
+					{#each COUNTRIES_PRIORITY as c}
+						<option value={c}>{c}</option>
+					{/each}
+					<option disabled>──────────</option>
+					{#each COUNTRIES_OTHER as c}
+						<option value={c}>{c}</option>
 					{/each}
 				</select>
 			</div>
@@ -2044,20 +2093,6 @@
 					bind:value={pin_code}
 					placeholder="e.g. 500001"
 				/>
-			</div>
-
-			<!-- Country -->
-			<div>
-				<BilingualLabel key="country" for="country" />
-				<input
-					id="country"
-					type="text"
-					class="input"
-					bind:value={country}
-					oninput={(e) => (country = asciiOnly(e.currentTarget.value))}
-					placeholder="India"
-				/>
-				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 			</div>
 		</div>
 	</details>

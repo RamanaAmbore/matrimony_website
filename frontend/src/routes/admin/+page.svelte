@@ -30,7 +30,7 @@
 
 	// ── Tab state ────────────────────────────────────────────────────────────────
 
-	type Tab = 'pending' | 'profiles' | 'requests' | 'users';
+	type Tab = 'pending' | 'profiles' | 'requests' | 'users' | 'broadcast';
 	let activeTab = $state<Tab>('pending');
 
 	// ── Pending tab state ────────────────────────────────────────────────────────
@@ -68,6 +68,38 @@
 	let usersGridApi = $state<GridApi | undefined>(undefined);
 	let selectedUser = $state<User | null>(null);
 	let userActionLoading = $state(false);
+
+	// ── Broadcast Email tab state ─────────────────────────────────────────────────
+
+	let broadcastSubject = $state('');
+	let broadcastBody = $state('');
+	let broadcastVerifiedOnly = $state(true);
+	let broadcastApprovedOnly = $state(false);
+	let broadcastSending = $state(false);
+	let broadcastResult = $state<{ sent: number; failed: number } | null>(null);
+
+	async function sendBroadcast() {
+		if (!broadcastSubject.trim() || !broadcastBody.trim()) {
+			toastStore.error('Subject and message body are required.');
+			return;
+		}
+		broadcastSending = true;
+		broadcastResult = null;
+		try {
+			const result = await adminApi.broadcastEmail({
+				subject: broadcastSubject.trim(),
+				body_html: broadcastBody.trim(),
+				filter_verified_only: broadcastVerifiedOnly,
+				filter_approved_only: broadcastApprovedOnly
+			});
+			broadcastResult = result;
+			toastStore.success(`Broadcast sent: ${result.sent} delivered, ${result.failed} failed.`);
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message : 'Broadcast failed.');
+		} finally {
+			broadcastSending = false;
+		}
+	}
 
 	// ── Mount: load pending dashboard ────────────────────────────────────────────
 
@@ -392,6 +424,7 @@
 		<button class={tabClass('profiles')} onclick={() => selectTab('profiles')}>All Profiles</button>
 		<button class={tabClass('requests')} onclick={() => selectTab('requests')}>All Requests</button>
 		<button class={tabClass('users')} onclick={() => selectTab('users')}>All Users</button>
+		<button class={tabClass('broadcast')} onclick={() => selectTab('broadcast')}>Broadcast Email</button>
 	</div>
 
 	<!-- ── Pending tab ─────────────────────────────────────────────────────────── -->
@@ -806,4 +839,76 @@
 		{/if}
 
 	{/if}
+
+	<!-- ── Broadcast Email tab ─────────────────────────────────────────────────── -->
+	{#if activeTab === 'broadcast'}
+		<div class="max-w-2xl">
+			<h2 class="text-xl font-semibold text-ink mb-1">Broadcast Email</h2>
+			<p class="text-sm text-ink/60 mb-6">Send a message to all registered users.</p>
+
+			<div class="bg-white rounded-xl border border-gold/20 shadow-sm p-6 space-y-5">
+				<!-- Audience filters -->
+				<fieldset class="space-y-2">
+					<legend class="text-sm font-medium text-ink">Audience</legend>
+					<label class="flex items-center gap-2 text-sm cursor-pointer">
+						<input type="checkbox" bind:checked={broadcastVerifiedOnly} class="accent-maroon" />
+						Only email-verified users
+					</label>
+					<label class="flex items-center gap-2 text-sm cursor-pointer">
+						<input type="checkbox" bind:checked={broadcastApprovedOnly} class="accent-maroon" />
+						Only admin-approved users
+					</label>
+				</fieldset>
+
+				<!-- Subject -->
+				<div class="space-y-1">
+					<label for="bc-subject" class="label text-sm">Subject</label>
+					<input
+						id="bc-subject"
+						type="text"
+						class="input"
+						bind:value={broadcastSubject}
+						placeholder="e.g. Important update from Maratha Kalyanam"
+						disabled={broadcastSending}
+					/>
+				</div>
+
+				<!-- Body -->
+				<div class="space-y-1">
+					<label for="bc-body" class="label text-sm">Message</label>
+					<p class="text-xs text-ink/50">Plain text or simple HTML. Will be embedded in a branded email template.</p>
+					<textarea
+						id="bc-body"
+						rows="10"
+						class="input font-mono text-sm resize-y"
+						bind:value={broadcastBody}
+						placeholder="Dear members,&#10;&#10;We are pleased to announce..."
+						disabled={broadcastSending}
+					></textarea>
+				</div>
+
+				<!-- Send button -->
+				<div class="flex items-center gap-4">
+					<button
+						class="btn-primary px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+						disabled={broadcastSending || !broadcastSubject.trim() || !broadcastBody.trim()}
+						onclick={sendBroadcast}
+					>
+						{#if broadcastSending}
+							Sending…
+						{:else}
+							Send Broadcast
+						{/if}
+					</button>
+					{#if broadcastResult}
+						<span class="text-sm text-ink/70">
+							Sent <strong class="text-green-700">{broadcastResult.sent}</strong> ·
+							Failed <strong class={broadcastResult.failed > 0 ? 'text-red-600' : 'text-ink/40'}>{broadcastResult.failed}</strong>
+						</span>
+					{/if}
+				</div>
+			</div>
+		</div>
+	{/if}
+
 </div>

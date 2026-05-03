@@ -539,5 +539,17 @@ export const admin = {
 				body: JSON.stringify(settings)
 			});
 		}
+	},
+
+	async broadcastEmail(payload: {
+		subject: string;
+		body_html: string;
+		filter_verified_only: boolean;
+		filter_approved_only: boolean;
+	}): Promise<{ sent: number; failed: number }> {
+		return request('/api/admin/broadcast-email', {
+			method: 'POST',
+			body: JSON.stringify(payload)
+		});
 	}
 };

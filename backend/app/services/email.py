@@ -253,3 +253,14 @@ async def send_admin_view_request(
         f"View request: {requester_name} → {profile_name} — Maratha Kalyanam · {ts['ist_time']}",
         html,
     )
+
+
+async def send_broadcast(
+    to: str,
+    subject: str,
+    body_html: str,
+    recipient_name: str,
+) -> None:
+    """Send a broadcast email to a single recipient using the broadcast template."""
+    html = _render("broadcast.html", subject=subject, body_html=body_html, recipient_name=recipient_name)
+    await _send(to, subject, html)

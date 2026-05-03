@@ -1,10 +1,12 @@
 """Admin routes."""
 
 import asyncio
+import logging
 import uuid
 from datetime import date, datetime, timezone
 from typing import Any, Optional
 
+import msgspec
 from litestar import Controller, get, post, put
 from litestar.connection import Request
 from litestar.exceptions import HTTPException
@@ -24,6 +26,15 @@ from app.schemas.admin import (
 )
 from app.services import email as email_svc
 from app.services.settings import settings_service, SENSITIVE_KEYS
+
+logger = logging.getLogger(__name__)
+
+
+class BroadcastEmailBody(msgspec.Struct):
+    subject: str
+    body_html: str
+    filter_verified_only: bool = True
+    filter_approved_only: bool = False
 
 
 def _require_admin(request: Request) -> dict[str, Any]:
@@ -676,6 +687,60 @@ class AdminController(Controller):
         await db.commit()
 
         return settings_service.all_public()
+
+    # --- Broadcast email ---
+    @post("/broadcast-email")
+    async def broadcast_email(
+        self,
+        data: BroadcastEmailBody,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Send a custom broadcast email to all (or filtered) registered users."""
+        _require_admin(request)
+
+        query = select(User)
+        if data.filter_verified_only:
+            query = query.where(User.email_verified == True)  # noqa: E712
+        if data.filter_approved_only:
+            query = query.where(User.is_approved == True)  # noqa: E712
+        result = await db.execute(query)
+        users = result.scalars().all()
+
+        _BATCH_SIZE = 20
+        sent = 0
+        failed = 0
+
+        for batch_start in range(0, len(users), _BATCH_SIZE):
+            batch = users[batch_start : batch_start + _BATCH_SIZE]
+
+            async def _send_one(user: User) -> bool:
+                recipient_name = user.full_name or user.email
+                try:
+                    await email_svc.send_broadcast(
+                        to=user.email,
+                        subject=data.subject,
+                        body_html=data.body_html,
+                        recipient_name=recipient_name,
+                    )
+                    return True
+                except Exception as exc:
+                    logger.warning(
+                        "Broadcast send failed for %s: %s", user.email, exc
+                    )
+                    return False
+
+            results = await asyncio.gather(*[_send_one(u) for u in batch])
+            sent += sum(1 for ok in results if ok)
+            failed += sum(1 for ok in results if not ok)
+
+        logger.info(
+            "Broadcast: sent=%d failed=%d subject=%s",
+            sent,
+            failed,
+            data.subject,
+        )
+        return {"sent": sent, "failed": failed}
 
     # --- Stats ---
     @get("/stats")
