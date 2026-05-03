@@ -57,7 +57,7 @@
 	let dob = $state(untrack(() => initialData.dob ?? ''));
 	let marital_status = $state(untrack(() => initialData.marital_status ?? ''));
 	let mother_tongue = $state(untrack(() => initialData.mother_tongue ?? 'Telugu'));
-	let sub_caste = $state(untrack(() => initialData.sub_caste ?? ''));
+	let sub_caste = $state(untrack(() => initialData.sub_caste ?? 'Maratha'));
 	let surname_clan = $state(untrack(() => initialData.surname_clan ?? ''));
 
 	// Physical
@@ -76,7 +76,21 @@
 	let manglik = $state<'yes' | 'no' | 'partial' | 'unknown'>(
 		untrack(() => initialData.manglik ?? 'unknown')
 	);
-	let time_of_birth = $state(untrack(() => initialData.time_of_birth ?? ''));
+	// 12-hour time picker state — backend stores HH:MM (24-hour)
+	function parseTimeTo12h(t: string | null | undefined): { hour: string; minute: string; ampm: 'AM' | 'PM' } {
+		if (!t) return { hour: '12', minute: '00', ampm: 'AM' };
+		const [hStr, mStr] = t.split(':');
+		let h = parseInt(hStr, 10);
+		const ampm: 'AM' | 'PM' = h < 12 ? 'AM' : 'PM';
+		if (h === 0) h = 12;
+		else if (h > 12) h = h - 12;
+		return { hour: String(h), minute: mStr?.slice(0, 2) ?? '00', ampm };
+	}
+	let timeEnabled = $state(untrack(() => !!initialData.time_of_birth));
+	const _initTime = untrack(() => parseTimeTo12h(initialData.time_of_birth));
+	let time_hour = $state(_initTime.hour);
+	let time_minute = $state(_initTime.minute);
+	let time_ampm = $state<'AM' | 'PM'>(_initTime.ampm);
 	let place_of_birth = $state(untrack(() => initialData.place_of_birth ?? ''));
 
 	// Education & Career
@@ -397,7 +411,13 @@
 			nakshatram,
 			rashi,
 			manglik,
-			time_of_birth: time_of_birth || null,
+			time_of_birth: (() => {
+				if (!timeEnabled) return null;
+				let h = parseInt(time_hour, 10);
+				if (time_ampm === 'AM' && h === 12) h = 0;
+				else if (time_ampm === 'PM' && h !== 12) h = h + 12;
+				return `${String(h).padStart(2, '0')}:${time_minute}`;
+			})(),
 			place_of_birth: place_of_birth.trim() || null,
 
 			education: education.trim(),
@@ -455,10 +475,11 @@
 	// prettier-ignore
 	const formFingerprint = $derived(
 		[
-			gender, first_name, last_name, dob, marital_status, mother_tongue,
+			gender, first_name, dob, marital_status, mother_tongue,
 			sub_caste, surname_clan, height_cm, weight_kg, complexion, body_type,
 			blood_group, gotra, kuldevata, devak, nakshatram, rashi, manglik,
-			time_of_birth, place_of_birth, education, college_university, occupation,
+			time_hour, time_minute, time_ampm, timeEnabled, place_of_birth,
+			education, college_university, occupation,
 			employer, annual_income_inr, work_location, father_name, mother_name,
 			num_family_members, father_occupation, mother_occupation, num_brothers,
 			num_sisters, num_brothers_married, num_sisters_married, family_type,
@@ -607,9 +628,12 @@
 								<!-- Sub-caste (optional) -->
 								<div class="sm:col-span-2">
 									<BilingualLabel key="subCaste" for="sub_caste" />
-									<input id="sub_caste" type="text" class="input" bind:value={sub_caste} oninput={(e) => (sub_caste = asciiOnly(e.currentTarget.value))} placeholder="Optional" />
-									<p class="mt-0.5 text-xs text-ink/45">Sub-group within Maratha community, if applicable · ఉప-కులం</p>
-									<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+									<select id="sub_caste" class="input" bind:value={sub_caste}>
+										<option value="Maratha">Maratha</option>
+										<option value="Are Marathi">Are Marathi</option>
+										<option value="Are Kshatriya">Are Kshatriya</option>
+										<option value="Maratha Non-Brahmin">Maratha Non-Brahmin</option>
+									</select>
 								</div>
 							</div>
 						</div>
@@ -723,8 +747,30 @@
 
 							<!-- Time of Birth (optional) -->
 							<div>
-								<BilingualLabel key="timeOfBirth" for="time_of_birth" />
-								<input id="time_of_birth" type="time" class="input" bind:value={time_of_birth} />
+								<BilingualLabel key="timeOfBirth" for="time_enabled" />
+								<div class="flex items-center gap-2">
+									<input type="checkbox" id="time_enabled" bind:checked={timeEnabled} class="accent-maroon" />
+									<label for="time_enabled" class="text-sm text-ink/60">Add time of birth</label>
+								</div>
+								{#if timeEnabled}
+								<div class="mt-2 flex items-center gap-2">
+									<select class="input w-20" bind:value={time_hour}>
+										{#each Array.from({length: 12}, (_, i) => String(i + 1)) as h}
+											<option value={h}>{h}</option>
+										{/each}
+									</select>
+									<span class="text-ink/60">:</span>
+									<select class="input w-20" bind:value={time_minute}>
+										{#each ['00','05','10','15','20','25','30','35','40','45','50','55'] as m}
+											<option value={m}>{m}</option>
+										{/each}
+									</select>
+									<select class="input w-20" bind:value={time_ampm}>
+										<option value="AM">AM</option>
+										<option value="PM">PM</option>
+									</select>
+								</div>
+								{/if}
 								<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · జన్మ సమయం</p>
 							</div>
 
@@ -1226,18 +1272,12 @@
 				<!-- Sub-caste (optional) -->
 				<div class="sm:col-span-2">
 					<BilingualLabel key="subCaste" for="sub_caste" />
-					<input
-						id="sub_caste"
-						type="text"
-						class="input"
-						bind:value={sub_caste}
-						oninput={(e) => (sub_caste = asciiOnly(e.currentTarget.value))}
-						placeholder="Optional"
-					/>
-					<p class="mt-0.5 text-xs text-ink/45">
-						Sub-group within Maratha community, if applicable · ఉప-కులం
-					</p>
-					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					<select id="sub_caste" class="input" bind:value={sub_caste}>
+						<option value="Maratha">Maratha</option>
+						<option value="Are Marathi">Are Marathi</option>
+						<option value="Are Kshatriya">Are Kshatriya</option>
+						<option value="Maratha Non-Brahmin">Maratha Non-Brahmin</option>
+					</select>
 				</div>
 			</div>
 		</div>
@@ -1433,8 +1473,30 @@
 
 			<!-- Time of Birth (optional) -->
 			<div>
-				<BilingualLabel key="timeOfBirth" for="time_of_birth" />
-				<input id="time_of_birth" type="time" class="input" bind:value={time_of_birth} />
+				<BilingualLabel key="timeOfBirth" for="time_enabled_n" />
+				<div class="flex items-center gap-2">
+					<input type="checkbox" id="time_enabled_n" bind:checked={timeEnabled} class="accent-maroon" />
+					<label for="time_enabled_n" class="text-sm text-ink/60">Add time of birth</label>
+				</div>
+				{#if timeEnabled}
+				<div class="mt-2 flex items-center gap-2">
+					<select class="input w-20" bind:value={time_hour}>
+						{#each Array.from({length: 12}, (_, i) => String(i + 1)) as h}
+							<option value={h}>{h}</option>
+						{/each}
+					</select>
+					<span class="text-ink/60">:</span>
+					<select class="input w-20" bind:value={time_minute}>
+						{#each ['00','05','10','15','20','25','30','35','40','45','50','55'] as m}
+							<option value={m}>{m}</option>
+						{/each}
+					</select>
+					<select class="input w-20" bind:value={time_ampm}>
+						<option value="AM">AM</option>
+						<option value="PM">PM</option>
+					</select>
+				</div>
+				{/if}
 				<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · జన్మ సమయం</p>
 			</div>
 

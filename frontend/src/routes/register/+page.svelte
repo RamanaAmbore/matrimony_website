@@ -14,7 +14,7 @@
 
 	let user_handle = $state('');
 	let email = $state('');
-	let phone_number = $state('+');
+	let phone_number = $state('+91 ');
 	let password = $state('');
 	let confirmPassword = $state('');
 	let loading = $state(false);
