@@ -4,7 +4,6 @@
 	import { ApiError } from '$lib/api';
 	import { goto } from '$app/navigation';
 	import ProfileForm from '$lib/components/ProfileForm.svelte';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 
 	let submitting = $state(false);
 	let serverErrors = $state<Record<string, string>>({});
@@ -44,7 +43,6 @@
 	<h1 class="font-serif text-3xl font-bold text-maroon">Create New Profile</h1>
 	<p class="mt-1 text-sm text-ink/60">Fill in the details to create your matrimonial profile.</p>
 
-	<KalashaDivider />
 
 	<div class="mt-6">
 		<ProfileForm {submitting} {serverErrors} onSubmit={handleSubmit} />

@@ -21,7 +21,6 @@
 		X,
 		ShieldCheck
 	} from 'lucide-svelte';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 
 	let dashboard = $state<AdminDashboard | null>(null);
 	let loading = $state(true);
@@ -147,7 +146,6 @@
 	<h1 class="font-serif text-3xl font-bold text-maroon">Admin Dashboard</h1>
 	<p class="mt-1 text-sm text-ink/60">Platform overview and quick approvals</p>
 
-	<KalashaDivider />
 
 	<!-- Quick nav to sub-pages -->
 	<nav class="mb-8 flex flex-wrap gap-3">

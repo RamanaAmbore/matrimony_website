@@ -5,7 +5,6 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
 	import { Loader, ShieldCheck, UserCheck } from 'lucide-svelte';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 
 	let userList = $state<User[]>([]);
 	let loading = $state(true);
@@ -62,7 +61,6 @@
 		<a href="/admin" class="btn-secondary text-sm">← Dashboard</a>
 	</div>
 
-	<KalashaDivider />
 
 	<div class="mt-4 mb-6">
 		<input

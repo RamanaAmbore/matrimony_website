@@ -1,5 +1,4 @@
 <script lang="ts">
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 </script>
 
 <svelte:head>
@@ -11,7 +10,6 @@
 	<p class="mb-0.5 text-sm" lang="te">మన గురించి</p>
 	<p class="mb-8 text-ink/60">Maratha Kalyanam · <span lang="te">మరాఠా కల్యాణం</span> — Our Story</p>
 
-	<KalashaDivider />
 
 	<div class="prose-ink prose mt-8 max-w-none">
 		<h2 class="mb-0.5 font-serif text-2xl font-semibold text-terracotta">Our Mission</h2>
@@ -54,5 +52,4 @@
 		</p>
 	</div>
 
-	<KalashaDivider class="mt-12" />
 </div>

@@ -3,7 +3,6 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
 	import { ApiError } from '$lib/api';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 	import { T } from '$lib/i18n';
 	import { asciiOnly } from '$lib/inputFilters';
 
@@ -134,7 +133,6 @@
 		<p class="mt-1 text-sm text-ink/60">Join the Maratha Kalyanam community</p>
 	</div>
 
-	<KalashaDivider />
 
 	<form onsubmit={handleSubmit} novalidate class="mt-6 space-y-5">
 		<!-- User ID / handle -->

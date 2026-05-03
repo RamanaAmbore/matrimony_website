@@ -4,7 +4,6 @@
 	import { ApiError } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 	import { Loader, Edit, Send, User } from 'lucide-svelte';
 	import Logo from '$lib/components/Logo.svelte';
 
@@ -179,7 +178,6 @@
 					</span>
 				</div>
 
-				<KalashaDivider />
 
 				<!-- Details grid -->
 				<dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 text-sm sm:grid-cols-3">

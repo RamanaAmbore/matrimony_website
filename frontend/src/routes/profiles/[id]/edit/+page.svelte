@@ -6,7 +6,6 @@
 	import { goto } from '$app/navigation';
 	import ProfileForm from '$lib/components/ProfileForm.svelte';
 	import PhotoUpload from '$lib/components/PhotoUpload.svelte';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 	import { Loader, Send } from 'lucide-svelte';
 
 	let { data } = $props();
@@ -120,7 +119,6 @@
 			{/if}
 		</div>
 
-		<KalashaDivider />
 
 		<div class="mt-6">
 			<ProfileForm initialData={profile} {submitting} {serverErrors} onSubmit={handleSave} />

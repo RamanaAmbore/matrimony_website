@@ -5,7 +5,6 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
 	import { Loader, CheckCircle, XCircle, Eye } from 'lucide-svelte';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 
 	let statusFilter = $state('pending');
 	let profileList = $state<Profile[]>([]);
@@ -102,7 +101,6 @@
 		{/each}
 	</div>
 
-	<KalashaDivider />
 
 	{#if loading}
 		<div class="flex items-center justify-center py-20">

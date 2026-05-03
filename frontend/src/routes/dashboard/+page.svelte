@@ -4,7 +4,6 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { ApiError } from '$lib/api';
 	import { Plus, User, Edit, Loader } from 'lucide-svelte';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 	import { T } from '$lib/i18n';
 
 	let profileList = $state<Profile[]>([]);
@@ -73,7 +72,6 @@
 		</a>
 	</div>
 
-	<KalashaDivider />
 
 	{#if loading}
 		<div class="flex items-center justify-center py-20">

@@ -5,7 +5,6 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
 	import { Loader, Save } from 'lucide-svelte';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 
 	let settings = $state<Setting[]>([]);
 	let values = $state<Record<string, string>>({});
@@ -52,7 +51,6 @@
 	</div>
 	<p class="text-sm text-ink/60">Runtime configuration — changes take effect immediately.</p>
 
-	<KalashaDivider />
 
 	{#if loading}
 		<div class="flex items-center justify-center py-20">

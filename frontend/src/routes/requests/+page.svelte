@@ -4,7 +4,6 @@
 	import { ApiError } from '$lib/api';
 	import { goto } from '$app/navigation';
 	import { Loader, Inbox } from 'lucide-svelte';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 	import { T } from '$lib/i18n';
 
 	let requestList = $state<DetailRequest[]>([]);
@@ -57,7 +56,6 @@
 	</h1>
 	<p class="mt-1 text-sm text-ink/60">Outbound detail requests you have sent</p>
 
-	<KalashaDivider />
 
 	{#if loading}
 		<div class="flex items-center justify-center py-20">

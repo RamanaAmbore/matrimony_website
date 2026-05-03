@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Search, UserPlus } from 'lucide-svelte';
-	import KalashaDivider from '$lib/components/KalashaDivider.svelte';
 	import PaisleyAccent from '$lib/components/PaisleyAccent.svelte';
 	let { data } = $props();
 </script>
@@ -126,7 +125,6 @@
 <!-- ── Value propositions ─────────────────────────────────────────────────── -->
 <section class="px-4 py-16">
 	<div class="mx-auto max-w-5xl">
-		<KalashaDivider />
 
 		<h2 class="mt-6 mb-1 text-center font-serif text-3xl font-semibold text-maroon md:text-4xl">
 			Why Maratha Kalyanam?
@@ -177,7 +175,6 @@
 			</div>
 		</div>
 
-		<KalashaDivider class="mt-12" />
 	</div>
 </section>
 

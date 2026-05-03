@@ -141,7 +141,7 @@
 </svelte:head>
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
-<header class="shadow-md" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
+<header class="shadow-md border-b border-gold/40" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
 	<div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
 		<!-- Brand wordmark -->
 		<a
