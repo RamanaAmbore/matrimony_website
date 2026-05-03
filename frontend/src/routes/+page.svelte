@@ -64,7 +64,7 @@
 			<p
 				class="mb-8 max-w-lg text-base md:text-lg"
 				lang="te"
-				style="color: #ffe066; text-shadow: 0 1px 4px rgba(43,10,14,0.8), 0 2px 10px rgba(43,10,14,0.55);"
+				style="color: #f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);"
 			>
 				ఆంధ్రప్రదేశ్, తెలంగాణ, మహారాష్ట్రలలో నివసించే మరాఠా కుటుంబాలకు విశ్వసనీయమైన వివాహ వేదిక. నిర్వాహకులు ధృవీకరించిన ప్రొఫైళ్లు. గోప్యత అగ్రగామి.
 			</p>
@@ -89,7 +89,7 @@
 				{:else}
 					<a
 						href="/dashboard"
-						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-6 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
+						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-cream/25 bg-white/10 px-6 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream/45 hover:bg-white/18 focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
 						<span>My Profiles<br /><span class="text-xs font-normal" lang="te" style="color:inherit">నా ప్రొఫైళ్లు</span></span>
 					</a>

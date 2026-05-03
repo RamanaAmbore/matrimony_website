@@ -361,7 +361,7 @@
 					</div>
 					<div>
 						<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
-						<p class="text-sm" lang="te">మరాఠా కల్యాణం</p>
+						<p class="text-sm" lang="te" style="color: #f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</p>
 					</div>
 				</div>
 			</div>
