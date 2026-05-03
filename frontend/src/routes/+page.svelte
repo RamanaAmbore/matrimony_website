@@ -61,21 +61,24 @@
 
 			<!-- English brand name (first) -->
 			<h1
-				class="mb-1 font-serif text-4xl font-bold text-cream md:text-6xl"
-				style="text-shadow:
-					0 0 18px rgba(201,162,39,0.95),
-					0 0 40px rgba(201,162,39,0.55),
+				class="mb-1 font-serif text-4xl font-bold md:text-6xl"
+				style="color:#ff6a00; text-shadow:
+					0 0 12px rgba(255,255,255,0.95),
+					0 0 30px rgba(255,255,255,0.6),
 					0 5px 10px rgba(43,10,14,0.98),
 					0 2px 4px rgba(0,0,0,0.9);"
 			>
-				Maratha <span class="text-marigold">Kalyanam</span>
+				Maratha Kalyanam
 			</h1>
 
 			<!-- Telugu brand name (below) -->
 			<p
-				class="mb-4 font-serif text-base text-saffron drop-shadow-md md:text-lg"
+				class="mb-4 font-serif text-base md:text-lg"
 				lang="te"
-				style="text-shadow: 0 2px 8px rgba(43,10,14,0.9), 0 1px 3px rgba(0,0,0,0.7);"
+				style="color:#ff6a00; text-shadow:
+					0 0 10px rgba(255,106,0,0.95),
+					0 0 24px rgba(255,106,0,0.55),
+					0 2px 6px rgba(43,10,14,0.9);"
 			>
 				మరాఠా కల్యాణం
 			</p>
