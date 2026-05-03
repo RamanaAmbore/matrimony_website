@@ -438,6 +438,11 @@
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
+		// In wizard mode Enter-key should advance the active section, not bypass wizard logic
+		if (wizardMode) {
+			saveSection(activeSection);
+			return;
+		}
 		if (!validateSave()) return;
 		onSubmit(buildData());
 	}
