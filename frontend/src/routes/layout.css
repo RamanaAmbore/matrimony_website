@@ -52,11 +52,10 @@
 }
 
 @layer utilities {
-	/* Telugu matches surrounding English text colour exactly.
-	   The maroon stroke (drawn under the fill via paint-order) provides the
-	   subtle visual distinction without a colour shift. */
+	/* Telugu slightly lighter than surrounding English — stroke adds visual weight so
+	   we pull the fill back to ~60% ink to compensate. Header/footer and inline styles override. */
 	[lang="te"] {
-		color: inherit;
+		color: rgba(43, 10, 14, 0.6);
 		-webkit-text-stroke: 0.55px var(--color-maroon);
 		paint-order: stroke fill;
 	}
