@@ -25,17 +25,30 @@ def upgrade() -> None:
     )
     op.execute("UPDATE users SET is_approved = TRUE WHERE email_verified = TRUE")
 
-    # 2. Drop unique constraints on email and phone (enforce uniqueness via app in prod)
-    op.drop_constraint("users_email_key", "users", type_="unique")
-    op.drop_constraint("users_phone_number_key", "users", type_="unique")
+    # 2. Drop unique constraints/indexes on email and phone.
+    # Use raw SQL with IF EXISTS to handle different environments where constraint
+    # names may vary (named constraint vs unique index only).
+    op.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key")
+    op.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_phone_number_key")
+    op.execute("DROP INDEX IF EXISTS ix_users_phone_number")
+    # ix_users_email may already be non-unique — only drop if it's a unique index
+    op.execute("""
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1 FROM pg_indexes
+                WHERE tablename = 'users'
+                  AND indexname = 'ix_users_email'
+                  AND indexdef LIKE '%UNIQUE%'
+            ) THEN
+                DROP INDEX ix_users_email;
+            END IF;
+        END$$
+    """)
 
-    # Drop the old unique indexes (created by index=True + unique=True on the columns)
-    op.drop_index("ix_users_email", table_name="users")
-    op.drop_index("ix_users_phone_number", table_name="users")
-
-    # Re-create as non-unique indexes for query performance
-    op.create_index("ix_users_email", "users", ["email"], unique=False)
-    op.create_index("ix_users_phone_number", "users", ["phone_number"], unique=False)
+    # Re-create as non-unique indexes for query performance (skip if already exist)
+    op.execute("CREATE INDEX IF NOT EXISTS ix_users_email ON users (email)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_users_phone_number ON users (phone_number)")
 
     # 3. Seed is_prod setting (false by default — uniqueness checks disabled in dev)
     op.execute(
