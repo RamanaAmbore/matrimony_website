@@ -66,6 +66,8 @@
 	header [lang="te"],
 	footer [lang="te"] {
 		color: var(--color-marigold);
+		-webkit-text-stroke: 0.65px var(--color-ink);
+		paint-order: stroke fill;
 		text-shadow: 0 1px 1px rgba(0,0,0,0.4);
 	}
 
