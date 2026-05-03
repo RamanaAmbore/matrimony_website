@@ -64,7 +64,7 @@
 			<p
 				class="mb-8 max-w-lg text-base md:text-lg"
 				lang="te"
-				style="-webkit-text-stroke: 0; text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.7);"
+				style="-webkit-text-stroke: 0.35px rgba(255,248,231,0.55); text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.7);"
 			>
 				ఆంధ్రప్రదేశ్, తెలంగాణ, మహారాష్ట్రలలో నివసించే మరాఠా కుటుంబాలకు విశ్వసనీయమైన వివాహ వేదిక. నిర్వాహకులు ధృవీకరించిన ప్రొఫైళ్లు. గోప్యత అగ్రగామి.
 			</p>
