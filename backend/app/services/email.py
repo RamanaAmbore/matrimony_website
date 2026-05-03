@@ -81,6 +81,7 @@ async def _send(
             password=str(smtp_password) if smtp_password else None,
             use_tls=use_tls,
             start_tls=start_tls,
+            timeout=30,
         )
         logger.info("Email sent to %s: %s", to, subject)
     except Exception as exc:
