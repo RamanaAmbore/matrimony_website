@@ -63,7 +63,7 @@
 		<div>
 			<h1 class="font-serif text-3xl font-bold text-terracotta">
 				{T.myProfiles.en}
-				<span class="ml-2 text-xl font-normal text-ink/50" lang="te">{T.myProfiles.te}</span>
+				<span class="ml-2 text-xl font-normal" lang="te">{T.myProfiles.te}</span>
 			</h1>
 			<p class="mt-1 text-sm text-ink/60">Manage your matrimonial profiles</p>
 		</div>

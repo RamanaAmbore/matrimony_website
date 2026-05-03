@@ -53,7 +53,7 @@
 <div class="mx-auto max-w-3xl px-4 py-10">
 	<h1 class="font-serif text-3xl font-bold text-maroon">
 		{T.requests.en}
-		<span class="ml-2 text-xl font-normal text-ink/50" lang="te">{T.requests.te}</span>
+		<span class="ml-2 text-xl font-normal" lang="te">{T.requests.te}</span>
 	</h1>
 	<p class="mt-1 text-sm text-ink/60">Outbound detail requests you have sent</p>
 

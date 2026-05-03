@@ -31,11 +31,6 @@
 		color: var(--color-ink);
 	}
 
-	/* Telugu text is always saffron site-wide */
-	[lang="te"] {
-		color: var(--color-saffron);
-	}
-
 	h1,
 	h2,
 	h3,
@@ -56,6 +51,12 @@
 }
 
 @layer utilities {
+	/* Telugu text always renders in saffron — placed in utilities so it wins over
+	   Tailwind utility colour classes (e.g. text-ink/60) on the same element. */
+	[lang="te"] {
+		color: var(--color-saffron);
+	}
+
 	.logo-glow {
 		filter:
 			drop-shadow(0 0 2px rgba(255, 255, 255, 1))

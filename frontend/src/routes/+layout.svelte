@@ -321,17 +321,17 @@
 {/if}
 
 <!-- ── Main content ──────────────────────────────────────────────────────── -->
-<!-- Subtle inner-page background image (hidden on home, which has its own hero) -->
+<!-- Subtle wedding-photo background on inner pages (home has its own full-bleed hero) -->
 {#if currentPath !== '/'}
 	<div class="pointer-events-none fixed inset-0 -z-10" aria-hidden="true">
 		<img
-			src="/bg/inner.jpg"
+			src="/bg/home.jpg"
 			alt=""
-			class="h-full w-full object-cover object-center opacity-25"
+			class="h-full w-full object-cover object-center opacity-30"
 			loading="lazy"
 		/>
-		<!-- Strong cream wash so forms and body text are clearly visible -->
-		<div class="absolute inset-0 bg-cream/95"></div>
+		<!-- Cream wash keeps text and forms readable while letting the photo show through -->
+		<div class="absolute inset-0 bg-cream/85"></div>
 	</div>
 {/if}
 

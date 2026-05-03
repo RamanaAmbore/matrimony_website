@@ -122,7 +122,7 @@
 	<div class="mb-6">
 		<h1 class="font-serif text-3xl font-bold text-terracotta">
 			Find Your Partner
-			<span class="block text-base font-normal text-ink/60 sm:inline sm:ml-2" lang="te">
+			<span class="block text-base font-normal sm:inline sm:ml-2" lang="te">
 				· జీవిత భాగస్వామిని కనుగొనండి
 			</span>
 		</h1>
@@ -132,11 +132,15 @@
 		<!-- ── Filters sidebar — always visible (no toggle) ────────────────── -->
 		<aside class="w-full shrink-0 md:w-64">
 			<div class="card space-y-4 sticky top-4">
-				<h2 class="font-serif text-lg font-semibold text-terracotta">Filters</h2>
+				<h2 class="font-serif text-lg font-semibold text-terracotta">
+					Filters · <span lang="te">వడపోత</span>
+				</h2>
 
 				<!-- Gender -->
 				<div>
-					<label for="f-gender" class="label">Looking for</label>
+					<label for="f-gender" class="label">
+						Looking for · <span lang="te">వెతుకుతున్నది</span>
+					</label>
 					<select id="f-gender" class="input text-sm" bind:value={gender}>
 						<option value="">Any</option>
 						<option value="bride">Bride</option>
@@ -144,30 +148,58 @@
 					</select>
 				</div>
 
-				<!-- Age range -->
+				<!-- Age range — +/- steppers, clamped 18–60 -->
 				<div>
-					<p class="label">Age: {age_min}–{age_max} yrs</p>
+					<p class="label">Age · <span lang="te">వయసు</span></p>
 					<div class="space-y-2 mt-1">
 						<div class="flex items-center gap-2">
-							<span class="text-xs w-8 text-ink/50">Min</span>
-							<input type="range" min="18" max="80" step="1" bind:value={age_min} class="flex-1 accent-tangerine" />
+							<span class="text-xs w-8 text-ink/60">Min</span>
+							<button
+								type="button"
+								onclick={() => { if (age_min > 18) age_min -= 1; }}
+								class="flex h-7 w-7 items-center justify-center rounded border border-gold/40 text-maroon hover:bg-gold/10 disabled:opacity-40"
+								disabled={age_min <= 18}
+								aria-label="Decrease minimum age"
+							>−</button>
+							<span class="w-8 text-center text-sm font-semibold tabular-nums">{age_min}</span>
+							<button
+								type="button"
+								onclick={() => { if (age_min < age_max - 1) age_min += 1; }}
+								class="flex h-7 w-7 items-center justify-center rounded border border-gold/40 text-maroon hover:bg-gold/10 disabled:opacity-40"
+								disabled={age_min >= age_max - 1}
+								aria-label="Increase minimum age"
+							>+</button>
 						</div>
 						<div class="flex items-center gap-2">
-							<span class="text-xs w-8 text-ink/50">Max</span>
-							<input type="range" min="18" max="80" step="1" bind:value={age_max} class="flex-1 accent-tangerine" />
+							<span class="text-xs w-8 text-ink/60">Max</span>
+							<button
+								type="button"
+								onclick={() => { if (age_max > age_min + 1) age_max -= 1; }}
+								class="flex h-7 w-7 items-center justify-center rounded border border-gold/40 text-maroon hover:bg-gold/10 disabled:opacity-40"
+								disabled={age_max <= age_min + 1}
+								aria-label="Decrease maximum age"
+							>−</button>
+							<span class="w-8 text-center text-sm font-semibold tabular-nums">{age_max}</span>
+							<button
+								type="button"
+								onclick={() => { if (age_max < 60) age_max += 1; }}
+								class="flex h-7 w-7 items-center justify-center rounded border border-gold/40 text-maroon hover:bg-gold/10 disabled:opacity-40"
+								disabled={age_max >= 60}
+								aria-label="Increase maximum age"
+							>+</button>
 						</div>
 					</div>
 				</div>
 
 				<!-- Gotra -->
 				<div>
-					<label for="f-gotra" class="label">Gotra</label>
+					<label for="f-gotra" class="label">Gotra · <span lang="te">గోత్రం</span></label>
 					<input id="f-gotra" type="text" class="input text-sm" bind:value={gotra} placeholder="Any gotra" />
 				</div>
 
 				<!-- Nakshatram -->
 				<div>
-					<label for="f-naksh" class="label">Nakshatram</label>
+					<label for="f-naksh" class="label">Nakshatram · <span lang="te">నక్షత్రం</span></label>
 					<select id="f-naksh" class="input text-sm" bind:value={nakshatram}>
 						<option value="">Any</option>
 						{#each NAKSHATRAS as n}
@@ -178,7 +210,7 @@
 
 				<!-- Rashi -->
 				<div>
-					<label for="f-rashi" class="label">Rashi</label>
+					<label for="f-rashi" class="label">Rashi · <span lang="te">రాశి</span></label>
 					<select id="f-rashi" class="input text-sm" bind:value={rashi}>
 						<option value="">Any</option>
 						{#each RASHIS as r}
@@ -189,19 +221,19 @@
 
 				<!-- City -->
 				<div>
-					<label for="f-city" class="label">City</label>
+					<label for="f-city" class="label">City · <span lang="te">నగరం</span></label>
 					<input id="f-city" type="text" class="input text-sm" bind:value={city} placeholder="Any city" />
 				</div>
 
 				<!-- State -->
 				<div>
-					<label for="f-state" class="label">State</label>
+					<label for="f-state" class="label">State · <span lang="te">రాష్ట్రం</span></label>
 					<input id="f-state" type="text" class="input text-sm" bind:value={state_filter} placeholder="Any state" />
 				</div>
 
 				<!-- Manglik -->
 				<div>
-					<label for="f-manglik" class="label">Manglik</label>
+					<label for="f-manglik" class="label">Manglik · <span lang="te">మాంగళిక్</span></label>
 					<select id="f-manglik" class="input text-sm" bind:value={manglik}>
 						<option value="">Any</option>
 						<option value="yes">Yes</option>
@@ -213,7 +245,7 @@
 
 				<!-- Diet -->
 				<div>
-					<label for="f-diet" class="label">Diet</label>
+					<label for="f-diet" class="label">Diet · <span lang="te">ఆహారం</span></label>
 					<select id="f-diet" class="input text-sm" bind:value={diet}>
 						<option value="">Any</option>
 						<option value="veg">Vegetarian</option>
@@ -229,7 +261,7 @@
 					}}
 					class="btn-secondary w-full text-sm py-2"
 				>
-					Clear Filters
+					Clear Filters · <span lang="te">వడపోతలు తీసివేయి</span>
 				</button>
 			</div>
 		</aside>

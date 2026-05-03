@@ -76,7 +76,7 @@
 					class="inline-flex items-center gap-2 rounded-lg bg-maroon px-6 py-3 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream"
 				>
 					<Search size={18} />
-					Find Your Partner
+					Find Your Partner · <span lang="te">జీవిత భాగస్వామిని కనుగొనండి</span>
 				</a>
 
 				{#if !data.user}
@@ -85,14 +85,14 @@
 						class="inline-flex items-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream"
 					>
 						<UserPlus size={18} />
-						Create Profile
+						Create Profile · <span lang="te">ప్రొఫైల్ సృష్టించండి</span>
 					</a>
 				{:else}
 					<a
 						href="/dashboard"
 						class="inline-flex items-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream"
 					>
-						My Profiles
+						My Profiles · <span lang="te">నా ప్రొఫైళ్లు</span>
 					</a>
 				{/if}
 			</div>
