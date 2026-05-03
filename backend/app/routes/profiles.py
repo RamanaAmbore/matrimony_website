@@ -415,7 +415,7 @@ class ProfileController(Controller):
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
-        if str(profile.owner_user_id) != user["sub"]:
+        if str(profile.owner_user_id) != user["sub"] and not user.get("is_admin"):
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
 
         # ASCII validation
@@ -581,8 +581,9 @@ class ProfileController(Controller):
             profile.hobbies = data.hobbies
             changed = True
 
-        # If was approved and now changed, reset to pending
-        if changed and profile.status == ProfileStatusEnum.approved:
+        # If the profile was approved or rejected and is now being edited, reset to
+        # pending so an admin re-reviews the updated content.
+        if changed and profile.status in (ProfileStatusEnum.approved, ProfileStatusEnum.rejected):
             profile.status = ProfileStatusEnum.pending
 
         await db.commit()
@@ -611,8 +612,19 @@ class ProfileController(Controller):
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
-        if str(profile.owner_user_id) != user["sub"] and not user.get("is_admin"):
+        is_owner = str(profile.owner_user_id) == user["sub"]
+        is_admin = bool(user.get("is_admin"))
+
+        if not is_owner and not is_admin:
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
+
+        # Non-admins may only delete profiles that are draft or rejected.
+        # An approved profile is live on the platform; require admin action to remove it.
+        if is_owner and not is_admin and profile.status == ProfileStatusEnum.approved:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "invalid_status", "message": "Approved profiles cannot be deleted; contact the admin"},
+            )
 
         await db.delete(profile)
         await db.commit()
@@ -643,7 +655,7 @@ class ProfileController(Controller):
         if str(profile.owner_user_id) != user["sub"]:
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
 
-        if profile.status != ProfileStatusEnum.draft:
+        if profile.status not in (ProfileStatusEnum.draft, ProfileStatusEnum.rejected):
             raise HTTPException(
                 status_code=409,
                 detail={"code": "invalid_status", "message": f"Profile is already in '{profile.status.value}' status"},

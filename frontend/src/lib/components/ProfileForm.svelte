@@ -14,6 +14,7 @@
 	import { T } from '$lib/i18n';
 	import { asciiOnly } from '$lib/inputFilters';
 	import BilingualLabel from '$lib/components/BilingualLabel.svelte';
+	import PhotoUpload from '$lib/components/PhotoUpload.svelte';
 
 	function cmToFtIn(cm: number): string {
 		const totalInches = Math.round(cm / 2.54);
@@ -31,7 +32,9 @@
 		submittingForApproval = false,
 		profileStatus = '',
 		photoCount = undefined,
-		autoSave = false
+		autoSave = false,
+		wizardMode = false,
+		profileId = undefined
 	}: {
 		initialData?: Partial<Profile>;
 		onSubmit: (data: Partial<ProfilePayload>) => void;
@@ -42,6 +45,8 @@
 		profileStatus?: string;
 		photoCount?: number;
 		autoSave?: boolean;
+		wizardMode?: boolean;
+		profileId?: string;
 	} = $props();
 
 	// ── Form state — seeded once from initialData ─────────────────────────────
@@ -120,6 +125,23 @@
 	let partner_expectations = $state(untrack(() => initialData.partner_expectations ?? ''));
 
 	let errors = $state<Record<string, string>>({});
+
+	// ── Wizard state ─────────────────────────────────────────────────────────
+	let wizardStep = $state(0); // 0-indexed
+	const TOTAL_WIZARD_STEPS = 9; // 8 form sections + 1 photo section
+
+	// Photo count tracked internally in wizard mode
+	let wizardPhotoCount = $state(0);
+
+	function saveAndContinue() {
+		onSubmit(buildData()); // fire-and-forget save
+		wizardStep = Math.min(wizardStep + 1, TOTAL_WIZARD_STEPS - 1);
+		setTimeout(() => {
+			document
+				.getElementById(`wizard-step-${wizardStep}`)
+				?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}, 50);
+	}
 
 	// ── Static lookup data ───────────────────────────────────────────────────
 	const NAKSHATRAS = [
@@ -292,8 +314,9 @@
 		if (!about.trim()) e.about = 'Required';
 		if (about.length > 500) e.about = 'Max 500 characters';
 		if (partner_expectations.length > 800) e.partner_expectations = 'Max 800 characters';
-		// Photo
-		if ((photoCount ?? 0) === 0) e._photos = 'At least one photo is required before submitting';
+		// Photo — use wizardPhotoCount when in wizard mode, else photoCount prop
+		if ((wizardMode ? wizardPhotoCount : (photoCount ?? 0)) === 0)
+			e._photos = 'At least one photo is required before submitting';
 		errors = e;
 		return Object.keys(e).length === 0;
 	}
@@ -427,15 +450,1118 @@
 			errors = { ...errors, ...serverErrors };
 		}
 	});
+
+	// ── Wizard section labels (for "Done" summary) ──────────────────────────
+	const WIZARD_SECTION_LABELS = [
+		'Basic Information',
+		'Physical',
+		'Astrology',
+		'Education & Career',
+		'Family',
+		'Lifestyle',
+		'Location',
+		'About & Expectations',
+		'Photos'
+	];
 </script>
 
 <form onsubmit={handleSubmit} novalidate class="space-y-6">
+
+{#if wizardMode}
+	<!-- ══════════════════════════════════════════════════════════════════════ -->
+	<!-- WIZARD MODE                                                           -->
+	<!-- ══════════════════════════════════════════════════════════════════════ -->
+
+	<!-- Step progress indicator -->
+	<div class="flex items-center justify-between rounded-lg bg-maroon/5 px-4 py-2.5">
+		<span class="text-sm font-medium text-maroon">
+			Step {wizardStep + 1} of {TOTAL_WIZARD_STEPS}
+		</span>
+		<span class="text-sm text-ink/60">{WIZARD_SECTION_LABELS[wizardStep]}</span>
+	</div>
+
+	<!-- Completed steps — collapsed "Done" pills -->
+	{#each WIZARD_SECTION_LABELS.slice(0, wizardStep) as label, i}
+		<div class="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
+			<span
+				class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white"
+			>{i + 1}</span>
+			<span class="text-sm font-medium text-green-800">{label}</span>
+			<span class="ml-auto text-xs text-green-600">&#10003; Done</span>
+		</div>
+	{/each}
+
+	<!-- ── Wizard Step 0: Basic Information ──────────────────────────────── -->
+	{#if wizardStep === 0}
+		<div id="wizard-step-0" class="card">
+			<h2 class="mb-4 font-serif text-xl font-semibold text-maroon">
+				<span
+					class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+				>1</span>Basic Information
+				<span class="ml-1 text-sm font-normal text-ink/50" lang="te">మూల సమాచారం</span>
+			</h2>
+
+			<div class="space-y-4">
+				<!-- Gender -->
+				<fieldset>
+					<legend class="label">
+						<span class="block">{T.gender.en} <span class="text-vermilion">*</span></span>
+						<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+							>{T.gender.te}</span
+						>
+					</legend>
+					<div class="mt-1 flex gap-6">
+						{#each [{ value: 'bride', key: 'bride' as const }, { value: 'groom', key: 'groom' as const }] as opt}
+							<label class="flex cursor-pointer items-center gap-2">
+								<input
+									type="radio"
+									name="gender"
+									value={opt.value}
+									bind:group={gender}
+									class="accent-maroon"
+								/>
+								<span>{T[opt.key].en}</span>
+								<span class="text-xs text-ink/60" lang="te">{T[opt.key].te}</span>
+							</label>
+						{/each}
+					</div>
+				</fieldset>
+
+				<div class="grid gap-4 sm:grid-cols-2">
+					<!-- First Name -->
+					<div>
+						<BilingualLabel key="firstName" for="first_name" required />
+						<input
+							id="first_name"
+							type="text"
+							class="input"
+							class:border-vermilion={errors.first_name}
+							bind:value={first_name}
+							oninput={(e) => (first_name = asciiOnly(e.currentTarget.value))}
+						/>
+						<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+						{#if errors.first_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
+								{errors.first_name}
+							</p>{/if}
+					</div>
+
+					<!-- Last Name -->
+					<div>
+						<BilingualLabel key="lastName" for="last_name" required />
+						<input
+							id="last_name"
+							type="text"
+							class="input"
+							class:border-vermilion={errors.last_name}
+							bind:value={last_name}
+							oninput={(e) => (last_name = asciiOnly(e.currentTarget.value))}
+						/>
+						<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+						{#if errors.last_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
+								{errors.last_name}
+							</p>{/if}
+					</div>
+
+					<!-- Date of Birth -->
+					<div>
+						<BilingualLabel key="dob" for="dob" required />
+						<input
+							id="dob"
+							type="date"
+							class="input"
+							class:border-vermilion={errors.dob}
+							bind:value={dob}
+							max={new Date().toISOString().split('T')[0]}
+						/>
+						{#if errors.dob}<p class="mt-1 text-xs text-vermilion" data-error="true">
+								{errors.dob}
+							</p>{/if}
+					</div>
+
+					<!-- Marital Status -->
+					<div>
+						<BilingualLabel key="maritalStatus" for="marital_status" />
+						<select
+							id="marital_status"
+							class="input"
+							class:border-vermilion={errors.marital_status}
+							bind:value={marital_status}
+						>
+							<option value="">Select…</option>
+							{#each MARITAL_STATUSES as ms}
+								<option value={ms.value}>{ms.label}</option>
+							{/each}
+						</select>
+						{#if errors.marital_status}<p class="mt-1 text-xs text-vermilion" data-error="true">
+								{errors.marital_status}
+							</p>{/if}
+					</div>
+
+					<!-- Mother Tongue -->
+					<div>
+						<BilingualLabel key="motherTongue" for="mother_tongue" />
+						<input
+							id="mother_tongue"
+							type="text"
+							class="input"
+							bind:value={mother_tongue}
+							oninput={(e) => (mother_tongue = asciiOnly(e.currentTarget.value))}
+							placeholder="Telugu"
+						/>
+						<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					</div>
+
+					<!-- Surname / Clan -->
+					<div>
+						<BilingualLabel key="surnameClan" for="surname_clan" />
+						<input
+							id="surname_clan"
+							type="text"
+							class="input"
+							class:border-vermilion={errors.surname_clan}
+							bind:value={surname_clan}
+							oninput={(e) => (surname_clan = asciiOnly(e.currentTarget.value))}
+						/>
+						<p class="mt-0.5 text-xs text-ink/45">
+							Your family/clan surname, e.g. Desai, Patil, More · కుటుంబ పేరు
+						</p>
+						<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+						{#if errors.surname_clan}<p class="mt-1 text-xs text-vermilion" data-error="true">
+								{errors.surname_clan}
+							</p>{/if}
+					</div>
+
+					<!-- Sub-caste (optional) -->
+					<div class="sm:col-span-2">
+						<BilingualLabel key="subCaste" for="sub_caste" />
+						<input
+							id="sub_caste"
+							type="text"
+							class="input"
+							bind:value={sub_caste}
+							oninput={(e) => (sub_caste = asciiOnly(e.currentTarget.value))}
+							placeholder="Optional"
+						/>
+						<p class="mt-0.5 text-xs text-ink/45">
+							Sub-group within Maratha community, if applicable · ఉప-కులం
+						</p>
+						<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="mt-6 flex justify-end gap-3">
+				<button type="button" onclick={saveAndContinue} class="btn-primary">
+					Save &amp; Continue &rarr;
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- ── Wizard Step 1: Physical ───────────────────────────────────────── -->
+	{#if wizardStep === 1}
+		<div id="wizard-step-1" class="card">
+			<h2 class="mb-4 font-serif text-xl font-semibold text-maroon">
+				<span
+					class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+				>2</span>Physical
+				<span class="ml-1 text-sm font-normal text-ink/50" lang="te">శారీరక వివరాలు</span>
+			</h2>
+
+			<div class="grid gap-4 sm:grid-cols-2">
+				<!-- Height -->
+				<div class="sm:col-span-2">
+					<BilingualLabel key="height" for="height_cm" />
+					<p class="mb-1 text-sm text-ink/60">{cmToFtIn(height_cm)}</p>
+					<input
+						id="height_cm"
+						type="range"
+						min="120"
+						max="220"
+						step="1"
+						bind:value={height_cm}
+						class="w-full accent-maroon"
+					/>
+					<div class="mt-1 flex justify-between text-xs text-ink/40">
+						<span>3'11"</span><span>7'3"</span>
+					</div>
+				</div>
+
+				<!-- Weight (optional) -->
+				<div>
+					<BilingualLabel key="weight" for="weight_kg" />
+					<input
+						id="weight_kg"
+						type="number"
+						min="30"
+						max="200"
+						class="input"
+						bind:value={weight_kg}
+						placeholder="Optional"
+					/>
+				</div>
+
+				<!-- Complexion -->
+				<div>
+					<BilingualLabel key="complexion" for="complexion" />
+					<select id="complexion" class="input" bind:value={complexion}>
+						<option value="">Select…</option>
+						{#each COMPLEXIONS as c}
+							<option value={c.value}>{c.label}</option>
+						{/each}
+					</select>
+				</div>
+
+				<!-- Body Type (optional) -->
+				<div>
+					<BilingualLabel key="bodyType" for="body_type" />
+					<select id="body_type" class="input" bind:value={body_type}>
+						<option value="">Select… (optional)</option>
+						{#each BODY_TYPES as bt}
+							<option value={bt.value}>{bt.label}</option>
+						{/each}
+					</select>
+				</div>
+
+				<!-- Blood Group (optional) -->
+				<div>
+					<BilingualLabel key="bloodGroup" for="blood_group" />
+					<select id="blood_group" class="input" bind:value={blood_group}>
+						<option value="">Select… (optional)</option>
+						{#each BLOOD_GROUPS as bg}
+							<option value={bg}>{bg === 'unknown' ? 'Unknown' : bg}</option>
+						{/each}
+					</select>
+				</div>
+			</div>
+
+			<div class="mt-6 flex justify-end gap-3">
+				<button type="button" onclick={() => wizardStep--} class="btn-secondary">&larr; Back</button>
+				<button type="button" onclick={saveAndContinue} class="btn-primary">
+					Save &amp; Continue &rarr;
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- ── Wizard Step 2: Astrology ──────────────────────────────────────── -->
+	{#if wizardStep === 2}
+		<div id="wizard-step-2" class="card">
+			<h2 class="mb-4 font-serif text-xl font-semibold text-maroon">
+				<span
+					class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+				>3</span>Astrology
+				<span class="ml-1 text-sm font-normal text-ink/50" lang="te">జ్యోతిష వివరాలు</span>
+			</h2>
+
+			<div class="grid gap-4 sm:grid-cols-2">
+				<!-- Gotra -->
+				<div>
+					<BilingualLabel key="gotra" for="gotra" required />
+					<input
+						id="gotra"
+						type="text"
+						class="input"
+						class:border-vermilion={errors.gotra}
+						bind:value={gotra}
+						oninput={(e) => (gotra = asciiOnly(e.currentTarget.value))}
+					/>
+					<p class="mt-0.5 text-xs text-ink/45">
+						Ancestral lineage name, e.g. Kashyap, Bharadwaj · గోత్రం పేరు
+					</p>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					{#if errors.gotra}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.gotra}
+						</p>{/if}
+				</div>
+
+				<!-- Kuldevata -->
+				<div>
+					<BilingualLabel key="kuldevata" for="kuldevata" />
+					<input
+						id="kuldevata"
+						type="text"
+						class="input"
+						class:border-vermilion={errors.kuldevata}
+						bind:value={kuldevata}
+						oninput={(e) => (kuldevata = asciiOnly(e.currentTarget.value))}
+					/>
+					<p class="mt-0.5 text-xs text-ink/45">
+						Your family deity, e.g. Bhavani, Khandoba · కుల దేవత
+					</p>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					{#if errors.kuldevata}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.kuldevata}
+						</p>{/if}
+				</div>
+
+				<!-- Devak -->
+				<div>
+					<BilingualLabel key="devak" for="devak" />
+					<input
+						id="devak"
+						type="text"
+						class="input"
+						class:border-vermilion={errors.devak}
+						bind:value={devak}
+						oninput={(e) => (devak = asciiOnly(e.currentTarget.value))}
+					/>
+					<p class="mt-0.5 text-xs text-ink/45">
+						Your family devak symbol, e.g. Neem, Audumbar · దేవక్
+					</p>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					{#if errors.devak}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.devak}
+						</p>{/if}
+				</div>
+
+				<!-- Nakshatram -->
+				<div>
+					<BilingualLabel key="nakshatram" for="nakshatram" required />
+					<select
+						id="nakshatram"
+						class="input"
+						class:border-vermilion={errors.nakshatram}
+						bind:value={nakshatram}
+					>
+						<option value="">Select…</option>
+						{#each NAKSHATRAS as n}
+							<option value={n}>{n}</option>
+						{/each}
+					</select>
+					{#if errors.nakshatram}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.nakshatram}
+						</p>{/if}
+				</div>
+
+				<!-- Rashi -->
+				<div>
+					<BilingualLabel key="rashi" for="rashi" required />
+					<select id="rashi" class="input" class:border-vermilion={errors.rashi} bind:value={rashi}>
+						<option value="">Select…</option>
+						{#each RASHIS as r}
+							<option value={r}>{r}</option>
+						{/each}
+					</select>
+					{#if errors.rashi}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.rashi}
+						</p>{/if}
+				</div>
+
+				<!-- Time of Birth (optional) -->
+				<div>
+					<BilingualLabel key="timeOfBirth" for="time_of_birth" />
+					<input id="time_of_birth" type="time" class="input" bind:value={time_of_birth} />
+					<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · జన్మ సమయం</p>
+				</div>
+
+				<!-- Place of Birth (optional) -->
+				<div>
+					<BilingualLabel key="placeOfBirth" for="place_of_birth" />
+					<input
+						id="place_of_birth"
+						type="text"
+						class="input"
+						bind:value={place_of_birth}
+						oninput={(e) => (place_of_birth = asciiOnly(e.currentTarget.value))}
+						placeholder="Optional"
+					/>
+					<p class="mt-0.5 text-xs text-ink/45">City/town where you were born · జన్మ స్థానం</p>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				</div>
+			</div>
+
+			<!-- Manglik -->
+			<fieldset class="mt-4">
+				<legend class="label">
+					<span class="block">{T.manglik.en}</span>
+					<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+						>{T.manglik.te}</span
+					>
+				</legend>
+				<div class="mt-1 flex flex-wrap gap-4">
+					{#each [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'partial', label: 'Partial' }, { value: 'unknown', label: "Unknown / Don't Know" }] as opt}
+						<label class="flex cursor-pointer items-center gap-2">
+							<input
+								type="radio"
+								name="manglik"
+								value={opt.value}
+								bind:group={manglik}
+								class="accent-maroon"
+							/>
+							<span>{opt.label}</span>
+						</label>
+					{/each}
+				</div>
+			</fieldset>
+
+			<div class="mt-6 flex justify-end gap-3">
+				<button type="button" onclick={() => wizardStep--} class="btn-secondary">&larr; Back</button>
+				<button type="button" onclick={saveAndContinue} class="btn-primary">
+					Save &amp; Continue &rarr;
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- ── Wizard Step 3: Education & Career ─────────────────────────────── -->
+	{#if wizardStep === 3}
+		<div id="wizard-step-3" class="card">
+			<h2 class="mb-4 font-serif text-xl font-semibold text-maroon">
+				<span
+					class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+				>4</span>Education &amp; Career
+				<span class="ml-1 text-sm font-normal text-ink/50" lang="te">విద్య &amp; వృత్తి</span>
+			</h2>
+
+			<div class="grid gap-4 sm:grid-cols-2">
+				<!-- Education -->
+				<div>
+					<BilingualLabel key="education" for="education" required />
+					<input
+						id="education"
+						type="text"
+						class="input"
+						class:border-vermilion={errors.education}
+						bind:value={education}
+						oninput={(e) => (education = asciiOnly(e.currentTarget.value))}
+						placeholder="e.g. B.Tech, M.Sc"
+					/>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					{#if errors.education}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.education}
+						</p>{/if}
+				</div>
+
+				<!-- College / University (optional) -->
+				<div>
+					<BilingualLabel key="collegeUniversity" for="college_university" />
+					<input
+						id="college_university"
+						type="text"
+						class="input"
+						bind:value={college_university}
+						oninput={(e) => (college_university = asciiOnly(e.currentTarget.value))}
+						placeholder="Optional"
+					/>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				</div>
+
+				<!-- Occupation -->
+				<div>
+					<BilingualLabel key="occupation" for="occupation" required />
+					<input
+						id="occupation"
+						type="text"
+						class="input"
+						class:border-vermilion={errors.occupation}
+						bind:value={occupation}
+						oninput={(e) => (occupation = asciiOnly(e.currentTarget.value))}
+						placeholder="e.g. Software Engineer"
+					/>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					{#if errors.occupation}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.occupation}
+						</p>{/if}
+				</div>
+
+				<!-- Employer (optional) -->
+				<div>
+					<BilingualLabel key="employer" for="employer" />
+					<input
+						id="employer"
+						type="text"
+						class="input"
+						bind:value={employer}
+						oninput={(e) => (employer = asciiOnly(e.currentTarget.value))}
+						placeholder="Optional"
+					/>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				</div>
+
+				<!-- Annual Income (optional) -->
+				<div>
+					<BilingualLabel key="income" for="annual_income" />
+					<input
+						id="annual_income"
+						type="number"
+						min="0"
+						step="10000"
+						class="input"
+						bind:value={annual_income_inr}
+						placeholder="Optional, e.g. 800000"
+					/>
+					<p class="mt-0.5 text-xs text-ink/45">
+						Annual income in Indian Rupees (numbers only) · వార్షిక ఆదాయం
+					</p>
+				</div>
+
+				<!-- Work Location (optional) -->
+				<div>
+					<BilingualLabel key="workLocation" for="work_location" />
+					<input
+						id="work_location"
+						type="text"
+						class="input"
+						bind:value={work_location}
+						oninput={(e) => (work_location = asciiOnly(e.currentTarget.value))}
+						placeholder="Optional"
+					/>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				</div>
+			</div>
+
+			<div class="mt-6 flex justify-end gap-3">
+				<button type="button" onclick={() => wizardStep--} class="btn-secondary">&larr; Back</button>
+				<button type="button" onclick={saveAndContinue} class="btn-primary">
+					Save &amp; Continue &rarr;
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- ── Wizard Step 4: Family ─────────────────────────────────────────── -->
+	{#if wizardStep === 4}
+		<div id="wizard-step-4" class="card">
+			<h2 class="mb-4 font-serif text-xl font-semibold text-maroon">
+				<span
+					class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+				>5</span>Family
+				<span class="ml-1 text-sm font-normal text-ink/50" lang="te">కుటుంబ వివరాలు</span>
+			</h2>
+
+			<div class="grid gap-4 sm:grid-cols-2">
+				<!-- Father Name -->
+				<div>
+					<BilingualLabel key="fatherName" for="father_name" />
+					<input
+						id="father_name"
+						type="text"
+						maxlength="100"
+						class="input"
+						class:border-vermilion={errors.father_name}
+						bind:value={father_name}
+						oninput={(e) => (father_name = e.currentTarget.value)}
+						placeholder="Father's full name"
+					/>
+					{#if errors.father_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.father_name}
+						</p>{/if}
+				</div>
+
+				<!-- Mother Name -->
+				<div>
+					<BilingualLabel key="motherName" for="mother_name" />
+					<input
+						id="mother_name"
+						type="text"
+						maxlength="100"
+						class="input"
+						class:border-vermilion={errors.mother_name}
+						bind:value={mother_name}
+						oninput={(e) => (mother_name = e.currentTarget.value)}
+						placeholder="Mother's full name"
+					/>
+					{#if errors.mother_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.mother_name}
+						</p>{/if}
+				</div>
+
+				<!-- Father's Occupation -->
+				<div>
+					<BilingualLabel key="fatherOccupation" for="father_occupation" />
+					<input
+						id="father_occupation"
+						type="text"
+						class="input"
+						bind:value={father_occupation}
+						oninput={(e) => (father_occupation = asciiOnly(e.currentTarget.value))}
+						placeholder="Optional"
+					/>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				</div>
+
+				<!-- Mother's Occupation -->
+				<div>
+					<BilingualLabel key="motherOccupation" for="mother_occupation" />
+					<input
+						id="mother_occupation"
+						type="text"
+						class="input"
+						bind:value={mother_occupation}
+						oninput={(e) => (mother_occupation = asciiOnly(e.currentTarget.value))}
+						placeholder="Optional"
+					/>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				</div>
+
+				<!-- Number of Brothers -->
+				<div>
+					<BilingualLabel key="numBrothers" for="num_brothers" />
+					<input
+						id="num_brothers"
+						type="number"
+						min="0"
+						max="20"
+						class="input"
+						bind:value={num_brothers}
+						placeholder="Optional"
+					/>
+				</div>
+
+				<!-- Brothers Married -->
+				<div>
+					<BilingualLabel key="numBrothersMarried" for="num_brothers_married" />
+					<input
+						id="num_brothers_married"
+						type="number"
+						min="0"
+						max="20"
+						class="input"
+						bind:value={num_brothers_married}
+						placeholder="Optional"
+					/>
+				</div>
+
+				<!-- Number of Sisters -->
+				<div>
+					<BilingualLabel key="numSisters" for="num_sisters" />
+					<input
+						id="num_sisters"
+						type="number"
+						min="0"
+						max="20"
+						class="input"
+						bind:value={num_sisters}
+						placeholder="Optional"
+					/>
+				</div>
+
+				<!-- Sisters Married -->
+				<div>
+					<BilingualLabel key="numSistersMarried" for="num_sisters_married" />
+					<input
+						id="num_sisters_married"
+						type="number"
+						min="0"
+						max="20"
+						class="input"
+						bind:value={num_sisters_married}
+						placeholder="Optional"
+					/>
+				</div>
+
+				<!-- Number of family members -->
+				<div>
+					<BilingualLabel key="numFamilyMembers" for="num_family_members" />
+					<input
+						id="num_family_members"
+						type="number"
+						min="1"
+						max="30"
+						class="input"
+						bind:value={num_family_members}
+						placeholder="Total members in family"
+					/>
+				</div>
+
+				<!-- Family Status -->
+				<div>
+					<BilingualLabel key="familyStatus" for="family_status" />
+					<select id="family_status" class="input" bind:value={family_status}>
+						<option value="">Select… (optional)</option>
+						{#each FAMILY_STATUSES as fs}
+							<option value={fs.value}>{fs.label}</option>
+						{/each}
+					</select>
+				</div>
+
+				<!-- Family Values -->
+				<div>
+					<BilingualLabel key="familyValues" for="family_values" />
+					<select id="family_values" class="input" bind:value={family_values}>
+						<option value="">Select… (optional)</option>
+						{#each FAMILY_VALUES_OPTS as fv}
+							<option value={fv.value}>{fv.label}</option>
+						{/each}
+					</select>
+				</div>
+
+				<!-- Native Place -->
+				<div class="sm:col-span-2">
+					<BilingualLabel key="nativePlace" for="native_place" />
+					<input
+						id="native_place"
+						type="text"
+						class="input"
+						class:border-vermilion={errors.native_place}
+						bind:value={native_place}
+						oninput={(e) => (native_place = asciiOnly(e.currentTarget.value))}
+						placeholder="Optional — village/town of origin"
+					/>
+					<p class="mt-0.5 text-xs text-ink/45">
+						Village or town your family originally belongs to · స్వగ్రామం
+					</p>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					{#if errors.native_place}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.native_place}
+						</p>{/if}
+				</div>
+			</div>
+
+			<!-- Family Type -->
+			<fieldset class="mt-4">
+				<legend class="label">
+					<span class="block">{T.familyType.en}</span>
+					<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+						>{T.familyType.te}</span
+					>
+				</legend>
+				<div class="mt-1 flex flex-wrap gap-6">
+					{#each [{ value: '', label: 'Not specified' }, { value: 'nuclear', label: 'Nuclear' }, { value: 'joint', label: 'Joint' }] as opt}
+						<label class="flex cursor-pointer items-center gap-2">
+							<input
+								type="radio"
+								name="family_type"
+								value={opt.value}
+								bind:group={family_type}
+								class="accent-maroon"
+							/>
+							<span>{opt.label}</span>
+						</label>
+					{/each}
+				</div>
+				{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.family_type}
+					</p>{/if}
+			</fieldset>
+
+			<div class="mt-6 flex justify-end gap-3">
+				<button type="button" onclick={() => wizardStep--} class="btn-secondary">&larr; Back</button>
+				<button type="button" onclick={saveAndContinue} class="btn-primary">
+					Save &amp; Continue &rarr;
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- ── Wizard Step 5: Lifestyle ──────────────────────────────────────── -->
+	{#if wizardStep === 5}
+		<div id="wizard-step-5" class="card">
+			<h2 class="mb-4 font-serif text-xl font-semibold text-maroon">
+				<span
+					class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+				>6</span>Lifestyle
+				<span class="ml-1 text-sm font-normal text-ink/50" lang="te">జీవనశైలి</span>
+			</h2>
+
+			<div class="space-y-4">
+				<!-- Diet -->
+				<fieldset>
+					<legend class="label">
+						<span class="block">{T.diet.en} <span class="text-vermilion">*</span></span>
+						<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+							>{T.diet.te}</span
+						>
+					</legend>
+					<div class="mt-1 flex flex-wrap gap-4">
+						{#each [{ value: 'veg', label: 'Vegetarian' }, { value: 'non-veg', label: 'Non-Vegetarian' }, { value: 'eggetarian', label: 'Eggetarian' }, { value: 'jain', label: 'Jain' }, { value: 'vegan', label: 'Vegan' }] as opt}
+							<label class="flex cursor-pointer items-center gap-2">
+								<input
+									type="radio"
+									name="diet"
+									value={opt.value}
+									bind:group={diet}
+									class="accent-maroon"
+								/>
+								<span>{opt.label}</span>
+							</label>
+						{/each}
+					</div>
+				</fieldset>
+
+				<!-- Smokes -->
+				<fieldset>
+					<legend class="label">
+						<span class="block">{T.smokes.en}</span>
+						<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+							>{T.smokes.te}</span
+						>
+					</legend>
+					<div class="mt-1 flex flex-wrap gap-4">
+						{#each [{ value: '', label: 'Prefer not to say' }, { value: 'no', label: 'No' }, { value: 'occasionally', label: 'Occasionally' }, { value: 'yes', label: 'Yes' }] as opt}
+							<label class="flex cursor-pointer items-center gap-2">
+								<input
+									type="radio"
+									name="smokes"
+									value={opt.value}
+									bind:group={smokes}
+									class="accent-maroon"
+								/>
+								<span>{opt.label}</span>
+							</label>
+						{/each}
+					</div>
+				</fieldset>
+
+				<!-- Drinks -->
+				<fieldset>
+					<legend class="label">
+						<span class="block">{T.drinks.en}</span>
+						<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+							>{T.drinks.te}</span
+						>
+					</legend>
+					<div class="mt-1 flex flex-wrap gap-4">
+						{#each [{ value: '', label: 'Prefer not to say' }, { value: 'no', label: 'No' }, { value: 'occasionally', label: 'Occasionally' }, { value: 'yes', label: 'Yes' }] as opt}
+							<label class="flex cursor-pointer items-center gap-2">
+								<input
+									type="radio"
+									name="drinks"
+									value={opt.value}
+									bind:group={drinks}
+									class="accent-maroon"
+								/>
+								<span>{opt.label}</span>
+							</label>
+						{/each}
+					</div>
+				</fieldset>
+
+				<!-- Hobbies (optional textarea) -->
+				<div>
+					<BilingualLabel key="hobbies" for="hobbies" />
+					<textarea
+						id="hobbies"
+						class="input min-h-[80px] resize-y"
+						bind:value={hobbies}
+						oninput={(e) => (hobbies = asciiOnly(e.currentTarget.value))}
+						placeholder="Optional — e.g. Reading, Cricket, Cooking"
+					></textarea>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				</div>
+			</div>
+
+			<div class="mt-6 flex justify-end gap-3">
+				<button type="button" onclick={() => wizardStep--} class="btn-secondary">&larr; Back</button>
+				<button type="button" onclick={saveAndContinue} class="btn-primary">
+					Save &amp; Continue &rarr;
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- ── Wizard Step 6: Location ───────────────────────────────────────── -->
+	{#if wizardStep === 6}
+		<div id="wizard-step-6" class="card">
+			<h2 class="mb-4 font-serif text-xl font-semibold text-maroon">
+				<span
+					class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+				>7</span>Location
+				<span class="ml-1 text-sm font-normal text-ink/50" lang="te">నివాస వివరాలు</span>
+			</h2>
+
+			<div class="grid gap-4 sm:grid-cols-2">
+				<!-- City -->
+				<div>
+					<BilingualLabel key="city" for="city" required />
+					<input
+						id="city"
+						type="text"
+						class="input"
+						class:border-vermilion={errors.city}
+						bind:value={city}
+						oninput={(e) => (city = asciiOnly(e.currentTarget.value))}
+					/>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					{#if errors.city}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.city}
+						</p>{/if}
+				</div>
+
+				<!-- State -->
+				<div>
+					<BilingualLabel key="state" for="state" />
+					<select id="state" class="input" bind:value={state_field}>
+						{#each INDIA_STATES as s}
+							<option value={s}>{s}</option>
+						{/each}
+					</select>
+				</div>
+
+				<!-- Pin Code (optional) -->
+				<div>
+					<label for="pin_code" class="label">
+						<span class="block"
+							>Pin Code <span class="text-xs font-normal text-ink/50">(optional)</span></span
+						>
+						<span class="block text-xs leading-tight font-normal" lang="te">పిన్ కోడ్</span>
+					</label>
+					<input
+						id="pin_code"
+						type="text"
+						inputmode="numeric"
+						maxlength="10"
+						class="input"
+						bind:value={pin_code}
+						placeholder="e.g. 500001"
+					/>
+				</div>
+
+				<!-- Country -->
+				<div>
+					<BilingualLabel key="country" for="country" />
+					<input
+						id="country"
+						type="text"
+						class="input"
+						bind:value={country}
+						oninput={(e) => (country = asciiOnly(e.currentTarget.value))}
+						placeholder="India"
+					/>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				</div>
+			</div>
+
+			<div class="mt-6 flex justify-end gap-3">
+				<button type="button" onclick={() => wizardStep--} class="btn-secondary">&larr; Back</button>
+				<button type="button" onclick={saveAndContinue} class="btn-primary">
+					Save &amp; Continue &rarr;
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- ── Wizard Step 7: About & Expectations ───────────────────────────── -->
+	{#if wizardStep === 7}
+		<div id="wizard-step-7" class="card">
+			<h2 class="mb-4 font-serif text-xl font-semibold text-maroon">
+				<span
+					class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+				>8</span>About &amp; Expectations
+				<span class="ml-1 text-sm font-normal text-ink/50" lang="te"
+					>మీ గురించి &amp; అపేక్షలు</span
+				>
+			</h2>
+
+			<div class="space-y-4">
+				<!-- About Yourself -->
+				<div>
+					<BilingualLabel key="about" for="about" />
+					<p class="mt-0.5 text-xs text-ink/45">
+						Tell prospective families about yourself — your values, personality, lifestyle · మీ
+						గురించి వివరించండి
+					</p>
+					<textarea
+						id="about"
+						class="input mt-1 min-h-[120px] resize-y"
+						class:border-vermilion={errors.about}
+						bind:value={about}
+						oninput={(e) => (about = asciiOnly(e.currentTarget.value))}
+						maxlength={500}
+						placeholder="A short description about yourself, your family, and interests…"
+					></textarea>
+					<div class="mt-1 flex justify-between">
+						{#if errors.about}
+							<p class="text-xs text-vermilion" data-error="true">{errors.about}</p>
+						{:else}
+							<p class="text-[10px] text-ink/40">{ASCII_HINT}</p>
+						{/if}
+						<p class="text-xs text-ink/40">{about.length}/500</p>
+					</div>
+				</div>
+
+				<!-- Partner Expectations -->
+				<div>
+					<BilingualLabel key="partnerExpectations" for="expectations" />
+					<p class="mt-0.5 text-xs text-ink/45">
+						Describe the qualities you're looking for in a partner · జీవిత భాగస్వామిలో కోరుకునే
+						లక్షణాలు
+					</p>
+					<textarea
+						id="expectations"
+						class="input mt-1 min-h-[140px] resize-y"
+						class:border-vermilion={errors.partner_expectations}
+						bind:value={partner_expectations}
+						oninput={(e) => (partner_expectations = asciiOnly(e.currentTarget.value))}
+						maxlength={800}
+						placeholder="Describe what you're looking for in a partner…"
+					></textarea>
+					<div class="mt-1 flex justify-between">
+						{#if errors.partner_expectations}
+							<p class="text-xs text-vermilion" data-error="true">{errors.partner_expectations}</p>
+						{:else}
+							<p class="text-[10px] text-ink/40">{ASCII_HINT}</p>
+						{/if}
+						<p class="text-xs text-ink/40">{partner_expectations.length}/800</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="mt-6 flex justify-end gap-3">
+				<button type="button" onclick={() => wizardStep--} class="btn-secondary">&larr; Back</button>
+				<button type="button" onclick={saveAndContinue} class="btn-primary">
+					Save &amp; Continue &rarr;
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- ── Wizard Step 8: Photos ─────────────────────────────────────────── -->
+	{#if wizardStep === 8}
+		<div id="wizard-step-8" class="card">
+			<h2 class="mb-4 font-serif text-xl font-semibold text-maroon">
+				<span
+					class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+				>9</span>Photos
+				<span class="ml-1 text-sm font-normal text-ink/50" lang="te">ఫోటోలు</span>
+			</h2>
+
+			{#if errors._photos}
+				<p class="mb-3 text-sm text-vermilion" data-error="true">{errors._photos}</p>
+			{/if}
+
+			{#if profileId}
+				<PhotoUpload
+					{profileId}
+					initialPhotos={[]}
+					isOwner={true}
+					onCountChange={(n) => { wizardPhotoCount = n; }}
+				/>
+			{:else}
+				<p class="text-sm text-ink/60">Save the form first to enable photo upload.</p>
+			{/if}
+
+			<div class="mt-6 flex justify-end gap-3">
+				<button type="button" onclick={() => wizardStep--} class="btn-secondary">&larr; Back</button>
+				{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
+					<button
+						type="button"
+						onclick={handleSubmitForApproval}
+						class="btn-primary"
+						disabled={submittingForApproval}
+					>
+						{submittingForApproval ? 'Submitting…' : 'Submit for Approval'}
+					</button>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
+{:else}
+	<!-- ══════════════════════════════════════════════════════════════════════ -->
+	<!-- NORMAL MODE (edit page — all sections open)                          -->
+	<!-- ══════════════════════════════════════════════════════════════════════ -->
+
 	<!-- ── Section: Basic Information ──────────────────────────────────────── -->
 	<details open class="card">
 		<summary
 			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
 		>
 			<span class="text-tangerine">▸</span>
+			<span
+				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+			>1</span>
 			Basic Information
 			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">మూల సమాచారం</span>
 		</summary>
@@ -596,6 +1722,9 @@
 			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
 		>
 			<span class="text-tangerine">▸</span>
+			<span
+				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+			>2</span>
 			Physical
 			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">శారీరక వివరాలు</span>
 		</summary>
@@ -674,6 +1803,9 @@
 			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
 		>
 			<span class="text-tangerine">▸</span>
+			<span
+				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+			>3</span>
 			Astrology
 			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">జ్యోతిష వివరాలు</span>
 		</summary>
@@ -826,6 +1958,9 @@
 			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
 		>
 			<span class="text-tangerine">▸</span>
+			<span
+				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+			>4</span>
 			Education &amp; Career
 			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">విద్య &amp; వృత్తి</span>
 		</summary>
@@ -934,6 +2069,9 @@
 			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
 		>
 			<span class="text-tangerine">▸</span>
+			<span
+				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+			>5</span>
 			Family
 			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">కుటుంబ వివరాలు</span>
 		</summary>
@@ -1151,6 +2289,9 @@
 			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
 		>
 			<span class="text-tangerine">▸</span>
+			<span
+				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+			>6</span>
 			Lifestyle
 			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">జీవనశైలి</span>
 		</summary>
@@ -1249,6 +2390,9 @@
 			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
 		>
 			<span class="text-tangerine">▸</span>
+			<span
+				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+			>7</span>
 			Location
 			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">నివాస వివరాలు</span>
 		</summary>
@@ -1322,6 +2466,9 @@
 			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
 		>
 			<span class="text-tangerine">▸</span>
+			<span
+				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
+			>8</span>
 			About &amp; Expectations
 			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">మీ గురించి &amp; అపేక్షలు</span>
 		</summary>
@@ -1416,4 +2563,6 @@
 			</button>
 		{/if}
 	</div>
+
+{/if}
 </form>

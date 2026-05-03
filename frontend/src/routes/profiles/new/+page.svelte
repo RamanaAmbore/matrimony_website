@@ -1,20 +1,16 @@
 <script lang="ts">
-	import { profiles as profilesApi, type Profile, type Photo, type ProfilePayload } from '$lib/api';
+	import { profiles as profilesApi, type Profile, type ProfilePayload } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { ApiError } from '$lib/api';
 	import { goto } from '$app/navigation';
 	import ProfileForm from '$lib/components/ProfileForm.svelte';
-	import PhotoUpload from '$lib/components/PhotoUpload.svelte';
-	import { Send } from 'lucide-svelte';
 
 	let submitting = $state(false);
 	let submittingForApproval = $state(false);
 	let serverErrors = $state<Record<string, string>>({});
 
-	// Set after first save — reveals photo upload inline
+	// Set after first save — enables photo upload inside the wizard's step 9
 	let savedProfile = $state<Profile | null>(null);
-	let photos = $state<Photo[]>([]);
-	let photoCount = $state(0);
 
 	async function handleSubmit(data: Partial<ProfilePayload>) {
 		submitting = true;
@@ -25,11 +21,9 @@
 				savedProfile = await profilesApi.update(savedProfile.id, data);
 				toastStore.success('Profile updated!');
 			} else {
-				// First save — create and reveal photo upload
+				// First save — create and advance wizard to next step
 				savedProfile = await profilesApi.create(data);
-				toastStore.success('Profile saved! Now upload your photos below.');
-				// Scroll to photo section
-				setTimeout(() => document.getElementById('photo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+				toastStore.success('Profile saved! Continue to next step.');
 			}
 		} catch (err) {
 			if (err instanceof ApiError) {
@@ -72,17 +66,13 @@
 
 <div class="mx-auto max-w-5xl px-4 py-10">
 	<h1 class="font-serif text-3xl font-bold text-maroon">Create New Profile</h1>
-	<p class="mt-1 text-sm text-ink/60">Fill in the details, upload photos, then submit for approval.</p>
+	<p class="mt-1 text-sm text-ink/60">Fill in the details step by step, upload photos, then submit for approval.</p>
 
-	<!-- Profile ID + photo upload — appears after first save -->
+	<!-- Profile ID banner — appears after first save -->
 	{#if savedProfile}
 		<div class="mt-4 mb-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
 			Profile saved! &nbsp;ID: <span class="font-mono text-xs bg-green-100 px-1.5 py-0.5 rounded select-all">{savedProfile.id}</span>
-			&nbsp;— Upload at least one photo below, then click <strong>Submit for Approval</strong>.
-			<span class="block mt-0.5 text-xs text-green-700" lang="te">ప్రొఫైల్ సేవ్ అయింది! ఫోటో అప్‌లోడ్ చేసి సమర్పించండి.</span>
-		</div>
-		<div id="photo-section" class="mt-4">
-			<PhotoUpload profileId={savedProfile.id} initialPhotos={photos} isOwner={true} onCountChange={(n) => photoCount = n} />
+			<span class="block mt-0.5 text-xs text-green-700" lang="te">ప్రొఫైల్ సేవ్ అయింది!</span>
 		</div>
 	{/if}
 
@@ -95,8 +85,9 @@
 			onSubmitForApproval={savedProfile ? submitForApproval : undefined}
 			{submittingForApproval}
 			profileStatus={savedProfile?.status ?? 'draft'}
-			{photoCount}
-			autoSave={!!savedProfile}
+			wizardMode={true}
+			profileId={savedProfile?.id ?? ''}
+			autoSave={false}
 		/>
 	</div>
 </div>
