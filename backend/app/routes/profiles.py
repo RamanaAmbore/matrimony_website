@@ -120,6 +120,9 @@ def _serialize_full_profile(profile: Profile, request: Request) -> dict[str, Any
         "place_of_birth": profile.place_of_birth,
         "father_occupation": profile.father_occupation,
         "mother_occupation": profile.mother_occupation,
+        "father_name": profile.father_name,
+        "mother_name": profile.mother_name,
+        "num_family_members": profile.num_family_members,
         "num_brothers": profile.num_brothers,
         "num_sisters": profile.num_sisters,
         "num_brothers_married": profile.num_brothers_married,
@@ -222,6 +225,8 @@ def _validate_free_text_fields(data: ProfileCreateRequest | ProfilePatchRequest)
         ("place_of_birth", getattr(data, "place_of_birth", None)),
         ("father_occupation", getattr(data, "father_occupation", None)),
         ("mother_occupation", getattr(data, "mother_occupation", None)),
+        ("father_name", getattr(data, "father_name", None)),
+        ("mother_name", getattr(data, "mother_name", None)),
         ("native_place", getattr(data, "native_place", None)),
         ("college_university", getattr(data, "college_university", None)),
         ("employer", getattr(data, "employer", None)),
@@ -326,6 +331,9 @@ class ProfileController(Controller):
             place_of_birth=data.place_of_birth,
             father_occupation=data.father_occupation,
             mother_occupation=data.mother_occupation,
+            father_name=data.father_name,
+            mother_name=data.mother_name,
+            num_family_members=data.num_family_members,
             num_brothers=data.num_brothers,
             num_sisters=data.num_sisters,
             num_brothers_married=data.num_brothers_married,
@@ -520,6 +528,15 @@ class ProfileController(Controller):
             changed = True
         if data.mother_occupation is not None:
             profile.mother_occupation = data.mother_occupation
+            changed = True
+        if data.father_name is not None:
+            profile.father_name = data.father_name
+            changed = True
+        if data.mother_name is not None:
+            profile.mother_name = data.mother_name
+            changed = True
+        if data.num_family_members is not None:
+            profile.num_family_members = data.num_family_members
             changed = True
         if data.num_brothers is not None:
             profile.num_brothers = data.num_brothers

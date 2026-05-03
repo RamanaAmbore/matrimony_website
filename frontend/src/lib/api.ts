@@ -77,6 +77,9 @@ export interface Profile {
 	work_location?: string | null;
 
 	// Family
+	father_name?: string | null;
+	mother_name?: string | null;
+	num_family_members?: number | null;
 	father_occupation?: string | null;
 	mother_occupation?: string | null;
 	num_brothers?: number | null;

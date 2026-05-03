@@ -59,6 +59,9 @@ class ProfileCreateRequest(msgspec.Struct, kw_only=True):
     place_of_birth: str | None = None
     father_occupation: str | None = None
     mother_occupation: str | None = None
+    father_name: str | None = None
+    mother_name: str | None = None
+    num_family_members: int | None = None
     num_brothers: int | None = None
     num_sisters: int | None = None
     num_brothers_married: int | None = None
@@ -112,6 +115,9 @@ class ProfilePatchRequest(msgspec.Struct, kw_only=True):
     place_of_birth: str | None = None
     father_occupation: str | None = None
     mother_occupation: str | None = None
+    father_name: str | None = None
+    mother_name: str | None = None
+    num_family_members: int | None = None
     num_brothers: int | None = None
     num_sisters: int | None = None
     num_brothers_married: int | None = None
@@ -185,6 +191,9 @@ class FullProfileResponse(msgspec.Struct):
     place_of_birth: str | None
     father_occupation: str | None
     mother_occupation: str | None
+    father_name: str | None
+    mother_name: str | None
+    num_family_members: int | None
     num_brothers: int | None
     num_sisters: int | None
     num_brothers_married: int | None

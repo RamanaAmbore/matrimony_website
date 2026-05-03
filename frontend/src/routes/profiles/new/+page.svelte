@@ -13,7 +13,7 @@
 		serverErrors = {};
 		try {
 			const profile = await profilesApi.create(data);
-			toastStore.success('Profile saved!');
+			toastStore.success('Profile created! Add your photos below ↓');
 			goto(`/profiles/${profile.id}/edit`);
 		} catch (err) {
 			if (err instanceof ApiError) {
@@ -43,6 +43,11 @@
 	<h1 class="font-serif text-3xl font-bold text-maroon">Create New Profile</h1>
 	<p class="mt-1 text-sm text-ink/60">Fill in the details to create your matrimonial profile.</p>
 
+
+	<p class="mb-4 rounded-lg border border-saffron/40 bg-saffron/8 px-4 py-3 text-sm text-ink/80">
+		After saving the basic details, you'll be able to upload photos on the next screen.
+		<span class="block mt-0.5 text-xs" lang="te">మీ ప్రొఫైల్ వివరాలు నింపిన తర్వాత ఫోటోలు అప్‌లోడ్ చేయవచ్చు.</span>
+	</p>
 
 	<div class="mt-6">
 		<ProfileForm {submitting} {serverErrors} onSubmit={handleSubmit} />

@@ -61,6 +61,9 @@
 	let work_location = $state(untrack(() => initialData.work_location ?? ''));
 
 	// Family
+	let father_name = $state(untrack(() => initialData.father_name ?? ''));
+	let mother_name = $state(untrack(() => initialData.mother_name ?? ''));
+	let num_family_members = $state<number | ''>(untrack(() => initialData.num_family_members ?? ''));
 	let father_occupation = $state(untrack(() => initialData.father_occupation ?? ''));
 	let mother_occupation = $state(untrack(() => initialData.mother_occupation ?? ''));
 	let num_brothers = $state<number | ''>(untrack(() => initialData.num_brothers ?? ''));
@@ -213,6 +216,9 @@
 			annual_income_inr: annual_income_inr === '' ? null : Number(annual_income_inr),
 			work_location: work_location.trim() || null,
 
+			father_name: father_name.trim() || null,
+			mother_name: mother_name.trim() || null,
+			num_family_members: num_family_members === '' ? null : Number(num_family_members),
 			father_occupation: father_occupation.trim() || null,
 			mother_occupation: mother_occupation.trim() || null,
 			num_brothers: num_brothers === '' ? null : Number(num_brothers),
@@ -685,6 +691,34 @@
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
+			<!-- Father Name -->
+			<div>
+				<BilingualLabel key="fatherName" for="father_name" />
+				<input
+					id="father_name"
+					type="text"
+					maxlength="100"
+					class="input"
+					bind:value={father_name}
+					oninput={(e) => father_name = e.currentTarget.value}
+					placeholder="Father's full name"
+				/>
+			</div>
+
+			<!-- Mother Name -->
+			<div>
+				<BilingualLabel key="motherName" for="mother_name" />
+				<input
+					id="mother_name"
+					type="text"
+					maxlength="100"
+					class="input"
+					bind:value={mother_name}
+					oninput={(e) => mother_name = e.currentTarget.value}
+					placeholder="Mother's full name"
+				/>
+			</div>
+
 			<!-- Father's Occupation -->
 			<div>
 				<BilingualLabel key="fatherOccupation" for="father_occupation" />
@@ -766,6 +800,20 @@
 					class="input"
 					bind:value={num_sisters_married}
 					placeholder="Optional"
+				/>
+			</div>
+
+			<!-- Number of family members -->
+			<div>
+				<BilingualLabel key="numFamilyMembers" for="num_family_members" />
+				<input
+					id="num_family_members"
+					type="number"
+					min="1"
+					max="30"
+					class="input"
+					bind:value={num_family_members}
+					placeholder="Total members in family"
 				/>
 			</div>
 
