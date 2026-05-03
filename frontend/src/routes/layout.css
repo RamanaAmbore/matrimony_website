@@ -53,15 +53,23 @@
 
 @layer utilities {
 	[lang="te"] {
-		color: rgba(43, 10, 14, 0.55);
-		-webkit-text-stroke: 0.55px var(--color-maroon);
+		opacity: 0.82;
+	}
+
+	/* Hero section Telugu paragraph — dedicated class beats attribute-selector cascade */
+	p.hero-te {
+		opacity: 1;
+		color: var(--color-saffron) !important;
+		-webkit-text-stroke: 0.8px var(--color-marigold);
 		paint-order: stroke fill;
+		text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.7);
 	}
 
 	/* Navbar & footer Telugu: darker orange.
 	   Buttons override this via inline style="color:inherit" so they are unaffected. */
 	header [lang="te"],
 	footer [lang="te"] {
+		opacity: 1;
 		color: var(--color-marigold);
 		-webkit-text-stroke: 0.65px var(--color-ink);
 		paint-order: stroke fill;

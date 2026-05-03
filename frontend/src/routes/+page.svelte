@@ -62,9 +62,8 @@
 				Maharashtra and other states. Admin-verified profiles. Privacy-first photo sharing.
 			</p>
 			<p
-				class="mb-8 max-w-lg text-base md:text-lg"
+				class="hero-te mb-8 max-w-lg text-base md:text-lg"
 				lang="te"
-				style="color: #f4a300 !important; -webkit-text-stroke: 0.8px #ffb627; paint-order: stroke fill; text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.7);"
 			>
 				ఆంధ్రప్రదేశ్, తెలంగాణ, మహారాష్ట్రలలో నివసించే మరాఠా కుటుంబాలకు విశ్వసనీయమైన వివాహ వేదిక. నిర్వాహకులు ధృవీకరించిన ప్రొఫైళ్లు. గోప్యత అగ్రగామి.
 			</p>
@@ -81,7 +80,7 @@
 				{#if !data.user}
 					<a
 						href="/register"
-						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-cream/40 px-6 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
+						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-marigold/55 px-6 font-semibold text-ink shadow-lg transition-all duration-200 hover:bg-marigold hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
 						<UserPlus size={18} />
 						<span class="leading-tight">Create Profile<br /><span class="text-xs font-normal leading-none" lang="te" style="color:inherit">ప్రొఫైల్ సృష్టించండి</span></span>
