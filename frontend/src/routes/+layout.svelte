@@ -153,7 +153,7 @@
 			</div>
 			<span class="font-serif text-lg font-semibold leading-tight">
 				<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-				<span class="block text-xs font-normal leading-tight" lang="te" style="text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
+				<span class="block text-xs font-normal leading-tight" lang="te" style="color: #f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
 			</span>
 		</a>
 
@@ -244,7 +244,7 @@
 				</div>
 				<div class="font-serif leading-tight">
 					<span class="block text-sm font-semibold" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-					<span class="block text-xs font-normal" lang="te" style="text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
+					<span class="block text-xs font-normal" lang="te" style="color: #f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
 				</div>
 			</div>
 			<button
@@ -327,11 +327,11 @@
 		<img
 			src="/bg/home.jpg"
 			alt=""
-			class="h-full w-full object-cover object-center opacity-30"
+			class="h-full w-full object-cover object-center opacity-50"
 			loading="lazy"
 		/>
 		<!-- Cream wash keeps text and forms readable while letting the photo show through -->
-		<div class="absolute inset-0 bg-cream/85"></div>
+		<div class="absolute inset-0 bg-cream/75"></div>
 	</div>
 {/if}
 

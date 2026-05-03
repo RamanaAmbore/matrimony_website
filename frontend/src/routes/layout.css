@@ -51,10 +51,11 @@
 }
 
 @layer utilities {
-	/* Telugu text always renders in saffron — placed in utilities so it wins over
-	   Tailwind utility colour classes (e.g. text-ink/60) on the same element. */
+	/* Telugu text always renders in dark amber — placed in utilities so it wins over
+	   Tailwind utility colour classes (e.g. text-ink/60) on the same element.
+	   #c87800 is darker than saffron (#f4a300) and stays readable on cream (#fff8e7). */
 	[lang="te"] {
-		color: var(--color-saffron);
+		color: #c87800;
 	}
 
 	/* Inside buttons/links with their own text colour, Telugu inherits that colour

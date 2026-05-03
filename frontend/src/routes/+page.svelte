@@ -64,7 +64,7 @@
 			<p
 				class="mb-8 max-w-lg text-sm md:text-base"
 				lang="te"
-				style="text-shadow: 0 1px 4px rgba(43,10,14,0.9);"
+				style="color: #f4a300; text-shadow: 0 1px 4px rgba(43,10,14,0.9);"
 			>
 				ఆంధ్రప్రదేశ్, తెలంగాణ, మహారాష్ట్రలలో నివసించే మరాఠా కుటుంబాలకు విశ్వసనీయమైన వివాహ వేదిక. నిర్వాహకులు ధృవీకరించిన ప్రొఫైళ్లు. గోప్యత అగ్రగామి.
 			</p>
@@ -144,6 +144,7 @@
 					Built for Maratha families with deep respect for gotra, nakshatram,
 					kuldevata, and devak traditions.
 				</p>
+				<p class="mt-1 text-xs" lang="te">గోత్రం, నక్షత్రం, కుల్‍దేవత మరియు దేవక్ సంప్రదాయాలను గౌరవించే మరాఠా కుటుంబాల కోసం నిర్మించబడింది.</p>
 			</div>
 
 			<!-- Admin-Verified — kalash pot 🪬 -->
@@ -158,6 +159,7 @@
 					Every profile is reviewed and approved by our team before going live.
 					Contact details shared only after mutual interest.
 				</p>
+				<p class="mt-1 text-xs" lang="te">ప్రతి ప్రొఫైల్ మా బృందం ధృవీకరించిన తర్వాతే ప్రచురితమవుతుంది. పరస్పర ఆసక్తి తర్వాతే సంప్రదింపు వివరాలు అందుతాయి.</p>
 			</div>
 
 			<!-- Privacy First — lotus flower 🪷 -->
@@ -172,6 +174,7 @@
 					Photos are blurred in search results. Full details are shared only after
 					admin approval of a request.
 				</p>
+				<p class="mt-1 text-xs" lang="te">శోధన ఫలితాలలో ఫోటోలు బ్లర్ చేయబడతాయి. నిర్వాహకుని అనుమతి తర్వాతే పూర్తి వివరాలు అందుతాయి.</p>
 			</div>
 		</div>
 

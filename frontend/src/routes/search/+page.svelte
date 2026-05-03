@@ -8,6 +8,7 @@
 	} from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { ChevronLeft, ChevronRight, User, Loader, Search } from 'lucide-svelte';
+	import DualRangeSlider from '$lib/components/DualRangeSlider.svelte';
 
 	const NAKSHATRAS = [
 		'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashirsha', 'Ardra',
@@ -148,46 +149,13 @@
 					</select>
 				</div>
 
-				<!-- Age range — +/- steppers, clamped 18–60 -->
+				<!-- Age range — dual-handle slider 18–60 -->
 				<div>
-					<p class="label">Age · <span lang="te">వయసు</span></p>
-					<div class="space-y-2 mt-1">
-						<div class="flex items-center gap-2">
-							<span class="text-xs w-8 text-ink/60">Min</span>
-							<button
-								type="button"
-								onclick={() => { if (age_min > 18) age_min -= 1; }}
-								class="flex h-7 w-7 items-center justify-center rounded border border-gold/40 text-maroon hover:bg-gold/10 disabled:opacity-40"
-								disabled={age_min <= 18}
-								aria-label="Decrease minimum age"
-							>−</button>
-							<span class="w-8 text-center text-sm font-semibold tabular-nums">{age_min}</span>
-							<button
-								type="button"
-								onclick={() => { if (age_min < age_max - 1) age_min += 1; }}
-								class="flex h-7 w-7 items-center justify-center rounded border border-gold/40 text-maroon hover:bg-gold/10 disabled:opacity-40"
-								disabled={age_min >= age_max - 1}
-								aria-label="Increase minimum age"
-							>+</button>
-						</div>
-						<div class="flex items-center gap-2">
-							<span class="text-xs w-8 text-ink/60">Max</span>
-							<button
-								type="button"
-								onclick={() => { if (age_max > age_min + 1) age_max -= 1; }}
-								class="flex h-7 w-7 items-center justify-center rounded border border-gold/40 text-maroon hover:bg-gold/10 disabled:opacity-40"
-								disabled={age_max <= age_min + 1}
-								aria-label="Decrease maximum age"
-							>−</button>
-							<span class="w-8 text-center text-sm font-semibold tabular-nums">{age_max}</span>
-							<button
-								type="button"
-								onclick={() => { if (age_max < 60) age_max += 1; }}
-								class="flex h-7 w-7 items-center justify-center rounded border border-gold/40 text-maroon hover:bg-gold/10 disabled:opacity-40"
-								disabled={age_max >= 60}
-								aria-label="Increase maximum age"
-							>+</button>
-						</div>
+					<p class="label">
+						Age {age_min}–{age_max} yrs · <span lang="te">వయసు</span>
+					</p>
+					<div class="mt-2">
+						<DualRangeSlider min={18} max={60} bind:valueMin={age_min} bind:valueMax={age_max} />
 					</div>
 				</div>
 
