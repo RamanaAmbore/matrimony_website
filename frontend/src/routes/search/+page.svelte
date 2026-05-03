@@ -145,7 +145,7 @@
 		<h1 class="font-serif text-3xl font-bold text-maroon">
 			Find Your Partner
 			<span class="block text-base font-normal sm:inline sm:ml-2" lang="te">
-				· జీవిత భాగస్వామిని కనుగొనండి
+				 జీవిత భాగస్వామిని కనుగొనండి
 			</span>
 		</h1>
 	</div>
