@@ -57,10 +57,10 @@
 	[lang="te"] {
 		color: #c87800;
 		text-shadow:
-			-0.5px -0.5px 0 rgba(255,255,255,0.65),
-			0.5px -0.5px 0 rgba(255,255,255,0.65),
-			-0.5px 0.5px 0 rgba(255,255,255,0.65),
-			0.5px 0.5px 0 rgba(255,255,255,0.65);
+			-0.5px -0.5px 0 rgba(255,255,255,0.25),
+			0.5px -0.5px 0 rgba(255,255,255,0.25),
+			-0.5px 0.5px 0 rgba(255,255,255,0.25),
+			0.5px 0.5px 0 rgba(255,255,255,0.25);
 	}
 
 	/* Telugu text on dark (maroon/header) backgrounds — orange with golden glow */

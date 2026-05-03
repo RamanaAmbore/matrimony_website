@@ -89,9 +89,9 @@
 				{:else}
 					<a
 						href="/dashboard"
-						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-saffron px-6 font-semibold text-ink shadow-lg transition-all duration-200 hover:bg-marigold hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
+						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-marigold/80 px-6 font-semibold text-ink shadow-lg transition-all duration-200 hover:bg-marigold hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
-						<span>My Profiles<br /><span class="text-xs font-normal" lang="te" style="color:inherit">నా ప్రొఫైళ్లు</span></span>
+						<span>My Profiles<br /><span class="text-xs font-normal" lang="te" style="color: #2b0a0e; text-shadow: none;">నా ప్రొఫైళ్లు</span></span>
 					</a>
 				{/if}
 			</div>
