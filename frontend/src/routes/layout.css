@@ -97,9 +97,13 @@
 	}
 
 	.input {
-		@apply w-full rounded border border-gold/40 bg-cream px-3 py-2 text-ink;
+		@apply h-10 w-full rounded border border-gold/40 bg-cream px-3 py-2 text-ink;
 		@apply focus:border-maroon focus:ring-2 focus:ring-maroon/30 focus:outline-none;
 		@apply placeholder:text-ink/40;
+	}
+
+	textarea.input {
+		@apply h-auto min-h-[5rem];
 	}
 
 	.label {
