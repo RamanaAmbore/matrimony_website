@@ -355,7 +355,7 @@
 					<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto" /></div>
 					<div>
 						<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
-						<p class="text-sm" lang="te" style="color: #f4a300;">మరాఠా కల్యాణం</p>
+						<p class="text-sm" lang="te">మరాఠా కల్యాణం</p>
 					</div>
 				</div>
 			</div>

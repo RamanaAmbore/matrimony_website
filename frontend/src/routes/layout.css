@@ -60,10 +60,11 @@
 		text-shadow: 0 1px 0 rgba(0,0,0,0.12);  /* subtle bottom edge, zero blur */
 	}
 
-	/* Telugu text on dark (maroon/header) backgrounds — orange */
-	header [lang="te"] {
+	/* Telugu text on dark (maroon/header/footer/hero overlay) backgrounds */
+	header [lang="te"],
+	footer [lang="te"] {
 		color: #f4a300;
-		text-shadow: 0 1px 0 rgba(0,0,0,0.35);  /* subtle bottom edge, zero blur */
+		text-shadow: 0 1px 0 rgba(0,0,0,0.35);
 	}
 
 	/* Inside buttons/links with their own text colour, Telugu inherits that colour
@@ -90,6 +91,9 @@
 		overflow: hidden;
 		border: 2px solid rgba(255, 255, 255, 0.85);
 		padding: 2px;
+		box-shadow:
+			0 0 8px rgba(244, 163, 0, 0.6),
+			0 0 20px rgba(244, 163, 0, 0.3);
 	}
 }
 
