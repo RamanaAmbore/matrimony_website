@@ -56,15 +56,14 @@
 	   Tailwind utility colour classes (e.g. text-ink/60) on the same element.
 	   #c87800 is darker than saffron (#f4a300) and stays readable on cream (#fff8e7). */
 	[lang="te"] {
-		color: #b8860b;  /* dark goldenrod — readable on cream */
-		text-shadow: 0 1px 0 rgba(0,0,0,0.12);  /* subtle bottom edge, zero blur */
+		color: var(--color-marigold);
 	}
 
-	/* Telugu text on dark (maroon/header/footer/hero overlay) backgrounds */
+	/* Slightly stronger shadow on dark backgrounds for legibility */
 	header [lang="te"],
 	footer [lang="te"] {
-		color: #f4a300;
-		text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+		color: var(--color-marigold);
+		text-shadow: 0 1px 1px rgba(0,0,0,0.4);
 	}
 
 	/* Inside buttons/links with their own text colour, Telugu inherits that colour
@@ -95,6 +94,11 @@
 		box-shadow:
 			0 0 8px rgba(244, 163, 0, 0.6),
 			0 0 20px rgba(244, 163, 0, 0.3);
+	}
+
+	/* Tint the logo image to saffron/orange to match the accent palette */
+	.logo-ring img {
+		filter: brightness(0) saturate(100%) invert(73%) sepia(51%) saturate(2878%) hue-rotate(2deg) brightness(104%);
 	}
 }
 

@@ -3,12 +3,15 @@
 	import { profiles as profilesApi, type Profile } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { ApiError } from '$lib/api';
-	import { Plus, User, Edit, Loader } from 'lucide-svelte';
+	import { Plus, User, Edit, Loader, SendHorizonal } from 'lucide-svelte';
 	import { T } from '$lib/i18n';
+
+	let { data } = $props();
 
 	let profileList = $state<Profile[]>([]);
 	let loading = $state(true);
 	let error = $state('');
+	let submitting = $state<Record<string, boolean>>({});
 
 	onMount(async () => {
 		try {
@@ -39,6 +42,23 @@
 			case 'pending': return 'Under Review';
 			case 'rejected': return 'Rejected';
 			default: return 'Draft';
+		}
+	}
+
+	async function submitProfile(id: string) {
+		submitting[id] = true;
+		try {
+			const updated = await profilesApi.submit(id);
+			profileList = profileList.map(p => p.id === id ? updated : p);
+			toastStore.success('Profile submitted for review!');
+		} catch (err) {
+			if (err instanceof ApiError) {
+				toastStore.error(err.message.slice(0, 80));
+			} else {
+				toastStore.error('Submission failed. Try again.');
+			}
+		} finally {
+			submitting[id] = false;
 		}
 	}
 
@@ -108,22 +128,39 @@
 							</p>
 							<span class="font-mono text-[0.65rem] text-maroon/60">MC-{profile.id.replace(/-/g, '').slice(0, 5).toUpperCase()}</span>
 						</div>
-						<span class={statusClass(profile.status)}>
-							{statusLabel(profile.status)}
-						</span>
+						{#if data.user?.is_admin}
+							<a
+								href="/admin/profiles?status={profile.status}"
+								class="{statusClass(profile.status)} hover:opacity-80 transition-opacity"
+								title="View in admin"
+							>
+								{statusLabel(profile.status)}
+							</a>
+						{:else}
+							<span class={statusClass(profile.status)}>
+								{statusLabel(profile.status)}
+							</span>
+						{/if}
 					</div>
 
 					<div class="text-sm text-ink/70 space-y-0.5">
 						<p>{profile.occupation}</p>
 						<p>{profile.city}, {profile.state}</p>
-						{#if profile.status === 'rejected'}
-							<p class="mt-1 text-vermilion text-xs">
-								Reason may be in the rejection notes — contact admin.
-							</p>
-						{/if}
 					</div>
 
-					<div class="flex gap-2 mt-auto pt-2 border-t border-gold/20">
+					<p class="text-xs text-ink/50">
+						{#if profile.status === 'draft'}
+							Not yet submitted — complete your profile and submit for review.
+						{:else if profile.status === 'pending'}
+							Under admin review — you will be notified once approved.
+						{:else if profile.status === 'approved'}
+							Live in search results.
+						{:else if profile.status === 'rejected'}
+							Not approved — edit and resubmit, or contact admin.
+						{/if}
+					</p>
+
+					<div class="flex flex-wrap gap-2 mt-auto pt-2 border-t border-gold/20">
 						<a href="/profiles/{profile.id}" class="btn-secondary flex-1 text-center text-sm py-1.5">
 							View
 						</a>
@@ -131,6 +168,16 @@
 							<Edit size={14} />
 							Edit
 						</a>
+						{#if profile.status === 'draft'}
+							<button
+								onclick={() => submitProfile(profile.id)}
+								disabled={submitting[profile.id]}
+								class="btn-secondary flex w-full items-center justify-center gap-1 text-sm py-1.5 border-saffron text-saffron hover:bg-saffron/10 disabled:opacity-50"
+							>
+								<SendHorizonal size={14} />
+								{submitting[profile.id] ? 'Submitting…' : 'Submit'}
+							</button>
+						{/if}
 					</div>
 				</div>
 			{/each}

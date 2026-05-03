@@ -4,7 +4,7 @@
 	import { ApiError } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
-	import { Loader, Edit, Send, User } from 'lucide-svelte';
+	import { Loader, Edit, Send, SendHorizonal, User } from 'lucide-svelte';
 	import Logo from '$lib/components/Logo.svelte';
 
 	let { data } = $props();
@@ -14,6 +14,7 @@
 	let profile = $state<Profile | null>(null);
 	let photos = $state<Photo[]>([]);
 	let loading = $state(true);
+	let submitting = $state(false);
 	let requesting = $state(false);
 	let requestMessage = $state('');
 	let showRequestForm = $state(false);
@@ -51,6 +52,23 @@
 			age--;
 		}
 		return age;
+	}
+
+	async function submitProfile() {
+		if (!profile) return;
+		submitting = true;
+		try {
+			profile = await profilesApi.submit(profileId);
+			toastStore.success('Profile submitted for review!');
+		} catch (err) {
+			if (err instanceof ApiError) {
+				toastStore.error(err.message.slice(0, 80));
+			} else {
+				toastStore.error('Submission failed. Try again.');
+			}
+		} finally {
+			submitting = false;
+		}
 	}
 
 	async function sendRequest() {
@@ -108,6 +126,18 @@
 						<Edit size={16} />
 						Edit Profile
 					</a>
+					{#if profile.status === 'draft'}
+						<button
+							onclick={submitProfile}
+							disabled={submitting}
+							class="btn-secondary flex w-full items-center justify-center gap-2 disabled:opacity-50"
+						>
+							<SendHorizonal size={16} />
+							{submitting ? 'Submitting…' : 'Submit for Approval'}
+						</button>
+					{:else if profile.status === 'pending'}
+						<p class="text-center text-sm text-saffron font-medium">Under admin review</p>
+					{/if}
 				{:else if profile.status === 'approved'}
 					{#if !showRequestForm}
 						<button

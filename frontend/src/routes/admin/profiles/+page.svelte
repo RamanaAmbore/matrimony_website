@@ -5,8 +5,11 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
 	import { Loader, CheckCircle, XCircle, Eye } from 'lucide-svelte';
+	import { page } from '$app/stores';
 
-	let statusFilter = $state('pending');
+	const validStatuses = ['pending', 'approved', 'rejected', 'draft'];
+	const urlStatus = $page.url.searchParams.get('status') ?? '';
+	let statusFilter = $state(validStatuses.includes(urlStatus) ? urlStatus : 'pending');
 	let profileList = $state<Profile[]>([]);
 	let loading = $state(true);
 	let processingId = $state<string | null>(null);
