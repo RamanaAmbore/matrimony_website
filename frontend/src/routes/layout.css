@@ -38,6 +38,7 @@
 	h5,
 	h6 {
 		font-family: var(--font-family-serif);
+		color: var(--color-saffron);
 	}
 
 	:focus-visible {
@@ -75,20 +76,19 @@
 		color: inherit;
 	}
 
-	.logo-glow {
-		filter:
-			drop-shadow(0 0 2px rgba(255, 255, 255, 1))
-			drop-shadow(0 0 6px rgba(255, 215, 80, 1))
-			drop-shadow(0 0 16px rgba(201, 162, 39, 0.75));
+	/* Saffron headings — element+class specificity (0,1,1) beats .text-maroon (0,1,0) */
+	h1.font-serif, h2.font-serif, h3.font-serif, h4.font-serif, h5.font-serif {
+		color: var(--color-saffron);
+	}
+	/* Keep headings in the dark header readable */
+	header h1.font-serif, header h2.font-serif, header h3.font-serif {
+		color: var(--color-cream);
 	}
 
 	.logo-ring {
 		border-radius: 9999px;
 		overflow: hidden;
-		box-shadow:
-			0 0 0 1.5px rgba(201, 162, 39, 0.5),
-			0 0 10px rgba(201, 162, 39, 0.55),
-			0 0 22px rgba(201, 162, 39, 0.25);
+		border: 2px solid rgba(255, 255, 255, 0.85);
 		padding: 2px;
 	}
 }

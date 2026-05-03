@@ -38,16 +38,13 @@ from app.services.validation import validate_ascii
 # Helpers
 # ---------------------------------------------------------------------------
 
-_NON_ENGLISH_ERROR = {
-    "code": "non_english_input",
-    "message": "Please enter data in English only",
-}
-
-
 def _require_ascii(value: str | None, field: str) -> None:
     """Raise 422 if *value* contains non-ASCII printable characters."""
     if value and not validate_ascii(value):
-        raise HTTPException(status_code=422, detail=_NON_ENGLISH_ERROR)
+        raise HTTPException(status_code=422, detail={
+            "code": "non_english_input",
+            "message": f"'{field.replace('_', ' ').title()}' must be filled in English (ASCII) characters only",
+        })
 
 
 def _compute_age(dob: date) -> int:
