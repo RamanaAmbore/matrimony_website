@@ -52,10 +52,11 @@
 }
 
 @layer utilities {
-	/* Telugu inherits English colour with a subtle maroon stroke for definition. */
+	/* Telugu matches surrounding English text colour exactly.
+	   The maroon stroke (drawn under the fill via paint-order) provides the
+	   subtle visual distinction without a colour shift. */
 	[lang="te"] {
 		color: inherit;
-		font-size: 0.88em;
 		-webkit-text-stroke: 0.55px var(--color-maroon);
 		paint-order: stroke fill;
 	}
