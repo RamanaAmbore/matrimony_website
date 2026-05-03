@@ -53,12 +53,15 @@ frontend/                      SvelteKit (Svelte 5) + Tailwind CSS
       api.ts                   Typed fetch wrapper, error handling
       stores/
         toast.svelte           Toast notifications (Svelte 5 runes)
-      components/              Reusable UI: buttons, modals, forms
+      components/
+        DualRangeSlider.svelte Dual-handle age range slider (min/max on one track)
+        BilingualLabel.svelte  Bilingual English+Telugu form label component
+        (other components)     Reusable UI: buttons, modals, forms
   vite.config.ts               Proxy /api/* to localhost:8000
   tailwind.config.ts           Tailwind v4 with custom theme block
   package.json                 Dependencies: sveltekits, tailwindcss, lucide-svelte
 
-deploy/                        Production scripts (placeholder; see ADMIN_GUIDE)
+deploy/                        Production scripts; see [ADMIN_GUIDE](ADMIN_GUIDE.md)
 docker-compose.yml             Local: PostgreSQL 16 + Mailhog
 .env                           Session secret, database URL (git-ignored)
 ```
@@ -151,7 +154,7 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 | POST | /profiles/{id}/submit | yes | Draft → pending (or approved, if setting allows) |
 | POST | /profiles/{id}/photos | yes | Upload photo (multipart) |
 | DELETE | /profiles/{id}/photos/{photo_id} | yes | Delete photo |
-| GET | /search | none | List approved profiles with optional filters |
+| GET | /search | none | List approved profiles; filters: gender, age_min, age_max, gotra, nakshatram, rashi, city, state, country, pin_code, mother_tongue, manglik, diet, page, per_page |
 | POST | /profiles/{id}/request | yes | Create detail request (requester → profile owner) |
 | GET | /requests | yes | List user's detail requests (both made + received) |
 | GET | /admin/profiles | admin | List all profiles with status filter |
@@ -175,7 +178,7 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 | Entity | Key fields | Notes |
 |--------|-----------|-------|
 | **User** | id (UUID), email (unique), password_hash, email_verified, is_admin, created_at | Bootstrap admin created on first startup if no users exist |
-| **Profile** | id, owner_user_id (FK User), gender (bride/groom), first_name, last_name, dob, height_cm, complexion, education, occupation, annual_income_inr, city, state, country, gotra, kuldevata, devak, surname_clan, nakshatram, rashi, manglik (yes/no/partial/unknown), mother_tongue (default "Telugu"), diet (veg/non-veg/eggetarian), about, partner_expectations, status (draft/pending/approved/rejected), admin_notes, created_at, updated_at | Stateful: draft → pending (on submit) → approved/rejected (admin). Editing approved profile resets to pending |
+| **Profile** | id, owner_user_id (FK User), gender (bride/groom), first_name, last_name, dob, age, height_cm, weight_kg, complexion, body_type, blood_group, education, college_university, occupation, employer, work_location, annual_income_inr, pin_code, city, state, country, gotra, kuldevata, devak, surname_clan, sub_caste, nakshatram, rashi, time_of_birth, place_of_birth, manglik (yes/no/partial/unknown), mother_tongue (default "Telugu"), marital_status, diet (veg/non-veg/eggetarian), about, partner_expectations, father_occupation, mother_occupation, num_brothers, num_sisters, num_brothers_married, num_sisters_married, family_type, family_status, family_values, native_place, smokes, drinks, hobbies, status (draft/pending/approved/rejected), admin_notes, created_at, updated_at | Stateful: draft → pending (on submit) → approved/rejected (admin). Editing approved profile resets to pending. Extended fields cover personal, professional, family, lifestyle, astrological, and demographic details |
 | **Photo** | id, profile_id (FK), original_filename, passport_path, blurred_path, thumb_path, byte_size, is_primary, created_at | Three variants stored under `MEDIA_ROOT/profiles/{profile_id}/{photo_id}/`. Max 5 per profile |
 | **DetailRequest** | id, requester_user_id (FK User), profile_id (FK Profile), status (pending/approved/rejected), message, admin_notes, responded_at, created_at | Unique constraint on (requester_user_id, profile_id). Admin approves → email full profile + passport photos to requester |
 | **Setting** | key (primary), value (JSON-encoded), updated_at, updated_by (FK User) | Runtime config: SMTP host/port/user/password, photo dimensions/limits, admin email, approval flags |
@@ -206,12 +209,16 @@ secrets).
 
 ## Local dev workflow
 
-**Prerequisites:** Docker, Python 3.11+, Node.js 18+
+**Prerequisites:** Podman (or Docker), Python 3.11+, Node.js 18+
 
 ### 1. Bring up local infrastructure
 
+Use **Podman** instead of Docker:
+
 ```bash
-docker compose up -d
+podman compose up -d
+# or if using podman-compose:
+podman-compose up -d
 # Postgres: localhost:5432 (marathakalyanam/marathakalyanam)
 # Mailhog: localhost:8025 (email UI)
 ```

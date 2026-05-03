@@ -41,6 +41,7 @@ def _serialize_partial(profile: Profile, request: Request) -> dict[str, Any]:
         "first_name": profile.first_name[0].upper() + "." if profile.first_name else "",
         "age": _compute_age(profile.dob),
         "height_cm": profile.height_cm,
+        "weight_kg": profile.weight_kg,
         "education": profile.education,
         "occupation": profile.occupation,
         "city": profile.city,
@@ -72,6 +73,7 @@ def _serialize_preview(profile: Profile, request: Request) -> dict[str, Any]:
         "gender": profile.gender.value,
         "age": _compute_age(profile.dob),
         "height_cm": profile.height_cm,
+        "weight_kg": profile.weight_kg,
         "city": profile.city,
         "state": profile.state,
         "gotra": profile.gotra,
@@ -84,6 +86,10 @@ def _build_base_query(
     gender: Optional[str],
     age_min: Optional[int],
     age_max: Optional[int],
+    height_min: Optional[int],
+    height_max: Optional[int],
+    weight_min: Optional[int],
+    weight_max: Optional[int],
     gotra: Optional[str],
     nakshatram: Optional[str],
     rashi: Optional[str],
@@ -119,6 +125,17 @@ def _build_base_query(
     if age_max is not None:
         min_dob = date.today().replace(year=date.today().year - age_max - 1)
         query = query.where(Profile.dob >= min_dob)
+
+    if height_min is not None:
+        query = query.where(Profile.height_cm >= height_min)
+
+    if height_max is not None:
+        query = query.where(Profile.height_cm <= height_max)
+
+    if weight_min is not None:
+        query = query.where(Profile.weight_kg >= weight_min)
+    if weight_max is not None:
+        query = query.where(Profile.weight_kg <= weight_max)
 
     if gotra:
         query = query.where(Profile.gotra.ilike(f"%{gotra}%"))
@@ -197,6 +214,10 @@ class SearchController(Controller):
         gender: Optional[str] = None,
         age_min: Optional[int] = None,
         age_max: Optional[int] = None,
+        height_min: Optional[int] = None,
+        height_max: Optional[int] = None,
+        weight_min: Optional[int] = None,
+        weight_max: Optional[int] = None,
         gotra: Optional[str] = None,
         nakshatram: Optional[str] = None,
         rashi: Optional[str] = None,
@@ -224,6 +245,10 @@ class SearchController(Controller):
             gender=gender,
             age_min=age_min,
             age_max=age_max,
+            height_min=height_min,
+            height_max=height_max,
+            weight_min=weight_min,
+            weight_max=weight_max,
             gotra=gotra,
             nakshatram=nakshatram,
             rashi=rashi,

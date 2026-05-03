@@ -140,15 +140,18 @@ The Settings page is the **only safe place to enter sensitive data** (SMTP crede
 
 **⚠️ SMTP credentials are sensitive:** never log them, never put them in `.env` (bootstrap secrets only). Use the Settings UI.
 
-## First-time bootstrap
+## Bootstrap & first-time setup
 
-On first run (fresh database), the app automatically:
+### On first startup
 
-1. Creates the database schema (via Alembic migration)
+When the backend service starts for the first time (fresh database), it automatically:
+
+1. Runs the initial Alembic migration to create the database schema
 2. Seeds default settings from [CLAUDE.md#settings-keys](CLAUDE.md#settings-keys)
-3. Creates a bootstrap admin user at the `OWNER_EMAIL` address
+3. Creates a bootstrap admin user at the `OWNER_EMAIL` address (default:
+   ramanamborespam@gmail.com)
 
-You'll see a log message like:
+The startup log shows:
 
 ```
 ======================================================
@@ -160,46 +163,129 @@ Change your password immediately after first login.
 ======================================================
 ```
 
-**Next steps:**
+Check the backend logs:
 
-1. Log in at http://marathakalyanam.com/login with:
+```bash
+journalctl -u marathakalyanam_api.service
+```
+
+### Initial configuration
+
+After bootstrap, complete these steps:
+
+1. **Log in as admin:**
+   - Go to https://marathakalyanam.com/login
    - Email: `ramanamborespam@gmail.com` (or your `OWNER_EMAIL`)
-   - Password: (the temp password from logs)
-2. Go to account settings and change your password immediately
-3. Update `owner_email` setting if you want notifications sent elsewhere
-4. Configure SMTP settings (go to **Admin > Settings**):
+   - Password: (the temp password from startup logs)
+
+2. **Change your password immediately:**
+   - Click your name (top right) → Account Settings
+   - Enter a new, strong password
+
+3. **Update notification email (if needed):**
+   - Go to **Admin > Settings**
+   - Update `owner_email` if you want admin notifications sent elsewhere
+
+4. **Configure SMTP:**
+   - Go to **Admin > Settings**
    - Set `smtp_host`, `smtp_port`, `smtp_user`, `smtp_password`
-   - Test by submitting a profile; you should receive an approval notification
+   - Test by submitting a profile; you should receive an approval notification email
 
-**Password reset:** If you lose your password, you'll need to:
-- Access the database directly: `UPDATE users SET password_hash = ... WHERE email = ...`
-- Or have an existing admin reset it (future feature)
+### Password recovery
 
-## Deploy runbook (placeholder)
+If you lose your password:
 
-Production deployment will be on a remote server. This section will contain:
+1. Access the server: `ssh ramboq`
+2. Connect to the database and reset your password hash:
+   ```bash
+   psql -U marathakalyanam -d marathakalyanam
+   ```
+3. Or request another admin to reset it (future feature)
 
-- SSH setup and host details
-- nginx vhost configuration (marathakalyanam.com)
-- systemd service unit (auto-restart, logging)
-- certbot SSL/TLS setup
-- Database backup strategy
-- Log rotation
+## Production deployment
 
-**Target deployment host:** ramboq server
-**Target domain:** marathakalyanam.com
+### Server access
 
-*Details to be filled in once SSH access is configured.*
+Production server: **ramboq** (root@69.62.78.136)
 
-## Backups
+```bash
+ssh ramboq
+# or directly:
+ssh root@69.62.78.136
+```
 
-Maratha Kalyanam has two critical components that must be backed up:
+Application directory: `/opt/marathakalyanam`
+
+### Services
+
+Two systemd services run on the production server:
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| `marathakalyanam_web.service` | 3003 | SvelteKit frontend (Node.js) |
+| `marathakalyanam_api.service` | 8003 | Litestar API backend (Python) |
+
+Both are managed by systemd and auto-restart on failure.
+
+### Viewing logs
+
+View service logs in real time:
+
+```bash
+# Frontend logs
+journalctl -u marathakalyanam_web.service -f
+
+# Backend logs
+journalctl -u marathakalyanam_api.service -f
+```
+
+### Deploying changes
+
+```bash
+ssh ramboq "cd /opt/marathakalyanam && bash deploy/webhook-deploy.sh"
+```
+
+This script:
+1. Pulls latest code from the repository
+2. Rebuilds and restarts both services
+3. Runs database migrations (if schema changes exist)
+
+### Database migrations after schema changes
+
+After pulling code that includes new Alembic migrations:
+
+```bash
+ssh ramboq "cd /opt/marathakalyanam/backend && \
+  source .venv/bin/activate && \
+  alembic upgrade head"
+```
+
+Verify migration success in the backend service logs:
+
+```bash
+ssh ramboq "journalctl -u marathakalyanam_api.service -n 50"
+```
+
+### Nginx proxy
+
+Nginx on the production server reverse-proxies traffic to both services:
+
+- `https://marathakalyanam.com` → port 3003 (frontend)
+- `https://marathakalyanam.com/api/*` → port 8003 (backend)
+
+SSL/TLS is handled by Nginx; certificates are managed by Certbot.
+
+## Backups & maintenance
+
+Maratha Kalyanam stores two critical asset types:
 
 ### 1. Database (PostgreSQL)
 
-Backup the entire database regularly:
+Back up the entire database regularly. On the production server:
 
 ```bash
+ssh ramboq
+
 # Full database dump
 pg_dump -h localhost -U marathakalyanam -d marathakalyanam \
   > /backups/marathakalyanam_$(date +%Y%m%d_%H%M%S).sql
@@ -207,65 +293,199 @@ pg_dump -h localhost -U marathakalyanam -d marathakalyanam \
 # Compress
 gzip /backups/marathakalyanam_*.sql
 
-# Example: daily backup via cron
+# Example: daily automated backup via cron
 0 2 * * * pg_dump -h localhost -U marathakalyanam -d marathakalyanam \
   | gzip > /backups/mk_$(date +\%Y\%m\%d).sql.gz
 ```
 
-### 2. Media files (photos)
+### 2. Media files (user photos)
 
-All uploaded photos are stored in the `MEDIA_ROOT` directory (default: `./var/media`). Back up
-the entire directory:
+All uploaded profile photos are stored at `/opt/marathakalyanam/var/media`. Back up
+this directory:
 
 ```bash
-# Rsync to backup server
-rsync -av --delete /path/to/marathakalyanam/var/media/ \
-  backup-user@backup-server:/backups/marathakalyanam-media/
+# From your local machine, rsync to a backup location
+rsync -av --delete ramboq:/opt/marathakalyanam/var/media/ \
+  /local/backup/marathakalyanam-media/
 
-# Example: daily backup via cron
-0 3 * * * rsync -av --delete /var/marathakalyanam/media/ \
+# Or set up automated daily backup on the server via cron
+0 3 * * * rsync -av --delete /opt/marathakalyanam/var/media/ \
   backup-user@backup.example.com:/backups/marathakalyanam-media/
 ```
 
-### Retention
+### Backup retention & testing
 
-- Keep database backups for at least 30 days (roll off old ones)
-- Keep media backups synced continuously (rsync --delete removes orphaned files)
-- Test restore procedures monthly
+- Keep database backups for at least 30 days (rotate old ones)
+- Keep media backups in sync; `rsync --delete` removes orphaned files
+- Test restore procedures monthly to ensure backups are valid
 
 ### Disaster recovery
 
-To restore from backup:
+To restore from backup on the production server:
 
 ```bash
-# 1. Restore database
+ssh ramboq
+
+# 1. Stop services to prevent writes during restore
+systemctl stop marathakalyanam_web.service marathakalyanam_api.service
+
+# 2. Restore database
 gunzip < /backups/marathakalyanam_YYYYMMDD.sql.gz | \
   psql -h localhost -U marathakalyanam -d marathakalyanam
 
-# 2. Restore media files
+# 3. Restore media files
 rsync -av /backups/marathakalyanam-media/ \
-  /path/to/marathakalyanam/var/media/
+  /opt/marathakalyanam/var/media/
+
+# 4. Restart services
+systemctl start marathakalyanam_web.service marathakalyanam_api.service
+
+# 5. Verify the restore
+journalctl -u marathakalyanam_api.service -f
 ```
+
+## Photo upload pipeline
+
+When users upload a profile photo, the system automatically:
+
+1. **Validates file:**
+   - Maximum size: `upload_max_mb` setting (default 10 MB)
+   - Format: JPEG or PNG
+
+2. **Face detection (if enabled):**
+   - Uses OpenCV `CascadeClassifier` to detect faces
+   - If `require_face_detection=true` (default), enforces exactly 1 face per photo
+   - Rejects if 0 or multiple faces detected
+   - Can be disabled in **Admin > Settings** for testing (not recommended for production)
+
+3. **Auto-crop:**
+   - Automatically crops to the face bounding box with padding
+   - Preserves portrait orientation
+
+4. **Resize & compress:**
+   - Resizes to passport dimensions: `photo_passport_width` × `photo_passport_height`
+     (default 413 × 531 pixels)
+   - Re-encodes as JPEG and compresses until ≤ `photo_max_kb` (default 500 KB)
+
+5. **Store three variants:**
+   - **passport.jpg:** Full-resolution clear photo (stored at
+     `/opt/marathakalyanam/var/media/profiles/{profile_id}/{photo_id}/`)
+   - **blurred.jpg:** Gaussian blur (radius `photo_blur_radius`, default 14 pixels);
+     shown in search results
+   - **thumb.jpg:** Square thumbnail (`photo_thumb_size`, default 150×150); used in
+     admin lists
+
+### Photo settings (adjust in Admin > Settings)
+
+| Setting | Default | Purpose |
+|---------|---------|---------|
+| `upload_max_mb` | 10 | Max upload file size |
+| `photo_max_kb` | 500 | Max compressed JPEG size |
+| `photo_passport_width` | 413 | Passport photo width |
+| `photo_passport_height` | 531 | Passport photo height |
+| `photo_blur_width` | 600 | Blurred variant width (preview) |
+| `photo_blur_radius` | 14 | Gaussian blur amount (higher = more blurred) |
+| `photo_thumb_size` | 150 | Thumbnail size (square) |
+| `photos_max_per_profile` | 5 | Max photos per profile |
+| `require_face_detection` | true | Enforce single-face validation |
 
 ## Monitoring
 
 - **Error logs:** Check application logs for warnings/errors
-  - Local dev: stdout (console)
-  - Production: systemd journal or log file (to be configured)
-- **Email delivery:** Check Mailhog UI (dev) or mail server logs (prod)
-- **Pending queue:** Admin dashboard shows count of pending profiles and requests; investigate
-  if queue grows unexpectedly
+  ```bash
+  journalctl -u marathakalyanam_api.service -f
+  journalctl -u marathakalyanam_web.service -f
+  ```
+- **Email delivery:** Verify outbound emails by checking mail server logs or test inbox
+- **Pending queue:** Admin dashboard shows counts of pending profiles and detail requests;
+  investigate if queue grows unexpectedly (may indicate slow review process)
+- **Disk space:** Monitor `/opt/marathakalyanam/var/media/` for large photo accumulation
 
-## Support and troubleshooting
+## Support & troubleshooting
 
-**Can't log in?** Check `OWNER_EMAIL` in bootstrap logs; verify email spelling.
+### Can't log in?
 
-**SMTP not sending?** Go to **Admin > Settings** and verify `smtp_host`, `smtp_port`,
-credentials. Test with a simple email first. Check firewall/network access to SMTP server.
+1. Check the admin email from bootstrap logs: `journalctl -u marathakalyanam_api.service | grep BOOTSTRAP`
+2. Verify email spelling and capitalization match
+3. If you lost the temp password, access the server and reset via database (see
+   [Password recovery](#password-recovery))
 
-**Photos not processing?** Check that OpenCV is installed (`pip install pillow opencv-python`).
-Verify `MEDIA_ROOT` is writable.
+### SMTP not sending?
 
-**Database full?** Check disk space on PostgreSQL host. Archive old photos if needed.
+1. Go to **Admin > Settings** and verify:
+   - `smtp_host` is correct (e.g. "mail.example.com", not "localhost")
+   - `smtp_port` matches your server (465 = implicit TLS, 587 = STARTTLS)
+   - `smtp_user` and `smtp_password` are correct
+2. Test connectivity from the server:
+   ```bash
+   ssh ramboq
+   telnet <smtp_host> <smtp_port>
+   ```
+3. Check firewall rules on both the application and SMTP servers
+4. Review backend logs for SMTP errors:
+   ```bash
+   journalctl -u marathakalyanam_api.service | grep -i smtp
+   ```
 
-For other issues, contact the development team.
+### Photos not processing or face detection failing?
+
+1. Verify OpenCV is installed on the backend:
+   ```bash
+   ssh ramboq
+   cd /opt/marathakalyanam/backend
+   source .venv/bin/activate
+   python -c "import cv2; print(cv2.__version__)"
+   ```
+2. Check that `/opt/marathakalyanam/var/media/` is writable:
+   ```bash
+   ssh ramboq
+   ls -ld /opt/marathakalyanam/var/media/
+   # Should show write permissions for the app user
+   ```
+3. Check backend logs for upload errors:
+   ```bash
+   journalctl -u marathakalyanam_api.service -f
+   # Look for error messages during photo upload
+   ```
+4. If face detection is causing issues, temporarily disable in **Admin > Settings** for testing
+   (not recommended for production)
+
+### Disk space full?
+
+1. Check available space:
+   ```bash
+   ssh ramboq
+   df -h /opt/marathakalyanam
+   ```
+2. If media files are consuming space, consider:
+   - Archiving old photos to backup storage
+   - Running cleanup script (if available)
+3. If database is full, check PostgreSQL:
+   ```bash
+   ssh ramboq
+   du -sh /var/lib/postgresql/
+   ```
+
+### Service won't start or keeps crashing
+
+1. Check logs for errors:
+   ```bash
+   journalctl -u marathakalyanam_api.service -n 50
+   journalctl -u marathakalyanam_web.service -n 50
+   ```
+2. Verify database is accessible:
+   ```bash
+   ssh ramboq
+   psql -U marathakalyanam -d marathakalyanam -c "SELECT 1;"
+   ```
+3. Manually restart the service:
+   ```bash
+   ssh ramboq
+   systemctl restart marathakalyanam_api.service
+   systemctl restart marathakalyanam_web.service
+   ```
+
+For other issues or persistent errors, contact the development team with:
+- Full service logs from `journalctl`
+- Error messages from the UI
+- Steps to reproduce the issue

@@ -5,6 +5,13 @@
 	import { asciiOnly } from '$lib/inputFilters';
 	import BilingualLabel from '$lib/components/BilingualLabel.svelte';
 
+	function cmToFtIn(cm: number): string {
+		const totalInches = Math.round(cm / 2.54);
+		const feet = Math.floor(totalInches / 12);
+		const inches = totalInches % 12;
+		return `${feet}'${inches}"`;
+	}
+
 	let {
 		initialData = {},
 		onSubmit,
@@ -387,10 +394,10 @@
 			<!-- Height -->
 			<div class="sm:col-span-2">
 				<BilingualLabel key="height" for="height_cm" />
-				<p class="text-sm text-ink/60 mb-1">{height_cm} cm</p>
+				<p class="text-sm text-ink/60 mb-1">{cmToFtIn(height_cm)}</p>
 				<input id="height_cm" type="range" min="120" max="220" step="1" bind:value={height_cm} class="w-full accent-maroon" />
 				<div class="flex justify-between text-xs text-ink/40 mt-1">
-					<span>120 cm</span><span>220 cm</span>
+					<span>3'11"</span><span>7'3"</span>
 				</div>
 			</div>
 

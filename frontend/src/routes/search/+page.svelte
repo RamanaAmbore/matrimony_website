@@ -27,6 +27,10 @@
 	let gender = $state<'bride' | 'groom' | ''>('');
 	let age_min = $state(18);
 	let age_max = $state(60);
+	let height_min = $state(140);
+	let height_max = $state(210);
+	let weight_min = $state(40);
+	let weight_max = $state(120);
 	let gotra = $state('');
 	let nakshatram = $state('');
 	let rashi = $state('');
@@ -55,6 +59,10 @@
 				gender: gender as SearchParams['gender'] || undefined,
 				age_min: age_min !== 18 ? age_min : undefined,
 				age_max: age_max !== 60 ? age_max : undefined,
+				height_min: height_min !== 140 ? height_min : undefined,
+				height_max: height_max !== 210 ? height_max : undefined,
+				weight_min: weight_min !== 40 ? weight_min : undefined,
+				weight_max: weight_max !== 120 ? weight_max : undefined,
 				gotra: gotra || undefined,
 				nakshatram: nakshatram || undefined,
 				rashi: rashi || undefined,
@@ -93,7 +101,7 @@
 
 	// Reactive filter signature — changing any filter triggers a debounced re-search
 	const filterKey = $derived(
-		[gender, gotra, nakshatram, rashi, city, state_filter, country_filter, pin_code_filter, mother_tongue_filter, manglik, diet, age_min, age_max].join('|')
+		[gender, gotra, nakshatram, rashi, city, state_filter, country_filter, pin_code_filter, mother_tongue_filter, manglik, diet, age_min, age_max, height_min, height_max, weight_min, weight_max].join('|')
 	);
 
 	let mounted = $state(false);
@@ -118,6 +126,13 @@
 			age--;
 		}
 		return age;
+	}
+
+	function cmToFtIn(cm: number): string {
+		const totalInches = Math.round(cm / 2.54);
+		const feet = Math.floor(totalInches / 12);
+		const inches = totalInches % 12;
+		return `${feet}'${inches}"`;
 	}
 </script>
 
@@ -162,6 +177,26 @@
 					</p>
 					<div class="mt-2">
 						<DualRangeSlider min={18} max={60} bind:valueMin={age_min} bind:valueMax={age_max} />
+					</div>
+				</div>
+
+				<!-- Height range -->
+				<div>
+					<p class="label">
+						Height {cmToFtIn(height_min)}–{cmToFtIn(height_max)} · <span lang="te">ఎత్తు</span>
+					</p>
+					<div class="mt-2">
+						<DualRangeSlider min={140} max={210} bind:valueMin={height_min} bind:valueMax={height_max} />
+					</div>
+				</div>
+
+				<!-- Weight range -->
+				<div>
+					<p class="label">
+						Weight {weight_min}–{weight_max} kg · <span lang="te">బరువు</span>
+					</p>
+					<div class="mt-2">
+						<DualRangeSlider min={40} max={120} bind:valueMin={weight_min} bind:valueMax={weight_max} />
 					</div>
 				</div>
 
@@ -248,7 +283,7 @@
 
 				<button
 					onclick={() => {
-						gender = ''; age_min = 18; age_max = 60; gotra = ''; nakshatram = '';
+						gender = ''; age_min = 18; age_max = 60; height_min = 140; height_max = 210; weight_min = 40; weight_max = 120; gotra = ''; nakshatram = '';
 						rashi = ''; city = ''; state_filter = ''; country_filter = ''; pin_code_filter = ''; mother_tongue_filter = '';
 						manglik = ''; diet = '';
 					}}

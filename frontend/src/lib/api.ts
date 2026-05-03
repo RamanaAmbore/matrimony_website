@@ -144,6 +144,7 @@ export interface SearchResult {
 	last_name: string;
 	dob: string;
 	height_cm: number;
+	weight_kg?: number | null;
 	education: string;
 	occupation: string;
 	city: string;
@@ -169,6 +170,7 @@ export interface PreviewSearchResult {
 	gender: Gender;
 	age: number;
 	height_cm: number;
+	weight_kg?: number | null;
 	city: string;
 	state: string;
 	gotra: string;
@@ -254,6 +256,10 @@ export interface SearchParams {
 	gender?: Gender;
 	age_min?: number;
 	age_max?: number;
+	height_min?: number;
+	height_max?: number;
+	weight_min?: number;
+	weight_max?: number;
 	gotra?: string;
 	nakshatram?: string;
 	rashi?: string;
