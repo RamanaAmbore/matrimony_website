@@ -99,8 +99,18 @@
 	<meta name="twitter:image" content="https://marathakalyanam.com/brand/og-image.png" />
 	<meta name="twitter:image:alt" content="Maratha Kalyanam — Telugu Maratha Matrimony" />
 
+	<!-- PWA manifest + icons -->
+	<link rel="manifest" href="/manifest.webmanifest" />
+	<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+	<link rel="icon" type="image/png" href="/favicon.png" />
+	<link rel="apple-touch-icon" href="/brand/icon-192.png" />
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-title" content="Maratha Kalyanam" />
+
 	<!-- Theme + canonical + crawling -->
-	<meta name="theme-color" content="#C8102E" />
+	<meta name="theme-color" content="#6B0F1A" />
 	<link rel="canonical" href="https://marathakalyanam.com/" />
 	<meta name="robots" content="index, follow, max-image-preview:large" />
 	<meta name="googlebot" content="index, follow" />
