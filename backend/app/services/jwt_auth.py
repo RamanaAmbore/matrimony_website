@@ -12,7 +12,7 @@ from app.config import SESSION_SECRET
 logger = logging.getLogger(__name__)
 
 _ALGORITHM = "HS256"
-_EXPIRY_SECONDS = 86400  # 24 hours
+_EXPIRY_SECONDS = 86400 * 30  # 30 days
 
 
 def mint_jwt(user_id: str, handle: str, email: str, is_admin: bool, email_verified: bool) -> str:

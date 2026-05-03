@@ -25,7 +25,7 @@
 			profile = result.profile;
 			photos = result.photos;
 			// Determine ownership from layout user data
-			isOwner = data.user?.user_id === profile.user_id;
+			isOwner = data.user?.user_id === profile.owner_user_id;
 		} catch (err) {
 			if (err instanceof ApiError) {
 				if (err.status === 404) {

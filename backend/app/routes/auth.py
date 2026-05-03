@@ -25,7 +25,7 @@ from app.services.jwt_auth import mint_jwt
 from app.services.settings import settings_service
 
 _JWT_COOKIE = "mk_jwt"
-_COOKIE_MAX_AGE = 86400  # 24 hours — must match jwt_auth._EXPIRY_SECONDS
+_COOKIE_MAX_AGE = 86400 * 30  # 30 days — must match jwt_auth._EXPIRY_SECONDS
 
 # ^[A-Za-z][A-Za-z0-9_]{2,29}$  →  starts with a letter, then 2–29 alphanumeric/underscore
 # total length: 3–30 characters

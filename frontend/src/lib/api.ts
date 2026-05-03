@@ -38,7 +38,7 @@ export type SmokeDrink = 'no' | 'occasionally' | 'yes';
 
 export interface Profile {
 	id: string;
-	user_id: string;
+	owner_user_id: string;
 	status: ProfileStatus;
 
 	// Basic Information
@@ -377,7 +377,7 @@ export const auth = {
 
 // ─── Profiles ─────────────────────────────────────────────────────────────────
 
-export type ProfilePayload = Omit<Profile, 'id' | 'user_id' | 'status' | 'created_at' | 'updated_at'>;
+export type ProfilePayload = Omit<Profile, 'id' | 'owner_user_id' | 'status' | 'created_at' | 'updated_at'>;
 
 export const profiles = {
 	async list(): Promise<Profile[]> {
