@@ -25,6 +25,7 @@ class User(Base):
     )
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     user_handle: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    phone_number: Mapped[str] = mapped_column(String(32), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(512), nullable=False)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     email_verification_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
