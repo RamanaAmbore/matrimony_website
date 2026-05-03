@@ -54,7 +54,9 @@
 @layer utilities {
 	[lang="te"] {
 		opacity: 0.82;
-		font-size: 0.95em !important;
+		font-size: 0.85em !important;
+		font-weight: inherit !important;
+		font-style: inherit !important;
 	}
 
 	/* Hero section Telugu paragraph — literal hex to bypass any var() resolution issues */

@@ -168,25 +168,25 @@
 		<!-- Desktop nav — nowrap prevents each item from breaking across lines -->
 		<nav class="ml-8 hidden items-center gap-4 md:flex" aria-label="Main navigation">
 			<a href="/" class="whitespace-nowrap text-sm {navLinkClass('/')}">
-				{T.home.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.home.te}</span>
+				{T.home.en} <span lang="te">{T.home.te}</span>
 			</a>
 			<a href="/search" class="whitespace-nowrap text-sm {navLinkClass('/search')}">
-				{T.search.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.search.te}</span>
+				{T.search.en} <span lang="te">{T.search.te}</span>
 			</a>
 			<a href="/about" class="whitespace-nowrap text-sm {navLinkClass('/about')}">
-				{T.aboutPage.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.aboutPage.te}</span>
+				{T.aboutPage.en} <span lang="te">{T.aboutPage.te}</span>
 			</a>
 
 			{#if user}
 				<a href="/dashboard" class="whitespace-nowrap text-sm {navLinkClass('/dashboard')}">
-					{T.myProfiles.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.myProfiles.te}</span>
+					{T.myProfiles.en} <span lang="te">{T.myProfiles.te}</span>
 				</a>
 				<a href="/requests" class="whitespace-nowrap text-sm {navLinkClass('/requests')}">
-					{T.requests.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.requests.te}</span>
+					{T.requests.en} <span lang="te">{T.requests.te}</span>
 				</a>
 				{#if user.is_admin}
 					<a href="/admin" class="whitespace-nowrap text-sm {navLinkClass('/admin')}">
-						{T.admin.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.admin.te}</span>
+						{T.admin.en} <span lang="te">{T.admin.te}</span>
 					</a>
 				{/if}
 				<span class="hidden font-mono text-xs text-cream/50 xl:inline" title={user.email}>@{user.user_handle}</span>
@@ -194,14 +194,14 @@
 					onclick={logout}
 					class="whitespace-nowrap rounded border border-cream/50 px-3 py-0.5 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
 				>
-					{T.logout.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.logout.te}</span>
+					{T.logout.en} <span lang="te">{T.logout.te}</span>
 				</button>
 			{:else}
 				<a href="/login" class="whitespace-nowrap rounded border border-cream px-3 py-0.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">
-					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te" style="color:inherit">{T.login.te}</span>
+					{T.login.en} <span lang="te" style="color:inherit">{T.login.te}</span>
 				</a>
 				<a href="/register" class="whitespace-nowrap rounded px-3 py-0.5 text-sm font-medium text-maroon transition-all duration-200 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-cream" style="background:#fde8b0;">
-					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te" style="color:inherit">{T.register.te}</span>
+					{T.register.en} <span lang="te" style="color:inherit">{T.register.te}</span>
 				</a>
 			{/if}
 		</nav>
@@ -265,27 +265,27 @@
 		<!-- Drawer nav links -->
 		<nav class="flex flex-col gap-1 p-4" aria-label="Mobile navigation">
 			<a href="/" class={drawerLinkClass('/')} onclick={closeDrawer}>
-				{T.home.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.home.te}</span>
+				{T.home.en} <span lang="te">{T.home.te}</span>
 			</a>
 			<a href="/search" class={drawerLinkClass('/search')} onclick={closeDrawer}>
-				{T.search.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.search.te}</span>
+				{T.search.en} <span lang="te">{T.search.te}</span>
 			</a>
 			<a href="/about" class={drawerLinkClass('/about')} onclick={closeDrawer}>
-				{T.aboutPage.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.aboutPage.te}</span>
+				{T.aboutPage.en} <span lang="te">{T.aboutPage.te}</span>
 			</a>
 
 			{#if user}
 				<div class="my-2 h-px bg-gold/20"></div>
 				<a href="/dashboard" class={drawerLinkClass('/dashboard')} onclick={closeDrawer}>
-					{T.myProfiles.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.myProfiles.te}</span>
+					{T.myProfiles.en} <span lang="te">{T.myProfiles.te}</span>
 				</a>
 				<a href="/requests" class={drawerLinkClass('/requests')} onclick={closeDrawer}>
-					{T.requests.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.requests.te}</span>
+					{T.requests.en} <span lang="te">{T.requests.te}</span>
 				</a>
 				{#if user.is_admin}
 					<div class="my-2 h-px bg-gold/20"></div>
 					<p class="px-3 text-xs font-semibold tracking-wider text-ink/40 uppercase">
-						{T.admin.en}&nbsp;·&nbsp;<span lang="te" class="normal-case">{T.admin.te}</span>
+						{T.admin.en} <span lang="te" class="normal-case">{T.admin.te}</span>
 					</p>
 					<a href="/admin" class={drawerLinkClass('/admin')} onclick={closeDrawer}>Admin Panel</a>
 					<a href="/admin/settings" class={drawerLinkClass('/admin/settings')} onclick={closeDrawer}>
@@ -298,19 +298,19 @@
 					onclick={logout}
 					class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-vermilion hover:bg-vermilion/10 focus-visible:outline-2 focus-visible:outline-tangerine"
 				>
-					{T.logout.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.logout.te}</span>
+					{T.logout.en} <span lang="te">{T.logout.te}</span>
 				</button>
 			{:else}
 				<div class="my-2 h-px bg-gold/20"></div>
 				<a href="/login" class={drawerLinkClass('/login')} onclick={closeDrawer}>
-					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.login.te}</span>
+					{T.login.en} <span lang="te">{T.login.te}</span>
 				</a>
 				<a
 					href="/register"
 					class="flex items-center gap-2 rounded-lg bg-tangerine px-3 py-2.5 text-cream hover:bg-marigold hover:text-ink"
 					onclick={closeDrawer}
 				>
-					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te" style="color:inherit">{T.register.te}</span>
+					{T.register.en} <span lang="te" style="color:inherit">{T.register.te}</span>
 				</a>
 			{/if}
 		</nav>
