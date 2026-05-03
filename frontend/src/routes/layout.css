@@ -55,12 +55,10 @@
 	   Tailwind utility colour classes (e.g. text-ink/60) on the same element.
 	   #c87800 is darker than saffron (#f4a300) and stays readable on cream (#fff8e7). */
 	[lang="te"] {
-		color: #c87800;
+		color: #b8860b;  /* dark goldenrod — readable on cream and visible on dark */
 		text-shadow:
-			-0.5px -0.5px 0 rgba(255,255,255,0.25),
-			0.5px -0.5px 0 rgba(255,255,255,0.25),
-			-0.5px 0.5px 0 rgba(255,255,255,0.25),
-			0.5px 0.5px 0 rgba(255,255,255,0.25);
+			0 0 6px rgba(201,162,39,0.35),
+			0 1px 2px rgba(0,0,0,0.15);
 	}
 
 	/* Telugu text on dark (maroon/header) backgrounds — orange with golden glow */

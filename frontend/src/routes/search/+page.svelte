@@ -343,7 +343,7 @@
 						</p>
 						<a
 							href="/register"
-							class="mt-3 inline-flex items-center gap-2 rounded-lg bg-maroon px-4 py-2 text-sm font-semibold text-cream transition-colors hover:bg-saffron hover:text-ink focus-visible:outline-2 focus-visible:outline-maroon"
+							class="btn-primary mt-3 inline-flex items-center gap-2 text-sm px-3 py-1.5"
 						>
 							Register Free · <span lang="te">ఉచిత నమోదు</span>
 						</a>

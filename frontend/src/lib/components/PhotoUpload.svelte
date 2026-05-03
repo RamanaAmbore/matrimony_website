@@ -8,7 +8,7 @@
 	let {
 		profileId,
 		initialPhotos = [],
-		maxPhotos = 3,
+		maxPhotos = 1,
 		isOwner = true,
 		onCountChange = undefined
 	}: {
