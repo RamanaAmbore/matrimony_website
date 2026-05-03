@@ -85,9 +85,9 @@
 	<meta property="og:title" content="Maratha Kalyanam · మరాఠా కల్యాణం" />
 	<meta property="og:description" content="Trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states. Admin-verified profiles. Gotra, nakshatram and kuldevata matching. Privacy-first." />
 	<meta property="og:url" content="https://marathakalyanam.com/" />
-	<meta property="og:image" content="https://marathakalyanam.com/brand/logo.png" />
-	<meta property="og:image:width" content="1254" />
-	<meta property="og:image:height" content="1254" />
+	<meta property="og:image" content="https://marathakalyanam.com/brand/og-image.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
 	<meta property="og:image:alt" content="Maratha Kalyanam — Telugu Maratha Matrimony" />
 	<meta property="og:locale" content="en_IN" />
 	<meta property="og:locale:alternate" content="te_IN" />
@@ -96,7 +96,7 @@
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="Maratha Kalyanam · మరాఠా కల్యాణం" />
 	<meta name="twitter:description" content="Trusted matrimonial platform for Maratha families. Admin-verified profiles. Privacy-first." />
-	<meta name="twitter:image" content="https://marathakalyanam.com/brand/logo.png" />
+	<meta name="twitter:image" content="https://marathakalyanam.com/brand/og-image.png" />
 	<meta name="twitter:image:alt" content="Maratha Kalyanam — Telugu Maratha Matrimony" />
 
 	<!-- Theme + canonical + crawling -->
