@@ -683,7 +683,7 @@
 	</details>
 
 	<!-- ── Section: Family ───────────────────────────────────────────────────── -->
-	<details class="card">
+	<details open class="card">
 		<summary class="cursor-pointer font-serif text-xl font-semibold text-maroon mb-1 list-none flex items-center gap-2">
 			<span class="text-tangerine">▸</span>
 			Family
