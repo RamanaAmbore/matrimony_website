@@ -1,5 +1,6 @@
 """Detail request routes."""
 
+import asyncio
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -104,6 +105,12 @@ class RequestController(Controller):
         except Exception as exc:
             import logging
             logging.getLogger(__name__).warning("Failed to send request notification: %s", exc)
+
+        from app.services.telegram import notify_request_received
+        asyncio.create_task(notify_request_received(
+            requester=requester_name,
+            profile_name=f"{profile.first_name} {profile.last_name or ''}".strip(),
+        ))
 
         return _serialize_request(detail_req)
 

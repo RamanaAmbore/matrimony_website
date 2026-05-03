@@ -1,5 +1,6 @@
 """Admin routes."""
 
+import asyncio
 import uuid
 from datetime import date, datetime, timezone
 from typing import Any, Optional
@@ -268,6 +269,12 @@ class AdminController(Controller):
             import logging
             logging.getLogger(__name__).warning("Failed to send approval email: %s", exc)
 
+        from app.services.telegram import notify_profile_approved
+        asyncio.create_task(notify_profile_approved(
+            name=f"{profile.first_name} {profile.last_name or ''}".strip(),
+            admin_notes=data.admin_notes or "",
+        ))
+
         await db.refresh(profile, ["photos"])
         return _serialize_profile(profile, request)
 
@@ -307,6 +314,12 @@ class AdminController(Controller):
         except Exception as exc:
             import logging
             logging.getLogger(__name__).warning("Failed to send rejection email: %s", exc)
+
+        from app.services.telegram import notify_profile_rejected
+        asyncio.create_task(notify_profile_rejected(
+            name=f"{profile.first_name} {profile.last_name or ''}".strip(),
+            admin_notes=data.admin_notes or "",
+        ))
 
         await db.refresh(profile, ["photos"])
         return _serialize_profile(profile, request)
@@ -380,6 +393,15 @@ class AdminController(Controller):
                 await email_svc.send_detail_request_approved(
                     requester.email, profile, profile.photos, photo_bytes_map
                 )
+
+            from app.services.telegram import notify_request_approved
+            asyncio.create_task(notify_request_approved(
+                requester=requester.email if requester else str(req.requester_user_id),
+                profile_name=(
+                    f"{profile.first_name} {profile.last_name or ''}".strip()
+                    if profile else str(req.profile_id)
+                ),
+            ))
         except Exception as exc:
             import logging
             logging.getLogger(__name__).warning("Failed to send approved request email: %s", exc)
@@ -411,6 +433,25 @@ class AdminController(Controller):
         req.admin_notes = data.admin_notes
         req.responded_at = datetime.now(timezone.utc)
         await db.commit()
+
+        try:
+            requester_result = await db.execute(select(User).where(User.id == req.requester_user_id))
+            requester = requester_result.scalar_one_or_none()
+            profile_result = await db.execute(select(Profile).where(Profile.id == req.profile_id))
+            profile = profile_result.scalar_one_or_none()
+
+            from app.services.telegram import notify_request_rejected
+            asyncio.create_task(notify_request_rejected(
+                requester=requester.email if requester else str(req.requester_user_id),
+                profile_name=(
+                    f"{profile.first_name} {profile.last_name or ''}".strip()
+                    if profile else str(req.profile_id)
+                ),
+            ))
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("Failed to send rejected request notification: %s", exc)
+
         await db.refresh(req)
         return _serialize_request(req)
 

@@ -1,5 +1,6 @@
 """Profile CRUD routes."""
 
+import asyncio
 import uuid
 from datetime import date, datetime, time
 from typing import Any
@@ -670,4 +671,12 @@ class ProfileController(Controller):
         await db.commit()
         await db.refresh(profile)
         await db.refresh(profile, ["photos"])
+
+        from app.services.telegram import notify_profile_submitted
+        asyncio.create_task(notify_profile_submitted(
+            profile_id=str(profile.id),
+            name=f"{profile.first_name} {profile.last_name or ''}".strip(),
+            gender=profile.gender.value if profile.gender else "unknown",
+        ))
+
         return _serialize_full_profile(profile, request)

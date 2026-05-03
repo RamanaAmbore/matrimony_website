@@ -28,9 +28,12 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "upload_max_mb": 10,
     "require_face_detection": True,
     "require_admin_approval_for_profiles": True,
+    "matrimony_tg_token": "",
+    "matrimony_tg_chat_id": "",
+    "matrimony_tg_enabled": True,
 }
 
-SENSITIVE_KEYS = {"smtp_password"}
+SENSITIVE_KEYS = {"smtp_password", "matrimony_tg_token"}
 
 
 class SettingsService:

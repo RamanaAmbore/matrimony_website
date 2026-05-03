@@ -21,6 +21,7 @@ from app.routes.search import SearchController
 from app.routes.requests import RequestController
 from app.routes.admin import AdminController
 from app.routes.media import serve_media
+from app.routes.telegram import TelegramRouter
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,6 +42,9 @@ async def lifespan(app: Litestar) -> AsyncGenerator[None, None]:
     async with AsyncSessionLocal() as session:
         await bootstrap(session)
         await settings_service.load(session)
+
+    from app.services.telegram import register_webhook
+    await register_webhook()
 
     logger.info("MarathaKalyanam backend started")
     yield
@@ -81,6 +85,7 @@ app = Litestar(
         RequestController,
         AdminController,
         serve_media,
+        TelegramRouter,
     ],
     middleware=[JWTSessionMiddleware()],
     cors_config=cors_config,

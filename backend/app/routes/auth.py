@@ -1,5 +1,6 @@
 """Authentication routes."""
 
+import asyncio
 import re
 import uuid
 from typing import Any
@@ -166,6 +167,13 @@ class AuthController(Controller):
         except Exception as exc:
             import logging
             logging.getLogger(__name__).warning("Failed to send verification email: %s", exc)
+
+        from app.services.telegram import notify_user_registered
+        asyncio.create_task(notify_user_registered(
+            name=data.user_handle,
+            email=data.email,
+            phone=normalized_phone,
+        ))
 
         return {"user_id": str(user.id)}
 
