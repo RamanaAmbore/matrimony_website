@@ -91,7 +91,7 @@
 						href="/dashboard"
 						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-marigold/55 px-6 font-semibold text-ink shadow-lg transition-all duration-200 hover:bg-marigold hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
-						<span class="leading-tight">My Profiles<br /><span class="text-xs font-normal leading-none" lang="te" style="color: #2b0a0e;">నా ప్రొఫైళ్లు</span></span>
+						<span class="leading-tight">My Profiles<br /><span class="text-sm font-normal leading-none" lang="te" style="color: #2b0a0e;">నా ప్రొఫైళ్లు</span></span>
 					</a>
 				{/if}
 			</div>
