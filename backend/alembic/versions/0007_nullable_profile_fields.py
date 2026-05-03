@@ -8,8 +8,8 @@ Create Date: 2026-05-03
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "0007_nullable_profile_fields"
-down_revision = "0006_add_family_name_fields"
+revision = "0007"
+down_revision = "0006"
 branch_labels = None
 depends_on = None
 
