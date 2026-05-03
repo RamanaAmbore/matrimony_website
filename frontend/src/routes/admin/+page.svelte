@@ -140,7 +140,7 @@
 </script>
 
 <svelte:head>
-	<title>Admin Dashboard — Marathya Kalaynam</title>
+	<title>Admin Dashboard — Maratha Kalyanam</title>
 </svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 py-10">

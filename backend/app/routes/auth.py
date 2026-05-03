@@ -25,10 +25,65 @@ from app.services.jwt_auth import mint_jwt
 from app.services.settings import settings_service
 
 _JWT_COOKIE = "mk_jwt"
+_COOKIE_MAX_AGE = 86400  # 24 hours — must match jwt_auth._EXPIRY_SECONDS
 
 # ^[A-Za-z][A-Za-z0-9_]{2,29}$  →  starts with a letter, then 2–29 alphanumeric/underscore
 # total length: 3–30 characters
 _HANDLE_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]{2,29}$")
+
+# Email: local@domain.tld — same shape as the frontend regex so client and
+# server agree on what is accepted.
+_EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+# Phone: must start with '+', spaces/hyphens/dots stripped before check.
+_PHONE_STRIP_RE = re.compile(r"[\s\-.]")
+_PHONE_RE = re.compile(r"^\+\d{7,17}$")
+
+# Password: at least 8 chars, must contain at least one letter and one digit.
+_PASSWORD_LETTER_RE = re.compile(r"[A-Za-z]")
+_PASSWORD_DIGIT_RE = re.compile(r"\d")
+_PASSWORD_MIN_LEN = 8
+
+
+def _validate_email(value: str) -> None:
+    if not _EMAIL_RE.match(value):
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "invalid_email", "message": "Enter a valid email address"},
+        )
+
+
+def _normalize_phone(value: str) -> str:
+    return _PHONE_STRIP_RE.sub("", value.strip())
+
+
+def _validate_phone(value: str) -> None:
+    if not _PHONE_RE.match(_normalize_phone(value)):
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "invalid_phone",
+                "message": "Phone must start with '+' and include country code (e.g. +91 9840770711).",
+            },
+        )
+
+
+def _validate_password(value: str) -> None:
+    if (
+        len(value) < _PASSWORD_MIN_LEN
+        or not _PASSWORD_LETTER_RE.search(value)
+        or not _PASSWORD_DIGIT_RE.search(value)
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "weak_password",
+                "message": (
+                    "Password must be at least 8 characters and contain "
+                    "at least one letter and one digit."
+                ),
+            },
+        )
 
 
 class AuthController(Controller):
@@ -54,6 +109,12 @@ class AuthController(Controller):
                 },
             )
 
+        _validate_email(data.email)
+        _validate_phone(data.phone_number)
+        _validate_password(data.password)
+
+        normalized_phone = _normalize_phone(data.phone_number)
+
         # Check handle uniqueness (case-insensitive)
         handle_result = await db.execute(
             select(User).where(func.lower(User.user_handle) == data.user_handle.lower())
@@ -74,17 +135,22 @@ class AuthController(Controller):
                 detail={"code": "email_taken", "message": "Email already registered"},
             )
 
-        if len(data.password) < 8:
+        # Check phone uniqueness
+        phone_result = await db.execute(
+            select(User).where(User.phone_number == normalized_phone)
+        )
+        if phone_result.scalar_one_or_none():
             raise HTTPException(
-                status_code=422,
-                detail={"code": "weak_password", "message": "Password must be at least 8 characters"},
+                status_code=409,
+                detail={"code": "phone_taken", "message": "Phone number already registered"},
             )
 
         token = auth_svc.generate_token()
         user = User(
             id=uuid.uuid4(),
             email=data.email.lower(),
-            user_handle=data.user_handle,  # preserve chosen casing for display
+            user_handle=data.user_handle,
+            phone_number=normalized_phone,
             password_hash=auth_svc.hash_password(data.password),
             email_verified=False,
             email_verification_token=token,
@@ -147,7 +213,7 @@ class AuthController(Controller):
         response.set_cookie(
             key=_JWT_COOKIE,
             value=token,
-            max_age=86400,
+            max_age=_COOKIE_MAX_AGE,
             httponly=True,
             samesite="lax",
             secure=IS_PROD,

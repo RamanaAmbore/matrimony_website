@@ -18,6 +18,7 @@ export interface User {
 	user_id: string;
 	user_handle: string;
 	email: string;
+	phone_number: string;
 	is_admin: boolean;
 	email_verified: boolean;
 }
@@ -326,10 +327,15 @@ function buildQuery(params: Record<string, unknown>): string {
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export const auth = {
-	async register(email: string, password: string, user_handle: string): Promise<{ user_id: string }> {
+	async register(
+		email: string,
+		password: string,
+		user_handle: string,
+		phone_number: string
+	): Promise<{ user_id: string }> {
 		return request('/api/auth/register', {
 			method: 'POST',
-			body: JSON.stringify({ email, password, user_handle })
+			body: JSON.stringify({ email, password, user_handle, phone_number })
 		});
 	},
 

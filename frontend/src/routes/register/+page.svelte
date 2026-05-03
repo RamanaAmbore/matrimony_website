@@ -8,9 +8,14 @@
 	import { asciiOnly } from '$lib/inputFilters';
 
 	const HANDLE_RE = /^[A-Za-z][A-Za-z0-9_]{2,29}$/;
+	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	const PHONE_DIGITS_RE = /^\+\d{7,17}$/;
+	const PASSWORD_LETTER_RE = /[A-Za-z]/;
+	const PASSWORD_DIGIT_RE = /\d/;
 
 	let user_handle = $state('');
 	let email = $state('');
+	let phone_number = $state('+91 ');
 	let password = $state('');
 	let confirmPassword = $state('');
 	let loading = $state(false);
@@ -24,6 +29,26 @@
 			if (!/^[A-Za-z]/.test(value)) return 'Must start with a letter';
 			return 'Only letters, digits and underscore allowed';
 		}
+		return '';
+	}
+
+	function normalizePhone(value: string): string {
+		return value.replace(/[\s\-.]/g, '').trim();
+	}
+
+	function validatePhone(value: string): string {
+		if (!value.trim()) return 'Phone number is required';
+		if (!PHONE_DIGITS_RE.test(normalizePhone(value))) {
+			return "Must start with '+', include country code (e.g. +91 9840770711)";
+		}
+		return '';
+	}
+
+	function validatePassword(value: string): string {
+		if (!value) return 'Password is required';
+		if (value.length < 8) return 'At least 8 characters required';
+		if (!PASSWORD_LETTER_RE.test(value)) return 'Must contain at least one letter';
+		if (!PASSWORD_DIGIT_RE.test(value)) return 'Must contain at least one digit';
 		return '';
 	}
 
@@ -42,9 +67,11 @@
 		const handleMsg = validateHandle(user_handle);
 		if (handleMsg) e.user_handle = handleMsg;
 		if (!email.trim()) e.email = 'Email is required';
-		else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Enter a valid email';
-		if (!password) e.password = 'Password is required';
-		else if (password.length < 8) e.password = 'At least 8 characters required';
+		else if (!EMAIL_RE.test(email)) e.email = 'Enter a valid email';
+		const phoneMsg = validatePhone(phone_number);
+		if (phoneMsg) e.phone_number = phoneMsg;
+		const pwMsg = validatePassword(password);
+		if (pwMsg) e.password = pwMsg;
 		if (password !== confirmPassword) e.confirmPassword = 'Passwords do not match';
 		errors = e;
 		return Object.keys(e).length === 0;
@@ -56,7 +83,12 @@
 
 		loading = true;
 		try {
-			await auth.register(email.trim(), password, user_handle.trim());
+			await auth.register(
+				email.trim(),
+				password,
+				user_handle.trim(),
+				phone_number.trim()
+			);
 			toastStore.success('Account created! Please check your email to verify.');
 			goto('/login');
 		} catch (err) {
@@ -64,10 +96,18 @@
 				if (err.status === 409) {
 					if (err.code === 'handle_taken') {
 						errors = { user_handle: 'This user ID is already taken — pick another' };
+					} else if (err.code === 'phone_taken') {
+						errors = { phone_number: 'This phone number is already registered' };
 					} else {
 						// email_taken or generic 409
 						errors = { email: 'An account with this email already exists — login or use a different email' };
 					}
+				} else if (err.status === 422) {
+					if (err.code === 'invalid_email') errors = { email: err.message };
+					else if (err.code === 'invalid_phone') errors = { phone_number: err.message };
+					else if (err.code === 'weak_password') errors = { password: err.message };
+					else if (err.code === 'invalid_handle') errors = { user_handle: err.message };
+					else toastStore.error(err.message.slice(0, 80));
 				} else {
 					toastStore.error(err.message.slice(0, 60));
 				}
@@ -81,7 +121,7 @@
 </script>
 
 <svelte:head>
-	<title>Register — Marathya Kalaynam</title>
+	<title>Register — Maratha Kalyanam</title>
 </svelte:head>
 
 <div class="mx-auto max-w-md px-4 py-16">
@@ -90,7 +130,7 @@
 			{T.register.en}
 			<span class="ml-2 text-xl font-normal text-ink/50" lang="te">{T.register.te}</span>
 		</h1>
-		<p class="mt-1 text-sm text-ink/60">Join the Marathya Kalaynam community</p>
+		<p class="mt-1 text-sm text-ink/60">Join the Maratha Kalyanam community</p>
 	</div>
 
 	<KalashaDivider />
@@ -145,6 +185,32 @@
 			{/if}
 		</div>
 
+		<!-- Phone number -->
+		<div>
+			<label for="phone_number" class="label block">
+				<span class="block">Phone number</span>
+				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">ఫోన్ నంబర్</span>
+			</label>
+			<input
+				id="phone_number"
+				type="tel"
+				autocomplete="tel"
+				inputmode="tel"
+				class="input"
+				class:border-vermilion={errors.phone_number}
+				bind:value={phone_number}
+				placeholder="+91 9840770711"
+				spellcheck="false"
+			/>
+			{#if errors.phone_number}
+				<p class="mt-1 text-xs text-vermilion">{errors.phone_number}</p>
+			{:else}
+				<p class="mt-1 text-xs text-ink/50 leading-snug">
+					Include country code, e.g. <span class="font-mono">+91 9840770711</span>
+				</p>
+			{/if}
+		</div>
+
 		<!-- Password -->
 		<div>
 			<label for="password" class="label block">
@@ -158,10 +224,14 @@
 				class="input"
 				class:border-vermilion={errors.password}
 				bind:value={password}
-				placeholder="Min. 8 characters"
+				placeholder="Min. 8 chars · letter + digit"
 			/>
 			{#if errors.password}
 				<p class="mt-1 text-xs text-vermilion">{errors.password}</p>
+			{:else}
+				<p class="mt-1 text-xs text-ink/50 leading-snug">
+					At least 8 characters · must contain a letter and a digit
+				</p>
 			{/if}
 		</div>
 

@@ -21,11 +21,21 @@ def _unique_handle() -> str:
     return f"u{uuid.uuid4().hex[:7]}"
 
 
-def _reg_payload(email: str, password: str = "ValidPass123!", handle: str | None = None) -> dict:
+def _unique_phone() -> str:
+    return f"+1{uuid.uuid4().int % 10**10:010d}"
+
+
+def _reg_payload(
+    email: str,
+    password: str = "ValidPass123!",
+    handle: str | None = None,
+    phone: str | None = None,
+) -> dict:
     return {
         "email": email,
         "password": password,
         "user_handle": handle or _unique_handle(),
+        "phone_number": phone or _unique_phone(),
     }
 
 
@@ -54,9 +64,81 @@ async def test_register_missing_handle(client: AsyncClient) -> None:
     """Register without user_handle → 422."""
     resp = await client.post(
         "/auth/register",
-        json={"email": f"x_{uuid.uuid4().hex[:6]}@example.com", "password": "ValidPass123!"},
+        json={
+            "email": f"x_{uuid.uuid4().hex[:6]}@example.com",
+            "password": "ValidPass123!",
+            "phone_number": _unique_phone(),
+            # user_handle intentionally omitted
+        },
     )
     assert resp.status_code == 422, resp.text
+
+
+async def test_register_invalid_email(client: AsyncClient) -> None:
+    """Malformed email → 422 invalid_email."""
+    resp = await client.post(
+        "/auth/register",
+        json=_reg_payload("not-an-email"),
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["detail"]["code"] == "invalid_email"
+
+
+async def test_register_password_no_digit(client: AsyncClient) -> None:
+    """Password without a digit → 422 weak_password."""
+    email = f"pw_{uuid.uuid4().hex[:6]}@example.com"
+    resp = await client.post(
+        "/auth/register",
+        json=_reg_payload(email, password="OnlyLetters"),
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["detail"]["code"] == "weak_password"
+
+
+async def test_register_password_no_letter(client: AsyncClient) -> None:
+    """Password with only digits → 422 weak_password."""
+    email = f"pw2_{uuid.uuid4().hex[:6]}@example.com"
+    resp = await client.post(
+        "/auth/register",
+        json=_reg_payload(email, password="12345678"),
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["detail"]["code"] == "weak_password"
+
+
+async def test_register_password_too_short(client: AsyncClient) -> None:
+    """Password under 8 chars → 422 weak_password."""
+    email = f"pw3_{uuid.uuid4().hex[:6]}@example.com"
+    resp = await client.post(
+        "/auth/register",
+        json=_reg_payload(email, password="ab12"),
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["detail"]["code"] == "weak_password"
+
+
+async def test_register_bootstrap_style_password_accepted(client: AsyncClient) -> None:
+    """The bootstrap admin password 'rambo1234' meets the rules."""
+    email = f"rb_{uuid.uuid4().hex[:6]}@example.com"
+    resp = await client.post(
+        "/auth/register",
+        json=_reg_payload(email, password="rambo1234"),
+    )
+    assert resp.status_code == 201, resp.text
+
+
+async def test_register_duplicate_phone(client: AsyncClient) -> None:
+    """Duplicate phone → 409 phone_taken."""
+    phone = _unique_phone()
+    email1 = f"dphone1_{uuid.uuid4().hex[:6]}@example.com"
+    email2 = f"dphone2_{uuid.uuid4().hex[:6]}@example.com"
+
+    resp = await client.post("/auth/register", json=_reg_payload(email1, phone=phone))
+    assert resp.status_code == 201, resp.text
+
+    resp = await client.post("/auth/register", json=_reg_payload(email2, phone=phone))
+    assert resp.status_code == 409, resp.text
+    assert resp.json()["detail"]["code"] == "phone_taken"
 
 
 async def test_register_invalid_handle_starts_with_digit(client: AsyncClient) -> None:

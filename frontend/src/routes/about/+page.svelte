@@ -3,19 +3,19 @@
 </script>
 
 <svelte:head>
-	<title>About — Marathya Kalaynam</title>
+	<title>About — Maratha Kalyanam</title>
 </svelte:head>
 
 <div class="mx-auto max-w-3xl px-4 py-16">
 	<h1 class="mb-2 font-serif text-4xl font-bold text-terracotta">About Us</h1>
-	<p class="mb-8 text-ink/60">Marathya Kalaynam · <span lang="te">మరాఠా కల్యాణం</span> — Our Story</p>
+	<p class="mb-8 text-ink/60">Maratha Kalyanam · <span lang="te">మరాఠా కల్యాణం</span> — Our Story</p>
 
 	<KalashaDivider />
 
 	<div class="prose-ink prose mt-8 max-w-none">
 		<h2 class="font-serif text-2xl font-semibold text-terracotta">Our Mission</h2>
 		<p class="mt-3 text-ink/80">
-			Marathya Kalaynam was founded with a simple purpose: to help Maratha families find compatible
+			Maratha Kalyanam was founded with a simple purpose: to help Maratha families find compatible
 			life partners who share their cultural heritage, values, and traditions. We serve families
 			across Andhra Pradesh, Telangana, Maharashtra and other states — and wherever this vibrant
 			community has settled worldwide.
