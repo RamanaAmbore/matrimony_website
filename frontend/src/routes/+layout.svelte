@@ -358,8 +358,8 @@
 				</h3>
 				<ul class="space-y-2 text-sm text-cream/80">
 					<li>
-						<a href="mailto:admin@marathakalyanam.com" class="hover:text-marigold">
-							admin@marathakalyanam.com
+						<a href="mailto:admin.marathakalyanam@gmail.com" class="hover:text-marigold">
+							admin.marathakalyanam@gmail.com
 						</a>
 					</li>
 					<li class="text-cream/60">Andhra Pradesh · Telangana</li>

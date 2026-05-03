@@ -77,11 +77,11 @@
 			</h2>
 			<p class="mt-1 text-ink/80">
 				For queries, please email
-				<a href="mailto:admin@marathakalyanam.com" class="text-saffron hover:underline">
-					admin@marathakalyanam.com
+				<a href="mailto:admin.marathakalyanam@gmail.com" class="text-saffron hover:underline">
+					admin.marathakalyanam@gmail.com
 				</a>.
 				<span class="block mt-2" lang="te">
-					సందేహాల కోసం దయచేసి admin@marathakalyanam.com కు ఇమెయిల్ పంపండి.
+					సందేహాల కోసం దయచేసి admin.marathakalyanam@gmail.com కు ఇమెయిల్ పంపండి.
 				</span>
 			</p>
 		</section>
