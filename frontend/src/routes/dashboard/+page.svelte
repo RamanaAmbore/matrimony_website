@@ -4,6 +4,7 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { ApiError } from '$lib/api';
 	import { Plus, User, Edit, Loader, SendHorizonal } from 'lucide-svelte';
+	import { goto } from '$app/navigation';
 	import { T } from '$lib/i18n';
 
 	let { data } = $props();
@@ -117,7 +118,13 @@
 	{:else}
 		<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{#each profileList as profile (profile.id)}
-				<div class="card flex flex-col gap-3">
+				<div
+					class="card flex flex-col gap-3 cursor-pointer"
+					role="link"
+					tabindex="0"
+					onclick={(e) => { if ((e.target as HTMLElement).closest('button, a')) return; goto(`/profiles/${profile.id}`); }}
+					onkeydown={(e) => { if (e.key === 'Enter') goto(`/profiles/${profile.id}`); }}
+				>
 					<div class="flex items-start justify-between">
 						<div>
 							<h2 class="font-serif text-lg font-semibold text-maroon">

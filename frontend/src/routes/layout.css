@@ -57,6 +57,8 @@
 	   #c87800 is darker than saffron (#f4a300) and stays readable on cream (#fff8e7). */
 	[lang="te"] {
 		color: var(--color-marigold);
+		-webkit-text-stroke: 0.3px currentColor;
+		paint-order: stroke fill;
 	}
 
 	/* Slightly stronger shadow on dark backgrounds for legibility */
@@ -96,9 +98,14 @@
 			0 0 20px rgba(244, 163, 0, 0.3);
 	}
 
-	/* Tint the logo image to saffron/orange to match the accent palette */
-	.logo-ring img {
-		filter: brightness(0) saturate(100%) invert(73%) sepia(51%) saturate(2878%) hue-rotate(2deg) brightness(104%);
+	/* Suppress browser autofill yellow background on cream inputs */
+	input:-webkit-autofill,
+	input:-webkit-autofill:hover,
+	input:-webkit-autofill:focus,
+	textarea:-webkit-autofill {
+		-webkit-box-shadow: 0 0 0 40px var(--color-cream) inset !important;
+		-webkit-text-fill-color: var(--color-ink) !important;
+		transition: background-color 5000s ease-in-out 0s;
 	}
 }
 

@@ -198,10 +198,10 @@
 				</button>
 			{:else}
 				<a href="/login" class="whitespace-nowrap rounded border border-cream px-3 py-0.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">
-					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.login.te}</span>
+					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te" style="color:inherit">{T.login.te}</span>
 				</a>
 				<a href="/register" class="whitespace-nowrap rounded px-3 py-0.5 text-sm font-medium text-maroon transition-all duration-200 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-cream" style="background:#fde8b0;">
-					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.register.te}</span>
+					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te" style="color:inherit">{T.register.te}</span>
 				</a>
 			{/if}
 		</nav>
@@ -319,7 +319,7 @@
 					class="flex items-center gap-2 rounded-lg bg-tangerine px-3 py-2.5 text-cream hover:bg-marigold hover:text-ink"
 					onclick={closeDrawer}
 				>
-					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.register.te}</span>
+					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te" style="color:inherit">{T.register.te}</span>
 				</a>
 			{/if}
 		</nav>
