@@ -12,12 +12,25 @@ requests, manage users, and adjust settings.
 Currently, the first admin is bootstrapped automatically on initial deployment (see
 [First-time bootstrap](#first-time-bootstrap)).
 
+### Approving new users
+
+After a user verifies their email, they appear in the **Users** tab with `Approved: No`. Admin
+must click **Approve** to allow them to create profiles. Users receive an email confirmation
+when approved. Admins can also revoke approval (sets is_approved=false).
+
+The Users tab uses an interactive ag-Grid table — click a row to select a user, then use the
+action panel below to:
+- **Approve** (sets is_approved=true)
+- **Revoke Approval** (sets is_approved=false)
+- **Verify Email** (marks email_verified=true, useful if needed)
+- **Make Admin** (grants admin privileges)
+
 ### Promoting another user to admin
 
 1. Log in as an admin
 2. Go to **Admin > Users**
-3. Find the user you want to promote
-4. Click **Promote**
+3. Click a row to select a user
+4. In the action panel, click **Make Admin**
 5. They will now see the **Admin** link in the top navigation
 
 **Note:** Only admins can promote other users. Make sure you trust them before granting access.
@@ -130,6 +143,8 @@ The Settings page is the **only safe place to enter sensitive data** (SMTP crede
 | upload_max_mb | int | 10 | Max file upload size (MB) | Yes |
 | require_face_detection | bool | true | Enforce single-face photo validation via OpenCV. If false, any photo is accepted. | Yes |
 | require_admin_approval_for_profiles | bool | true | If true: profiles go to pending on submit, admin must approve. If false: auto-approve on submit. | Yes |
+| is_prod | bool | false | When true: reject duplicate email/phone registrations (production mode). When false: allow multiple accounts with same contact info (testing mode). | Yes |
+| site_url | string | https://marathakalyanam.com | Base URL injected into all email templates for links (verify_email, approve, etc.). Update if domain changes. | Yes |
 
 ### Common adjustments
 
@@ -140,13 +155,27 @@ The Settings page is the **only safe place to enter sensitive data** (SMTP crede
 
 **⚠️ SMTP credentials are sensitive:** never log them, never put them in `.env` (bootstrap secrets only). Use the Settings UI.
 
+## Sending a broadcast email
+
+From the admin dashboard, go to the **Broadcast Email** tab. Fill in:
+- **Subject:** Email subject line (recommended: include your org name)
+- **Message:** Plain text or simple HTML for the email body
+
+Choose audience filters:
+- **Only email-verified users:** Include only users who have verified their email
+- **Only admin-approved users:** Include only users who have been admin-approved
+
+Click **Send Broadcast**. The result shows how many emails were delivered vs failed. Emails are
+sent using the configured SMTP credentials and use the same branded template. Use this for
+announcements, feature updates, or important notices.
+
 ## Bootstrap & first-time setup
 
 ### On first startup
 
 When the backend service starts for the first time (fresh database), it automatically:
 
-1. Runs Alembic migrations (0001 through 0010) to create the database schema and all fields
+1. Runs Alembic migrations (0001 through 0011) to create the database schema and all fields
 2. Seeds default settings from [CLAUDE.md#settings-keys](CLAUDE.md#settings-keys)
 3. Creates a bootstrap admin user at the `OWNER_EMAIL` address (default:
    admin.marathakalyanam@gmail.com)
@@ -190,8 +219,15 @@ After bootstrap, complete these steps:
 
 4. **Configure SMTP:**
    - Go to **Admin > Settings**
+   - For Gmail: use `smtp.gmail.com`, port `587`, your Gmail address, and an App Password
+     (not your regular password). Generate App Passwords at myaccount.google.com/apppasswords
    - Set `smtp_host`, `smtp_port`, `smtp_user`, `smtp_password`
    - Test by submitting a profile; you should receive an approval notification email
+
+5. **Enable production mode (when ready to go live):**
+   - Go to **Admin > Settings**
+   - Set `is_prod=true` to prevent duplicate accounts (same email/phone can't register twice)
+   - Leave `is_prod=false` during testing to allow multiple accounts with same contact info
 
 ### Password recovery
 
@@ -251,6 +287,7 @@ This script:
 1. Pulls latest code from the repository
 2. Rebuilds and restarts both services
 3. Runs database migrations (if schema changes exist)
+4. Sends a Telegram notification on completion to the configured bot
 
 ### Database migrations after schema changes
 

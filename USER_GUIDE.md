@@ -20,9 +20,15 @@ profiles are reviewed by our team before being published, ensuring quality and s
    - **Password:** At least 8 characters (required)
 3. We'll send you a verification link to your email
 4. Click the link to verify your email
-5. You're ready to create your first profile
+5. An admin will review and approve your account within 24–48 hours. You'll receive an email
+   once approved.
+6. You're ready to create your first profile
 
 ## Adding a profile
+
+Note: You must be email-verified AND admin-approved before you can create profiles. If you're
+verified but not yet approved, the dashboard will show a notice and the New Profile button
+will be unavailable.
 
 You can add profiles for yourself or other family members (e.g. siblings, children).
 
@@ -69,7 +75,9 @@ approve it (so it appears in searches) or ask for changes.
 - **Annual income (optional):** Gross annual income in INR; private and not shown in search
 
 **Location:**
-- **City, State, Country:** Where you live
+- **City:** Where you live
+- **State:** Indian states and union territories (all 36 listed; select or type)
+- **Country:** Dropdown with India, USA, UK, UAE listed first, plus ~30 more countries
 - **Pin code:** Postal code (for local search)
 - **Native place:** Your hometown or ancestral village
 
@@ -100,8 +108,9 @@ approve it (so it appears in searches) or ask for changes.
 - **Manglik:** Does your horoscope show Mangal dosha? (important for many families)
 
 **Communication:**
-- **Mother tongue:** Language spoken at home; choose from Telugu, Marathi, Kannada, Tamil, or
-  enter a custom language (default: Telugu)
+- **Mother tongue:** Language spoken at home; choose from a dropdown list (Telugu, Marathi,
+  Kannada, Tamil, Hindi, Malayalam, Gujarati, Bengali, Punjabi, Odia, Urdu) or type your
+  own (default: Telugu)
 - **About you:** A personal note about yourself (interests, values, what you're seeking)
 - **Partner expectations:** What you're looking for in a match
 
@@ -156,8 +165,9 @@ This information is private and visible only to you.
    - **Gender:** Bride or groom
    - **Age range:** Drag the slider to set min and max age
    - **Gotra, sub-caste, nakshatram, rashi:** Astrological preferences
-   - **Location:** City, state, country, pin code
-   - **Mother tongue:** Language preference
+   - **Location:** City, state (select or type), country (dropdown), pin code
+   - **Mother tongue:** Select from dropdown list (Telugu, Marathi, Kannada, Tamil, Hindi,
+     Malayalam, Gujarati, Bengali, Punjabi, Odia, Urdu) or type your own
    - **Manglik status:** Match or exclude based on Mangal dosha
    - **Diet:** Vegetarian, non-vegetarian, or eggetarian
 3. Results show approved profiles with partial information and blurred photos
@@ -218,6 +228,11 @@ seriously.
 **Can I contact someone without requesting full details?**
 Not yet. Our system ensures mutual interest: both parties must approve a request before
 exchanging contact info. This prevents spam and protects privacy.
+
+**Why can't I create a profile yet?**
+If your email is verified but you see a notice saying your account is pending approval, an
+admin needs to approve your account first. This usually takes 24–48 hours. Once approved,
+you'll be able to create profiles and search the site.
 
 **I'm having technical issues. What should I do?**
 Email **admin.marathakalyanam@gmail.com** with a description of the issue, and we'll help.
