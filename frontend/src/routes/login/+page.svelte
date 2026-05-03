@@ -80,7 +80,7 @@
 					class:border-vermilion={errors.identifier}
 					bind:value={identifier}
 					oninput={(ev) => { identifier = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
-					placeholder="ramesh_kulkarni  or  you@example.com"
+					placeholder="ramana_ambore  or  you@example.com"
 					spellcheck="false"
 				/>
 				{#if errors.identifier}

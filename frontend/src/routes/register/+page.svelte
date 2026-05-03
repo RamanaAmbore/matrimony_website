@@ -152,7 +152,7 @@
 				bind:value={user_handle}
 				oninput={(ev) => { user_handle = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
 				onblur={handleBlur}
-				placeholder="ramesh_kulkarni"
+				placeholder="ramana_ambore"
 				maxlength="30"
 				spellcheck="false"
 			/>
