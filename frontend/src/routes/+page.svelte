@@ -53,6 +53,13 @@
 	<!-- Hero text -->
 	<div class="relative z-10 flex min-h-[88vh] flex-col items-center justify-center px-4 text-center">
 		<div class="mx-auto max-w-3xl">
+			<!-- Logo -->
+			<div class="mb-6 flex justify-center">
+				<div class="rounded-full ring-2 ring-gold/40 p-1">
+					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-28 w-auto md:h-36 logo-glow" />
+				</div>
+			</div>
+
 			<!-- Platform description -->
 			<p
 				class="mb-2 max-w-lg text-sm text-cream/90 md:text-base"
