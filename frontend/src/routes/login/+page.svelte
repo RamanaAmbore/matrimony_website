@@ -58,7 +58,7 @@
 		<div class="text-center">
 			<h1 class="font-serif text-3xl font-bold text-maroon">
 				{T.login.en}
-				<span class="ml-2 text-xl font-normal text-ink/50" lang="te">{T.login.te}</span>
+				<span class="ml-2 text-xl font-normal" lang="te">{T.login.te}</span>
 			</h1>
 			<p class="mt-1 text-sm text-ink/60">Sign in to your Maratha Kalyanam account</p>
 		</div>
@@ -70,7 +70,7 @@
 			<div>
 				<label for="identifier" class="label block">
 					<span class="block">{T.identifier.en}</span>
-					<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">{T.identifier.te}</span>
+					<span class="block text-xs font-normal leading-tight" lang="te">{T.identifier.te}</span>
 				</label>
 				<input
 					id="identifier"
@@ -92,7 +92,7 @@
 			<div>
 				<label for="password" class="label block">
 					<span class="block">Password</span>
-					<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">పాస్‌వర్డ్</span>
+					<span class="block text-xs font-normal leading-tight" lang="te">పాస్‌వర్డ్</span>
 				</label>
 				<input
 					id="password"

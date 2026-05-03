@@ -131,7 +131,7 @@
 		<h2 class="mt-6 mb-1 text-center font-serif text-3xl font-semibold text-maroon md:text-4xl">
 			Why Maratha Kalyanam?
 		</h2>
-		<p class="mb-12 text-center text-sm text-ink/50" lang="te">మరాఠా కల్యాణం ఎందుకు?</p>
+		<p class="mb-12 text-center text-sm" lang="te">మరాఠా కల్యాణం ఎందుకు?</p>
 
 		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 			<!-- Community-Focused — oil lamp 🪔 -->
@@ -141,7 +141,7 @@
 					aria-hidden="true"
 				>🪔</div>
 				<h3 class="mb-0.5 font-serif text-xl font-semibold text-maroon">Community-Focused</h3>
-				<p class="mb-2 text-xs text-ink/45" lang="te">సమాజ కేంద్రంగా</p>
+				<p class="mb-2 text-xs" lang="te">సమాజ కేంద్రంగా</p>
 				<p class="text-sm text-ink/80">
 					Built for Maratha families with deep respect for gotra, nakshatram,
 					kuldevata, and devak traditions.
@@ -155,7 +155,7 @@
 					aria-hidden="true"
 				>🛕</div>
 				<h3 class="mb-0.5 font-serif text-xl font-semibold text-maroon">Admin-Verified</h3>
-				<p class="mb-2 text-xs text-ink/45" lang="te">నిర్వాహక ధృవీకరణ</p>
+				<p class="mb-2 text-xs" lang="te">నిర్వాహక ధృవీకరణ</p>
 				<p class="text-sm text-ink/80">
 					Every profile is reviewed and approved by our team before going live.
 					Contact details shared only after mutual interest.
@@ -169,7 +169,7 @@
 					aria-hidden="true"
 				>🪷</div>
 				<h3 class="mb-0.5 font-serif text-xl font-semibold text-maroon">Privacy First</h3>
-				<p class="mb-2 text-xs text-ink/45" lang="te">గోప్యత అగ్రగామి</p>
+				<p class="mb-2 text-xs" lang="te">గోప్యత అగ్రగామి</p>
 				<p class="text-sm text-ink/80">
 					Photos are blurred in search results. Full details are shared only after
 					admin approval of a request.

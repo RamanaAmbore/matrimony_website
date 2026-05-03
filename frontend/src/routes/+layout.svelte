@@ -153,7 +153,7 @@
 			</div>
 			<span class="font-serif text-lg font-semibold leading-tight">
 				<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-				<span class="block text-xs font-normal leading-tight" lang="te" style="color:#f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
+				<span class="block text-xs font-normal leading-tight" lang="te" style="text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
 			</span>
 		</a>
 
@@ -244,7 +244,7 @@
 				</div>
 				<div class="font-serif leading-tight">
 					<span class="block text-sm font-semibold" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-					<span class="block text-xs font-normal" lang="te" style="color:#f4a300; text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
+					<span class="block text-xs font-normal" lang="te" style="text-shadow: 0 0 8px rgba(244,163,0,0.85), 0 0 18px rgba(244,163,0,0.4), 1px 1px 2px rgba(0,0,0,0.9);">మరాఠా కల్యాణం</span>
 				</div>
 			</div>
 			<button
@@ -259,22 +259,22 @@
 		<!-- Drawer nav links -->
 		<nav class="flex flex-col gap-1 p-4" aria-label="Mobile navigation">
 			<a href="/" class={drawerLinkClass('/')} onclick={closeDrawer}>
-				{T.home.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.home.te}</span>
+				{T.home.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.home.te}</span>
 			</a>
 			<a href="/search" class={drawerLinkClass('/search')} onclick={closeDrawer}>
-				{T.search.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.search.te}</span>
+				{T.search.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.search.te}</span>
 			</a>
 			<a href="/about" class={drawerLinkClass('/about')} onclick={closeDrawer}>
-				{T.aboutPage.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.aboutPage.te}</span>
+				{T.aboutPage.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.aboutPage.te}</span>
 			</a>
 
 			{#if user}
 				<div class="my-2 h-px bg-gold/20"></div>
 				<a href="/dashboard" class={drawerLinkClass('/dashboard')} onclick={closeDrawer}>
-					{T.myProfiles.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.myProfiles.te}</span>
+					{T.myProfiles.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.myProfiles.te}</span>
 				</a>
 				<a href="/requests" class={drawerLinkClass('/requests')} onclick={closeDrawer}>
-					{T.requests.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.requests.te}</span>
+					{T.requests.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.requests.te}</span>
 				</a>
 				{#if user.is_admin}
 					<div class="my-2 h-px bg-gold/20"></div>
@@ -301,12 +301,12 @@
 					onclick={logout}
 					class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-vermilion hover:bg-vermilion/10 focus-visible:outline-2 focus-visible:outline-tangerine"
 				>
-					{T.logout.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.logout.te}</span>
+					{T.logout.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.logout.te}</span>
 				</button>
 			{:else}
 				<div class="my-2 h-px bg-gold/20"></div>
 				<a href="/login" class={drawerLinkClass('/login')} onclick={closeDrawer}>
-					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-70" lang="te">{T.login.te}</span>
+					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.82em] font-normal opacity-80" lang="te">{T.login.te}</span>
 				</a>
 				<a
 					href="/register"
@@ -351,7 +351,7 @@
 					</div>
 					<div>
 						<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
-						<p class="text-sm text-cream/75" lang="te">మరాఠా కల్యాణం</p>
+						<p class="text-sm" lang="te">మరాఠా కల్యాణం</p>
 					</div>
 				</div>
 			</div>
