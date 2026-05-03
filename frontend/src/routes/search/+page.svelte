@@ -142,7 +142,7 @@
 
 <div class="mx-auto max-w-7xl px-4 py-8">
 	<div class="mb-6">
-		<h1 class="font-serif text-3xl font-bold text-terracotta">
+		<h1 class="font-serif text-3xl font-bold text-maroon">
 			Find Your Partner
 			<span class="block text-base font-normal sm:inline sm:ml-2" lang="te">
 				· జీవిత భాగస్వామిని కనుగొనండి
@@ -154,7 +154,7 @@
 		<!-- ── Filters sidebar — always visible (no toggle) ────────────────── -->
 		<aside class="w-full shrink-0 md:w-64">
 			<div class="card space-y-4 sticky top-4">
-				<h2 class="font-serif text-lg font-semibold text-terracotta">
+				<h2 class="font-serif text-lg font-semibold text-maroon">
 					Filters · <span lang="te">వడపోత</span>
 				</h2>
 
@@ -322,10 +322,10 @@
 				</div>
 			{:else if results.length === 0}
 				<div class="py-20 text-center">
-					<div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-honey/60 border-2 border-gold/30">
+					<div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-cream/60 border-2 border-gold/30">
 						<Search size={36} class="text-gold/50" />
 					</div>
-					<h2 class="mt-2 font-serif text-xl font-semibold text-terracotta">No profiles found</h2>
+					<h2 class="mt-2 font-serif text-xl font-semibold text-maroon">No profiles found</h2>
 					<p class="mt-2 text-ink/60">Try adjusting your filters.</p>
 				</div>
 			{:else}
@@ -431,7 +431,7 @@
 						{#each Array.from({ length: totalPages }, (_, i) => i + 1) as p}
 							<button
 								onclick={() => goToPage(p)}
-								class="px-3 py-1.5 rounded text-sm font-medium transition-colors {p === page ? 'bg-tangerine text-cream' : 'hover:bg-tangerine/10 text-ink'}"
+								class="px-3 py-1.5 rounded text-sm font-medium transition-colors {p === page ? 'bg-maroon text-cream' : 'hover:bg-maroon/10 text-ink'}"
 							>
 								{p}
 							</button>

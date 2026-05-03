@@ -151,7 +151,7 @@
 </svelte:head>
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
-<header class="shadow-md border-b border-gold/40" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
+<header class="shadow-md border-t-4 border-saffron border-b border-gold/40" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
 	<div class="mx-auto flex w-full max-w-5xl items-center justify-center gap-4 px-4 py-2">
 		<!-- Brand wordmark — shrink-0 keeps it from compressing -->
 		<a
