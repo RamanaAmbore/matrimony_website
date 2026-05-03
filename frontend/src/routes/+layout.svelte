@@ -378,7 +378,7 @@
 			</p>
 			<p>
 				Designed &amp; developed by
-				<span class="font-semibold text-marigold">Rambo Quant Analytics LLP</span>
+				<span class="font-semibold text-marigold">Ambore Software</span>
 			</p>
 		</div>
 	</div>
