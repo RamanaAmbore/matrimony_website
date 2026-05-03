@@ -353,9 +353,9 @@
 			<div class="md:col-span-2">
 				<div class="flex items-center gap-3">
 					<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto" /></div>
-					<div>
-						<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
-						<p class="text-lg" lang="te">మరాఠా కల్యాణం</p>
+					<div class="leading-tight">
+						<p class="font-serif text-xl font-semibold text-cream leading-none">Maratha Kalyanam</p>
+						<p class="text-lg leading-snug" lang="te">మరాఠా కల్యాణం</p>
 					</div>
 				</div>
 			</div>
