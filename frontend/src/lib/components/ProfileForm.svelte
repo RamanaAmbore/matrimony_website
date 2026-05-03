@@ -154,7 +154,7 @@
 	// Per-section mandatory field check — drives Save button enabled/disabled
 	function isSectionValid(n: number): boolean {
 		switch (n) {
-			case 0: return !!first_name.trim() && !!last_name.trim() && !!dob;
+			case 0: return !!first_name.trim() && !!surname_clan.trim() && !!dob;
 			case 1: return true; // height has a default
 			case 2: return !!gotra.trim() && !!nakshatram && !!rashi;
 			case 3: return !!education.trim() && !!occupation.trim();
@@ -311,7 +311,7 @@
 	function validateSave(): boolean {
 		const e: Record<string, string> = {};
 		if (!first_name.trim()) e.first_name = 'Required';
-		if (!last_name.trim()) e.last_name = 'Required';
+		if (!surname_clan.trim()) e.surname_clan = 'Required';
 		if (!dob) e.dob = 'Date of birth is required';
 		else {
 			const age = new Date().getFullYear() - new Date(dob).getFullYear();
@@ -378,7 +378,7 @@
 		return {
 			gender,
 			first_name: first_name.trim(),
-			last_name: last_name.trim(),
+			last_name: surname_clan.trim(),
 			dob,
 			marital_status: (marital_status || null) as MaritalStatus | null,
 			mother_tongue: mother_tongue.trim(),
@@ -562,12 +562,15 @@
 									{#if errors.first_name}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.first_name}</p>{/if}
 								</div>
 
-								<!-- Last Name -->
+								<!-- Surname / Clan (required) -->
 								<div>
-									<BilingualLabel key="lastName" for="last_name" required />
-									<input id="last_name" type="text" class="input" class:border-vermilion={errors.last_name} bind:value={last_name} oninput={(e) => (last_name = asciiOnly(e.currentTarget.value))} />
+									<BilingualLabel key="surnameClan" for="surname_clan" required />
+									<input id="surname_clan" type="text" class="input" class:border-vermilion={errors.surname_clan}
+										bind:value={surname_clan}
+										oninput={(e) => (surname_clan = asciiOnly(e.currentTarget.value))} />
+									<p class="mt-0.5 text-xs text-ink/45">Your family/clan surname, e.g. Desai, Patil, More · కుటుంబ పేరు</p>
 									<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-									{#if errors.last_name}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.last_name}</p>{/if}
+									{#if errors.surname_clan}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.surname_clan}</p>{/if}
 								</div>
 
 								<!-- Date of Birth -->
@@ -594,15 +597,6 @@
 									<BilingualLabel key="motherTongue" for="mother_tongue" />
 									<input id="mother_tongue" type="text" class="input" bind:value={mother_tongue} oninput={(e) => (mother_tongue = asciiOnly(e.currentTarget.value))} placeholder="Telugu" />
 									<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-								</div>
-
-								<!-- Surname / Clan -->
-								<div>
-									<BilingualLabel key="surnameClan" for="surname_clan" />
-									<input id="surname_clan" type="text" class="input" class:border-vermilion={errors.surname_clan} bind:value={surname_clan} oninput={(e) => (surname_clan = asciiOnly(e.currentTarget.value))} />
-									<p class="mt-0.5 text-xs text-ink/45">Your family/clan surname, e.g. Desai, Patil, More · కుటుంబ పేరు</p>
-									<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-									{#if errors.surname_clan}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.surname_clan}</p>{/if}
 								</div>
 
 								<!-- Sub-caste (optional) -->
@@ -1075,6 +1069,24 @@
 	{/each}
 </div>
 
+{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
+	{@const allDone = SECTIONS.every((_, i) => completedSections.has(i) || i === SECTIONS.length - 1)}
+	{#if allDone || completedSections.size >= SECTIONS.length - 1}
+		<div class="mt-8 rounded-lg border border-gold/30 bg-white p-6 text-center shadow-sm">
+			<h3 class="mb-1 font-serif text-xl font-semibold text-maroon">Ready to Submit?</h3>
+			<p class="mb-4 text-sm text-ink/60">Once submitted, your profile goes to admin for review. Only approved profiles appear in search results.</p>
+			<button
+				type="button"
+				onclick={() => onSubmitForApproval?.()}
+				class="btn-primary px-10 py-3 text-base"
+				disabled={submittingForApproval}
+			>
+				{submittingForApproval ? 'Submitting…' : 'Submit for Approval'}
+			</button>
+		</div>
+	{/if}
+{/if}
+
 {:else}
 	<!-- ══════════════════════════════════════════════════════════════════════ -->
 	<!-- NORMAL MODE (edit page — all sections open)                          -->
@@ -1134,23 +1146,6 @@
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 					{#if errors.first_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
 							{errors.first_name}
-						</p>{/if}
-				</div>
-
-				<!-- Last Name -->
-				<div>
-					<BilingualLabel key="lastName" for="last_name" required />
-					<input
-						id="last_name"
-						type="text"
-						class="input"
-						class:border-vermilion={errors.last_name}
-						bind:value={last_name}
-						oninput={(e) => (last_name = asciiOnly(e.currentTarget.value))}
-					/>
-					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-					{#if errors.last_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
-							{errors.last_name}
 						</p>{/if}
 				</div>
 
