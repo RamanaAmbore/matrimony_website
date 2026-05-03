@@ -148,7 +148,7 @@
 			href="/"
 			class="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-cream"
 		>
-			<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-10 w-auto drop-shadow-md" />
+			<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-10 w-auto logo-glow" />
 			<span class="font-serif text-lg font-semibold leading-tight text-cream">
 				<span class="block leading-none">Maratha Kalyanam</span>
 				<span class="block text-xs font-normal text-cream/70 leading-tight" lang="te">మరాఠా కల్యాణం</span>
@@ -237,7 +237,7 @@
 			style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);"
 		>
 			<div class="flex items-center gap-2">
-				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto drop-shadow-md" />
+				<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto logo-glow" />
 				<div class="font-serif leading-tight text-cream">
 					<span class="block text-sm font-semibold">Maratha Kalyanam</span>
 					<span class="block text-xs font-normal text-cream/70" lang="te">మరాఠా కల్యాణం</span>
@@ -342,7 +342,7 @@
 			<!-- Brand column -->
 			<div class="md:col-span-2">
 				<div class="mb-3">
-					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto drop-shadow-lg" />
+					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto logo-glow" />
 				</div>
 				<div class="mt-1">
 					<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
