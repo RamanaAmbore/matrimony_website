@@ -158,7 +158,7 @@
 		</a>
 
 		<!-- Desktop nav — nowrap prevents each item from breaking across lines -->
-		<nav class="hidden items-center gap-4 md:flex" aria-label="Main navigation">
+		<nav class="ml-8 hidden items-center gap-4 md:flex" aria-label="Main navigation">
 			<a href="/" class="whitespace-nowrap text-base {navLinkClass('/')}">
 				{T.home.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.home.te}</span>
 			</a>
