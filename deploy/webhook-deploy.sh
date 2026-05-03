@@ -53,10 +53,10 @@ log "Building frontend"
 
 # --- restart services ---
 log "Restarting $API_SERVICE"
-sudo /bin/systemctl restart "$API_SERVICE"
+sudo /usr/bin/systemctl restart "$API_SERVICE"
 
 log "Restarting $WEB_SERVICE"
-sudo /bin/systemctl restart "$WEB_SERVICE"
+sudo /usr/bin/systemctl restart "$WEB_SERVICE"
 
 # --- sync hook definitions if changed ---
 HOOKS_SRC="$REPO_DIR/deploy/webhook/hooks.snippet.json"
@@ -68,3 +68,19 @@ if [[ -f "$SYNC_SCRIPT" && -f "$HOOKS_SRC" ]]; then
 fi
 
 log "Deploy complete: $HEAD_SHA"
+
+# --- Telegram notification ---
+# Credentials stored in .env (never in git)
+DOTENV="$REPO_DIR/.env"
+if [[ -f "$DOTENV" ]]; then
+    TG_TOKEN="$(grep -E '^TELEGRAM_BOT_TOKEN=' "$DOTENV" | cut -d= -f2- | tr -d '[:space:]')"
+    TG_CHAT="$(grep -E '^TELEGRAM_CHAT_ID=' "$DOTENV" | cut -d= -f2- | tr -d '[:space:]')"
+    if [[ -n "$TG_TOKEN" && -n "$TG_CHAT" ]]; then
+        IST="$(TZ='Asia/Kolkata' date '+%a, %d %b %Y %I:%M %p IST')"
+        MSG="<b>Maratha Kalyanam — Deploy OK</b>%0A${IST}%0A<code>SHA: ${HEAD_SHA}</code>"
+        curl -s -o /dev/null \
+            "https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT}&text=${MSG}&parse_mode=HTML" \
+            && log "Telegram notification sent" \
+            || log "Telegram notification failed (non-fatal)"
+    fi
+fi
