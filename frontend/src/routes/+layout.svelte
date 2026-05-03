@@ -336,30 +336,64 @@
 </main>
 
 <!-- ── Footer ─────────────────────────────────────────────────────────────── -->
-<footer class="border-t border-gold/30 bg-honey/60 py-8">
+<footer class="border-t border-gold/30 bg-maroon/95 py-10 text-cream">
 	<div class="mx-auto max-w-7xl px-4">
-		<div class="flex flex-col items-center gap-4 text-center md:flex-row md:justify-between md:text-left">
-			<div class="flex items-center gap-3">
-				<Logo size="sm" />
-				<div>
-					<p class="font-serif text-lg font-semibold text-terracotta" lang="te">తెలుగు–మరాఠా కల్యాణ వేదిక</p>
-					<p class="text-xs text-ink/50">Telugu–Maratha Kalyana Vedika</p>
-					<p class="text-sm text-ink/60">Telugu-Maratha matrimonial site</p>
+		<div class="grid gap-8 md:grid-cols-4">
+			<!-- Brand column -->
+			<div class="md:col-span-2">
+				<div class="flex items-center gap-3">
+					<Logo size="sm" />
+					<div>
+						<p class="font-serif text-xl font-semibold text-cream" lang="te">తెలుగు–మరాఠా కల్యాణ వేదిక</p>
+						<p class="text-sm text-cream/75">Telugu–Maratha Kalyana Vedika</p>
+					</div>
 				</div>
+				<p class="mt-3 max-w-md text-sm text-cream/70">
+					The trusted matrimonial platform for the Telugu-Maratha community settled across Andhra Pradesh,
+					Telangana and Maharashtra. Admin-verified profiles. Privacy-first photo sharing. Gotra,
+					nakshatram, kuldevata and devak matching built in.
+				</p>
 			</div>
-			<div class="flex flex-wrap justify-center gap-4 text-sm text-ink/60 md:justify-end">
-				<a href="/about" class="hover:text-tangerine">About</a>
-				<a href="/search" class="hover:text-tangerine">Search</a>
-				<a href="/contact" class="hover:text-tangerine">Contact</a>
-				<a href="/privacy" class="hover:text-tangerine">Privacy</a>
+
+			<!-- Site links -->
+			<div>
+				<h3 class="mb-3 font-serif text-sm font-semibold tracking-wider text-marigold uppercase">
+					Site
+				</h3>
+				<ul class="space-y-2 text-sm text-cream/80">
+					<li><a href="/" class="hover:text-marigold">Home</a></li>
+					<li><a href="/search" class="hover:text-marigold">Search</a></li>
+					<li><a href="/about" class="hover:text-marigold">About</a></li>
+					<li><a href="/register" class="hover:text-marigold">Register</a></li>
+					<li><a href="/login" class="hover:text-marigold">Login</a></li>
+				</ul>
+			</div>
+
+			<!-- Contact -->
+			<div>
+				<h3 class="mb-3 font-serif text-sm font-semibold tracking-wider text-marigold uppercase">
+					Contact
+				</h3>
+				<ul class="space-y-2 text-sm text-cream/80">
+					<li>
+						<a href="mailto:admin@marathakalyanam.com" class="hover:text-marigold">
+							admin@marathakalyanam.com
+						</a>
+					</li>
+					<li class="text-cream/60">Andhra Pradesh · Telangana</li>
+					<li class="text-cream/60">India</li>
+				</ul>
 			</div>
 		</div>
-		<div class="mt-4 flex flex-col items-center gap-1 text-center">
-			<p class="text-xs text-ink/40">
-				© 2026 Telugu–Maratha Kalyana Vedika · marathakalyanam.com ·
-				<a href="mailto:admin@marathakalyanam.com" class="hover:text-tangerine">
-					admin@marathakalyanam.com
-				</a>
+
+		<!-- Bottom bar -->
+		<div class="mt-8 flex flex-col items-center justify-between gap-3 border-t border-gold/30 pt-6 text-xs text-cream/70 md:flex-row">
+			<p>
+				© 2026 Telugu–Maratha Kalyana Vedika · marathakalyanam.com
+			</p>
+			<p>
+				Designed &amp; developed by
+				<span class="font-semibold text-marigold">Ambore Software</span>
 			</p>
 		</div>
 	</div>
