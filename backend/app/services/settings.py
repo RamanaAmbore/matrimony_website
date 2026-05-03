@@ -12,7 +12,7 @@ from app.models.setting import Setting
 
 # Default settings seeded on first startup
 DEFAULT_SETTINGS: dict[str, Any] = {
-    "owner_email": "ramanamborespam@gmail.com",
+    "owner_email": "admin.marathakalyanam@gmail.com",
     "smtp_host": "localhost",
     "smtp_port": 1025,
     "smtp_user": "",

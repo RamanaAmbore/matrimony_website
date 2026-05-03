@@ -114,7 +114,7 @@ The Settings page is the **only safe place to enter sensitive data** (SMTP crede
 
 | Key | Type | Default | Purpose | Edit? |
 |-----|------|---------|---------|-------|
-| owner_email | string | ramanamborespam@gmail.com | Recipient for admin notifications (profile requests, rejections, etc.) | Yes |
+| owner_email | string | admin.marathakalyanam@gmail.com | Recipient for admin notifications (profile requests, rejections, etc.) | Yes |
 | smtp_host | string | localhost | SMTP server hostname (e.g. "mail.example.com"). **IMPORTANT: Never hardcode in code; always set here.** | Yes |
 | smtp_port | int | 1025 | SMTP port (465 = implicit TLS, 587 = STARTTLS) | Yes |
 | smtp_user | string | (empty) | SMTP auth username (leave blank if not needed) | Yes |
@@ -149,14 +149,14 @@ When the backend service starts for the first time (fresh database), it automati
 1. Runs the initial Alembic migration to create the database schema
 2. Seeds default settings from [CLAUDE.md#settings-keys](CLAUDE.md#settings-keys)
 3. Creates a bootstrap admin user at the `OWNER_EMAIL` address (default:
-   ramanamborespam@gmail.com)
+   admin.marathakalyanam@gmail.com)
 
 The startup log shows:
 
 ```
 ======================================================
 BOOTSTRAP ADMIN CREATED
-Email: ramanamborespam@gmail.com
+Email: admin.marathakalyanam@gmail.com
 Temporary password: aB3XyZ9kL2qP5wX
 One-time reset token: 12345abcdef...
 Change your password immediately after first login.
@@ -175,7 +175,7 @@ After bootstrap, complete these steps:
 
 1. **Log in as admin:**
    - Go to https://marathakalyanam.com/login
-   - Email: `ramanamborespam@gmail.com` (or your `OWNER_EMAIL`)
+   - Email: `admin.marathakalyanam@gmail.com` (or your `OWNER_EMAIL`)
    - Password: (the temp password from startup logs)
 
 2. **Change your password immediately:**

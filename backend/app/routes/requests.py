@@ -94,7 +94,7 @@ class RequestController(Controller):
         from app.services import email as email_svc
         from app.services.settings import settings_service
 
-        owner_email = settings_service.get_str("owner_email", "ramanamborespam@gmail.com")
+        owner_email = settings_service.get_str("owner_email", "admin.marathakalyanam@gmail.com")
         result2 = await db.execute(select(User).where(User.id == requester_id))
         requester_user = result2.scalar_one_or_none()
         requester_name = requester_user.email if requester_user else str(requester_id)

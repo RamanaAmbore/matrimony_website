@@ -187,7 +187,7 @@ reviewed independently.
 
 **How do I delete my account?**
 Currently you can delete individual profiles, but to fully delete your account and all data,
-please email **ramanamborespam@gmail.com** with your request. We'll remove all traces of your
+please email **admin.marathakalyanam@gmail.com** with your request. We'll remove all traces of your
 account within 5 business days.
 
 **Is my information safe?**
@@ -195,7 +195,7 @@ Yes. We use encrypted connections, secure passwords, and don't share your detail
 without your consent. Only approved detail requests reveal full information.
 
 **What if I see inappropriate behavior?**
-Please report it immediately to **ramanamborespam@gmail.com**. We take community safety
+Please report it immediately to **admin.marathakalyanam@gmail.com**. We take community safety
 seriously.
 
 **Can I contact someone without requesting full details?**
@@ -203,4 +203,4 @@ Not yet. Our system ensures mutual interest: both parties must approve a request
 exchanging contact info. This prevents spam and protects privacy.
 
 **I'm having technical issues. What should I do?**
-Email **ramanamborespam@gmail.com** with a description of the issue, and we'll help.
+Email **admin.marathakalyanam@gmail.com** with a description of the issue, and we'll help.

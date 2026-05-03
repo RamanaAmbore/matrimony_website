@@ -143,7 +143,7 @@ def upgrade() -> None:
     # Seed default settings
     op.execute("""
         INSERT INTO settings (key, value, updated_at) VALUES
-        ('owner_email', '"ramanamborespam@gmail.com"', NOW()),
+        ('owner_email', '"admin.marathakalyanam@gmail.com"', NOW()),
         ('smtp_host', '"localhost"', NOW()),
         ('smtp_port', '1025', NOW()),
         ('smtp_user', '""', NOW()),

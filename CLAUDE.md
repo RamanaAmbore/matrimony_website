@@ -190,7 +190,7 @@ secrets).
 
 | Key | Type | Default | Purpose |
 |-----|------|---------|---------|
-| owner_email | string | ramanamborespam@gmail.com | Recipient for admin notifications (profile requests, etc.) |
+| owner_email | string | admin.marathakalyanam@gmail.com | Recipient for admin notifications (profile requests, etc.) |
 | smtp_host | string | localhost | SMTP server hostname (empty = logs to stdout) |
 | smtp_port | int | 1025 | SMTP port (465 = TLS, 587 = STARTTLS) |
 | smtp_user | string | (empty) | SMTP auth username |
@@ -240,7 +240,7 @@ Startup logs will show:
 
 ```
 BOOTSTRAP ADMIN CREATED
-Email: ramanamborespam@gmail.com
+Email: admin.marathakalyanam@gmail.com
 Temporary password: <temp_password>
 One-time reset token: <reset_token>
 ```

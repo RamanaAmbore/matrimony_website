@@ -30,7 +30,7 @@ SESSION_SECRET: str = os.environ.get("SESSION_SECRET", "change-me-to-32-random-b
 
 MEDIA_ROOT: Path = Path(os.environ.get("MEDIA_ROOT", "./var/media")).resolve()
 
-OWNER_EMAIL: str = os.environ.get("OWNER_EMAIL", "ramanamborespam@gmail.com")
+OWNER_EMAIL: str = os.environ.get("OWNER_EMAIL", "admin.marathakalyanam@gmail.com")
 
 # CORS
 CORS_ORIGINS: list[str] = os.environ.get(

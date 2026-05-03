@@ -50,7 +50,7 @@ def upgrade() -> None:
         WHERE (lower(user_handle) = 'rambo'
                OR email IN ('rambo@marathakalyanam.com',
                             'ramanaamborespam@gmail.com',
-                            'ramanamborespam@gmail.com'))
+                            'admin.marathakalyanam@gmail.com'))
           AND phone_number IS NULL;
         """
     )
