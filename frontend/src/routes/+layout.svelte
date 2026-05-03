@@ -167,40 +167,40 @@
 
 		<!-- Desktop nav — nowrap prevents each item from breaking across lines -->
 		<nav class="ml-8 hidden items-center gap-4 md:flex" aria-label="Main navigation">
-			<a href="/" class="whitespace-nowrap text-base {navLinkClass('/')}">
+			<a href="/" class="whitespace-nowrap text-sm {navLinkClass('/')}">
 				{T.home.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.home.te}</span>
 			</a>
-			<a href="/search" class="whitespace-nowrap text-base {navLinkClass('/search')}">
+			<a href="/search" class="whitespace-nowrap text-sm {navLinkClass('/search')}">
 				{T.search.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.search.te}</span>
 			</a>
-			<a href="/about" class="whitespace-nowrap text-base {navLinkClass('/about')}">
+			<a href="/about" class="whitespace-nowrap text-sm {navLinkClass('/about')}">
 				{T.aboutPage.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.aboutPage.te}</span>
 			</a>
 
 			{#if user}
-				<a href="/dashboard" class="whitespace-nowrap text-base {navLinkClass('/dashboard')}">
+				<a href="/dashboard" class="whitespace-nowrap text-sm {navLinkClass('/dashboard')}">
 					{T.myProfiles.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.myProfiles.te}</span>
 				</a>
-				<a href="/requests" class="whitespace-nowrap text-base {navLinkClass('/requests')}">
+				<a href="/requests" class="whitespace-nowrap text-sm {navLinkClass('/requests')}">
 					{T.requests.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.requests.te}</span>
 				</a>
 				{#if user.is_admin}
-					<a href="/admin" class="whitespace-nowrap text-base {navLinkClass('/admin')}">
+					<a href="/admin" class="whitespace-nowrap text-sm {navLinkClass('/admin')}">
 						{T.admin.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.admin.te}</span>
 					</a>
 				{/if}
 				<span class="hidden font-mono text-xs text-cream/50 xl:inline" title={user.email}>@{user.user_handle}</span>
 				<button
 					onclick={logout}
-					class="whitespace-nowrap rounded border border-cream/50 px-3 py-1 text-base text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
+					class="whitespace-nowrap rounded border border-cream/50 px-3 py-1 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
 				>
 					{T.logout.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.logout.te}</span>
 				</button>
 			{:else}
-				<a href="/login" class="whitespace-nowrap rounded border border-cream px-3 py-1.5 text-base font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">
+				<a href="/login" class="whitespace-nowrap rounded border border-cream px-3 py-1.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">
 					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.login.te}</span>
 				</a>
-				<a href="/register" class="whitespace-nowrap rounded px-3 py-1.5 text-base font-medium text-maroon transition-all duration-200 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-cream" style="background:#fde8b0;">
+				<a href="/register" class="whitespace-nowrap rounded px-3 py-1.5 text-sm font-medium text-maroon transition-all duration-200 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-cream" style="background:#fde8b0;">
 					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.register.te}</span>
 				</a>
 			{/if}
