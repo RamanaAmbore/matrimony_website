@@ -75,7 +75,7 @@
 					class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-maroon px-6 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 				>
 					<Search size={18} />
-					<span>Find Your Partner<br /><span class="text-xs font-normal" lang="te" style="color:inherit">జీవిత భాగస్వామిని కనుగొనండి</span></span>
+					<span class="leading-tight">Find Your Partner<br /><span class="text-xs font-normal leading-none" lang="te" style="color:inherit">జీవిత భాగస్వామిని కనుగొనండి</span></span>
 				</a>
 
 				{#if !data.user}
@@ -84,14 +84,14 @@
 						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg border border-cream/40 px-6 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
 						<UserPlus size={18} />
-						<span>Create Profile<br /><span class="text-xs font-normal" lang="te" style="color:inherit">ప్రొఫైల్ సృష్టించండి</span></span>
+						<span class="leading-tight">Create Profile<br /><span class="text-xs font-normal leading-none" lang="te" style="color:inherit">ప్రొఫైల్ సృష్టించండి</span></span>
 					</a>
 				{:else}
 					<a
 						href="/dashboard"
 						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-marigold/55 px-6 font-semibold text-ink shadow-lg transition-all duration-200 hover:bg-marigold hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
-						<span>My Profiles<br /><span class="text-xs font-normal" lang="te" style="color: #2b0a0e;">నా ప్రొఫైళ్లు</span></span>
+						<span class="leading-tight">My Profiles<br /><span class="text-xs font-normal leading-none" lang="te" style="color: #2b0a0e;">నా ప్రొఫైళ్లు</span></span>
 					</a>
 				{/if}
 			</div>
