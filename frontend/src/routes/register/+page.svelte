@@ -258,7 +258,7 @@
 			{#if loading}
 				Creating account…
 			{:else}
-				{T.register.en} · <span lang="te">{T.register.te}</span>
+				{T.register.en} · <span lang="te" style="color:inherit">{T.register.te}</span>
 			{/if}
 		</button>
 	</form>

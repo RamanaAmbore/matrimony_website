@@ -106,7 +106,7 @@
 			</div>
 
 			<button type="submit" class="btn-primary w-full py-3" disabled={loading}>
-				{loading ? 'Signing in…' : `${T.login.en} · `}<span lang="te">{loading ? '' : T.login.te}</span>
+				{loading ? 'Signing in…' : `${T.login.en} · `}<span lang="te" style="color:inherit">{loading ? '' : T.login.te}</span>
 			</button>
 		</form>
 
