@@ -16,12 +16,18 @@
 		initialData = {},
 		onSubmit,
 		submitting = false,
-		serverErrors = {}
+		serverErrors = {},
+		onSubmitForApproval = undefined,
+		submittingForApproval = false,
+		profileStatus = ''
 	}: {
 		initialData?: Partial<Profile>;
 		onSubmit: (data: Partial<ProfilePayload>) => void;
 		submitting?: boolean;
 		serverErrors?: Record<string, string>;
+		onSubmitForApproval?: (() => void) | undefined;
+		submittingForApproval?: boolean;
+		profileStatus?: string;
 	} = $props();
 
 	// ── Form state — seeded once from initialData ─────────────────────────────
@@ -1068,17 +1074,31 @@
 		</div>
 	</details>
 
-	<!-- ── Submit ────────────────────────────────────────────────────────────── -->
-	<div class="flex justify-end gap-3 pb-8">
+	<!-- ── Actions ────────────────────────────────────────────────────────────── -->
+	<div class="flex flex-wrap justify-end gap-3 pb-8">
 		<a href="/dashboard" class="btn-secondary">
 			{T.cancel.en} · <span lang="te">{T.cancel.te}</span>
 		</a>
-		<button type="submit" class="btn-primary px-8" disabled={submitting}>
+		<button type="submit" class="btn-secondary px-8" disabled={submitting}>
 			{#if submitting}
 				Saving…
 			{:else}
 				{T.save.en} · <span lang="te">{T.save.te}</span>
 			{/if}
 		</button>
+		{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
+			<button
+				type="button"
+				onclick={onSubmitForApproval}
+				class="btn-primary flex items-center gap-2 px-8"
+				disabled={submittingForApproval}
+			>
+				{#if submittingForApproval}
+					Submitting…
+				{:else}
+					Submit for Approval · <span lang="te">అనుమతి కోసం సమర్పించండి</span>
+				{/if}
+			</button>
+		{/if}
 	</div>
 </form>

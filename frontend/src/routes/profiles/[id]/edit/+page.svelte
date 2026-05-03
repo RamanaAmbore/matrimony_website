@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 	import ProfileForm from '$lib/components/ProfileForm.svelte';
 	import PhotoUpload from '$lib/components/PhotoUpload.svelte';
-	import { Loader, Send } from 'lucide-svelte';
+	import { Loader } from 'lucide-svelte';
 
 	let { data } = $props();
 	// id is fixed for the lifetime of this page — route params don't change without navigation
@@ -105,18 +105,6 @@
 					</span>
 				</p>
 			</div>
-
-			<!-- Submit for approval when draft or rejected -->
-			{#if profile.status === 'draft' || profile.status === 'rejected'}
-				<button
-					onclick={submitForApproval}
-					class="btn-primary flex items-center gap-2"
-					disabled={submittingForApproval}
-				>
-					<Send size={16} />
-					{submittingForApproval ? 'Submitting…' : 'Submit for Approval'}
-				</button>
-			{/if}
 		</div>
 
 
@@ -129,7 +117,15 @@
 		</p>
 
 		<div class="mt-6">
-			<ProfileForm initialData={profile} {submitting} {serverErrors} onSubmit={handleSave} />
+			<ProfileForm
+					initialData={profile}
+					{submitting}
+					{serverErrors}
+					onSubmit={handleSave}
+					onSubmitForApproval={submitForApproval}
+					{submittingForApproval}
+					profileStatus={profile.status}
+				/>
 		</div>
 	{/if}
 </div>
