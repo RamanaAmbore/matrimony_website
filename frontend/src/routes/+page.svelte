@@ -62,7 +62,11 @@
 			<!-- English brand name (first) -->
 			<h1
 				class="mb-1 font-serif text-4xl font-bold text-cream md:text-6xl"
-				style="text-shadow: 0 3px 12px rgba(43,10,14,0.95), 0 1px 4px rgba(0,0,0,0.8);"
+				style="text-shadow:
+					0 0 18px rgba(201,162,39,0.95),
+					0 0 40px rgba(201,162,39,0.55),
+					0 5px 10px rgba(43,10,14,0.98),
+					0 2px 4px rgba(0,0,0,0.9);"
 			>
 				Maratha <span class="text-marigold">Kalyanam</span>
 			</h1>
