@@ -89,7 +89,7 @@
 	{:else if profile}
 		<div class="mb-4">
 			<h1 class="font-serif text-3xl font-bold text-maroon">
-				Edit Profile — {profile.first_name} {profile.last_name}
+				Edit Profile — {profile.first_name}{profile.surname_clan ? ` ${profile.surname_clan}` : ''}
 			</h1>
 			<p class="mt-1 text-sm text-ink/60">
 				Profile ID: <span class="font-mono text-xs bg-ink/5 px-1.5 py-0.5 rounded select-all">{profile.id}</span>

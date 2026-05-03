@@ -287,16 +287,7 @@
 					<p class="px-3 text-xs font-semibold tracking-wider text-ink/40 uppercase">
 						{T.admin.en}&nbsp;·&nbsp;<span lang="te" class="normal-case">{T.admin.te}</span>
 					</p>
-					<a href="/admin" class={drawerLinkClass('/admin')} onclick={closeDrawer}>Dashboard</a>
-					<a href="/admin/profiles" class={drawerLinkClass('/admin/profiles')} onclick={closeDrawer}>
-						Profiles
-					</a>
-					<a href="/admin/requests" class={drawerLinkClass('/admin/requests')} onclick={closeDrawer}>
-						Requests
-					</a>
-					<a href="/admin/users" class={drawerLinkClass('/admin/users')} onclick={closeDrawer}>
-						Users
-					</a>
+					<a href="/admin" class={drawerLinkClass('/admin')} onclick={closeDrawer}>Admin Panel</a>
 					<a href="/admin/settings" class={drawerLinkClass('/admin/settings')} onclick={closeDrawer}>
 						Settings
 					</a>

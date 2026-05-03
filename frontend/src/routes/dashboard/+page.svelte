@@ -128,7 +128,7 @@
 					<div class="flex items-start justify-between">
 						<div>
 							<h2 class="font-serif text-lg font-semibold text-maroon">
-								{profile.first_name} {profile.last_name}
+								{profile.first_name}{profile.surname_clan ? ` ${profile.surname_clan}` : ''}
 							</h2>
 							<p class="text-sm text-ink/60 capitalize">
 								{profile.gender} · {calcAge(profile.dob)} yrs
