@@ -26,6 +26,8 @@ cd "$REPO_DIR"
 
 log "Fetching $BRANCH"
 git fetch --quiet origin "$BRANCH"
+# Ensure www-data owns everything so git reset can overwrite any root-created files
+sudo /bin/chown -R www-data:www-data "$REPO_DIR"
 git reset --hard "origin/$BRANCH"
 HEAD_SHA="$(git rev-parse --short HEAD)"
 log "Now at $HEAD_SHA"
