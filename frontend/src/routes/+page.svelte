@@ -54,20 +54,20 @@
 	<!-- Hero text -->
 	<div class="relative z-10 flex min-h-[88vh] flex-col items-center justify-center px-4 text-center">
 		<div class="mx-auto max-w-3xl">
-			<!-- Site logo -->
-			<div class="mb-4 flex justify-center">
-				<div class="rounded-full ring-2 ring-gold/40 p-1">
-					<img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-24 w-auto md:h-28 logo-glow" />
-				</div>
-			</div>
-
 			<!-- Platform description -->
 			<p
-				class="mb-8 max-w-lg text-sm text-cream/90 md:text-base"
+				class="mb-2 max-w-lg text-sm text-cream/90 md:text-base"
 				style="text-shadow: 0 1px 4px rgba(43,10,14,0.9);"
 			>
 				The trusted matrimonial platform for the Maratha community settled across Andhra, Telangana,
 				Maharashtra and other states. Admin-verified profiles. Privacy-first photo sharing.
+			</p>
+			<p
+				class="mb-8 max-w-lg text-sm md:text-base"
+				lang="te"
+				style="text-shadow: 0 1px 4px rgba(43,10,14,0.9);"
+			>
+				ఆంధ్రప్రదేశ్, తెలంగాణ, మహారాష్ట్రలలో నివసించే మరాఠా కుటుంబాలకు విశ్వసనీయమైన వివాహ వేదిక. నిర్వాహకులు ధృవీకరించిన ప్రొఫైళ్లు. గోప్యత అగ్రగామి.
 			</p>
 
 			<div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -76,7 +76,7 @@
 					class="inline-flex items-center gap-2 rounded-lg bg-maroon px-6 py-3 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream"
 				>
 					<Search size={18} />
-					Find Your Partner · <span lang="te">జీవిత భాగస్వామిని కనుగొనండి</span>
+					Find Your Partner · <span lang="te" style="color:inherit">జీవిత భాగస్వామిని కనుగొనండి</span>
 				</a>
 
 				{#if !data.user}
@@ -85,14 +85,14 @@
 						class="inline-flex items-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream"
 					>
 						<UserPlus size={18} />
-						Create Profile · <span lang="te">ప్రొఫైల్ సృష్టించండి</span>
+						Create Profile · <span lang="te" style="color:inherit">ప్రొఫైల్ సృష్టించండి</span>
 					</a>
 				{:else}
 					<a
 						href="/dashboard"
 						class="inline-flex items-center gap-2 rounded-lg border-2 border-cream px-6 py-3 font-semibold text-cream backdrop-blur-sm transition-all duration-200 hover:border-cream hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream"
 					>
-						My Profiles · <span lang="te">నా ప్రొఫైళ్లు</span>
+						My Profiles · <span lang="te" style="color:inherit">నా ప్రొఫైళ్లు</span>
 					</a>
 				{/if}
 			</div>

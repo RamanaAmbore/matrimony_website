@@ -57,6 +57,16 @@
 		color: var(--color-saffron);
 	}
 
+	/* Inside buttons/links with their own text colour, Telugu inherits that colour
+	   so it stays readable on hover states (e.g. saffron-on-saffron = invisible). */
+	.btn-primary [lang="te"],
+	.btn-secondary [lang="te"],
+	.btn-danger [lang="te"],
+	a.btn-primary [lang="te"],
+	a.btn-secondary [lang="te"] {
+		color: inherit;
+	}
+
 	.logo-glow {
 		filter:
 			drop-shadow(0 0 2px rgba(255, 255, 255, 1))
