@@ -161,7 +161,7 @@
 			<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto" /></div>
 			<span class="whitespace-nowrap font-serif text-base font-semibold leading-tight">
 				<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-				<span class="block text-[0.7rem] font-normal leading-tight" lang="te">మరాఠా కల్యాణం</span>
+				<span class="block text-base font-normal leading-tight" lang="te">మరాఠా కల్యాణం</span>
 			</span>
 		</a>
 
@@ -250,7 +250,7 @@
 				<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto" /></div>
 				<div class="font-serif leading-tight">
 					<span class="block text-sm font-semibold" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-					<span class="block text-xs font-normal" lang="te">మరాఠా కల్యాణం</span>
+					<span class="block text-sm font-normal" lang="te">మరాఠా కల్యాణం</span>
 				</div>
 			</div>
 			<button
@@ -355,7 +355,7 @@
 					<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto" /></div>
 					<div>
 						<p class="font-serif text-xl font-semibold text-cream">Maratha Kalyanam</p>
-						<p class="text-sm" lang="te">మరాఠా కల్యాణం</p>
+						<p class="text-xl" lang="te">మరాఠా కల్యాణం</p>
 					</div>
 				</div>
 			</div>

@@ -77,8 +77,9 @@ if [[ -f "$DOTENV" ]]; then
     TG_CHAT="$(grep -E '^TELEGRAM_CHAT_ID=' "$DOTENV" | cut -d= -f2- | tr -d '[:space:]')"
     if [[ -n "$TG_TOKEN" && -n "$TG_CHAT" ]]; then
         IST="$(TZ='Asia/Kolkata' date '+%a, %d %b %Y %I:%M %p IST')"
+        EDT="$(TZ='America/New_York' date '+%I:%M %p EDT')"
         MSG="<b>Maratha Kalyanam - Deploy OK</b>
-${IST}
+${IST} · ${EDT}
 <code>SHA: ${HEAD_SHA}</code>"
         curl -s -o /dev/null \
             -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \

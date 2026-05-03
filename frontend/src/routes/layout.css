@@ -82,12 +82,12 @@
 	.logo-ring {
 		border-radius: 9999px;
 		overflow: hidden;
-		border: 2px solid rgba(255, 255, 255, 0.85);
-		padding: 3px;
+		border: 1px solid rgba(255, 255, 255, 0.6);
+		padding: 2px;
 		/* Orange gradient fills the gap between image and white border = glow ring sits there */
-		background: linear-gradient(135deg, rgba(255, 120, 0, 0.95), rgba(255, 60, 0, 0.8));
+		background: linear-gradient(135deg, rgba(255, 120, 0, 0.35), rgba(255, 60, 0, 0.25));
 		/* Subtle outer halo */
-		box-shadow: 0 0 10px 2px rgba(255, 90, 0, 0.45);
+		box-shadow: 0 0 6px 1px rgba(255, 90, 0, 0.2);
 	}
 
 	/* Suppress browser autofill yellow background on cream inputs */
