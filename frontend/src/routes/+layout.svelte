@@ -192,15 +192,15 @@
 				<span class="hidden font-mono text-xs text-cream/50 xl:inline" title={user.email}>@{user.user_handle}</span>
 				<button
 					onclick={logout}
-					class="whitespace-nowrap rounded border border-cream/50 px-3 py-1 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
+					class="whitespace-nowrap rounded border border-cream/50 px-3 py-0.5 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
 				>
 					{T.logout.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.logout.te}</span>
 				</button>
 			{:else}
-				<a href="/login" class="whitespace-nowrap rounded border border-cream px-3 py-1.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">
+				<a href="/login" class="whitespace-nowrap rounded border border-cream px-3 py-0.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">
 					{T.login.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.login.te}</span>
 				</a>
-				<a href="/register" class="whitespace-nowrap rounded px-3 py-1.5 text-sm font-medium text-maroon transition-all duration-200 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-cream" style="background:#fde8b0;">
+				<a href="/register" class="whitespace-nowrap rounded px-3 py-0.5 text-sm font-medium text-maroon transition-all duration-200 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-cream" style="background:#fde8b0;">
 					{T.register.en}&nbsp;·&nbsp;<span class="text-[0.8em] font-normal" lang="te">{T.register.te}</span>
 				</a>
 			{/if}
