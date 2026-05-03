@@ -52,19 +52,20 @@
 }
 
 @layer utilities {
-	/* Telugu matches surrounding English text colour exactly.
-	   The maroon stroke (drawn under the fill via paint-order) provides the
-	   subtle visual distinction without a colour shift. */
+	/* Telugu inherits English colour but is slightly dialled back so it reads as
+	   secondary text. The maroon stroke adds definition without a colour shift. */
 	[lang="te"] {
 		color: inherit;
+		opacity: 0.75;
 		font-size: 0.88em;
 		-webkit-text-stroke: 0.55px var(--color-maroon);
 		paint-order: stroke fill;
 	}
 
-	/* On dark header/footer backgrounds a light text-shadow aids legibility */
+	/* Navbar / footer: full opacity so Telugu matches English nav text exactly */
 	header [lang="te"],
 	footer [lang="te"] {
+		opacity: 1;
 		text-shadow: 0 1px 1px rgba(0,0,0,0.35);
 	}
 
