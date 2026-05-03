@@ -14,6 +14,7 @@
 	// Set after first save — reveals photo upload inline
 	let savedProfile = $state<Profile | null>(null);
 	let photos = $state<Photo[]>([]);
+	let photoCount = $state(0);
 
 	async function handleSubmit(data: Partial<ProfilePayload>) {
 		submitting = true;
@@ -73,14 +74,15 @@
 	<h1 class="font-serif text-3xl font-bold text-maroon">Create New Profile</h1>
 	<p class="mt-1 text-sm text-ink/60">Fill in the details, upload photos, then submit for approval.</p>
 
-	<!-- Photo upload — appears after first save -->
+	<!-- Profile ID + photo upload — appears after first save -->
 	{#if savedProfile}
-		<div id="photo-section" class="mt-6">
-			<div class="mb-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-				Profile saved! Upload at least one photo, then click <strong>Submit for Approval</strong>.
-				<span class="block mt-0.5 text-xs text-green-700" lang="te">ప్రొఫైల్ సేవ్ అయింది! ఫోటో అప్‌లోడ్ చేసి సమర్పించండి.</span>
-			</div>
-			<PhotoUpload profileId={savedProfile.id} initialPhotos={photos} isOwner={true} />
+		<div class="mt-4 mb-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+			Profile saved! &nbsp;ID: <span class="font-mono text-xs bg-green-100 px-1.5 py-0.5 rounded select-all">{savedProfile.id}</span>
+			&nbsp;— Upload at least one photo below, then click <strong>Submit for Approval</strong>.
+			<span class="block mt-0.5 text-xs text-green-700" lang="te">ప్రొఫైల్ సేవ్ అయింది! ఫోటో అప్‌లోడ్ చేసి సమర్పించండి.</span>
+		</div>
+		<div id="photo-section" class="mt-4">
+			<PhotoUpload profileId={savedProfile.id} initialPhotos={photos} isOwner={true} onCountChange={(n) => photoCount = n} />
 		</div>
 	{/if}
 
@@ -93,6 +95,7 @@
 			onSubmitForApproval={savedProfile ? submitForApproval : undefined}
 			{submittingForApproval}
 			profileStatus={savedProfile?.status ?? 'draft'}
+			{photoCount}
 		/>
 	</div>
 </div>

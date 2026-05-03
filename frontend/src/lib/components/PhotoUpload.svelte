@@ -9,16 +9,20 @@
 		profileId,
 		initialPhotos = [],
 		maxPhotos = 5,
-		isOwner = true
+		isOwner = true,
+		onCountChange = undefined
 	}: {
 		profileId: string;
 		initialPhotos?: Photo[];
 		maxPhotos?: number;
 		isOwner?: boolean;
+		onCountChange?: (count: number) => void;
 	} = $props();
 
 	// Seed local list from prop once; uploads/deletes mutate local state only.
 	let photoList = $state<Photo[]>(untrack(() => initialPhotos));
+
+	$effect(() => { onCountChange?.(photoList.length); });
 	let uploading = $state(false);
 	let uploadError = $state('');
 	let dragging = $state(false);

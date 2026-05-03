@@ -19,7 +19,8 @@
 		serverErrors = {},
 		onSubmitForApproval = undefined,
 		submittingForApproval = false,
-		profileStatus = ''
+		profileStatus = '',
+		photoCount = undefined
 	}: {
 		initialData?: Partial<Profile>;
 		onSubmit: (data: Partial<ProfilePayload>) => void;
@@ -28,6 +29,7 @@
 		onSubmitForApproval?: (() => void) | undefined;
 		submittingForApproval?: boolean;
 		profileStatus?: string;
+		photoCount?: number;
 	} = $props();
 
 	// ── Form state — seeded once from initialData ─────────────────────────────
@@ -165,7 +167,7 @@
 	const ASCII_HINT = 'English characters only · ఆంగ్ల అక్షరాలు మాత్రమే';
 
 	// ── Validation ───────────────────────────────────────────────────────────
-	function validate(): boolean {
+	function validateSave(): boolean {
 		const e: Record<string, string> = {};
 		if (!first_name.trim()) e.first_name = 'Required';
 		if (!last_name.trim()) e.last_name = 'Required';
@@ -174,21 +176,65 @@
 			const age = new Date().getFullYear() - new Date(dob).getFullYear();
 			if (age < 18) e.dob = 'Must be at least 18 years old';
 		}
-		if (!education.trim()) e.education = 'Required';
-		if (!occupation.trim()) e.occupation = 'Required';
-		if (!city.trim()) e.city = 'Required';
-		if (!gotra.trim()) e.gotra = 'Required';
-		if (!nakshatram) e.nakshatram = 'Required';
-		if (!rashi) e.rashi = 'Required';
 		if (about.length > 500) e.about = 'Max 500 characters';
 		if (partner_expectations.length > 800) e.partner_expectations = 'Max 800 characters';
 		errors = e;
 		return Object.keys(e).length === 0;
 	}
 
+	function validateSubmit(): boolean {
+		const e: Record<string, string> = {};
+		// Basic
+		if (!first_name.trim()) e.first_name = 'Required';
+		if (!last_name.trim()) e.last_name = 'Required';
+		if (!dob) e.dob = 'Required';
+		else {
+			const age = new Date().getFullYear() - new Date(dob).getFullYear();
+			if (age < 18) e.dob = 'Must be at least 18 years old';
+		}
+		if (!marital_status) e.marital_status = 'Required';
+		if (!surname_clan.trim()) e.surname_clan = 'Required';
+		// Astrology
+		if (!gotra.trim()) e.gotra = 'Required';
+		if (!kuldevata.trim()) e.kuldevata = 'Required';
+		if (!devak.trim()) e.devak = 'Required';
+		if (!nakshatram) e.nakshatram = 'Required';
+		if (!rashi) e.rashi = 'Required';
+		// Education & Career
+		if (!education.trim()) e.education = 'Required';
+		if (!occupation.trim()) e.occupation = 'Required';
+		// Family
+		if (!father_name.trim()) e.father_name = 'Required for submission';
+		if (!mother_name.trim()) e.mother_name = 'Required for submission';
+		if (!family_type) e.family_type = 'Required';
+		if (!native_place.trim()) e.native_place = 'Required';
+		// Location
+		if (!city.trim()) e.city = 'Required';
+		// About
+		if (!about.trim()) e.about = 'Required';
+		if (about.length > 500) e.about = 'Max 500 characters';
+		if (partner_expectations.length > 800) e.partner_expectations = 'Max 800 characters';
+		// Photo
+		if ((photoCount ?? 0) === 0) e._photos = 'At least one photo is required before submitting';
+		errors = e;
+		return Object.keys(e).length === 0;
+	}
+
+	function handleSubmitForApproval() {
+		if (!validateSubmit()) {
+			// Scroll to first error field
+			setTimeout(() => {
+				const el = document.querySelector('[data-error]') as HTMLElement | null;
+				el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			}, 50);
+			return;
+		}
+		onSubmitForApproval?.();
+	}
+
 	function handleSubmit(e: Event) {
 		e.preventDefault();
-		if (!validate()) return;
+		if (!validateSave()) return;
 
 		const data: Partial<ProfilePayload> = {
 			gender,
@@ -307,7 +353,7 @@
 						oninput={(e) => first_name = asciiOnly(e.currentTarget.value)}
 					/>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-					{#if errors.first_name}<p class="mt-1 text-xs text-vermilion">{errors.first_name}</p>{/if}
+					{#if errors.first_name}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.first_name}</p>{/if}
 				</div>
 
 				<!-- Last Name -->
@@ -322,7 +368,7 @@
 						oninput={(e) => last_name = asciiOnly(e.currentTarget.value)}
 					/>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-					{#if errors.last_name}<p class="mt-1 text-xs text-vermilion">{errors.last_name}</p>{/if}
+					{#if errors.last_name}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.last_name}</p>{/if}
 				</div>
 
 				<!-- Date of Birth -->
@@ -336,18 +382,19 @@
 						bind:value={dob}
 						max={new Date().toISOString().split('T')[0]}
 					/>
-					{#if errors.dob}<p class="mt-1 text-xs text-vermilion">{errors.dob}</p>{/if}
+					{#if errors.dob}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.dob}</p>{/if}
 				</div>
 
 				<!-- Marital Status -->
 				<div>
 					<BilingualLabel key="maritalStatus" for="marital_status" />
-					<select id="marital_status" class="input" bind:value={marital_status}>
+					<select id="marital_status" class="input" class:border-vermilion={errors.marital_status} bind:value={marital_status}>
 						<option value="">Select…</option>
 						{#each MARITAL_STATUSES as ms}
 							<option value={ms.value}>{ms.label}</option>
 						{/each}
 					</select>
+					{#if errors.marital_status}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.marital_status}</p>{/if}
 				</div>
 
 				<!-- Mother Tongue -->
@@ -371,10 +418,12 @@
 						id="surname_clan"
 						type="text"
 						class="input"
+						class:border-vermilion={errors.surname_clan}
 						bind:value={surname_clan}
 						oninput={(e) => surname_clan = asciiOnly(e.currentTarget.value)}
 					/>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					{#if errors.surname_clan}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.surname_clan}</p>{/if}
 				</div>
 
 				<!-- Sub-caste (optional) -->
@@ -483,7 +532,7 @@
 					oninput={(e) => gotra = asciiOnly(e.currentTarget.value)}
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.gotra}<p class="mt-1 text-xs text-vermilion">{errors.gotra}</p>{/if}
+				{#if errors.gotra}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.gotra}</p>{/if}
 			</div>
 
 			<!-- Kuldevata -->
@@ -493,10 +542,12 @@
 					id="kuldevata"
 					type="text"
 					class="input"
+					class:border-vermilion={errors.kuldevata}
 					bind:value={kuldevata}
 					oninput={(e) => kuldevata = asciiOnly(e.currentTarget.value)}
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				{#if errors.kuldevata}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.kuldevata}</p>{/if}
 			</div>
 
 			<!-- Devak -->
@@ -506,10 +557,12 @@
 					id="devak"
 					type="text"
 					class="input"
+					class:border-vermilion={errors.devak}
 					bind:value={devak}
 					oninput={(e) => devak = asciiOnly(e.currentTarget.value)}
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				{#if errors.devak}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.devak}</p>{/if}
 			</div>
 
 			<!-- Nakshatram -->
@@ -526,7 +579,7 @@
 						<option value={n}>{n}</option>
 					{/each}
 				</select>
-				{#if errors.nakshatram}<p class="mt-1 text-xs text-vermilion">{errors.nakshatram}</p>{/if}
+				{#if errors.nakshatram}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.nakshatram}</p>{/if}
 			</div>
 
 			<!-- Rashi -->
@@ -543,7 +596,7 @@
 						<option value={r}>{r}</option>
 					{/each}
 				</select>
-				{#if errors.rashi}<p class="mt-1 text-xs text-vermilion">{errors.rashi}</p>{/if}
+				{#if errors.rashi}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.rashi}</p>{/if}
 			</div>
 
 			<!-- Time of Birth (optional) -->
@@ -611,7 +664,7 @@
 					placeholder="e.g. B.Tech, M.Sc"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.education}<p class="mt-1 text-xs text-vermilion">{errors.education}</p>{/if}
+				{#if errors.education}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.education}</p>{/if}
 			</div>
 
 			<!-- College / University (optional) -->
@@ -641,7 +694,7 @@
 					placeholder="e.g. Software Engineer"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.occupation}<p class="mt-1 text-xs text-vermilion">{errors.occupation}</p>{/if}
+				{#if errors.occupation}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.occupation}</p>{/if}
 			</div>
 
 			<!-- Employer (optional) -->
@@ -705,10 +758,12 @@
 					type="text"
 					maxlength="100"
 					class="input"
+					class:border-vermilion={errors.father_name}
 					bind:value={father_name}
 					oninput={(e) => father_name = e.currentTarget.value}
 					placeholder="Father's full name"
 				/>
+				{#if errors.father_name}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.father_name}</p>{/if}
 			</div>
 
 			<!-- Mother Name -->
@@ -719,10 +774,12 @@
 					type="text"
 					maxlength="100"
 					class="input"
+					class:border-vermilion={errors.mother_name}
 					bind:value={mother_name}
 					oninput={(e) => mother_name = e.currentTarget.value}
 					placeholder="Mother's full name"
 				/>
+				{#if errors.mother_name}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.mother_name}</p>{/if}
 			</div>
 
 			<!-- Father's Occupation -->
@@ -852,11 +909,13 @@
 					id="native_place"
 					type="text"
 					class="input"
+					class:border-vermilion={errors.native_place}
 					bind:value={native_place}
 					oninput={(e) => native_place = asciiOnly(e.currentTarget.value)}
 					placeholder="Optional — village/town of origin"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+				{#if errors.native_place}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.native_place}</p>{/if}
 			</div>
 		</div>
 
@@ -874,6 +933,7 @@
 					</label>
 				{/each}
 			</div>
+			{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.family_type}</p>{/if}
 		</fieldset>
 	</details>
 
@@ -970,7 +1030,7 @@
 					oninput={(e) => city = asciiOnly(e.currentTarget.value)}
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.city}<p class="mt-1 text-xs text-vermilion">{errors.city}</p>{/if}
+				{#if errors.city}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.city}</p>{/if}
 			</div>
 
 			<!-- State -->
@@ -1039,7 +1099,7 @@
 				></textarea>
 				<div class="flex justify-between mt-1">
 					{#if errors.about}
-						<p class="text-xs text-vermilion">{errors.about}</p>
+						<p class="text-xs text-vermilion" data-error="true">{errors.about}</p>
 					{:else}
 						<p class="text-[10px] text-ink/40">{ASCII_HINT}</p>
 					{/if}
@@ -1064,7 +1124,7 @@
 				></textarea>
 				<div class="flex justify-between mt-1">
 					{#if errors.partner_expectations}
-						<p class="text-xs text-vermilion">{errors.partner_expectations}</p>
+						<p class="text-xs text-vermilion" data-error="true">{errors.partner_expectations}</p>
 					{:else}
 						<p class="text-[10px] text-ink/40">{ASCII_HINT}</p>
 					{/if}
@@ -1076,6 +1136,9 @@
 
 	<!-- ── Actions ────────────────────────────────────────────────────────────── -->
 	<div class="flex flex-wrap justify-end gap-3 pb-8">
+		{#if errors._photos}
+			<p class="w-full text-sm text-vermilion" data-error="true">{errors._photos}</p>
+		{/if}
 		<a href="/dashboard" class="btn-secondary">
 			{T.cancel.en} · <span lang="te">{T.cancel.te}</span>
 		</a>
@@ -1089,7 +1152,7 @@
 		{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
 			<button
 				type="button"
-				onclick={onSubmitForApproval}
+				onclick={handleSubmitForApproval}
 				class="btn-primary flex items-center gap-2 px-8"
 				disabled={submittingForApproval}
 			>

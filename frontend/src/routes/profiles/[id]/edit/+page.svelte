@@ -14,6 +14,7 @@
 
 	let profile = $state<Profile | null>(null);
 	let photos = $state<Photo[]>([]);
+	let photoCount = $state(0);
 	let loading = $state(true);
 	let submitting = $state(false);
 	let submittingForApproval = $state(false);
@@ -86,46 +87,38 @@
 			<Loader size={40} class="animate-spin text-saffron" />
 		</div>
 	{:else if profile}
-		<div class="mb-2 flex flex-wrap items-center justify-between gap-3">
-			<div>
-				<h1 class="font-serif text-3xl font-bold text-maroon">
-					Edit Profile — {profile.first_name}
-					{profile.last_name}
-				</h1>
-				<p class="mt-1 text-sm text-ink/60">
-					Status:
-					<span
-						class="font-medium capitalize {profile.status === 'approved'
-							? 'text-green-600'
-							: profile.status === 'rejected'
-								? 'text-vermilion'
-								: 'text-saffron'}"
-					>
-						{profile.status}
-					</span>
-				</p>
-			</div>
+		<div class="mb-4">
+			<h1 class="font-serif text-3xl font-bold text-maroon">
+				Edit Profile — {profile.first_name} {profile.last_name}
+			</h1>
+			<p class="mt-1 text-sm text-ink/60">
+				Profile ID: <span class="font-mono text-xs bg-ink/5 px-1.5 py-0.5 rounded select-all">{profile.id}</span>
+				&nbsp;·&nbsp;Status:
+				<span class="font-medium capitalize {profile.status === 'approved' ? 'text-green-600' : profile.status === 'rejected' ? 'text-vermilion' : 'text-saffron'}">
+					{profile.status}
+				</span>
+			</p>
 		</div>
 
-
 		<!-- Photos section — shown first so user sees it immediately -->
-		<PhotoUpload {profileId} initialPhotos={photos} isOwner={true} />
+		<PhotoUpload {profileId} initialPhotos={photos} isOwner={true} onCountChange={(n) => photoCount = n} />
 
-		<p class="mt-6 mb-2 text-sm text-ink/60">
-			Upload at least one photo above before submitting for approval. Photos are blurred in public search results — the clear version is shared only after admin approval of a contact request.
+		<p class="mt-4 mb-2 text-sm text-ink/60">
+			Upload at least one photo before submitting for approval. Photos are blurred in public search results — clear version shared only after admin approves a contact request.
 			<span class="block mt-0.5 text-xs" lang="te">అనుమతి తర్వాతే స్పష్టమైన ఫోటో అందుతుంది.</span>
 		</p>
 
 		<div class="mt-6">
 			<ProfileForm
-					initialData={profile}
-					{submitting}
-					{serverErrors}
-					onSubmit={handleSave}
-					onSubmitForApproval={submitForApproval}
-					{submittingForApproval}
-					profileStatus={profile.status}
-				/>
+				initialData={profile}
+				{submitting}
+				{serverErrors}
+				onSubmit={handleSave}
+				onSubmitForApproval={submitForApproval}
+				{submittingForApproval}
+				profileStatus={profile.status}
+				{photoCount}
+			/>
 		</div>
 	{/if}
 </div>
