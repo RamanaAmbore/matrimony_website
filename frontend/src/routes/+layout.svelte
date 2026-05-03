@@ -142,7 +142,7 @@
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
 <header class="shadow-md border-b border-gold/40" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
-	<div class="mx-auto flex w-full max-w-[1440px] items-center justify-between px-4 py-2">
+	<div class="mx-auto flex w-full max-w-[1440px] items-center gap-8 px-4 py-2">
 		<!-- Brand wordmark — shrink-0 keeps it from compressing -->
 		<a
 			href="/"
@@ -200,7 +200,7 @@
 
 		<!-- Mobile hamburger -->
 		<button
-			class="rounded p-2 text-cream hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-cream md:hidden"
+			class="ml-auto rounded p-2 text-cream hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-cream md:hidden"
 			onclick={openDrawer}
 			aria-label="Open menu"
 			aria-expanded={drawerOpen}
