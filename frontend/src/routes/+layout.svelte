@@ -101,7 +101,7 @@
 
 	<!-- PWA manifest + icons -->
 	<link rel="manifest" href="/manifest.webmanifest" />
-	<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+	<link rel="icon" type="image/png" sizes="512x512" href="/brand/icon-512.png" />
 	<link rel="icon" type="image/png" href="/favicon.png" />
 	<link rel="apple-touch-icon" href="/brand/icon-192.png" />
 	<meta name="mobile-web-app-capable" content="yes" />
