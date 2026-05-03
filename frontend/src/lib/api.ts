@@ -199,6 +199,52 @@ export interface AdminStats {
 	pending_requests: number;
 }
 
+// ─── Admin dashboard types ────────────────────────────────────────────────────
+
+export interface PendingProfileSummary {
+	id: string;
+	owner_email: string;
+	gender: Gender;
+	first_name: string;
+	last_name: string;
+	age: number;
+	city: string;
+	state: string;
+	gotra: string;
+	nakshatram: string;
+	created_at: string;
+}
+
+export interface PendingUser {
+	id: string;
+	email: string;
+	email_verified: boolean;
+	created_at: string;
+}
+
+export interface PendingRequest {
+	id: string;
+	requester_email: string;
+	profile_id: string;
+	profile_first_name: string;
+	profile_last_name: string;
+	message?: string;
+	created_at: string;
+}
+
+export interface AdminDashboard {
+	stats: {
+		users: number;
+		profiles_total: number;
+		profiles_pending: number;
+		profiles_approved: number;
+		requests_pending: number;
+	};
+	pending_profiles: PendingProfileSummary[];
+	pending_users: PendingUser[];
+	pending_requests: PendingRequest[];
+}
+
 // ─── Search params ────────────────────────────────────────────────────────────
 
 export interface SearchParams {
@@ -400,6 +446,10 @@ export const admin = {
 		return request('/api/admin/stats');
 	},
 
+	async dashboard(): Promise<AdminDashboard> {
+		return request('/api/admin/dashboard');
+	},
+
 	profiles: {
 		async list(status?: string): Promise<Profile[]> {
 			const q = status ? `?status=${status}` : '';
@@ -444,6 +494,9 @@ export const admin = {
 		},
 		async promote(id: string): Promise<void> {
 			return request(`/api/admin/users/${id}/promote`, { method: 'POST' });
+		},
+		async verifyEmail(userId: string): Promise<void> {
+			return request(`/api/admin/users/${userId}/verify_email`, { method: 'POST' });
 		}
 	},
 

@@ -8,13 +8,12 @@ from typing import Any
 
 from litestar import Litestar, get
 from litestar.config.cors import CORSConfig
-from litestar.middleware.session.client_side import CookieBackendConfig
 from litestar.openapi import OpenAPIConfig
-from litestar.stores.memory import MemoryStore
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import CORS_ORIGINS, IS_PROD, SESSION_SECRET
+from app.config import CORS_ORIGINS, IS_PROD
 from app.db import AsyncSessionLocal, get_db_session
+from app.middleware.jwt_session import JWTSessionMiddleware
 from app.routes.auth import AuthController
 from app.routes.profiles import ProfileController
 from app.routes.photos import PhotoController
@@ -53,19 +52,6 @@ async def health_check() -> dict[str, str]:
     return {"status": "ok", "service": "marathakalyanam"}
 
 
-_secret_bytes = SESSION_SECRET.encode()
-# Pad/truncate to exactly 16 bytes (AES-128)
-_secret_key = (_secret_bytes + b"x" * 16)[:16]
-
-session_config = CookieBackendConfig(
-    secret=_secret_key,
-    key="mk_session",
-    httponly=True,
-    samesite="lax",
-    secure=IS_PROD,
-    max_age=86400 * 30,  # 30 days
-)
-
 cors_config = CORSConfig(
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
@@ -96,7 +82,7 @@ app = Litestar(
         AdminController,
         serve_media,
     ],
-    middleware=[session_config.middleware],
+    middleware=[JWTSessionMiddleware()],
     cors_config=cors_config,
     lifespan=[lifespan],
     dependencies={"db": db_session_dependency},

@@ -46,7 +46,7 @@ class PhotoController(Controller):
         db: AsyncSession,
         data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
     ) -> dict[str, Any]:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(
                 status_code=401,
@@ -69,7 +69,7 @@ class PhotoController(Controller):
                 status_code=404, detail={"code": "not_found", "message": "Profile not found"}
             )
 
-        if str(profile.owner_user_id) != user["user_id"]:
+        if str(profile.owner_user_id) != user["sub"]:
             raise HTTPException(
                 status_code=403, detail={"code": "forbidden", "message": "Not your profile"}
             )
@@ -133,7 +133,7 @@ class PhotoController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> None:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(
                 status_code=401,
@@ -155,7 +155,7 @@ class PhotoController(Controller):
                 status_code=404, detail={"code": "not_found", "message": "Profile not found"}
             )
 
-        if str(profile.owner_user_id) != user["user_id"]:
+        if str(profile.owner_user_id) != user["sub"]:
             raise HTTPException(
                 status_code=403, detail={"code": "forbidden", "message": "Not your profile"}
             )
@@ -195,7 +195,7 @@ class PhotoController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(
                 status_code=401,
@@ -217,7 +217,7 @@ class PhotoController(Controller):
                 status_code=404, detail={"code": "not_found", "message": "Profile not found"}
             )
 
-        if str(profile.owner_user_id) != user["user_id"]:
+        if str(profile.owner_user_id) != user["sub"]:
             raise HTTPException(
                 status_code=403, detail={"code": "forbidden", "message": "Not your profile"}
             )

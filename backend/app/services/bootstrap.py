@@ -2,18 +2,21 @@
 from __future__ import annotations
 
 import logging
-import secrets
 import uuid
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import OWNER_EMAIL
 from app.models.user import User
 from app.services.auth import hash_password
 from app.services.settings import settings_service
 
 logger = logging.getLogger(__name__)
+
+# Dev/launch credential — operator MUST rotate this password after first login.
+# This is the intentional dev/launch credential: rambo / rambo1234.
+_BOOTSTRAP_EMAIL = "rambo@marathakalyanam.com"
+_BOOTSTRAP_PASSWORD = "rambo1234"
 
 
 async def bootstrap(session: AsyncSession) -> None:
@@ -26,17 +29,15 @@ async def bootstrap(session: AsyncSession) -> None:
     user_count = result.scalar_one()
 
     if user_count == 0:
-        # Create bootstrap admin
-        temp_password = secrets.token_urlsafe(16)
-        reset_token = secrets.token_urlsafe(32)
-
+        # Create bootstrap admin with known dev/launch credentials.
+        # IMPORTANT: rotate the password after first login on a live server.
         admin = User(
             id=uuid.uuid4(),
-            email=OWNER_EMAIL,
-            password_hash=hash_password(temp_password),
+            email=_BOOTSTRAP_EMAIL,
+            password_hash=hash_password(_BOOTSTRAP_PASSWORD),
             email_verified=True,
             is_admin=True,
-            email_verification_token=reset_token,
+            email_verification_token=None,
         )
         session.add(admin)
         await session.commit()
@@ -45,12 +46,18 @@ async def bootstrap(session: AsyncSession) -> None:
         logger.warning(
             "\n%s\nBOOTSTRAP ADMIN CREATED\n"
             "Email: %s\n"
-            "Temporary password: %s\n"
-            "One-time reset token: %s\n"
-            "Change your password immediately after first login.\n%s",
+            "Password: %s\n"
+            "ROTATE THIS PASSWORD AFTER FIRST LOGIN.\n%s",
             sep,
-            OWNER_EMAIL,
-            temp_password,
-            reset_token,
+            _BOOTSTRAP_EMAIL,
+            _BOOTSTRAP_PASSWORD,
             sep,
         )
+    else:
+        # If the bootstrap admin already exists, leave it alone (do not
+        # overwrite the password — operator may have already rotated it).
+        existing = await session.execute(
+            select(User).where(User.email == _BOOTSTRAP_EMAIL)
+        )
+        if not existing.scalar_one_or_none():
+            logger.debug("Bootstrap admin %s not found; non-zero user table — skipping seed.", _BOOTSTRAP_EMAIL)

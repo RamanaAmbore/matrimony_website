@@ -28,7 +28,7 @@ async def serve_media(file_path: str, request: Request) -> Response:
 
     # Access control: passport.jpg is private
     if resolved.name == "passport.jpg":
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Not found"})
 
@@ -48,7 +48,7 @@ async def serve_media(file_path: str, request: Request) -> Response:
                             select(Profile).where(Profile.id == profile_id)
                         )
                         profile = result.scalar_one_or_none()
-                        if profile is None or str(profile.owner_user_id) != user["user_id"]:
+                        if profile is None or str(profile.owner_user_id) != user["sub"]:
                             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Not found"})
                 except HTTPException:
                     raise

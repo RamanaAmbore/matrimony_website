@@ -42,7 +42,7 @@ class RequestController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
 
@@ -62,7 +62,7 @@ class RequestController(Controller):
                 detail={"code": "profile_not_approved", "message": "Can only request details for approved profiles"},
             )
 
-        requester_id = uuid.UUID(user["user_id"])
+        requester_id = uuid.UUID(user["sub"])
         if profile.owner_user_id == requester_id:
             raise HTTPException(
                 status_code=409,
@@ -113,11 +113,11 @@ class RequestController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> list[dict[str, Any]]:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
 
-        requester_id = uuid.UUID(user["user_id"])
+        requester_id = uuid.UUID(user["sub"])
         result = await db.execute(
             select(DetailRequest)
             .where(DetailRequest.requester_user_id == requester_id)

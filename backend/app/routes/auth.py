@@ -3,12 +3,13 @@
 import uuid
 from typing import Any
 
-from litestar import Controller, Response, delete, get, post
+from litestar import Controller, Response, get, post
 from litestar.connection import Request
 from litestar.exceptions import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import IS_PROD
 from app.models.user import User
 from app.schemas.auth import (
     LoginRequest,
@@ -19,7 +20,10 @@ from app.schemas.auth import (
 )
 from app.services import auth as auth_svc
 from app.services import email as email_svc
+from app.services.jwt_auth import mint_jwt
 from app.services.settings import settings_service
+
+_JWT_COOKIE = "mk_jwt"
 
 
 class AuthController(Controller):
@@ -75,7 +79,7 @@ class AuthController(Controller):
         data: LoginRequest,
         db: AsyncSession,
         request: Request,
-    ) -> dict[str, Any]:
+    ) -> Response[dict[str, Any]]:
         result = await db.execute(select(User).where(User.email == data.email.lower()))
         user = result.scalar_one_or_none()
 
@@ -85,24 +89,36 @@ class AuthController(Controller):
                 detail={"code": "invalid_credentials", "message": "Invalid email or password"},
             )
 
-        # Set session
-        request.session["user"] = {
+        token = mint_jwt(
+            user_id=str(user.id),
+            is_admin=user.is_admin,
+            email_verified=user.email_verified,
+        )
+
+        body: dict[str, Any] = {
             "user_id": str(user.id),
             "email": user.email,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
         }
 
-        return {
-            "user_id": str(user.id),
-            "email": user.email,
-            "is_admin": user.is_admin,
-            "email_verified": user.email_verified,
-        }
+        response: Response[dict[str, Any]] = Response(content=body)
+        response.set_cookie(
+            key=_JWT_COOKIE,
+            value=token,
+            max_age=86400,
+            httponly=True,
+            samesite="lax",
+            secure=IS_PROD,
+            path="/",
+        )
+        return response
 
     @post("/logout", status_code=204)
-    async def logout(self, request: Request) -> None:
-        request.session.clear()
+    async def logout(self, request: Request) -> Response[None]:
+        response: Response[None] = Response(content=None, status_code=204)
+        response.delete_cookie(key=_JWT_COOKIE, path="/")
+        return response
 
     @post("/verify-email")
     async def verify_email(
@@ -128,10 +144,14 @@ class AuthController(Controller):
 
     @get("/me")
     async def me(self, request: Request) -> dict[str, Any]:
-        user = request.session.get("user")
-        if not user:
+        payload: dict[str, Any] | None = request.scope.get("user_payload")
+        if not payload:
             raise HTTPException(
                 status_code=401,
                 detail={"code": "unauthenticated", "message": "Not authenticated"},
             )
-        return user
+        return {
+            "user_id": payload["sub"],
+            "is_admin": payload.get("is_admin", False),
+            "email_verified": payload.get("email_verified", False),
+        }

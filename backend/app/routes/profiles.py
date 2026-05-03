@@ -242,13 +242,13 @@ class ProfileController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> list[dict[str, Any]]:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
 
         result = await db.execute(
             select(Profile)
-            .where(Profile.owner_user_id == uuid.UUID(user["user_id"]))
+            .where(Profile.owner_user_id == uuid.UUID(user["sub"]))
             .options(selectinload(Profile.photos))
             .order_by(Profile.created_at.desc())
         )
@@ -262,7 +262,7 @@ class ProfileController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
         if not user.get("email_verified"):
@@ -287,7 +287,7 @@ class ProfileController(Controller):
 
         profile = Profile(
             id=uuid.uuid4(),
-            owner_user_id=uuid.UUID(user["user_id"]),
+            owner_user_id=uuid.UUID(user["sub"]),
             gender=_parse_enum(GenderEnum, data.gender, "gender"),
             first_name=data.first_name,
             last_name=data.last_name,
@@ -352,7 +352,7 @@ class ProfileController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
 
         try:
             pid = uuid.UUID(profile_id)
@@ -368,7 +368,7 @@ class ProfileController(Controller):
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
-        is_owner = user and user["user_id"] == str(profile.owner_user_id)
+        is_owner = user and user["sub"] == str(profile.owner_user_id)
         is_admin = user and user.get("is_admin")
 
         if is_owner or is_admin:
@@ -388,7 +388,7 @@ class ProfileController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
 
@@ -404,7 +404,7 @@ class ProfileController(Controller):
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
-        if str(profile.owner_user_id) != user["user_id"]:
+        if str(profile.owner_user_id) != user["sub"]:
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
 
         # ASCII validation
@@ -574,7 +574,7 @@ class ProfileController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> None:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
 
@@ -588,7 +588,7 @@ class ProfileController(Controller):
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
-        if str(profile.owner_user_id) != user["user_id"] and not user.get("is_admin"):
+        if str(profile.owner_user_id) != user["sub"] and not user.get("is_admin"):
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
 
         await db.delete(profile)
@@ -601,7 +601,7 @@ class ProfileController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        user = request.session.get("user")
+        user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
 
@@ -617,7 +617,7 @@ class ProfileController(Controller):
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
-        if str(profile.owner_user_id) != user["user_id"]:
+        if str(profile.owner_user_id) != user["sub"]:
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
 
         if profile.status != ProfileStatusEnum.draft:

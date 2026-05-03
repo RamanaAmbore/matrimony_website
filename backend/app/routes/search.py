@@ -206,10 +206,9 @@ class SearchController(Controller):
         page: int = 1,
         per_page: int = 20,
     ) -> dict[str, Any]:
-        # Detect anonymous caller — session exists (cookie middleware always
-        # creates one) but user_id is absent until after login.
-        user_id = request.session.get("user_id")
-        is_anonymous = not user_id
+        # Detect anonymous caller — JWT cookie absent or invalid means no payload.
+        user_payload = request.scope.get("user_payload")
+        is_anonymous = not user_payload
 
         query = _build_base_query(
             gender=gender,

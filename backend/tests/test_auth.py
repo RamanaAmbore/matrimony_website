@@ -114,7 +114,7 @@ async def test_verify_email_with_bad_token(client: AsyncClient, db_session: Asyn
 
 
 async def test_verify_email_with_good_token(client: AsyncClient, db_session: AsyncSession) -> None:
-    """Email verification with good token succeeds."""
+    """Email verification with good token succeeds; re-login reflects verified state."""
     email = f"verify_{uuid.uuid4().hex[:8]}@example.com"
     password = "ValidPass123!"
 
@@ -132,7 +132,10 @@ async def test_verify_email_with_good_token(client: AsyncClient, db_session: Asy
     resp = await client.post("/auth/verify-email", json={"token": token})
     assert resp.status_code == 200, resp.text
 
-    # Confirm user is now verified
+    # JWT was minted at login time with email_verified=False.
+    # Re-login so a fresh JWT with email_verified=True is issued.
+    await client.post("/auth/login", json={"email": email, "password": password})
+
     resp = await client.get("/auth/me")
     data = resp.json()
     assert data["email_verified"] is True

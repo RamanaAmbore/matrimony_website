@@ -19,10 +19,10 @@
 </script>
 
 <svelte:head>
-	<title>Telugu–Maratha Kalyana Vedika — Find Your Partner</title>
+	<title>Marathya Kalaynam — Find Your Partner</title>
 	<meta
 		name="description"
-		content="Telugu–Maratha Kalyana Vedika — the trusted matrimonial platform for Telugu-Maratha families. Find your perfect life partner."
+		content="Marathya Kalaynam — మరాఠా కల్యాణం. The trusted matrimonial platform for Maratha families in Andhra, Telangana, Maharashtra and other states. Find your perfect life partner."
 	/>
 </svelte:head>
 
@@ -72,37 +72,50 @@
 				<Logo size="lg" />
 			</div>
 
-			<!-- Telugu subtitle -->
+			<!-- Telugu brand name -->
 			<p
-				class="mb-3 font-serif text-base text-saffron drop-shadow-md md:text-lg"
+				class="mb-2 font-serif text-base text-saffron drop-shadow-md md:text-lg"
 				lang="te"
 				style="text-shadow: 0 2px 8px rgba(43,10,14,0.9), 0 1px 3px rgba(0,0,0,0.7);"
 			>
-				తెలుగు–మరాఠా కల్యాణ వేదిక
+				మరాఠా కల్యాణం
 			</p>
 
 			<h1
-				class="mb-4 font-serif text-4xl font-bold text-cream md:text-6xl"
-				lang="te"
+				class="mb-3 font-serif text-4xl font-bold text-cream md:text-6xl"
 				style="text-shadow: 0 3px 12px rgba(43,10,14,0.95), 0 1px 4px rgba(0,0,0,0.8);"
 			>
-				తెలుగు–మరాఠా <span class="text-marigold">కల్యాణ వేదిక</span>
+				Marathya <span class="text-marigold">Kalaynam</span>
 			</h1>
-			<p
-				class="mb-2 text-xl text-cream drop-shadow-md md:text-2xl"
-				style="text-shadow: 0 2px 8px rgba(43,10,14,0.85);"
-			>
-				<em>Telugu–Maratha Kalyana Vedika</em>
-			</p>
 
+			<!-- Tagline 1 -->
 			<p
-				class="mb-8 text-base text-cream drop-shadow-md md:text-lg"
+				class="mb-1 text-base font-medium text-cream/90 drop-shadow-md md:text-lg"
 				style="text-shadow: 0 2px 6px rgba(43,10,14,0.85);"
 			>
-				The trusted matrimonial platform for Telugu-Maratha families.<br
-					class="hidden md:block"
-				/>
-				Connecting hearts across Andhra Pradesh, Telangana &amp; Maharashtra.
+				Rooted in Tradition · United by Values
+			</p>
+			<p
+				class="mb-3 text-sm font-light text-cream/70 drop-shadow-sm"
+				lang="te"
+				style="text-shadow: 0 1px 4px rgba(43,10,14,0.8);"
+			>
+				సంప్రదాయంలో పాతుకొని · విలువలతో కలిసి
+			</p>
+
+			<!-- Tagline 2 -->
+			<p
+				class="mb-1 text-sm text-cream/80 drop-shadow-sm md:text-base"
+				style="text-shadow: 0 1px 4px rgba(43,10,14,0.8);"
+			>
+				For Maratha people in Andhra, Telangana, Maharashtra and other states
+			</p>
+			<p
+				class="mb-8 text-xs font-light text-cream/60 drop-shadow-sm md:text-sm"
+				lang="te"
+				style="text-shadow: 0 1px 4px rgba(43,10,14,0.8);"
+			>
+				ఆంధ్ర, తెలంగాణ, మహారాష్ట్ర మరియు ఇతర రాష్ట్రాలలోని మరాఠా ప్రజల కోసం
 			</p>
 
 			<div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -164,7 +177,7 @@
 		<KalashaDivider />
 
 		<h2 class="mt-6 mb-12 text-center font-serif text-3xl font-semibold text-maroon md:text-4xl">
-			Why Telugu–Maratha Kalyana Vedika?
+			Why Marathya Kalaynam?
 		</h2>
 
 		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -177,7 +190,7 @@
 				</div>
 				<h3 class="mb-2 font-serif text-xl font-semibold text-maroon">Community-Focused</h3>
 				<p class="text-sm text-ink/80">
-					Built specifically for Telugu-Maratha families with deep respect for gotra, nakshatram,
+					Built specifically for Maratha families with deep respect for gotra, nakshatram,
 					kuldevata, and devak traditions.
 				</p>
 			</div>

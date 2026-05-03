@@ -1,5 +1,5 @@
 // src/lib/i18n.ts
-// Translations are static — Telugu Kalyana Vedika is English-only data with bilingual UI labels.
+// Translations are static — Marathya Kalaynam (మరాఠా కల్యాణం) is English-only data with bilingual UI labels.
 export const T = {
   // Nav
   home: { en: 'Home', te: 'హోమ్' },

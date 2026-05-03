@@ -194,7 +194,7 @@ async def test_promote_user_to_admin(client: AsyncClient, db_session: AsyncSessi
     user_id, _ = await _create_verified_user(client, db_session)
     await client.post("/auth/logout")
     await _login_admin(client, db_session)
-    resp = await client.put(f"/admin/users/{user_id}/promote")
+    resp = await client.post(f"/admin/users/{user_id}/promote")
     assert resp.status_code == 200, resp.text
     result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_id)))
     assert result.scalar_one().is_admin is True
@@ -207,8 +207,73 @@ async def test_promoted_user_can_access_admin_endpoints(
     user_id, user_email = await _create_verified_user(client, db_session)
     await client.post("/auth/logout")
     await _login_admin(client, db_session)
-    await client.put(f"/admin/users/{user_id}/promote")
+    await client.post(f"/admin/users/{user_id}/promote")
     await client.post("/auth/logout")
     await client.post("/auth/login", json={"email": user_email, "password": "ValidPass123!"})
     resp = await client.get("/admin/stats")
     assert resp.status_code == 200
+
+
+async def test_admin_dashboard_returns_all_keys(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """GET /admin/dashboard returns stats, pending_profiles, pending_users, pending_requests."""
+    await _login_admin(client, db_session)
+    resp = await client.get("/admin/dashboard")
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+
+    # Top-level keys
+    assert "stats" in data
+    assert "pending_profiles" in data
+    assert "pending_users" in data
+    assert "pending_requests" in data
+
+    # Stats keys
+    stats = data["stats"]
+    required_stat_keys = {"users", "profiles_total", "profiles_pending", "profiles_approved", "requests_pending"}
+    assert all(k in stats for k in required_stat_keys)
+    assert all(isinstance(stats[k], int) for k in required_stat_keys)
+
+    # pending_profiles entries have expected fields when non-empty
+    for pp in data["pending_profiles"]:
+        for key in ("id", "owner_email", "gender", "first_name", "last_name", "age", "city", "state", "gotra", "nakshatram", "created_at"):
+            assert key in pp, f"Missing key {key!r} in pending_profile entry"
+
+    # pending_users entries have expected fields when non-empty
+    for pu in data["pending_users"]:
+        for key in ("id", "email", "email_verified", "created_at"):
+            assert key in pu, f"Missing key {key!r} in pending_user entry"
+
+    # pending_requests entries have expected fields when non-empty
+    for pr in data["pending_requests"]:
+        for key in ("id", "requester_email", "profile_id", "profile_first_name", "profile_last_name", "message", "created_at"):
+            assert key in pr, f"Missing key {key!r} in pending_request entry"
+
+
+async def test_admin_verify_email_flips_flag(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """POST /admin/users/{id}/verify_email sets email_verified=True."""
+    # Create an unverified user
+    email = f"unverified_{uuid.uuid4().hex[:8]}@example.com"
+    resp = await client.post("/auth/register", json={"email": email, "password": "ValidPass123!"})
+    user_id = resp.json()["user_id"]
+
+    # Confirm not verified
+    result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_id)))
+    user = result.scalar_one()
+    assert user.email_verified is False
+
+    # Login as admin and call the endpoint
+    await client.post("/auth/logout")
+    await _login_admin(client, db_session)
+
+    resp = await client.post(f"/admin/users/{user_id}/verify_email")
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["email_verified"] is True
+
+    # Confirm in DB
+    await db_session.refresh(user)
+    assert user.email_verified is True

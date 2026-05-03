@@ -1,7 +1,7 @@
 """Admin routes."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 from litestar import Controller, get, post, put
@@ -26,12 +26,12 @@ from app.services.settings import settings_service, SENSITIVE_KEYS
 
 
 def _require_admin(request: Request) -> dict[str, Any]:
-    user = request.session.get("user")
-    if not user:
+    payload = request.scope.get("user_payload")
+    if not payload:
         raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
-    if not user.get("is_admin"):
+    if not payload.get("is_admin"):
         raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Admin access required"})
-    return user
+    return payload
 
 
 def _serialize_profile(profile: Profile, request: Request) -> dict[str, Any]:
@@ -45,7 +45,6 @@ def _serialize_profile(profile: Profile, request: Request) -> dict[str, Any]:
             "thumb_url": f"{base}/media/{photo.thumb_path}",
             "is_primary": photo.is_primary,
         })
-    from datetime import date
 
     def age(dob: date) -> int:
         today = date.today()
@@ -92,6 +91,122 @@ def _serialize_request(req: DetailRequest) -> dict[str, Any]:
 
 class AdminController(Controller):
     path = "/admin"
+
+    # --- Dashboard ---
+    @get("/dashboard")
+    async def dashboard(
+        self,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Single-call admin home: stats + pending items for inline review."""
+        _require_admin(request)
+
+        # ── Stats ────────────────────────────────────────────────────────────
+        users_count = (await db.execute(select(func.count()).select_from(User))).scalar_one()
+        profiles_total = (await db.execute(select(func.count()).select_from(Profile))).scalar_one()
+        profiles_pending = (
+            await db.execute(
+                select(func.count()).select_from(Profile).where(Profile.status == ProfileStatusEnum.pending)
+            )
+        ).scalar_one()
+        profiles_approved = (
+            await db.execute(
+                select(func.count()).select_from(Profile).where(Profile.status == ProfileStatusEnum.approved)
+            )
+        ).scalar_one()
+        requests_pending = (
+            await db.execute(
+                select(func.count()).select_from(DetailRequest).where(DetailRequest.status == RequestStatusEnum.pending)
+            )
+        ).scalar_one()
+
+        stats = {
+            "users": users_count,
+            "profiles_total": profiles_total,
+            "profiles_pending": profiles_pending,
+            "profiles_approved": profiles_approved,
+            "requests_pending": requests_pending,
+        }
+
+        # ── Pending profiles (up to 25) with owner email ────────────────────
+        pending_profiles_result = await db.execute(
+            select(Profile)
+            .where(Profile.status == ProfileStatusEnum.pending)
+            .options(selectinload(Profile.owner))
+            .order_by(Profile.created_at.asc())
+            .limit(25)
+        )
+        pending_profiles_rows = pending_profiles_result.scalars().all()
+
+        def _age(dob: date) -> int:
+            today = date.today()
+            return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+        pending_profiles = [
+            {
+                "id": str(p.id),
+                "owner_email": p.owner.email if p.owner else None,
+                "gender": p.gender.value,
+                "first_name": p.first_name,
+                "last_name": p.last_name,
+                "age": _age(p.dob),
+                "city": p.city,
+                "state": p.state,
+                "gotra": p.gotra,
+                "nakshatram": p.nakshatram,
+                "created_at": p.created_at.isoformat(),
+            }
+            for p in pending_profiles_rows
+        ]
+
+        # ── Pending users (unverified, up to 25) ────────────────────────────
+        pending_users_result = await db.execute(
+            select(User)
+            .where(User.email_verified == False)  # noqa: E712
+            .order_by(User.created_at.desc())
+            .limit(25)
+        )
+        pending_users = [
+            {
+                "id": str(u.id),
+                "email": u.email,
+                "email_verified": u.email_verified,
+                "created_at": u.created_at.isoformat(),
+            }
+            for u in pending_users_result.scalars().all()
+        ]
+
+        # ── Pending requests (up to 25) with requester email + profile name ─
+        pending_requests_result = await db.execute(
+            select(DetailRequest)
+            .where(DetailRequest.status == RequestStatusEnum.pending)
+            .options(
+                selectinload(DetailRequest.requester),
+                selectinload(DetailRequest.profile),
+            )
+            .order_by(DetailRequest.created_at.asc())
+            .limit(25)
+        )
+        pending_requests = [
+            {
+                "id": str(r.id),
+                "requester_email": r.requester.email if r.requester else None,
+                "profile_id": str(r.profile_id),
+                "profile_first_name": r.profile.first_name if r.profile else None,
+                "profile_last_name": r.profile.last_name if r.profile else None,
+                "message": r.message,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in pending_requests_result.scalars().all()
+        ]
+
+        return {
+            "stats": stats,
+            "pending_profiles": pending_profiles,
+            "pending_users": pending_users,
+            "pending_requests": pending_requests,
+        }
 
     # --- Profiles ---
     @get("/profiles")
@@ -255,7 +370,6 @@ class AdminController(Controller):
             profile = profile_result.scalar_one_or_none()
 
             if requester and profile:
-                # Load passport photos
                 from app.config import MEDIA_ROOT
                 photo_bytes_map: dict[str, bytes] = {}
                 for photo in profile.photos:
@@ -351,6 +465,38 @@ class AdminController(Controller):
             "created_at": user.created_at.isoformat(),
         }
 
+    @post("/users/{user_id:str}/verify_email")
+    async def verify_user_email(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Admin override: mark a user's email as verified."""
+        _require_admin(request)
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        user.email_verified = True
+        user.email_verification_token = None
+        await db.commit()
+        await db.refresh(user)
+        return {
+            "id": str(user.id),
+            "email": user.email,
+            "is_admin": user.is_admin,
+            "email_verified": user.email_verified,
+            "created_at": user.created_at.isoformat(),
+        }
+
     # --- Settings ---
     @get("/settings")
     async def get_settings(
@@ -368,14 +514,13 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        _require_admin(request)
-        user = request.session.get("user")
+        payload = _require_admin(request)
 
         body = await request.json()
         if not isinstance(body, dict):
             raise HTTPException(status_code=422, detail={"code": "invalid_body", "message": "Body must be a JSON object"})
 
-        updated_by = uuid.UUID(user["user_id"]) if user else None
+        updated_by = uuid.UUID(payload["sub"]) if payload else None
         await settings_service.set_many(body, db, updated_by)
         await db.commit()
 

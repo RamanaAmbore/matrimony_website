@@ -77,50 +77,50 @@
 </script>
 
 <svelte:head>
-	<title>Telugu–Maratha Kalyana Vedika</title>
-	<meta name="description" content="Telugu–Maratha Kalyana Vedika — the trusted matrimonial platform for Telugu-Maratha families across Andhra Pradesh, Telangana and Maharashtra. Find your perfect life partner with admin-verified profiles, gotra/nakshatram matching, and privacy-first photo sharing." />
+	<title>Marathya Kalaynam — మరాఠా కల్యాణం</title>
+	<meta name="description" content="Marathya Kalaynam — మరాఠా కల్యాణం. The trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states. Admin-verified profiles, gotra/nakshatram matching, privacy-first photo sharing." />
 
 	<!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
 	<meta property="og:type" content="website" />
-	<meta property="og:site_name" content="Telugu–Maratha Kalyana Vedika" />
-	<meta property="og:title" content="Telugu–Maratha Kalyana Vedika · తెలుగు–మరాఠా కల్యాణ వేదిక" />
-	<meta property="og:description" content="Trusted matrimonial platform for Telugu-Maratha families across AP, Telangana and Maharashtra. Admin-verified profiles. Gotra, nakshatram and kuldevata matching. Privacy-first." />
+	<meta property="og:site_name" content="Marathya Kalaynam" />
+	<meta property="og:title" content="Marathya Kalaynam · మరాఠా కల్యాణం" />
+	<meta property="og:description" content="Trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states. Admin-verified profiles. Gotra, nakshatram and kuldevata matching. Privacy-first." />
 	<meta property="og:url" content="https://marathakalyanam.com/" />
 	<!-- SVG OG image — accepted by Facebook ≥2023, Twitter/X, WhatsApp, LinkedIn.
 	     For broadest crawler compat consider also generating a PNG at /og-image.png. -->
 	<meta property="og:image" content="https://marathakalyanam.com/og-image.svg" />
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />
-	<meta property="og:image:alt" content="Telugu–Maratha Kalyana Vedika — kalasha logo on maroon-saffron gradient" />
+	<meta property="og:image:alt" content="Marathya Kalaynam — kalasha logo on maroon-saffron gradient" />
 	<meta property="og:locale" content="en_IN" />
 	<meta property="og:locale:alternate" content="te_IN" />
 
 	<!-- Twitter / X -->
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content="Telugu–Maratha Kalyana Vedika · తెలుగు–మరాఠా కల్యాణ వేదిక" />
-	<meta name="twitter:description" content="Trusted matrimonial platform for Telugu-Maratha families. Admin-verified profiles. Privacy-first." />
+	<meta name="twitter:title" content="Marathya Kalaynam · మరాఠా కల్యాణం" />
+	<meta name="twitter:description" content="Trusted matrimonial platform for Maratha families. Admin-verified profiles. Privacy-first." />
 	<meta name="twitter:image" content="https://marathakalyanam.com/og-image.svg" />
-	<meta name="twitter:image:alt" content="Telugu–Maratha Kalyana Vedika — kalasha logo on maroon-saffron gradient" />
+	<meta name="twitter:image:alt" content="Marathya Kalaynam — kalasha logo on maroon-saffron gradient" />
 
 	<!-- Theme + canonical + crawling -->
 	<meta name="theme-color" content="#C8102E" />
 	<link rel="canonical" href="https://marathakalyanam.com/" />
 	<meta name="robots" content="index, follow, max-image-preview:large" />
 	<meta name="googlebot" content="index, follow" />
-	<meta name="author" content="Telugu–Maratha Kalyana Vedika" />
-	<meta name="publisher" content="Telugu–Maratha Kalyana Vedika" />
-	<meta name="keywords" content="Telugu Maratha matrimony, Maratha Kalyanam, Telugu matrimony, Maratha matrimony, Andhra Pradesh matrimony, Telangana matrimony, gotra matching, nakshatram matching, Telugu wedding, Maratha wedding, kuldevata, devak, Indian matrimony" />
+	<meta name="author" content="Marathya Kalaynam" />
+	<meta name="publisher" content="Marathya Kalaynam" />
+	<meta name="keywords" content="Maratha matrimony, Marathya Kalaynam, Maratha Kalyanam, Telugu Maratha matrimony, Andhra Pradesh matrimony, Telangana matrimony, Maharashtra matrimony, gotra matching, nakshatram matching, Maratha wedding, kuldevata, devak, Indian matrimony" />
 
 	<!-- JSON-LD structured data: Organization + WebSite (with sitelink search action) -->
 	<script type="application/ld+json">
 		{
 			"@context": "https://schema.org",
 			"@type": "Organization",
-			"name": "Telugu–Maratha Kalyana Vedika",
-			"alternateName": "తెలుగు–మరాఠా కల్యాణ వేదిక",
+			"name": "Marathya Kalaynam",
+			"alternateName": "మరాఠా కల్యాణం",
 			"url": "https://marathakalyanam.com",
 			"logo": "https://marathakalyanam.com/favicon.svg",
-			"description": "Trusted matrimonial platform for Telugu-Maratha families across Andhra Pradesh, Telangana and Maharashtra.",
+			"description": "Trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states.",
 			"areaServed": [
 				{ "@type": "AdministrativeArea", "name": "Andhra Pradesh" },
 				{ "@type": "AdministrativeArea", "name": "Telangana" },
@@ -132,7 +132,7 @@
 		{
 			"@context": "https://schema.org",
 			"@type": "WebSite",
-			"name": "Telugu–Maratha Kalyana Vedika",
+			"name": "Marathya Kalaynam",
 			"url": "https://marathakalyanam.com",
 			"potentialAction": {
 				"@type": "SearchAction",
@@ -153,9 +153,9 @@
 		>
 			<Logo size="sm" />
 			<span class="font-serif text-lg font-semibold leading-tight text-cream">
-				<span lang="te">తెలుగు–మరాఠా కల్యాణ వేదిక</span>
+				<span lang="te">మరాఠా కల్యాణం</span>
 				<span class="ml-1 hidden text-sm font-normal text-cream/75 sm:inline">
-					· Telugu–Maratha Kalyana Vedika
+					· Marathya Kalaynam
 				</span>
 			</span>
 		</a>
@@ -242,7 +242,7 @@
 		>
 			<div class="flex items-center gap-2">
 				<Logo size="sm" />
-				<span class="font-serif text-base leading-tight text-cream" lang="te">తెలుగు–మరాఠా<br />కల్యాణ వేదిక</span>
+				<span class="font-serif text-base leading-tight text-cream" lang="te">మరాఠా కల్యాణం</span>
 			</div>
 			<button
 				onclick={closeDrawer}
@@ -344,13 +344,21 @@
 				<div class="flex items-center gap-3">
 					<Logo size="sm" />
 					<div>
-						<p class="font-serif text-xl font-semibold text-cream" lang="te">తెలుగు–మరాఠా కల్యాణ వేదిక</p>
-						<p class="text-sm text-cream/75">Telugu–Maratha Kalyana Vedika</p>
+						<p class="font-serif text-xl font-semibold text-cream" lang="te">మరాఠా కల్యాణం</p>
+						<p class="text-sm text-cream/75">Marathya Kalaynam</p>
 					</div>
 				</div>
+				<p class="mt-2 text-xs text-cream/60 italic">
+					Rooted in Tradition · United by Values<br />
+					<span lang="te">సంప్రదాయంలో పాతుకొని · విలువలతో కలిసి</span>
+				</p>
+				<p class="mt-1 text-xs text-cream/55">
+					For Maratha people in Andhra, Telangana, Maharashtra and other states<br />
+					<span lang="te">ఆంధ్ర, తెలంగాణ, మహారాష్ట్ర మరియు ఇతర రాష్ట్రాలలోని మరాఠా ప్రజల కోసం</span>
+				</p>
 				<p class="mt-3 max-w-md text-sm text-cream/70">
-					The trusted matrimonial platform for the Telugu-Maratha community settled across Andhra Pradesh,
-					Telangana and Maharashtra. Admin-verified profiles. Privacy-first photo sharing. Gotra,
+					The trusted matrimonial platform for the Maratha community settled across Andhra, Telangana,
+					Maharashtra and other states. Admin-verified profiles. Privacy-first photo sharing. Gotra,
 					nakshatram, kuldevata and devak matching built in.
 				</p>
 			</div>
@@ -389,7 +397,7 @@
 		<!-- Bottom bar -->
 		<div class="mt-8 flex flex-col items-center justify-between gap-3 border-t border-gold/30 pt-6 text-xs text-cream/70 md:flex-row">
 			<p>
-				© 2026 Telugu–Maratha Kalyana Vedika · marathakalyanam.com
+				© 2026 Marathya Kalaynam · marathakalyanam.com
 			</p>
 			<p>
 				Designed &amp; developed by

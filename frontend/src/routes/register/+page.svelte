@@ -49,7 +49,7 @@
 </script>
 
 <svelte:head>
-	<title>Register — Telugu–Maratha Kalyana Vedika</title>
+	<title>Register — Marathya Kalaynam</title>
 </svelte:head>
 
 <div class="mx-auto max-w-md px-4 py-16">
@@ -58,7 +58,7 @@
 			{T.register.en}
 			<span class="ml-2 text-xl font-normal text-ink/50" lang="te">{T.register.te}</span>
 		</h1>
-		<p class="mt-1 text-sm text-ink/60">Join the Telugu–Maratha Kalyana Vedika community</p>
+		<p class="mt-1 text-sm text-ink/60">Join the Marathya Kalaynam community</p>
 	</div>
 
 	<KalashaDivider />
