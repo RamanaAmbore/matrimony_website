@@ -9,7 +9,7 @@ export const T = {
   register: { en: 'Register', te: 'నమోదు' },
   logout: { en: 'Logout', te: 'లాగౌట్' },
   myProfiles: { en: 'My Profiles', te: 'నా ప్రొఫైల్‌లు' },
-  requests: { en: 'Requests', te: 'అభ్యర్థనలు' },
+  requests: { en: 'My Requests', te: 'నా అభ్యర్థనలు' },
   admin: { en: 'Admin', te: 'నిర్వాహకుడు' },
 
   // Actions
