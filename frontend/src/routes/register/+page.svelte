@@ -14,7 +14,7 @@
 
 	let user_handle = $state('');
 	let email = $state('');
-	let phone_number = $state('+91 ');
+	let phone_number = $state('+');
 	let password = $state('');
 	let confirmPassword = $state('');
 	let loading = $state(false);
@@ -198,14 +198,14 @@
 				class="input"
 				class:border-vermilion={errors.phone_number}
 				bind:value={phone_number}
-				placeholder="+91 9840770711"
+				placeholder="+91 9840770711  or  +1 2125551234"
 				spellcheck="false"
 			/>
 			{#if errors.phone_number}
 				<p class="mt-1 text-xs text-vermilion">{errors.phone_number}</p>
 			{:else}
 				<p class="mt-1 text-xs text-ink/50 leading-snug">
-					Include country code, e.g. <span class="font-mono">+91 9840770711</span>
+					Include country code, e.g. <span class="font-mono">+91 9840770711</span> or <span class="font-mono">+1 2125551234</span>
 				</p>
 			{/if}
 		</div>

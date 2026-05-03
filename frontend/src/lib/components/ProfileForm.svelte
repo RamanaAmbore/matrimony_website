@@ -75,6 +75,7 @@
 	let city = $state(untrack(() => initialData.city ?? ''));
 	let state_field = $state(untrack(() => initialData.state ?? 'Telangana'));
 	let country = $state(untrack(() => initialData.country ?? 'India'));
+	let pin_code = $state(untrack(() => initialData.pin_code ?? ''));
 
 	// About
 	let about = $state(untrack(() => initialData.about ?? ''));
@@ -224,6 +225,7 @@
 			city: city.trim(),
 			state: state_field,
 			country: country.trim(),
+			pin_code: pin_code.trim() || null,
 
 			about: about.trim(),
 			partner_expectations: partner_expectations.trim()
@@ -894,7 +896,7 @@
 			<span class="text-sm font-normal text-ink/50 ml-1" lang="te">నివాస వివరాలు</span>
 		</summary>
 
-		<div class="mt-4 grid gap-4 sm:grid-cols-3">
+		<div class="mt-4 grid gap-4 sm:grid-cols-2">
 			<!-- City -->
 			<div>
 				<BilingualLabel key="city" for="city" required />
@@ -918,6 +920,23 @@
 						<option value={s}>{s}</option>
 					{/each}
 				</select>
+			</div>
+
+			<!-- Pin Code (optional) -->
+			<div>
+				<label for="pin_code" class="label">
+					<span class="block">Pin Code <span class="text-ink/50 font-normal text-xs">(optional)</span></span>
+					<span class="block text-xs font-normal leading-tight" lang="te">పిన్ కోడ్</span>
+				</label>
+				<input
+					id="pin_code"
+					type="text"
+					inputmode="numeric"
+					maxlength="10"
+					class="input"
+					bind:value={pin_code}
+					placeholder="e.g. 500001"
+				/>
 			</div>
 
 			<!-- Country -->

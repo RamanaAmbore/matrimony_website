@@ -95,6 +95,7 @@ def _serialize_full_profile(profile: Profile, request: Request) -> dict[str, Any
         "annual_income_inr": profile.annual_income_inr,
         "city": profile.city,
         "state": profile.state,
+        "pin_code": profile.pin_code,
         "country": profile.country,
         "gotra": profile.gotra,
         "kuldevata": profile.kuldevata,
@@ -208,6 +209,7 @@ def _validate_free_text_fields(data: ProfileCreateRequest | ProfilePatchRequest)
         ("occupation", getattr(data, "occupation", None)),
         ("city", getattr(data, "city", None)),
         ("state", getattr(data, "state", None)),
+        ("pin_code", getattr(data, "pin_code", None)),
         ("country", getattr(data, "country", None)),
         ("gotra", getattr(data, "gotra", None)),
         ("kuldevata", getattr(data, "kuldevata", None)),
@@ -299,6 +301,7 @@ class ProfileController(Controller):
             annual_income_inr=data.annual_income_inr,
             city=data.city,
             state=data.state,
+            pin_code=data.pin_code,
             country=data.country,
             gotra=data.gotra,
             kuldevata=data.kuldevata,
@@ -448,6 +451,9 @@ class ProfileController(Controller):
             changed = True
         if data.state is not None:
             profile.state = data.state
+            changed = True
+        if data.pin_code is not None:
+            profile.pin_code = data.pin_code
             changed = True
         if data.country is not None:
             profile.country = data.country

@@ -95,6 +95,8 @@ def _build_base_query(
     family_type: Optional[str],
     smokes: Optional[str],
     drinks: Optional[str],
+    mother_tongue: Optional[str],
+    pin_code: Optional[str],
 ) -> Any:
     """Build a filtered SQLAlchemy query for approved profiles (no order/limit)."""
     query = (
@@ -175,6 +177,12 @@ def _build_base_query(
         except ValueError:
             pass
 
+    if mother_tongue:
+        query = query.where(Profile.mother_tongue.ilike(f"%{mother_tongue}%"))
+
+    if pin_code:
+        query = query.where(Profile.pin_code.ilike(f"{pin_code}%"))
+
     return query
 
 
@@ -201,6 +209,8 @@ class SearchController(Controller):
         family_type: Optional[str] = None,
         smokes: Optional[str] = None,
         drinks: Optional[str] = None,
+        mother_tongue: Optional[str] = None,
+        pin_code: Optional[str] = None,
         # Keyword/interests filter (comma-separated)
         interests: Optional[str] = None,
         page: int = 1,
@@ -225,6 +235,8 @@ class SearchController(Controller):
             family_type=family_type,
             smokes=smokes,
             drinks=drinks,
+            mother_tongue=mother_tongue,
+            pin_code=pin_code,
         )
 
         # Count matching approved profiles (filter-respecting, before pagination)

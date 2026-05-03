@@ -43,6 +43,7 @@ class ProfileCreateRequest(msgspec.Struct, kw_only=True):
     # --- Existing optional fields ---
     annual_income_inr: int | None = None
     country: str = "India"
+    pin_code: str | None = None
     manglik: str = "unknown"
     mother_tongue: str = "Telugu"
     about: str = ""
@@ -87,6 +88,7 @@ class ProfilePatchRequest(msgspec.Struct, kw_only=True):
     annual_income_inr: int | None = None
     city: str | None = None
     state: str | None = None
+    pin_code: str | None = None
     country: str | None = None
     gotra: str | None = None
     kuldevata: str | None = None
@@ -154,6 +156,7 @@ class FullProfileResponse(msgspec.Struct):
     annual_income_inr: int | None
     city: str
     state: str
+    pin_code: str | None
     country: str
     gotra: str
     kuldevata: str

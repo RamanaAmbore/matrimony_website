@@ -120,11 +120,16 @@
 		</div>
 
 
+		<!-- Photos section — shown first so user sees it immediately -->
+		<PhotoUpload {profileId} initialPhotos={photos} isOwner={true} />
+
+		<p class="mt-6 mb-2 text-sm text-ink/60">
+			Upload at least one photo above before submitting for approval. Photos are blurred in public search results — the clear version is shared only after admin approval of a contact request.
+			<span class="block mt-0.5 text-xs" lang="te">అనుమతి తర్వాతే స్పష్టమైన ఫోటో అందుతుంది.</span>
+		</p>
+
 		<div class="mt-6">
 			<ProfileForm initialData={profile} {submitting} {serverErrors} onSubmit={handleSave} />
 		</div>
-
-		<!-- Photos section — only shown after profile exists -->
-		<PhotoUpload {profileId} initialPhotos={photos} isOwner={true} />
 	{/if}
 </div>

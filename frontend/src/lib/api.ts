@@ -98,6 +98,7 @@ export interface Profile {
 	city: string;
 	state: string;
 	country: string;
+	pin_code?: string | null;
 
 	// About
 	about: string;
@@ -258,6 +259,9 @@ export interface SearchParams {
 	rashi?: string;
 	city?: string;
 	state?: string;
+	country?: string;
+	pin_code?: string;
+	mother_tongue?: string;
 	manglik?: Manglik;
 	diet?: Diet;
 	page?: number;

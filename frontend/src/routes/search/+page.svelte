@@ -32,6 +32,9 @@
 	let rashi = $state('');
 	let city = $state('');
 	let state_filter = $state('');
+	let country_filter = $state('');
+	let pin_code_filter = $state('');
+	let mother_tongue_filter = $state('');
 	let manglik = $state('');
 	let diet = $state('');
 	let page = $state(1);
@@ -57,6 +60,9 @@
 				rashi: rashi || undefined,
 				city: city || undefined,
 				state: state_filter || undefined,
+				country: country_filter || undefined,
+				pin_code: pin_code_filter || undefined,
+				mother_tongue: mother_tongue_filter || undefined,
 				manglik: manglik as SearchParams['manglik'] || undefined,
 				diet: diet as SearchParams['diet'] || undefined,
 				page,
@@ -87,7 +93,7 @@
 
 	// Reactive filter signature — changing any filter triggers a debounced re-search
 	const filterKey = $derived(
-		[gender, gotra, nakshatram, rashi, city, state_filter, manglik, diet, age_min, age_max].join('|')
+		[gender, gotra, nakshatram, rashi, city, state_filter, country_filter, pin_code_filter, mother_tongue_filter, manglik, diet, age_min, age_max].join('|')
 	);
 
 	let mounted = $state(false);
@@ -199,6 +205,24 @@
 					<input id="f-state" type="text" class="input text-sm" bind:value={state_filter} placeholder="Any state" />
 				</div>
 
+				<!-- Country -->
+				<div>
+					<label for="f-country" class="label">Country · <span lang="te">దేశం</span></label>
+					<input id="f-country" type="text" class="input text-sm" bind:value={country_filter} placeholder="Any country" />
+				</div>
+
+				<!-- Pin Code -->
+				<div>
+					<label for="f-pin" class="label">Pin Code · <span lang="te">పిన్ కోడ్</span></label>
+					<input id="f-pin" type="text" inputmode="numeric" maxlength="10" class="input text-sm" bind:value={pin_code_filter} placeholder="e.g. 500001" />
+				</div>
+
+				<!-- Language -->
+				<div>
+					<label for="f-lang" class="label">Language · <span lang="te">భాష</span></label>
+					<input id="f-lang" type="text" class="input text-sm" bind:value={mother_tongue_filter} placeholder="e.g. Telugu" />
+				</div>
+
 				<!-- Manglik -->
 				<div>
 					<label for="f-manglik" class="label">Manglik · <span lang="te">మాంగళిక్</span></label>
@@ -225,7 +249,8 @@
 				<button
 					onclick={() => {
 						gender = ''; age_min = 18; age_max = 60; gotra = ''; nakshatram = '';
-						rashi = ''; city = ''; state_filter = ''; manglik = ''; diet = '';
+						rashi = ''; city = ''; state_filter = ''; country_filter = ''; pin_code_filter = ''; mother_tongue_filter = '';
+						manglik = ''; diet = '';
 					}}
 					class="btn-secondary w-full text-sm py-2"
 				>

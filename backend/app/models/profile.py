@@ -127,6 +127,7 @@ class Profile(Base):
     annual_income_inr: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     city: Mapped[str] = mapped_column(String(100), nullable=False)
     state: Mapped[str] = mapped_column(String(100), nullable=False)
+    pin_code: Mapped[str | None] = mapped_column(String(10), nullable=True)
     country: Mapped[str] = mapped_column(String(100), nullable=False, default="India")
     gotra: Mapped[str] = mapped_column(String(100), nullable=False)
     kuldevata: Mapped[str] = mapped_column(String(100), nullable=False)
