@@ -118,6 +118,7 @@
 				{submittingForApproval}
 				profileStatus={profile.status}
 				{photoCount}
+				autoSave={true}
 			/>
 		</div>
 	{/if}

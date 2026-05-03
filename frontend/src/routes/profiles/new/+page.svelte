@@ -96,6 +96,7 @@
 			{submittingForApproval}
 			profileStatus={savedProfile?.status ?? 'draft'}
 			{photoCount}
+			autoSave={!!savedProfile}
 		/>
 	</div>
 </div>

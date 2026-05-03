@@ -178,6 +178,7 @@
 					<div class="mt-2">
 						<DualRangeSlider min={18} max={60} bind:valueMin={age_min} bind:valueMax={age_max} />
 					</div>
+					<p class="mt-0.5 text-xs text-ink/45">Filters by date of birth on record · జన్మ తేదీ ఆధారంగా</p>
 				</div>
 
 				<!-- Height range -->
@@ -188,6 +189,7 @@
 					<div class="mt-2">
 						<DualRangeSlider min={140} max={210} bind:valueMin={height_min} bind:valueMax={height_max} />
 					</div>
+					<p class="mt-0.5 text-xs text-ink/45">Stored in cm, shown in ft/in · సెంటీమీటర్లలో నమోదు</p>
 				</div>
 
 				<!-- Weight range -->
@@ -204,6 +206,7 @@
 				<div>
 					<label for="f-gotra" class="label">Gotra · <span lang="te">గోత్రం</span></label>
 					<input id="f-gotra" type="text" class="input text-sm" bind:value={gotra} placeholder="Any gotra" />
+					<p class="mt-0.5 text-xs text-ink/45">Exact or partial gotra name · గోత్రం</p>
 				</div>
 
 				<!-- Nakshatram -->
@@ -232,6 +235,7 @@
 				<div>
 					<label for="f-city" class="label">City · <span lang="te">నగరం</span></label>
 					<input id="f-city" type="text" class="input text-sm" bind:value={city} placeholder="Any city" />
+					<p class="mt-0.5 text-xs text-ink/45">Partial match — 'Hyder' matches Hyderabad · నగరం పేరు</p>
 				</div>
 
 				<!-- State -->
@@ -250,12 +254,14 @@
 				<div>
 					<label for="f-pin" class="label">Pin Code · <span lang="te">పిన్ కోడ్</span></label>
 					<input id="f-pin" type="text" inputmode="numeric" maxlength="10" class="input text-sm" bind:value={pin_code_filter} placeholder="e.g. 500001" />
+					<p class="mt-0.5 text-xs text-ink/45">Matches profiles starting with this pin · పిన్ తో మొదలయ్యే</p>
 				</div>
 
 				<!-- Language -->
 				<div>
 					<label for="f-lang" class="label">Language · <span lang="te">భాష</span></label>
 					<input id="f-lang" type="text" class="input text-sm" bind:value={mother_tongue_filter} placeholder="e.g. Telugu" />
+					<p class="mt-0.5 text-xs text-ink/45">e.g. Telugu, Hindi, Marathi · భాష పేరు</p>
 				</div>
 
 				<!-- Manglik -->

@@ -1,6 +1,16 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
-	import type { Profile, ProfilePayload, MaritalStatus, BodyType, BloodGroup, FamilyType, FamilyStatus, FamilyValues, SmokeDrink } from '$lib/api';
+	import { untrack, onMount } from 'svelte';
+	import type {
+		Profile,
+		ProfilePayload,
+		MaritalStatus,
+		BodyType,
+		BloodGroup,
+		FamilyType,
+		FamilyStatus,
+		FamilyValues,
+		SmokeDrink
+	} from '$lib/api';
 	import { T } from '$lib/i18n';
 	import { asciiOnly } from '$lib/inputFilters';
 	import BilingualLabel from '$lib/components/BilingualLabel.svelte';
@@ -20,7 +30,8 @@
 		onSubmitForApproval = undefined,
 		submittingForApproval = false,
 		profileStatus = '',
-		photoCount = undefined
+		photoCount = undefined,
+		autoSave = false
 	}: {
 		initialData?: Partial<Profile>;
 		onSubmit: (data: Partial<ProfilePayload>) => void;
@@ -30,6 +41,7 @@
 		submittingForApproval?: boolean;
 		profileStatus?: string;
 		photoCount?: number;
+		autoSave?: boolean;
 	} = $props();
 
 	// ── Form state — seeded once from initialData ─────────────────────────────
@@ -56,7 +68,9 @@
 	let devak = $state(untrack(() => initialData.devak ?? ''));
 	let nakshatram = $state(untrack(() => initialData.nakshatram ?? ''));
 	let rashi = $state(untrack(() => initialData.rashi ?? ''));
-	let manglik = $state<'yes' | 'no' | 'partial' | 'unknown'>(untrack(() => initialData.manglik ?? 'unknown'));
+	let manglik = $state<'yes' | 'no' | 'partial' | 'unknown'>(
+		untrack(() => initialData.manglik ?? 'unknown')
+	);
 	let time_of_birth = $state(untrack(() => initialData.time_of_birth ?? ''));
 	let place_of_birth = $state(untrack(() => initialData.place_of_birth ?? ''));
 
@@ -76,15 +90,21 @@
 	let mother_occupation = $state(untrack(() => initialData.mother_occupation ?? ''));
 	let num_brothers = $state<number | ''>(untrack(() => initialData.num_brothers ?? ''));
 	let num_sisters = $state<number | ''>(untrack(() => initialData.num_sisters ?? ''));
-	let num_brothers_married = $state<number | ''>(untrack(() => initialData.num_brothers_married ?? ''));
-	let num_sisters_married = $state<number | ''>(untrack(() => initialData.num_sisters_married ?? ''));
+	let num_brothers_married = $state<number | ''>(
+		untrack(() => initialData.num_brothers_married ?? '')
+	);
+	let num_sisters_married = $state<number | ''>(
+		untrack(() => initialData.num_sisters_married ?? '')
+	);
 	let family_type = $state(untrack(() => initialData.family_type ?? ''));
 	let family_status = $state(untrack(() => initialData.family_status ?? ''));
 	let family_values = $state(untrack(() => initialData.family_values ?? ''));
 	let native_place = $state(untrack(() => initialData.native_place ?? ''));
 
 	// Lifestyle
-	let diet = $state<'veg' | 'non-veg' | 'eggetarian' | 'jain' | 'vegan'>(untrack(() => initialData.diet ?? 'veg'));
+	let diet = $state<'veg' | 'non-veg' | 'eggetarian' | 'jain' | 'vegan'>(
+		untrack(() => initialData.diet ?? 'veg')
+	);
 	let smokes = $state(untrack(() => initialData.smokes ?? ''));
 	let drinks = $state(untrack(() => initialData.drinks ?? ''));
 	let hobbies = $state(untrack(() => initialData.hobbies ?? ''));
@@ -103,26 +123,84 @@
 
 	// ── Static lookup data ───────────────────────────────────────────────────
 	const NAKSHATRAS = [
-		'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashirsha', 'Ardra',
-		'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni',
-		'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha',
-		'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishtha',
-		'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'
+		'Ashwini',
+		'Bharani',
+		'Krittika',
+		'Rohini',
+		'Mrigashirsha',
+		'Ardra',
+		'Punarvasu',
+		'Pushya',
+		'Ashlesha',
+		'Magha',
+		'Purva Phalguni',
+		'Uttara Phalguni',
+		'Hasta',
+		'Chitra',
+		'Swati',
+		'Vishakha',
+		'Anuradha',
+		'Jyeshtha',
+		'Mula',
+		'Purva Ashadha',
+		'Uttara Ashadha',
+		'Shravana',
+		'Dhanishtha',
+		'Shatabhisha',
+		'Purva Bhadrapada',
+		'Uttara Bhadrapada',
+		'Revati'
 	];
 
 	const RASHIS = [
-		'Mesha (Aries)', 'Vrishabha (Taurus)', 'Mithuna (Gemini)', 'Karka (Cancer)',
-		'Simha (Leo)', 'Kanya (Virgo)', 'Tula (Libra)', 'Vrishchika (Scorpio)',
-		'Dhanu (Sagittarius)', 'Makara (Capricorn)', 'Kumbha (Aquarius)', 'Meena (Pisces)'
+		'Mesha (Aries)',
+		'Vrishabha (Taurus)',
+		'Mithuna (Gemini)',
+		'Karka (Cancer)',
+		'Simha (Leo)',
+		'Kanya (Virgo)',
+		'Tula (Libra)',
+		'Vrishchika (Scorpio)',
+		'Dhanu (Sagittarius)',
+		'Makara (Capricorn)',
+		'Kumbha (Aquarius)',
+		'Meena (Pisces)'
 	];
 
 	const INDIA_STATES = [
-		'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-		'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-		'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
-		'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
-		'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-		'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Puducherry', 'Other'
+		'Andhra Pradesh',
+		'Arunachal Pradesh',
+		'Assam',
+		'Bihar',
+		'Chhattisgarh',
+		'Goa',
+		'Gujarat',
+		'Haryana',
+		'Himachal Pradesh',
+		'Jharkhand',
+		'Karnataka',
+		'Kerala',
+		'Madhya Pradesh',
+		'Maharashtra',
+		'Manipur',
+		'Meghalaya',
+		'Mizoram',
+		'Nagaland',
+		'Odisha',
+		'Punjab',
+		'Rajasthan',
+		'Sikkim',
+		'Tamil Nadu',
+		'Telangana',
+		'Tripura',
+		'Uttar Pradesh',
+		'Uttarakhand',
+		'West Bengal',
+		'Delhi',
+		'Jammu & Kashmir',
+		'Ladakh',
+		'Puducherry',
+		'Other'
 	];
 
 	const COMPLEXIONS = [
@@ -232,11 +310,8 @@
 		onSubmitForApproval?.();
 	}
 
-	function handleSubmit(e: Event) {
-		e.preventDefault();
-		if (!validateSave()) return;
-
-		const data: Partial<ProfilePayload> = {
+	function buildData(): Partial<ProfilePayload> {
+		return {
 			gender,
 			first_name: first_name.trim(),
 			last_name: last_name.trim(),
@@ -295,8 +370,56 @@
 			about: about.trim(),
 			partner_expectations: partner_expectations.trim()
 		};
-		onSubmit(data);
 	}
+
+	function handleSubmit(e: Event) {
+		e.preventDefault();
+		if (!validateSave()) return;
+		onSubmit(buildData());
+	}
+
+	// ── Auto-save ────────────────────────────────────────────────────────────
+	let autoSaveMounted = $state(false);
+	let autoSaveStatus = $state<'idle' | 'pending' | 'saving' | 'saved'>('idle');
+	let autoSaveTimer: ReturnType<typeof setTimeout>;
+
+	// prettier-ignore
+	const formFingerprint = $derived(
+		[
+			gender, first_name, last_name, dob, marital_status, mother_tongue,
+			sub_caste, surname_clan, height_cm, weight_kg, complexion, body_type,
+			blood_group, gotra, kuldevata, devak, nakshatram, rashi, manglik,
+			time_of_birth, place_of_birth, education, college_university, occupation,
+			employer, annual_income_inr, work_location, father_name, mother_name,
+			num_family_members, father_occupation, mother_occupation, num_brothers,
+			num_sisters, num_brothers_married, num_sisters_married, family_type,
+			family_status, family_values, native_place, diet, smokes, drinks,
+			hobbies, city, state_field, country, pin_code, about, partner_expectations
+		].join('|')
+	);
+
+	$effect(() => {
+		formFingerprint; // subscribe to all field changes
+		if (!autoSaveMounted || !autoSave || submitting) return;
+		autoSaveStatus = 'pending';
+		clearTimeout(autoSaveTimer);
+		autoSaveTimer = setTimeout(() => {
+			autoSaveStatus = 'saving';
+			onSubmit(buildData());
+			setTimeout(() => {
+				autoSaveStatus = 'saved';
+				setTimeout(() => {
+					autoSaveStatus = 'idle';
+				}, 2000);
+			}, 300);
+		}, 2000);
+	});
+
+	onMount(() => {
+		setTimeout(() => {
+			autoSaveMounted = true;
+		}, 100);
+	});
 
 	// Merge server errors into local errors
 	$effect(() => {
@@ -307,13 +430,14 @@
 </script>
 
 <form onsubmit={handleSubmit} novalidate class="space-y-6">
-
 	<!-- ── Section: Basic Information ──────────────────────────────────────── -->
 	<details open class="card">
-		<summary class="cursor-pointer font-serif text-xl font-semibold text-maroon mb-1 list-none flex items-center gap-2">
+		<summary
+			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
+		>
 			<span class="text-tangerine">▸</span>
 			Basic Information
-			<span class="text-sm font-normal text-ink/50 ml-1" lang="te">మూల సమాచారం</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">మూల సమాచారం</span>
 		</summary>
 
 		<div class="mt-4 space-y-4">
@@ -321,11 +445,13 @@
 			<fieldset>
 				<legend class="label">
 					<span class="block">{T.gender.en} <span class="text-vermilion">*</span></span>
-					<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">{T.gender.te}</span>
+					<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+						>{T.gender.te}</span
+					>
 				</legend>
-				<div class="flex gap-6 mt-1">
+				<div class="mt-1 flex gap-6">
 					{#each [{ value: 'bride', key: 'bride' as const }, { value: 'groom', key: 'groom' as const }] as opt}
-						<label class="flex items-center gap-2 cursor-pointer">
+						<label class="flex cursor-pointer items-center gap-2">
 							<input
 								type="radio"
 								name="gender"
@@ -350,10 +476,12 @@
 						class="input"
 						class:border-vermilion={errors.first_name}
 						bind:value={first_name}
-						oninput={(e) => first_name = asciiOnly(e.currentTarget.value)}
+						oninput={(e) => (first_name = asciiOnly(e.currentTarget.value))}
 					/>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-					{#if errors.first_name}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.first_name}</p>{/if}
+					{#if errors.first_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.first_name}
+						</p>{/if}
 				</div>
 
 				<!-- Last Name -->
@@ -365,10 +493,12 @@
 						class="input"
 						class:border-vermilion={errors.last_name}
 						bind:value={last_name}
-						oninput={(e) => last_name = asciiOnly(e.currentTarget.value)}
+						oninput={(e) => (last_name = asciiOnly(e.currentTarget.value))}
 					/>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-					{#if errors.last_name}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.last_name}</p>{/if}
+					{#if errors.last_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.last_name}
+						</p>{/if}
 				</div>
 
 				<!-- Date of Birth -->
@@ -382,19 +512,28 @@
 						bind:value={dob}
 						max={new Date().toISOString().split('T')[0]}
 					/>
-					{#if errors.dob}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.dob}</p>{/if}
+					{#if errors.dob}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.dob}
+						</p>{/if}
 				</div>
 
 				<!-- Marital Status -->
 				<div>
 					<BilingualLabel key="maritalStatus" for="marital_status" />
-					<select id="marital_status" class="input" class:border-vermilion={errors.marital_status} bind:value={marital_status}>
+					<select
+						id="marital_status"
+						class="input"
+						class:border-vermilion={errors.marital_status}
+						bind:value={marital_status}
+					>
 						<option value="">Select…</option>
 						{#each MARITAL_STATUSES as ms}
 							<option value={ms.value}>{ms.label}</option>
 						{/each}
 					</select>
-					{#if errors.marital_status}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.marital_status}</p>{/if}
+					{#if errors.marital_status}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.marital_status}
+						</p>{/if}
 				</div>
 
 				<!-- Mother Tongue -->
@@ -405,7 +544,7 @@
 						type="text"
 						class="input"
 						bind:value={mother_tongue}
-						oninput={(e) => mother_tongue = asciiOnly(e.currentTarget.value)}
+						oninput={(e) => (mother_tongue = asciiOnly(e.currentTarget.value))}
 						placeholder="Telugu"
 					/>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
@@ -420,10 +559,15 @@
 						class="input"
 						class:border-vermilion={errors.surname_clan}
 						bind:value={surname_clan}
-						oninput={(e) => surname_clan = asciiOnly(e.currentTarget.value)}
+						oninput={(e) => (surname_clan = asciiOnly(e.currentTarget.value))}
 					/>
+					<p class="mt-0.5 text-xs text-ink/45">
+						Your family/clan surname, e.g. Desai, Patil, More · కుటుంబ పేరు
+					</p>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-					{#if errors.surname_clan}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.surname_clan}</p>{/if}
+					{#if errors.surname_clan}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.surname_clan}
+						</p>{/if}
 				</div>
 
 				<!-- Sub-caste (optional) -->
@@ -434,9 +578,12 @@
 						type="text"
 						class="input"
 						bind:value={sub_caste}
-						oninput={(e) => sub_caste = asciiOnly(e.currentTarget.value)}
+						oninput={(e) => (sub_caste = asciiOnly(e.currentTarget.value))}
 						placeholder="Optional"
 					/>
+					<p class="mt-0.5 text-xs text-ink/45">
+						Sub-group within Maratha community, if applicable · ఉప-కులం
+					</p>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 				</div>
 			</div>
@@ -445,19 +592,29 @@
 
 	<!-- ── Section: Physical ─────────────────────────────────────────────────── -->
 	<details open class="card">
-		<summary class="cursor-pointer font-serif text-xl font-semibold text-maroon mb-1 list-none flex items-center gap-2">
+		<summary
+			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
+		>
 			<span class="text-tangerine">▸</span>
 			Physical
-			<span class="text-sm font-normal text-ink/50 ml-1" lang="te">శారీరక వివరాలు</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">శారీరక వివరాలు</span>
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
 			<!-- Height -->
 			<div class="sm:col-span-2">
 				<BilingualLabel key="height" for="height_cm" />
-				<p class="text-sm text-ink/60 mb-1">{cmToFtIn(height_cm)}</p>
-				<input id="height_cm" type="range" min="120" max="220" step="1" bind:value={height_cm} class="w-full accent-maroon" />
-				<div class="flex justify-between text-xs text-ink/40 mt-1">
+				<p class="mb-1 text-sm text-ink/60">{cmToFtIn(height_cm)}</p>
+				<input
+					id="height_cm"
+					type="range"
+					min="120"
+					max="220"
+					step="1"
+					bind:value={height_cm}
+					class="w-full accent-maroon"
+				/>
+				<div class="mt-1 flex justify-between text-xs text-ink/40">
 					<span>3'11"</span><span>7'3"</span>
 				</div>
 			</div>
@@ -513,10 +670,12 @@
 
 	<!-- ── Section: Astrology ────────────────────────────────────────────────── -->
 	<details open class="card">
-		<summary class="cursor-pointer font-serif text-xl font-semibold text-maroon mb-1 list-none flex items-center gap-2">
+		<summary
+			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
+		>
 			<span class="text-tangerine">▸</span>
 			Astrology
-			<span class="text-sm font-normal text-ink/50 ml-1" lang="te">జ్యోతిష వివరాలు</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">జ్యోతిష వివరాలు</span>
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -529,10 +688,15 @@
 					class="input"
 					class:border-vermilion={errors.gotra}
 					bind:value={gotra}
-					oninput={(e) => gotra = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (gotra = asciiOnly(e.currentTarget.value))}
 				/>
+				<p class="mt-0.5 text-xs text-ink/45">
+					Ancestral lineage name, e.g. Kashyap, Bharadwaj · గోత్రం పేరు
+				</p>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.gotra}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.gotra}</p>{/if}
+				{#if errors.gotra}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.gotra}
+					</p>{/if}
 			</div>
 
 			<!-- Kuldevata -->
@@ -544,10 +708,15 @@
 					class="input"
 					class:border-vermilion={errors.kuldevata}
 					bind:value={kuldevata}
-					oninput={(e) => kuldevata = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (kuldevata = asciiOnly(e.currentTarget.value))}
 				/>
+				<p class="mt-0.5 text-xs text-ink/45">
+					Your family deity, e.g. Bhavani, Khandoba · కుల దేవత
+				</p>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.kuldevata}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.kuldevata}</p>{/if}
+				{#if errors.kuldevata}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.kuldevata}
+					</p>{/if}
 			</div>
 
 			<!-- Devak -->
@@ -559,10 +728,15 @@
 					class="input"
 					class:border-vermilion={errors.devak}
 					bind:value={devak}
-					oninput={(e) => devak = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (devak = asciiOnly(e.currentTarget.value))}
 				/>
+				<p class="mt-0.5 text-xs text-ink/45">
+					Your family devak symbol, e.g. Neem, Audumbar · దేవక్
+				</p>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.devak}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.devak}</p>{/if}
+				{#if errors.devak}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.devak}
+					</p>{/if}
 			</div>
 
 			<!-- Nakshatram -->
@@ -579,35 +753,30 @@
 						<option value={n}>{n}</option>
 					{/each}
 				</select>
-				{#if errors.nakshatram}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.nakshatram}</p>{/if}
+				{#if errors.nakshatram}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.nakshatram}
+					</p>{/if}
 			</div>
 
 			<!-- Rashi -->
 			<div>
 				<BilingualLabel key="rashi" for="rashi" required />
-				<select
-					id="rashi"
-					class="input"
-					class:border-vermilion={errors.rashi}
-					bind:value={rashi}
-				>
+				<select id="rashi" class="input" class:border-vermilion={errors.rashi} bind:value={rashi}>
 					<option value="">Select…</option>
 					{#each RASHIS as r}
 						<option value={r}>{r}</option>
 					{/each}
 				</select>
-				{#if errors.rashi}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.rashi}</p>{/if}
+				{#if errors.rashi}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.rashi}
+					</p>{/if}
 			</div>
 
 			<!-- Time of Birth (optional) -->
 			<div>
 				<BilingualLabel key="timeOfBirth" for="time_of_birth" />
-				<input
-					id="time_of_birth"
-					type="time"
-					class="input"
-					bind:value={time_of_birth}
-				/>
+				<input id="time_of_birth" type="time" class="input" bind:value={time_of_birth} />
+				<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · జన్మ సమయం</p>
 			</div>
 
 			<!-- Place of Birth (optional) -->
@@ -618,9 +787,10 @@
 					type="text"
 					class="input"
 					bind:value={place_of_birth}
-					oninput={(e) => place_of_birth = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (place_of_birth = asciiOnly(e.currentTarget.value))}
 					placeholder="Optional"
 				/>
+				<p class="mt-0.5 text-xs text-ink/45">City/town where you were born · జన్మ స్థానం</p>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 			</div>
 		</div>
@@ -629,12 +799,20 @@
 		<fieldset class="mt-4">
 			<legend class="label">
 				<span class="block">{T.manglik.en}</span>
-				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">{T.manglik.te}</span>
+				<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+					>{T.manglik.te}</span
+				>
 			</legend>
-			<div class="flex gap-4 mt-1 flex-wrap">
+			<div class="mt-1 flex flex-wrap gap-4">
 				{#each [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'partial', label: 'Partial' }, { value: 'unknown', label: "Unknown / Don't Know" }] as opt}
-					<label class="flex items-center gap-2 cursor-pointer">
-						<input type="radio" name="manglik" value={opt.value} bind:group={manglik} class="accent-maroon" />
+					<label class="flex cursor-pointer items-center gap-2">
+						<input
+							type="radio"
+							name="manglik"
+							value={opt.value}
+							bind:group={manglik}
+							class="accent-maroon"
+						/>
 						<span>{opt.label}</span>
 					</label>
 				{/each}
@@ -644,10 +822,12 @@
 
 	<!-- ── Section: Education & Career ──────────────────────────────────────── -->
 	<details open class="card">
-		<summary class="cursor-pointer font-serif text-xl font-semibold text-maroon mb-1 list-none flex items-center gap-2">
+		<summary
+			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
+		>
 			<span class="text-tangerine">▸</span>
 			Education &amp; Career
-			<span class="text-sm font-normal text-ink/50 ml-1" lang="te">విద్య &amp; వృత్తి</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">విద్య &amp; వృత్తి</span>
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -660,11 +840,13 @@
 					class="input"
 					class:border-vermilion={errors.education}
 					bind:value={education}
-					oninput={(e) => education = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (education = asciiOnly(e.currentTarget.value))}
 					placeholder="e.g. B.Tech, M.Sc"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.education}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.education}</p>{/if}
+				{#if errors.education}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.education}
+					</p>{/if}
 			</div>
 
 			<!-- College / University (optional) -->
@@ -675,7 +857,7 @@
 					type="text"
 					class="input"
 					bind:value={college_university}
-					oninput={(e) => college_university = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (college_university = asciiOnly(e.currentTarget.value))}
 					placeholder="Optional"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
@@ -690,11 +872,13 @@
 					class="input"
 					class:border-vermilion={errors.occupation}
 					bind:value={occupation}
-					oninput={(e) => occupation = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (occupation = asciiOnly(e.currentTarget.value))}
 					placeholder="e.g. Software Engineer"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.occupation}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.occupation}</p>{/if}
+				{#if errors.occupation}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.occupation}
+					</p>{/if}
 			</div>
 
 			<!-- Employer (optional) -->
@@ -705,7 +889,7 @@
 					type="text"
 					class="input"
 					bind:value={employer}
-					oninput={(e) => employer = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (employer = asciiOnly(e.currentTarget.value))}
 					placeholder="Optional"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
@@ -723,6 +907,9 @@
 					bind:value={annual_income_inr}
 					placeholder="Optional, e.g. 800000"
 				/>
+				<p class="mt-0.5 text-xs text-ink/45">
+					Annual income in Indian Rupees (numbers only) · వార్షిక ఆదాయం
+				</p>
 			</div>
 
 			<!-- Work Location (optional) -->
@@ -733,7 +920,7 @@
 					type="text"
 					class="input"
 					bind:value={work_location}
-					oninput={(e) => work_location = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (work_location = asciiOnly(e.currentTarget.value))}
 					placeholder="Optional"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
@@ -743,10 +930,12 @@
 
 	<!-- ── Section: Family ───────────────────────────────────────────────────── -->
 	<details open class="card">
-		<summary class="cursor-pointer font-serif text-xl font-semibold text-maroon mb-1 list-none flex items-center gap-2">
+		<summary
+			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
+		>
 			<span class="text-tangerine">▸</span>
 			Family
-			<span class="text-sm font-normal text-ink/50 ml-1" lang="te">కుటుంబ వివరాలు</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">కుటుంబ వివరాలు</span>
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -760,10 +949,12 @@
 					class="input"
 					class:border-vermilion={errors.father_name}
 					bind:value={father_name}
-					oninput={(e) => father_name = e.currentTarget.value}
+					oninput={(e) => (father_name = e.currentTarget.value)}
 					placeholder="Father's full name"
 				/>
-				{#if errors.father_name}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.father_name}</p>{/if}
+				{#if errors.father_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.father_name}
+					</p>{/if}
 			</div>
 
 			<!-- Mother Name -->
@@ -776,10 +967,12 @@
 					class="input"
 					class:border-vermilion={errors.mother_name}
 					bind:value={mother_name}
-					oninput={(e) => mother_name = e.currentTarget.value}
+					oninput={(e) => (mother_name = e.currentTarget.value)}
 					placeholder="Mother's full name"
 				/>
-				{#if errors.mother_name}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.mother_name}</p>{/if}
+				{#if errors.mother_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.mother_name}
+					</p>{/if}
 			</div>
 
 			<!-- Father's Occupation -->
@@ -790,7 +983,7 @@
 					type="text"
 					class="input"
 					bind:value={father_occupation}
-					oninput={(e) => father_occupation = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (father_occupation = asciiOnly(e.currentTarget.value))}
 					placeholder="Optional"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
@@ -804,7 +997,7 @@
 					type="text"
 					class="input"
 					bind:value={mother_occupation}
-					oninput={(e) => mother_occupation = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (mother_occupation = asciiOnly(e.currentTarget.value))}
 					placeholder="Optional"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
@@ -911,11 +1104,16 @@
 					class="input"
 					class:border-vermilion={errors.native_place}
 					bind:value={native_place}
-					oninput={(e) => native_place = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (native_place = asciiOnly(e.currentTarget.value))}
 					placeholder="Optional — village/town of origin"
 				/>
+				<p class="mt-0.5 text-xs text-ink/45">
+					Village or town your family originally belongs to · స్వగ్రామం
+				</p>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.native_place}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.native_place}</p>{/if}
+				{#if errors.native_place}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.native_place}
+					</p>{/if}
 			</div>
 		</div>
 
@@ -923,26 +1121,38 @@
 		<fieldset class="mt-4">
 			<legend class="label">
 				<span class="block">{T.familyType.en}</span>
-				<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">{T.familyType.te}</span>
+				<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+					>{T.familyType.te}</span
+				>
 			</legend>
-			<div class="flex gap-6 mt-1 flex-wrap">
+			<div class="mt-1 flex flex-wrap gap-6">
 				{#each [{ value: '', label: 'Not specified' }, { value: 'nuclear', label: 'Nuclear' }, { value: 'joint', label: 'Joint' }] as opt}
-					<label class="flex items-center gap-2 cursor-pointer">
-						<input type="radio" name="family_type" value={opt.value} bind:group={family_type} class="accent-maroon" />
+					<label class="flex cursor-pointer items-center gap-2">
+						<input
+							type="radio"
+							name="family_type"
+							value={opt.value}
+							bind:group={family_type}
+							class="accent-maroon"
+						/>
 						<span>{opt.label}</span>
 					</label>
 				{/each}
 			</div>
-			{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.family_type}</p>{/if}
+			{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">
+					{errors.family_type}
+				</p>{/if}
 		</fieldset>
 	</details>
 
 	<!-- ── Section: Lifestyle ────────────────────────────────────────────────── -->
 	<details open class="card">
-		<summary class="cursor-pointer font-serif text-xl font-semibold text-maroon mb-1 list-none flex items-center gap-2">
+		<summary
+			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
+		>
 			<span class="text-tangerine">▸</span>
 			Lifestyle
-			<span class="text-sm font-normal text-ink/50 ml-1" lang="te">జీవనశైలి</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">జీవనశైలి</span>
 		</summary>
 
 		<div class="mt-4 space-y-4">
@@ -950,12 +1160,20 @@
 			<fieldset>
 				<legend class="label">
 					<span class="block">{T.diet.en} <span class="text-vermilion">*</span></span>
-					<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">{T.diet.te}</span>
+					<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+						>{T.diet.te}</span
+					>
 				</legend>
-				<div class="flex gap-4 mt-1 flex-wrap">
+				<div class="mt-1 flex flex-wrap gap-4">
 					{#each [{ value: 'veg', label: 'Vegetarian' }, { value: 'non-veg', label: 'Non-Vegetarian' }, { value: 'eggetarian', label: 'Eggetarian' }, { value: 'jain', label: 'Jain' }, { value: 'vegan', label: 'Vegan' }] as opt}
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input type="radio" name="diet" value={opt.value} bind:group={diet} class="accent-maroon" />
+						<label class="flex cursor-pointer items-center gap-2">
+							<input
+								type="radio"
+								name="diet"
+								value={opt.value}
+								bind:group={diet}
+								class="accent-maroon"
+							/>
 							<span>{opt.label}</span>
 						</label>
 					{/each}
@@ -966,12 +1184,20 @@
 			<fieldset>
 				<legend class="label">
 					<span class="block">{T.smokes.en}</span>
-					<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">{T.smokes.te}</span>
+					<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+						>{T.smokes.te}</span
+					>
 				</legend>
-				<div class="flex gap-4 mt-1 flex-wrap">
+				<div class="mt-1 flex flex-wrap gap-4">
 					{#each [{ value: '', label: 'Prefer not to say' }, { value: 'no', label: 'No' }, { value: 'occasionally', label: 'Occasionally' }, { value: 'yes', label: 'Yes' }] as opt}
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input type="radio" name="smokes" value={opt.value} bind:group={smokes} class="accent-maroon" />
+						<label class="flex cursor-pointer items-center gap-2">
+							<input
+								type="radio"
+								name="smokes"
+								value={opt.value}
+								bind:group={smokes}
+								class="accent-maroon"
+							/>
 							<span>{opt.label}</span>
 						</label>
 					{/each}
@@ -982,12 +1208,20 @@
 			<fieldset>
 				<legend class="label">
 					<span class="block">{T.drinks.en}</span>
-					<span class="block text-xs text-ink/60 font-normal leading-tight" lang="te">{T.drinks.te}</span>
+					<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
+						>{T.drinks.te}</span
+					>
 				</legend>
-				<div class="flex gap-4 mt-1 flex-wrap">
+				<div class="mt-1 flex flex-wrap gap-4">
 					{#each [{ value: '', label: 'Prefer not to say' }, { value: 'no', label: 'No' }, { value: 'occasionally', label: 'Occasionally' }, { value: 'yes', label: 'Yes' }] as opt}
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input type="radio" name="drinks" value={opt.value} bind:group={drinks} class="accent-maroon" />
+						<label class="flex cursor-pointer items-center gap-2">
+							<input
+								type="radio"
+								name="drinks"
+								value={opt.value}
+								bind:group={drinks}
+								class="accent-maroon"
+							/>
 							<span>{opt.label}</span>
 						</label>
 					{/each}
@@ -1001,7 +1235,7 @@
 					id="hobbies"
 					class="input min-h-[80px] resize-y"
 					bind:value={hobbies}
-					oninput={(e) => hobbies = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (hobbies = asciiOnly(e.currentTarget.value))}
 					placeholder="Optional — e.g. Reading, Cricket, Cooking"
 				></textarea>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
@@ -1011,10 +1245,12 @@
 
 	<!-- ── Section: Location ─────────────────────────────────────────────────── -->
 	<details open class="card">
-		<summary class="cursor-pointer font-serif text-xl font-semibold text-maroon mb-1 list-none flex items-center gap-2">
+		<summary
+			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
+		>
 			<span class="text-tangerine">▸</span>
 			Location
-			<span class="text-sm font-normal text-ink/50 ml-1" lang="te">నివాస వివరాలు</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">నివాస వివరాలు</span>
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -1027,10 +1263,12 @@
 					class="input"
 					class:border-vermilion={errors.city}
 					bind:value={city}
-					oninput={(e) => city = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (city = asciiOnly(e.currentTarget.value))}
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-				{#if errors.city}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.city}</p>{/if}
+				{#if errors.city}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.city}
+					</p>{/if}
 			</div>
 
 			<!-- State -->
@@ -1046,8 +1284,10 @@
 			<!-- Pin Code (optional) -->
 			<div>
 				<label for="pin_code" class="label">
-					<span class="block">Pin Code <span class="text-ink/50 font-normal text-xs">(optional)</span></span>
-					<span class="block text-xs font-normal leading-tight" lang="te">పిన్ కోడ్</span>
+					<span class="block"
+						>Pin Code <span class="text-xs font-normal text-ink/50">(optional)</span></span
+					>
+					<span class="block text-xs leading-tight font-normal" lang="te">పిన్ కోడ్</span>
 				</label>
 				<input
 					id="pin_code"
@@ -1068,7 +1308,7 @@
 					type="text"
 					class="input"
 					bind:value={country}
-					oninput={(e) => country = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (country = asciiOnly(e.currentTarget.value))}
 					placeholder="India"
 				/>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
@@ -1078,26 +1318,32 @@
 
 	<!-- ── Section: About ───────────────────────────────────────────────────── -->
 	<details open class="card">
-		<summary class="cursor-pointer font-serif text-xl font-semibold text-maroon mb-1 list-none flex items-center gap-2">
+		<summary
+			class="mb-1 flex cursor-pointer list-none items-center gap-2 font-serif text-xl font-semibold text-maroon"
+		>
 			<span class="text-tangerine">▸</span>
 			About &amp; Expectations
-			<span class="text-sm font-normal text-ink/50 ml-1" lang="te">మీ గురించి &amp; అపేక్షలు</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">మీ గురించి &amp; అపేక్షలు</span>
 		</summary>
 
 		<div class="mt-4 space-y-4">
 			<!-- About Yourself -->
 			<div>
 				<BilingualLabel key="about" for="about" />
+				<p class="mt-0.5 text-xs text-ink/45">
+					Tell prospective families about yourself — your values, personality, lifestyle · మీ
+					గురించి వివరించండి
+				</p>
 				<textarea
 					id="about"
-					class="input min-h-[120px] resize-y"
+					class="input mt-1 min-h-[120px] resize-y"
 					class:border-vermilion={errors.about}
 					bind:value={about}
-					oninput={(e) => about = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (about = asciiOnly(e.currentTarget.value))}
 					maxlength={500}
 					placeholder="A short description about yourself, your family, and interests…"
 				></textarea>
-				<div class="flex justify-between mt-1">
+				<div class="mt-1 flex justify-between">
 					{#if errors.about}
 						<p class="text-xs text-vermilion" data-error="true">{errors.about}</p>
 					{:else}
@@ -1110,19 +1356,20 @@
 			<!-- Partner Expectations -->
 			<div>
 				<BilingualLabel key="partnerExpectations" for="expectations" />
-				<p class="text-xs text-ink/50 mb-1">
-					Mention preferred age, education, location, family values, etc. The system will extract keywords from this for matching.
+				<p class="mt-0.5 text-xs text-ink/45">
+					Describe the qualities you're looking for in a partner · జీవిత భాగస్వామిలో కోరుకునే
+					లక్షణాలు
 				</p>
 				<textarea
 					id="expectations"
-					class="input min-h-[140px] resize-y"
+					class="input mt-1 min-h-[140px] resize-y"
 					class:border-vermilion={errors.partner_expectations}
 					bind:value={partner_expectations}
-					oninput={(e) => partner_expectations = asciiOnly(e.currentTarget.value)}
+					oninput={(e) => (partner_expectations = asciiOnly(e.currentTarget.value))}
 					maxlength={800}
 					placeholder="Describe what you're looking for in a partner…"
 				></textarea>
-				<div class="flex justify-between mt-1">
+				<div class="mt-1 flex justify-between">
 					{#if errors.partner_expectations}
 						<p class="text-xs text-vermilion" data-error="true">{errors.partner_expectations}</p>
 					{:else}
@@ -1135,9 +1382,14 @@
 	</details>
 
 	<!-- ── Actions ────────────────────────────────────────────────────────────── -->
-	<div class="flex flex-wrap justify-end gap-3 pb-8">
+	<div class="flex flex-wrap items-center justify-end gap-3 pb-8">
 		{#if errors._photos}
 			<p class="w-full text-sm text-vermilion" data-error="true">{errors._photos}</p>
+		{/if}
+		{#if autoSave && autoSaveStatus !== 'idle'}
+			<span class="mr-auto text-xs text-ink/50">
+				{#if autoSaveStatus === 'pending' || autoSaveStatus === 'saving'}Saving…{:else}Saved ✓{/if}
+			</span>
 		{/if}
 		<a href="/dashboard" class="btn-secondary">
 			{T.cancel.en} · <span lang="te">{T.cancel.te}</span>
