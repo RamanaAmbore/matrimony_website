@@ -151,7 +151,7 @@
 </svelte:head>
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
-<header class="shadow-sm border-t-4 border-saffron border-b border-cream/25" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
+<header class="shadow-sm border-t-4 border-saffron border-b border-cream/10" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
 	<div class="mx-auto flex w-full max-w-5xl items-center justify-center gap-2 px-4 py-2">
 		<!-- Brand wordmark — shrink-0 keeps it from compressing -->
 		<a
@@ -248,10 +248,10 @@
 		>
 			<div class="flex items-center gap-2">
 				<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto" /></div>
-				<div class="font-serif leading-tight">
-					<span class="block text-sm font-semibold" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-					<span class="block text-xs font-normal" lang="te">మరాఠా కల్యాణం</span>
-				</div>
+				<span class="whitespace-nowrap font-serif text-base font-semibold leading-tight">
+					<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
+					<span class="block font-normal leading-tight" lang="te" style="color:#ffb627; -webkit-text-stroke: 0.65px #2b0a0e; paint-order: stroke fill; text-shadow: 0 1px 1px rgba(0,0,0,0.4); opacity: 1;">మరాఠా కల్యాణం</span>
+				</span>
 			</div>
 			<button
 				onclick={closeDrawer}
