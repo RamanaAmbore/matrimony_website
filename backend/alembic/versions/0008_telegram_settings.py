@@ -1,7 +1,7 @@
 """Add Telegram notification settings.
 
-Revision ID: 0002
-Revises: 0001
+Revision ID: 0008
+Revises: 0007
 Create Date: 2026-05-03 00:00:00.000000
 
 """
@@ -11,8 +11,8 @@ from typing import Sequence, Union
 
 from alembic import op
 
-revision: str = "0002"
-down_revision: Union[str, None] = "0001"
+revision: str = "0008"
+down_revision: Union[str, None] = "0007"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
