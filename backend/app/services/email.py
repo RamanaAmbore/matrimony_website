@@ -116,6 +116,19 @@ async def send_detail_request_received(to: str, requester_name: str, profile_nam
     await _send(to, "New detail request — MarathaKalyanam Admin", html)
 
 
+async def send_detail_request_rejected(
+    to: str,
+    profile_first_name: str | None,
+    admin_notes: str | None,
+) -> None:
+    html = _render(
+        "detail_request_rejected.html",
+        profile_first_name=profile_first_name,
+        admin_notes=admin_notes,
+    )
+    await _send(to, "Your detail request was not approved — MarathaKalyanam", html)
+
+
 async def send_detail_request_approved(
     to: str,
     profile: object,

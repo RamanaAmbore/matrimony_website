@@ -109,7 +109,7 @@ def _serialize_full_profile(profile: Profile, request: Request) -> dict[str, Any
         "status": profile.status.value,
         "admin_notes": profile.admin_notes,
         # New fields
-        "marital_status": profile.marital_status.value,
+        "marital_status": profile.marital_status.value if profile.marital_status else None,
         "sub_caste": profile.sub_caste,
         "weight_kg": profile.weight_kg,
         "body_type": profile.body_type.value if profile.body_type else None,
@@ -166,7 +166,7 @@ def _serialize_partial_profile(profile: Profile, request: Request) -> dict[str, 
         "blurred_url": f"{base}/media/{primary.blurred_path}" if primary else None,
         "thumb_url": f"{base}/media/{primary.thumb_path}" if primary else None,
         # New fields safe for partial view
-        "marital_status": profile.marital_status.value,
+        "marital_status": profile.marital_status.value if profile.marital_status else None,
         "family_type": profile.family_type.value if profile.family_type else None,
         "smokes": profile.smokes.value if profile.smokes else None,
         "drinks": profile.drinks.value if profile.drinks else None,
@@ -381,13 +381,16 @@ class ProfileController(Controller):
         is_admin = user and user.get("is_admin")
 
         if is_owner or is_admin:
-            return _serialize_full_profile(profile, request)
+            full = _serialize_full_profile(profile, request)
+            photos_data = full.pop("photos", [])
+            return {"profile": full, "photos": photos_data}
 
         # Non-owner: only approved profiles get partial view
         if profile.status != ProfileStatusEnum.approved:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
-        return _serialize_partial_profile(profile, request)
+        partial = _serialize_partial_profile(profile, request)
+        return {"profile": partial, "photos": []}
 
     @patch("/{profile_id:str}")
     async def update_profile(
@@ -669,11 +672,17 @@ class ProfileController(Controller):
         await db.refresh(profile)
         await db.refresh(profile, ["photos"])
 
-        from app.services.telegram import notify_profile_submitted
+        from app.services.telegram import notify_profile_submitted, notify_profile_approved
         asyncio.create_task(notify_profile_submitted(
             profile_id=str(profile.id),
             name=f"{profile.first_name} {profile.last_name or ''}".strip(),
             gender=profile.gender.value if profile.gender else "unknown",
         ))
+
+        if not require_approval:
+            asyncio.create_task(notify_profile_approved(
+                name=f"{profile.first_name} {profile.last_name or ''}".strip(),
+                admin_notes="Auto-approved",
+            ))
 
         return _serialize_full_profile(profile, request)

@@ -114,7 +114,7 @@ The Settings page is the **only safe place to enter sensitive data** (SMTP crede
 
 | Key | Type | Default | Purpose | Edit? |
 |-----|------|---------|---------|-------|
-| owner_email | string | admin.marathakalyanam@gmail.com | Recipient for admin notifications (profile requests, rejections, etc.) | Yes |
+| owner_email | string | admin.marathakalyanam@gmail.com | Recipient for admin notifications (profile requests, rejections, Telegram alerts, etc.) | Yes |
 | smtp_host | string | localhost | SMTP server hostname (e.g. "mail.example.com"). **IMPORTANT: Never hardcode in code; always set here.** | Yes |
 | smtp_port | int | 1025 | SMTP port (465 = implicit TLS, 587 = STARTTLS) | Yes |
 | smtp_user | string | (empty) | SMTP auth username (leave blank if not needed) | Yes |
@@ -146,7 +146,7 @@ The Settings page is the **only safe place to enter sensitive data** (SMTP crede
 
 When the backend service starts for the first time (fresh database), it automatically:
 
-1. Runs the initial Alembic migration to create the database schema
+1. Runs Alembic migrations (0001 through 0010) to create the database schema and all fields
 2. Seeds default settings from [CLAUDE.md#settings-keys](CLAUDE.md#settings-keys)
 3. Creates a bootstrap admin user at the `OWNER_EMAIL` address (default:
    admin.marathakalyanam@gmail.com)
@@ -185,6 +185,8 @@ After bootstrap, complete these steps:
 3. **Update notification email (if needed):**
    - Go to **Admin > Settings**
    - Update `owner_email` if you want admin notifications sent elsewhere
+   - Telegram bot (MarathaKalaynamBot) also alerts on `owner_email` for: new registrations,
+     profile submissions/approvals/rejections, and view request activity
 
 4. **Configure SMTP:**
    - Go to **Admin > Settings**

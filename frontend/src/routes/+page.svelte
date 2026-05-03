@@ -127,7 +127,7 @@
 
 		<h2 class="mt-6 mb-12 text-center font-serif text-3xl font-semibold text-maroon md:text-4xl">
 			Why Maratha Kalyanam?
-			<span class="block font-normal" lang="te">మరాఠా కల్యాణం ఎందుకు?</span>
+			<span class="block" lang="te">మరాఠా కల్యాణం ఎందుకు?</span>
 		</h2>
 
 		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -139,7 +139,7 @@
 				>🪔</div>
 				<h3 class="mb-3 font-serif text-xl font-semibold text-maroon">
 					Community-Focused
-					<span class="block font-normal" lang="te">సమాజ కేంద్రంగా</span>
+					<span class="block" lang="te">సమాజ కేంద్రంగా</span>
 				</h3>
 				<p class="text-sm text-ink/80">
 					Built for Maratha families with deep respect for gotra, nakshatram,
@@ -156,7 +156,7 @@
 				>🛕</div>
 				<h3 class="mb-3 font-serif text-xl font-semibold text-maroon">
 					Admin-Verified
-					<span class="block font-normal" lang="te">నిర్వాహక ధృవీకరణ</span>
+					<span class="block" lang="te">నిర్వాహక ధృవీకరణ</span>
 				</h3>
 				<p class="text-sm text-ink/80">
 					Every profile is reviewed and approved by our team before going live.
@@ -173,7 +173,7 @@
 				>🪷</div>
 				<h3 class="mb-3 font-serif text-xl font-semibold text-maroon">
 					Privacy First
-					<span class="block font-normal" lang="te">గోప్యత అగ్రగామి</span>
+					<span class="block" lang="te">గోప్యత అగ్రగామి</span>
 				</h3>
 				<p class="text-sm text-ink/80">
 					Photos are blurred in search results. Full details are shared only after

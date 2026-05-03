@@ -144,7 +144,7 @@
 	<div class="mb-6">
 		<h1 class="font-serif text-3xl font-bold text-maroon">
 			Find Your Partner
-			<span class="block text-base font-normal sm:inline sm:ml-2" lang="te">
+			<span class="block sm:inline sm:ml-2" lang="te">
 				 జీవిత భాగస్వామిని కనుగొనండి
 			</span>
 		</h1>
@@ -334,7 +334,7 @@
 					<div class="mb-6 rounded-lg border border-saffron/40 bg-saffron/10 p-4">
 						<p class="font-serif text-lg font-semibold text-maroon">
 							Showing {results.length} of {total} matching profile{total === 1 ? '' : 's'}
-							<span class="font-sans text-sm font-normal text-ink/70" lang="te">
+							<span class="text-ink/70" lang="te">
 								· {total} ప్రొఫైళ్లలో {results.length} చూపబడుతున్నవి
 							</span>
 						</p>

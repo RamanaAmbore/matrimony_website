@@ -161,31 +161,31 @@
 			<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto" /></div>
 			<span class="whitespace-nowrap font-serif text-base font-semibold leading-tight">
 				<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-				<span class="block text-sm font-normal leading-tight" lang="te">మరాఠా కల్యాణం</span>
+				<span class="block leading-tight" lang="te">మరాఠా కల్యాణం</span>
 			</span>
 		</a>
 
 		<!-- Desktop nav — nowrap prevents each item from breaking across lines -->
 		<nav class="ml-8 hidden items-center gap-4 md:flex" aria-label="Main navigation">
-			<a href="/" class="whitespace-nowrap text-sm {navLinkClass('/')}">
+			<a href="/" class="whitespace-nowrap text-sm {navLinkClass('/')}" aria-current={isActive('/') ? 'page' : undefined}>
 				{T.home.en} <span lang="te">{T.home.te}</span>
 			</a>
-			<a href="/search" class="whitespace-nowrap text-sm {navLinkClass('/search')}">
+			<a href="/search" class="whitespace-nowrap text-sm {navLinkClass('/search')}" aria-current={isActive('/search') ? 'page' : undefined}>
 				{T.search.en} <span lang="te">{T.search.te}</span>
 			</a>
-			<a href="/about" class="whitespace-nowrap text-sm {navLinkClass('/about')}">
+			<a href="/about" class="whitespace-nowrap text-sm {navLinkClass('/about')}" aria-current={isActive('/about') ? 'page' : undefined}>
 				{T.aboutPage.en} <span lang="te">{T.aboutPage.te}</span>
 			</a>
 
 			{#if user}
-				<a href="/dashboard" class="whitespace-nowrap text-sm {navLinkClass('/dashboard')}">
+				<a href="/dashboard" class="whitespace-nowrap text-sm {navLinkClass('/dashboard')}" aria-current={isActive('/dashboard') ? 'page' : undefined}>
 					{T.myProfiles.en} <span lang="te">{T.myProfiles.te}</span>
 				</a>
-				<a href="/requests" class="whitespace-nowrap text-sm {navLinkClass('/requests')}">
+				<a href="/requests" class="whitespace-nowrap text-sm {navLinkClass('/requests')}" aria-current={isActive('/requests') ? 'page' : undefined}>
 					{T.requests.en} <span lang="te">{T.requests.te}</span>
 				</a>
 				{#if user.is_admin}
-					<a href="/admin" class="whitespace-nowrap text-sm {navLinkClass('/admin')}">
+					<a href="/admin" class="whitespace-nowrap text-sm {navLinkClass('/admin')}" aria-current={isActive('/admin') ? 'page' : undefined}>
 						{T.admin.en} <span lang="te">{T.admin.te}</span>
 					</a>
 				{/if}
@@ -264,22 +264,22 @@
 
 		<!-- Drawer nav links -->
 		<nav class="flex flex-col gap-1 p-4" aria-label="Mobile navigation">
-			<a href="/" class={drawerLinkClass('/')} onclick={closeDrawer}>
+			<a href="/" class={drawerLinkClass('/')} aria-current={isActive('/') ? 'page' : undefined} onclick={closeDrawer}>
 				{T.home.en} <span lang="te">{T.home.te}</span>
 			</a>
-			<a href="/search" class={drawerLinkClass('/search')} onclick={closeDrawer}>
+			<a href="/search" class={drawerLinkClass('/search')} aria-current={isActive('/search') ? 'page' : undefined} onclick={closeDrawer}>
 				{T.search.en} <span lang="te">{T.search.te}</span>
 			</a>
-			<a href="/about" class={drawerLinkClass('/about')} onclick={closeDrawer}>
+			<a href="/about" class={drawerLinkClass('/about')} aria-current={isActive('/about') ? 'page' : undefined} onclick={closeDrawer}>
 				{T.aboutPage.en} <span lang="te">{T.aboutPage.te}</span>
 			</a>
 
 			{#if user}
 				<div class="my-2 h-px bg-gold/20"></div>
-				<a href="/dashboard" class={drawerLinkClass('/dashboard')} onclick={closeDrawer}>
+				<a href="/dashboard" class={drawerLinkClass('/dashboard')} aria-current={isActive('/dashboard') ? 'page' : undefined} onclick={closeDrawer}>
 					{T.myProfiles.en} <span lang="te">{T.myProfiles.te}</span>
 				</a>
-				<a href="/requests" class={drawerLinkClass('/requests')} onclick={closeDrawer}>
+				<a href="/requests" class={drawerLinkClass('/requests')} aria-current={isActive('/requests') ? 'page' : undefined} onclick={closeDrawer}>
 					{T.requests.en} <span lang="te">{T.requests.te}</span>
 				</a>
 				{#if user.is_admin}
@@ -287,8 +287,8 @@
 					<p class="px-3 text-xs font-semibold tracking-wider text-ink/40 uppercase">
 						{T.admin.en} <span lang="te" class="normal-case">{T.admin.te}</span>
 					</p>
-					<a href="/admin" class={drawerLinkClass('/admin')} onclick={closeDrawer}>Admin Panel</a>
-					<a href="/admin/settings" class={drawerLinkClass('/admin/settings')} onclick={closeDrawer}>
+					<a href="/admin" class={drawerLinkClass('/admin')} aria-current={isActive('/admin') ? 'page' : undefined} onclick={closeDrawer}>Admin Panel</a>
+					<a href="/admin/settings" class={drawerLinkClass('/admin/settings')} aria-current={isActive('/admin/settings') ? 'page' : undefined} onclick={closeDrawer}>
 						Settings
 					</a>
 				{/if}
@@ -302,7 +302,7 @@
 				</button>
 			{:else}
 				<div class="my-2 h-px bg-gold/20"></div>
-				<a href="/login" class={drawerLinkClass('/login')} onclick={closeDrawer}>
+				<a href="/login" class={drawerLinkClass('/login')} aria-current={isActive('/login') ? 'page' : undefined} onclick={closeDrawer}>
 					{T.login.en} <span lang="te">{T.login.te}</span>
 				</a>
 				<a
@@ -346,7 +346,7 @@
 					<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto" /></div>
 					<div class="leading-tight">
 						<p class="font-serif text-xl font-semibold text-cream leading-none">Maratha Kalyanam</p>
-						<p class="text-lg leading-snug" lang="te">మరాఠా కల్యాణం</p>
+						<p class="leading-snug" lang="te">మరాఠా కల్యాణం</p>
 					</div>
 				</div>
 			</div>

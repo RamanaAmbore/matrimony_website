@@ -371,6 +371,8 @@ class AdminController(Controller):
         await db.commit()
 
         # Send full profile details to requester
+        requester = None
+        profile = None
         try:
             requester_result = await db.execute(select(User).where(User.id == req.requester_user_id))
             requester = requester_result.scalar_one_or_none()
@@ -393,18 +395,18 @@ class AdminController(Controller):
                 await email_svc.send_detail_request_approved(
                     requester.email, profile, profile.photos, photo_bytes_map
                 )
-
-            from app.services.telegram import notify_request_approved
-            asyncio.create_task(notify_request_approved(
-                requester=requester.email if requester else str(req.requester_user_id),
-                profile_name=(
-                    f"{profile.first_name} {profile.last_name or ''}".strip()
-                    if profile else str(req.profile_id)
-                ),
-            ))
         except Exception as exc:
             import logging
             logging.getLogger(__name__).warning("Failed to send approved request email: %s", exc)
+
+        from app.services.telegram import notify_request_approved
+        asyncio.create_task(notify_request_approved(
+            requester=requester.email if requester else str(req.requester_user_id),
+            profile_name=(
+                f"{profile.first_name} {profile.last_name or ''}".strip()
+                if profile else str(req.profile_id)
+            ),
+        ))
 
         await db.refresh(req)
         return _serialize_request(req)
@@ -434,23 +436,32 @@ class AdminController(Controller):
         req.responded_at = datetime.now(timezone.utc)
         await db.commit()
 
+        requester = None
+        profile = None
         try:
             requester_result = await db.execute(select(User).where(User.id == req.requester_user_id))
             requester = requester_result.scalar_one_or_none()
             profile_result = await db.execute(select(Profile).where(Profile.id == req.profile_id))
             profile = profile_result.scalar_one_or_none()
 
-            from app.services.telegram import notify_request_rejected
-            asyncio.create_task(notify_request_rejected(
-                requester=requester.email if requester else str(req.requester_user_id),
-                profile_name=(
-                    f"{profile.first_name} {profile.last_name or ''}".strip()
-                    if profile else str(req.profile_id)
-                ),
-            ))
+            if requester:
+                await email_svc.send_detail_request_rejected(
+                    requester.email,
+                    profile.first_name if profile else None,
+                    data.admin_notes,
+                )
         except Exception as exc:
             import logging
             logging.getLogger(__name__).warning("Failed to send rejected request notification: %s", exc)
+
+        from app.services.telegram import notify_request_rejected
+        asyncio.create_task(notify_request_rejected(
+            requester=requester.email if requester else str(req.requester_user_id),
+            profile_name=(
+                f"{profile.first_name} {profile.last_name or ''}".strip()
+                if profile else str(req.profile_id)
+            ),
+        ))
 
         await db.refresh(req)
         return _serialize_request(req)
@@ -467,8 +478,11 @@ class AdminController(Controller):
         users = result.scalars().all()
         return [
             {
-                "id": str(u.id),
+                "user_id": str(u.id),
                 "email": u.email,
+                "full_name": u.full_name,
+                "user_handle": u.user_handle,
+                "phone_number": u.phone_number,
                 "is_admin": u.is_admin,
                 "email_verified": u.email_verified,
                 "created_at": u.created_at.isoformat(),
@@ -499,8 +513,11 @@ class AdminController(Controller):
         await db.commit()
         await db.refresh(user)
         return {
-            "id": str(user.id),
+            "user_id": str(user.id),
             "email": user.email,
+            "full_name": user.full_name,
+            "user_handle": user.user_handle,
+            "phone_number": user.phone_number,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
             "created_at": user.created_at.isoformat(),
@@ -531,8 +548,11 @@ class AdminController(Controller):
         await db.commit()
         await db.refresh(user)
         return {
-            "id": str(user.id),
+            "user_id": str(user.id),
             "email": user.email,
+            "full_name": user.full_name,
+            "user_handle": user.user_handle,
+            "phone_number": user.phone_number,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
             "created_at": user.created_at.isoformat(),

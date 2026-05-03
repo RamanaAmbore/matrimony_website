@@ -12,11 +12,15 @@ profiles are reviewed by our team before being published, ensuring quality and s
 ## Creating an account
 
 1. Visit [marathakalyanam.com](https://marathakalyanam.com) and click **Register**
-2. Enter your email address and choose a password (at least 8 characters)
-3. Optionally add your phone number (with any ISD code; defaults to +91 for India)
-4. We'll send you a verification link to your email
-5. Click the link to verify your email
-6. You're ready to create your first profile
+2. Fill in the registration form:
+   - **Full Name:** Your first and last name (required)
+   - **User Handle:** A unique username (required)
+   - **Email:** Your email address (required)
+   - **Phone Number:** With any ISD code; defaults to +91 for India (required)
+   - **Password:** At least 8 characters (required)
+3. We'll send you a verification link to your email
+4. Click the link to verify your email
+5. You're ready to create your first profile
 
 ## Adding a profile
 
@@ -46,6 +50,7 @@ approve it (so it appears in searches) or ask for changes.
 ## Profile fields explained
 
 **Personal & demographics:**
+- **First name:** Your first name (shown in search results as initial only)
 - **Gender:** Bride or groom
 - **Date of birth:** Used to calculate age and astrological details
 - **Height (cm):** Your height in centimeters (e.g. 160 for 5'3")
@@ -85,7 +90,8 @@ approve it (so it appears in searches) or ask for changes.
 - **Time of birth:** Exact time (hour and minute) for accurate charts
 - **Place of birth:** City/town where you were born
 - **Gotra:** Your patrilineal clan (e.g. "Gautam", "Bhrigu")
-- **Sub-caste:** Your sub-caste or jati
+- **Sub-caste:** Choose from Maratha, Are Marathi, Are Kshatriya, Maratha Non-Brahmin, or
+  enter a custom value
 - **Surname/Clan:** Your family surname or clan
 - **Kuldevata:** Family deity (e.g. "Hanuman", "Durga")
 - **Devak:** Astrological classification (helps with birth-chart compatibility)
@@ -94,7 +100,8 @@ approve it (so it appears in searches) or ask for changes.
 - **Manglik:** Does your horoscope show Mangal dosha? (important for many families)
 
 **Communication:**
-- **Mother tongue:** Language spoken at home (default: Telugu)
+- **Mother tongue:** Language spoken at home; choose from Telugu, Marathi, Kannada, Tamil, or
+  enter a custom language (default: Telugu)
 - **About you:** A personal note about yourself (interests, values, what you're seeking)
 - **Partner expectations:** What you're looking for in a match
 
@@ -131,6 +138,16 @@ message and can retake it immediately.
 
 You can upload up to **5 photos** per profile. The first one will be your primary photo (shown
 in search).
+
+## Your account details
+
+When you log in, the dashboard shows an **Account Details** panel at the top with your:
+- Full Name (as entered during registration)
+- User ID (your unique user handle)
+- Email address
+- Phone number
+
+This information is private and visible only to you.
 
 ## Searching for matches
 
@@ -187,8 +204,8 @@ reviewed independently.
 
 **How do I delete my account?**
 Currently you can delete individual profiles, but to fully delete your account and all data,
-please email **admin.marathakalyanam@gmail.com** with your request. We'll remove all traces of your
-account within 5 business days.
+please email **admin.marathakalyanam@gmail.com** with your request. We'll remove all traces
+of your account within 5 business days.
 
 **Is my information safe?**
 Yes. We use encrypted connections, secure passwords, and don't share your details with anyone

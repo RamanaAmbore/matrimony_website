@@ -16,7 +16,7 @@ backend/                       Async Python, Litestar ASGI framework
     db.py                      AsyncSessionLocal, async engine, session dependency
     models/
       base.py                  Declarative base
-      user.py                  User model: email, password_hash, email_verified
+      user.py                  User model: email, full_name, phone_number, password_hash, email_verified
       profile.py               Profile model: demographics, astrology, status
       photo.py                 Photo model: passport/blurred/thumb variants
       request.py               DetailRequest model: requester → profile
@@ -39,7 +39,7 @@ backend/                       Async Python, Litestar ASGI framework
     templates/email/           Jinja2 templates for all transactional emails
   alembic/
     versions/
-      0001_initial_schema.py   Schema + settings seed migration
+      0001_initial_schema.py   Initial schema; migrations 0001–0010 cover all schema evolution
   tests/                       pytest + pytest-asyncio
   setup.py                     Dependencies: litestar, sqlalchemy, pillow, etc.
 
@@ -141,7 +141,7 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
-| POST | /auth/register | none | Email + password → user created (unverified) |
+| POST | /auth/register | none | Email + full_name + password + user_handle + phone_number → user created (unverified) |
 | POST | /auth/login | none | Email + password → session set |
 | POST | /auth/logout | yes | Clear session |
 | POST | /auth/verify-email | none | Token → user email_verified=true |
@@ -177,7 +177,7 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 
 | Entity | Key fields | Notes |
 |--------|-----------|-------|
-| **User** | id (UUID), email (unique), password_hash, email_verified, is_admin, created_at | Bootstrap admin created on first startup if no users exist |
+| **User** | id (UUID), email (unique), full_name (VARCHAR 120), user_handle (unique), phone_number, password_hash, email_verified, is_admin, created_at | Bootstrap admin created on first startup if no users exist. full_name is mandatory. |
 | **Profile** | id, owner_user_id (FK User), gender (bride/groom), first_name, last_name, dob, age, height_cm, weight_kg, complexion, body_type, blood_group, education, college_university, occupation, employer, work_location, annual_income_inr, pin_code, city, state, country, gotra, kuldevata, devak, surname_clan, sub_caste, nakshatram, rashi, time_of_birth, place_of_birth, manglik (yes/no/partial/unknown), mother_tongue (default "Telugu"), marital_status, diet (veg/non-veg/eggetarian), about, partner_expectations, father_occupation, mother_occupation, num_brothers, num_sisters, num_brothers_married, num_sisters_married, family_type, family_status, family_values, native_place, smokes, drinks, hobbies, status (draft/pending/approved/rejected), admin_notes, created_at, updated_at | Stateful: draft → pending (on submit) → approved/rejected (admin). Editing approved profile resets to pending. Extended fields cover personal, professional, family, lifestyle, astrological, and demographic details |
 | **Photo** | id, profile_id (FK), original_filename, passport_path, blurred_path, thumb_path, byte_size, is_primary, created_at | Three variants stored under `MEDIA_ROOT/profiles/{profile_id}/{photo_id}/`. Max 5 per profile |
 | **DetailRequest** | id, requester_user_id (FK User), profile_id (FK Profile), status (pending/approved/rejected), message, admin_notes, responded_at, created_at | Unique constraint on (requester_user_id, profile_id). Admin approves → email full profile + passport photos to requester |

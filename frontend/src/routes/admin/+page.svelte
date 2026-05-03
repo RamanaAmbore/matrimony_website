@@ -219,6 +219,15 @@
 		return id.slice(0, 8) + '…';
 	}
 
+	function statusBadgeClass(status: string) {
+		switch (status) {
+			case 'approved': return 'badge-approved';
+			case 'pending':  return 'badge-pending';
+			case 'rejected': return 'badge-rejected';
+			default:         return 'badge-draft';
+		}
+	}
+
 	// Tab button class helper
 	function tabClass(tab: Tab) {
 		return activeTab === tab
@@ -531,7 +540,7 @@
 									<td class="px-4 py-3 font-medium text-ink">{p.first_name} {p.last_name}</td>
 									<td class="px-4 py-3 text-ink/70 capitalize">{p.gender}</td>
 									<td class="px-4 py-3">
-										<span class="badge-{p.status}">{p.status}</span>
+										<span class={statusBadgeClass(p.status)}>{p.status}</span>
 									</td>
 									<td class="px-4 py-3 text-ink/70">{p.city}</td>
 									<td class="px-4 py-3 text-ink/50">{fmtDate(p.created_at)}</td>
@@ -581,7 +590,7 @@
 									<td class="px-4 py-3 font-mono text-xs text-ink/70">{truncateId(r.requester_user_id)}</td>
 									<td class="px-4 py-3 font-mono text-xs text-ink/70">{truncateId(r.profile_id)}</td>
 									<td class="px-4 py-3">
-										<span class="badge-{r.status}">{r.status}</span>
+										<span class={statusBadgeClass(r.status)}>{r.status}</span>
 									</td>
 									<td class="px-4 py-3 text-ink/50">{fmtDate(r.created_at)}</td>
 								</tr>

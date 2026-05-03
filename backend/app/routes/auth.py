@@ -97,6 +97,17 @@ class AuthController(Controller):
         db: AsyncSession,
         request: Request,
     ) -> dict[str, Any]:
+        # Validate full_name
+        full_name = data.full_name.strip()
+        if len(full_name) < 2:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_name",
+                    "message": "Full name must be at least 2 characters.",
+                },
+            )
+
         # Validate handle format
         if not _HANDLE_RE.match(data.user_handle):
             raise HTTPException(
@@ -150,7 +161,7 @@ class AuthController(Controller):
         user = User(
             id=uuid.uuid4(),
             email=data.email.lower(),
-            full_name=data.full_name,
+            full_name=full_name,
             user_handle=data.user_handle,
             phone_number=normalized_phone,
             password_hash=auth_svc.hash_password(data.password),
@@ -171,7 +182,7 @@ class AuthController(Controller):
 
         from app.services.telegram import notify_user_registered
         asyncio.create_task(notify_user_registered(
-            name=data.full_name,
+            name=full_name,
             email=data.email,
             phone=normalized_phone,
         ))

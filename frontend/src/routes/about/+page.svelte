@@ -8,7 +8,7 @@
 <div class="mx-auto max-w-3xl px-4 py-16">
 	<h1 class="mb-1 font-serif text-4xl font-bold text-maroon">
 		About Us
-		<span class="block font-normal" lang="te">మన గురించి</span>
+		<span class="block" lang="te">మన గురించి</span>
 	</h1>
 	<p class="mb-8 text-ink/60">Maratha Kalyanam · <span lang="te">మరాఠా కల్యాణం</span> — Our Story</p>
 
@@ -16,7 +16,7 @@
 		<section>
 			<h2 class="mb-3 font-serif text-2xl font-semibold text-maroon">
 				Our Mission
-				<span class="block font-normal" lang="te">మా లక్ష్యం</span>
+				<span class="block" lang="te">మా లక్ష్యం</span>
 			</h2>
 			<p class="mt-1 text-ink/80">
 				Maratha Kalyanam was founded with a simple purpose: to help Maratha families find compatible
@@ -34,7 +34,7 @@
 		<section>
 			<h2 class="mb-3 font-serif text-2xl font-semibold text-maroon">
 				Our Community
-				<span class="block font-normal" lang="te">మా సమాజం</span>
+				<span class="block" lang="te">మా సమాజం</span>
 			</h2>
 			<p class="mt-1 text-ink/80">
 				The Maratha community in Andhra, Telangana, Maharashtra and other states has a rich cultural
@@ -52,7 +52,7 @@
 		<section>
 			<h2 class="mb-3 font-serif text-2xl font-semibold text-maroon">
 				Privacy &amp; Safety
-				<span class="block font-normal" lang="te">గోప్యత &amp; భద్రత</span>
+				<span class="block" lang="te">గోప్యత &amp; భద్రత</span>
 			</h2>
 			<p class="mt-1 text-ink/80">
 				We take privacy seriously. Profile photos are blurred in all public listings. Your contact
@@ -73,7 +73,7 @@
 		<section>
 			<h2 class="mb-3 font-serif text-2xl font-semibold text-maroon">
 				Contact
-				<span class="block font-normal" lang="te">సంప్రదించండి</span>
+				<span class="block" lang="te">సంప్రదించండి</span>
 			</h2>
 			<p class="mt-1 text-ink/80">
 				For queries, please email

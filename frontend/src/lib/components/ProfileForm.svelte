@@ -341,7 +341,6 @@
 		const e: Record<string, string> = {};
 		// Basic
 		if (!first_name.trim()) e.first_name = 'Required';
-		if (!last_name.trim()) e.last_name = 'Required';
 		if (!dob) e.dob = 'Required';
 		else {
 			const age = new Date().getFullYear() - new Date(dob).getFullYear();
@@ -392,7 +391,7 @@
 		return {
 			gender,
 			first_name: first_name.trim(),
-			last_name: surname_clan.trim(),
+			last_name: last_name.trim(),
 			dob,
 			marital_status: (marital_status || null) as MaritalStatus | null,
 			mother_tongue: mother_tongue.trim(),
