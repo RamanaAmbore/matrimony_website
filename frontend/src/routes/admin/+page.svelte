@@ -101,6 +101,7 @@
 	// ── Mount: load dashboard + pre-load profiles ────────────────────────────────
 
 	onMount(async () => {
+		loadAllProfiles(); // start immediately so profiles show without waiting for dashboard
 		try {
 			dashboard = await adminApi.dashboard();
 		} catch (err) {
@@ -112,7 +113,6 @@
 		} finally {
 			loading = false;
 		}
-		loadAllProfiles(); // pre-load for default tab
 	});
 
 	// ── Lazy tab loaders ─────────────────────────────────────────────────────────
@@ -670,6 +670,10 @@
 					</table>
 				</div>
 			{/if}
+		{:else}
+			<div class="flex items-center justify-center py-20">
+				<Loader size={36} class="animate-spin text-saffron" />
+			</div>
 		{/if}
 
 	<!-- ── All Requests tab ────────────────────────────────────────────────────── -->
@@ -767,6 +771,10 @@
 					</table>
 				</div>
 			{/if}
+		{:else}
+			<div class="flex items-center justify-center py-20">
+				<Loader size={36} class="animate-spin text-saffron" />
+			</div>
 		{/if}
 
 	<!-- ── All Users tab ───────────────────────────────────────────────────────── -->
