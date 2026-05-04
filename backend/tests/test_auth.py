@@ -59,7 +59,7 @@ async def test_register_success(client: AsyncClient) -> None:
     resp = await client.post("/auth/register", json=_reg_payload(email))
     assert resp.status_code == 201, resp.text
     data = resp.json()
-    assert "user_id" in data and data["user_id"]
+    assert "uuid" in data and data["uuid"]
 
 
 async def test_register_missing_handle(client: AsyncClient) -> None:
@@ -219,9 +219,9 @@ async def test_login_with_email(client: AsyncClient) -> None:
     resp = await client.post("/auth/login", json=_login_email(email))
     assert resp.status_code == 200, resp.text
     data = resp.json()
-    assert data["user_id"]
+    assert data["uuid"]
     assert data["email"] == email
-    assert data["user_handle"] == handle
+    assert data["user_id"] == handle
     assert data["is_admin"] is False
     assert data["email_verified"] is False
 
@@ -235,7 +235,7 @@ async def test_login_with_handle(client: AsyncClient) -> None:
     resp = await client.post("/auth/login", json=_login_handle(handle))
     assert resp.status_code == 200, resp.text
     data = resp.json()
-    assert data["user_handle"] == handle
+    assert data["user_id"] == handle
     assert data["email"] == email
 
 
@@ -284,7 +284,7 @@ async def test_me_unauthenticated(client: AsyncClient) -> None:
 
 
 async def test_me_authenticated(client: AsyncClient) -> None:
-    """/auth/me returns user_id, user_handle, email when logged in."""
+    """/auth/me returns uuid, user_id, email when logged in."""
     email = f"me_{uuid.uuid4().hex[:8]}@example.com"
     handle = _unique_handle()
     await client.post("/auth/register", json=_reg_payload(email, handle=handle))
@@ -294,7 +294,7 @@ async def test_me_authenticated(client: AsyncClient) -> None:
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["email"] == email
-    assert data["user_handle"] == handle
+    assert data["user_id"] == handle
     assert data["is_admin"] is False
 
 
@@ -331,9 +331,9 @@ async def test_verify_email_with_good_token(client: AsyncClient, db_session: Asy
     password = "ValidPass123!"
 
     resp = await client.post("/auth/register", json=_reg_payload(email, password=password))
-    user_id = resp.json()["user_id"]
+    user_uuid = resp.json()["uuid"]
 
-    result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_id)))
+    result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_uuid)))
     user = result.scalar_one()
     token = user.email_verification_token
     assert token is not None
@@ -355,9 +355,9 @@ async def test_verify_email_double_use(client: AsyncClient, db_session: AsyncSes
     password = "ValidPass123!"
 
     resp = await client.post("/auth/register", json=_reg_payload(email, password=password))
-    user_id = resp.json()["user_id"]
+    user_uuid = resp.json()["uuid"]
 
-    result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_id)))
+    result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_uuid)))
     user = result.scalar_one()
     token = user.email_verification_token
 

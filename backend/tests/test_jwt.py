@@ -174,8 +174,8 @@ async def test_me_returns_payload_from_jwt_cookie(client: AsyncClient) -> None:
     resp = await client.get("/auth/me")
     assert resp.status_code == 200, resp.text
     data = resp.json()
-    assert "user_id" in data
-    assert data["user_handle"] == handle
+    assert "uuid" in data
+    assert data["user_id"] == handle
     assert data["email"] == email
     assert data["is_admin"] is False
     assert data["email_verified"] is False

@@ -13,7 +13,7 @@
 	const PASSWORD_DIGIT_RE = /\d/;
 
 	let full_name = $state('');
-	let user_handle = $state('');
+	let user_id = $state('');
 	let email = $state('');
 	let phone_number = $state('+91 ');
 	let password = $state('');
@@ -53,11 +53,11 @@
 	}
 
 	function handleBlur() {
-		const msg = validateHandle(user_handle);
+		const msg = validateHandle(user_id);
 		if (msg) {
-			errors = { ...errors, user_handle: msg };
+			errors = { ...errors, user_id: msg };
 		} else {
-			const { user_handle: _, ...rest } = errors;
+			const { user_id: _, ...rest } = errors;
 			errors = rest;
 		}
 	}
@@ -67,8 +67,8 @@
 		if (!full_name.trim()) e.full_name = 'Full name is required';
 		else if (full_name.trim().length < 2) e.full_name = 'Must be at least 2 characters';
 		else if (full_name.trim().length > 80) e.full_name = 'Must be 80 characters or fewer';
-		const handleMsg = validateHandle(user_handle);
-		if (handleMsg) e.user_handle = handleMsg;
+		const handleMsg = validateHandle(user_id);
+		if (handleMsg) e.user_id = handleMsg;
 		if (!email.trim()) e.email = 'Email is required';
 		else if (!EMAIL_RE.test(email)) e.email = 'Enter a valid email';
 		const phoneMsg = validatePhone(phone_number);
@@ -90,7 +90,7 @@
 				full_name.trim(),
 				email.trim(),
 				password,
-				user_handle.trim(),
+				user_id.trim(),
 				phone_number.trim()
 			);
 			toastStore.success('Account created! Please check your email to verify.');
@@ -99,7 +99,7 @@
 			if (err instanceof ApiError) {
 				if (err.status === 409) {
 					if (err.code === 'handle_taken') {
-						errors = { user_handle: 'This user ID is already taken — pick another' };
+						errors = { user_id: 'This user ID is already taken — pick another' };
 					} else if (err.code === 'phone_taken') {
 						errors = { phone_number: 'This phone number is already registered' };
 					} else {
@@ -110,7 +110,7 @@
 					if (err.code === 'invalid_email') errors = { email: err.message };
 					else if (err.code === 'invalid_phone') errors = { phone_number: err.message };
 					else if (err.code === 'weak_password') errors = { password: err.message };
-					else if (err.code === 'invalid_handle') errors = { user_handle: err.message };
+					else if (err.code === 'invalid_handle') errors = { user_id: err.message };
 					else toastStore.error(err.message.slice(0, 80));
 				} else {
 					toastStore.error(err.message.slice(0, 60));
@@ -161,27 +161,27 @@
 			{/if}
 		</div>
 
-		<!-- User ID / handle -->
+		<!-- User ID -->
 		<div>
-			<label for="user_handle" class="label block">
+			<label for="user_id" class="label block">
 				<span class="block">{T.userHandle.en}</span>
 				<span class="block leading-tight" lang="te">{T.userHandle.te}</span>
 			</label>
 			<input
-				id="user_handle"
+				id="user_id"
 				type="text"
 				autocomplete="username"
 				class="input font-mono"
-				class:border-vermilion={errors.user_handle}
-				bind:value={user_handle}
-				oninput={(ev) => { user_handle = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
+				class:border-vermilion={errors.user_id}
+				bind:value={user_id}
+				oninput={(ev) => { user_id = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
 				onblur={handleBlur}
 				placeholder="ramana_ambore"
 				maxlength="30"
 				spellcheck="false"
 			/>
-			{#if errors.user_handle}
-				<p class="mt-1 text-xs text-vermilion">{errors.user_handle}</p>
+			{#if errors.user_id}
+				<p class="mt-1 text-xs text-vermilion">{errors.user_id}</p>
 			{:else}
 				<p class="mt-1 text-xs text-ink/50 leading-snug">
 					3–30 characters · letters, digits, underscore · must start with a letter<br />

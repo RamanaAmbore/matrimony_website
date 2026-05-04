@@ -119,7 +119,7 @@
 			</p>
 			<div class="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4 text-ink/70">
 				<div><span class="text-xs text-ink/50 block">Name</span>{data.user.full_name || '—'}</div>
-				<div><span class="text-xs text-ink/50 block">User ID</span><span class="font-mono">{data.user.user_handle}</span></div>
+				<div><span class="text-xs text-ink/50 block">User ID</span><span class="font-mono">{data.user.user_id}</span></div>
 				<div><span class="text-xs text-ink/50 block">Email</span>{data.user.email}</div>
 				<div><span class="text-xs text-ink/50 block">Phone</span>{data.user.phone_number}</div>
 			</div>

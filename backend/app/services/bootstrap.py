@@ -45,7 +45,7 @@ async def bootstrap(session: AsyncSession) -> None:
         sep = "=" * 60
         logger.warning(
             "\n%s\nBOOTSTRAP ADMIN CREATED\n"
-            "Handle: %s\n"
+            "User ID: %s\n"
             "Email: %s\n"
             "Password: %s\n"
             "ROTATE THIS PASSWORD AFTER FIRST LOGIN.\n%s",

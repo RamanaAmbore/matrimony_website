@@ -37,7 +37,7 @@ async def _create_verified_user(client: AsyncClient, db_session: AsyncSession) -
     email = f"user_{uuid.uuid4().hex[:8]}@example.com"
     handle = f"u{uuid.uuid4().hex[:7]}"
     resp = await client.post("/auth/register", json={"email": email, "password": "ValidPass123!", "user_handle": handle, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
-    user_id = resp.json()["user_id"]
+    user_id = resp.json()["uuid"]
     result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_id)))
     user = result.scalar_one()
     user.email_verified = True
@@ -263,7 +263,7 @@ async def test_admin_verify_email_flips_flag(
     email = f"unverified_{uuid.uuid4().hex[:8]}@example.com"
     handle = f"u{uuid.uuid4().hex[:7]}"
     resp = await client.post("/auth/register", json={"email": email, "password": "ValidPass123!", "user_handle": handle, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
-    user_id = resp.json()["user_id"]
+    user_id = resp.json()["uuid"]
 
     # Confirm not verified
     result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_id)))

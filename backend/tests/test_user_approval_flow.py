@@ -127,9 +127,9 @@ async def test_register_verify_and_approve_flow(client: AsyncClient) -> None:
     }
     resp = await client.post("/auth/register", json=reg_payload)
     assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
-    user_id = resp.json()["user_id"]
+    user_id = resp.json()["uuid"]
     print(f"✓ User registered successfully")
-    print(f"  user_id: {user_id}")
+    print(f"  uuid: {user_id}")
     print(f"  email: {email}")
     print(f"  handle: {handle}")
 

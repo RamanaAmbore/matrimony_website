@@ -560,10 +560,10 @@ class AdminController(Controller):
         users = result.scalars().all()
         return [
             {
-                "user_id": str(u.id),
+                "uuid": str(u.id),
                 "email": u.email,
                 "full_name": u.full_name,
-                "user_handle": u.user_handle,
+                "user_id": u.user_handle,
                 "phone_number": u.phone_number,
                 "is_admin": u.is_admin,
                 "email_verified": u.email_verified,
@@ -596,10 +596,10 @@ class AdminController(Controller):
         await db.commit()
         await db.refresh(user)
         return {
-            "user_id": str(user.id),
+            "uuid": str(user.id),
             "email": user.email,
             "full_name": user.full_name,
-            "user_handle": user.user_handle,
+            "user_id": user.user_handle,
             "phone_number": user.phone_number,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
@@ -632,10 +632,10 @@ class AdminController(Controller):
         await db.commit()
         await db.refresh(user)
         return {
-            "user_id": str(user.id),
+            "uuid": str(user.id),
             "email": user.email,
             "full_name": user.full_name,
-            "user_handle": user.user_handle,
+            "user_id": user.user_handle,
             "phone_number": user.phone_number,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
@@ -673,10 +673,10 @@ class AdminController(Controller):
         asyncio.create_task(email_svc.send_account_approved(user.email, user.full_name))
 
         return {
-            "user_id": str(user.id),
+            "uuid": str(user.id),
             "email": user.email,
             "full_name": user.full_name,
-            "user_handle": user.user_handle,
+            "user_id": user.user_handle,
             "phone_number": user.phone_number,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,
@@ -709,10 +709,10 @@ class AdminController(Controller):
         await db.refresh(user)
 
         return {
-            "user_id": str(user.id),
+            "uuid": str(user.id),
             "email": user.email,
             "full_name": user.full_name,
-            "user_handle": user.user_handle,
+            "user_id": user.user_handle,
             "phone_number": user.phone_number,
             "is_admin": user.is_admin,
             "email_verified": user.email_verified,

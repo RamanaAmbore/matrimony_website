@@ -15,8 +15,8 @@ export class ApiError extends Error {
 // ─── Entity interfaces ────────────────────────────────────────────────────────
 
 export interface User {
+	uuid: string;
 	user_id: string;
-	user_handle: string;
 	email: string;
 	phone_number: string;
 	full_name: string;
@@ -365,12 +365,12 @@ export const auth = {
 		full_name: string,
 		email: string,
 		password: string,
-		user_handle: string,
+		user_id: string,
 		phone_number: string
-	): Promise<{ user_id: string }> {
+	): Promise<{ uuid: string }> {
 		return request('/api/auth/register', {
 			method: 'POST',
-			body: JSON.stringify({ email, password, user_handle, phone_number, full_name })
+			body: JSON.stringify({ email, password, user_id, phone_number, full_name })
 		});
 	},
 

@@ -193,7 +193,7 @@
 				{/if}
 				<span class="hidden xl:inline" title={user.email}>
 					<span class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 {user.is_admin ? 'border-cream/30 bg-maroon/20' : 'border-cream/20'}">
-						<span class="font-mono text-xs text-cream/70">{user.user_handle}</span>
+						<span class="font-mono text-xs text-cream/70">{user.user_id}</span>
 						{#if user.is_admin}
 							<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
 						{:else}
@@ -308,7 +308,7 @@
 				{/if}
 				<div class="my-2 h-px bg-gold/20"></div>
 				<div class="px-3 py-1 flex flex-wrap items-center gap-1.5" title={user.email}>
-					<span class="font-mono text-sm text-ink/60">{user.user_handle}</span>
+					<span class="font-mono text-sm text-ink/60">{user.user_id}</span>
 					{#if user.is_admin}
 						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
 					{:else}

@@ -30,10 +30,10 @@ class AdminStatsResponse(msgspec.Struct):
 
 
 class AdminUserResponse(msgspec.Struct):
-    user_id: str
+    uuid: str
     email: str
     full_name: str
-    user_handle: str
+    user_id: str
     phone_number: str
     is_admin: bool
     email_verified: bool

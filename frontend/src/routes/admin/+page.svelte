@@ -182,8 +182,8 @@
 	async function approveUser(u: User) {
 		userActionLoading = true;
 		try {
-			const updated = await adminApi.users.approve(u.user_id);
-			allUsers = allUsers!.map(x => x.user_id === u.user_id ? updated : x);
+			const updated = await adminApi.users.approve(u.uuid);
+			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
 			selectedUser = updated;
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
 			toastStore.success('User approved');
@@ -197,8 +197,8 @@
 	async function unapproveUser(u: User) {
 		userActionLoading = true;
 		try {
-			const updated = await adminApi.users.unapprove(u.user_id);
-			allUsers = allUsers!.map(x => x.user_id === u.user_id ? updated : x);
+			const updated = await adminApi.users.unapprove(u.uuid);
+			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
 			selectedUser = updated;
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
 			toastStore.success('Approval revoked');
@@ -212,8 +212,8 @@
 	async function promoteUserFromGrid(u: User) {
 		userActionLoading = true;
 		try {
-			await adminApi.users.promote(u.user_id);
-			allUsers = allUsers!.map(x => x.user_id === u.user_id ? { ...x, is_admin: true } : x);
+			await adminApi.users.promote(u.uuid);
+			allUsers = allUsers!.map(x => x.uuid === u.uuid ? { ...x, is_admin: true } : x);
 			selectedUser = { ...u, is_admin: true };
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
 			toastStore.success('Promoted to admin');
@@ -227,8 +227,8 @@
 	async function verifyEmailFromGrid(u: User) {
 		userActionLoading = true;
 		try {
-			await adminApi.users.verifyEmail(u.user_id);
-			allUsers = allUsers!.map(x => x.user_id === u.user_id ? { ...x, email_verified: true } : x);
+			await adminApi.users.verifyEmail(u.uuid);
+			allUsers = allUsers!.map(x => x.uuid === u.uuid ? { ...x, email_verified: true } : x);
 			selectedUser = { ...u, email_verified: true };
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
 			toastStore.success('Email verified');
@@ -443,8 +443,7 @@
 			usersGridApi?.destroy();
 			const columnDefs = [
 				{ field: 'email', headerName: 'Email', width: 260, filter: true, sortable: true, headerClass: 'mk-header' },
-				{ field: 'user_handle', headerName: 'Handle', width: 160, filter: true, sortable: true, headerClass: 'mk-header',
-				  valueFormatter: (p: { value: string }) => `@${p.value}` },
+				{ field: 'user_id', headerName: 'User ID', width: 160, filter: true, sortable: true, headerClass: 'mk-header' },
 				{ field: 'full_name', headerName: 'Name', width: 180, filter: true, sortable: true, headerClass: 'mk-header' },
 				{ field: 'phone_number', headerName: 'Phone', width: 150, headerClass: 'mk-header' },
 				{ field: 'email_verified', headerName: 'Email Verified', width: 150, sortable: true, headerClass: 'mk-header',
@@ -689,16 +688,6 @@
 			{#if allUsers.length === 0}
 				<div class="card text-sm text-ink/60">No users found.</div>
 			{:else}
-				<!-- Quick search -->
-				<div class="mb-3 flex items-center gap-2">
-					<input
-						type="search"
-						placeholder="Search users…"
-						class="input text-sm w-64"
-						oninput={(e) => usersGridApi?.setGridOption('quickFilterText', e.currentTarget.value)}
-					/>
-				</div>
-
 				<!-- ag-Grid container -->
 				{#key userFilter}
 				<div use:usersGridAction={computeUsersRows(userFilter)} class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm" style="height: 480px;
@@ -725,7 +714,7 @@
 						<div class="min-w-0 flex-1">
 							<p class="font-medium text-ink truncate">{selectedUser.email}</p>
 							<p class="text-xs text-ink/50">
-								@{selectedUser.user_handle}
+								{selectedUser.user_id}
 								{#if selectedUser.is_admin} · <span class="text-saffron font-semibold">Admin</span>{/if}
 								{#if selectedUser.email_verified} · <span class="text-green-600">Email verified</span>{:else} · <span class="text-marigold">Unverified email</span>{/if}
 								{#if selectedUser.is_approved} · <span class="text-green-600">Approved</span>{:else} · <span class="text-marigold">Not approved</span>{/if}

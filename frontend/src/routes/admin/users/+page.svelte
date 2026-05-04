@@ -29,7 +29,7 @@
 		search.trim()
 			? userList.filter((u) =>
 					u.email.toLowerCase().includes(search.toLowerCase()) ||
-					u.user_handle?.toLowerCase().includes(search.toLowerCase())
+					u.user_id?.toLowerCase().includes(search.toLowerCase())
 				)
 			: userList
 	);
@@ -40,7 +40,7 @@
 		try {
 			await adminApi.users.promote(id);
 			userList = userList.map((u) =>
-				u.user_id === id ? { ...u, is_admin: true } : u
+				u.uuid === id ? { ...u, is_admin: true } : u
 			);
 			toastStore.success('User promoted to admin');
 		} catch {
@@ -88,9 +88,9 @@
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-gold/10">
-					{#each filtered as user (user.user_id)}
+					{#each filtered as user (user.uuid)}
 						<tr class="hover:bg-cream/50">
-							<td class="px-4 py-3 font-mono text-ink/80 text-sm">@{user.user_handle}</td>
+							<td class="px-4 py-3 font-mono text-ink/80 text-sm">{user.user_id}</td>
 							<td class="px-4 py-3 text-ink">{user.email}</td>
 							<td class="px-4 py-3">
 								{#if user.email_verified}
@@ -115,11 +115,11 @@
 							<td class="px-4 py-3 text-right">
 								{#if !user.is_admin}
 									<button
-										onclick={() => promote(user.user_id)}
-										disabled={promotingId === user.user_id}
+										onclick={() => promote(user.uuid)}
+										disabled={promotingId === user.uuid}
 										class="text-xs font-medium text-saffron hover:underline disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-saffron"
 									>
-										{promotingId === user.user_id ? 'Promoting…' : 'Promote to Admin'}
+										{promotingId === user.uuid ? 'Promoting…' : 'Promote to Admin'}
 									</button>
 								{/if}
 							</td>

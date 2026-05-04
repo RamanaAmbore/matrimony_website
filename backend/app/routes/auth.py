@@ -108,14 +108,14 @@ class AuthController(Controller):
                 },
             )
 
-        # Validate handle format
-        if not _HANDLE_RE.match(data.user_handle):
+        # Validate user_id (handle) format
+        if not _HANDLE_RE.match(data.user_id):
             raise HTTPException(
                 status_code=422,
                 detail={
                     "code": "invalid_handle",
                     "message": (
-                        "Handle must be 3–30 characters, start with a letter, "
+                        "User ID must be 3–30 characters, start with a letter, "
                         "and contain only letters, digits, or underscores."
                     ),
                 },
@@ -127,14 +127,14 @@ class AuthController(Controller):
 
         normalized_phone = _normalize_phone(data.phone_number)
 
-        # Check handle uniqueness (case-insensitive)
+        # Check user_id uniqueness (case-insensitive — DB column is user_handle)
         handle_result = await db.execute(
-            select(User).where(func.lower(User.user_handle) == data.user_handle.lower())
+            select(User).where(func.lower(User.user_handle) == data.user_id.lower())
         )
         if handle_result.scalar_one_or_none():
             raise HTTPException(
                 status_code=409,
-                detail={"code": "handle_taken", "message": "That handle is already taken"},
+                detail={"code": "handle_taken", "message": "That user ID is already taken"},
             )
 
         # Check email/phone uniqueness — always enforced in prod, skipped in test mode
@@ -163,7 +163,7 @@ class AuthController(Controller):
             id=uuid.uuid4(),
             email=data.email.lower(),
             full_name=full_name,
-            user_handle=data.user_handle,
+            user_handle=data.user_id,
             phone_number=normalized_phone,
             password_hash=auth_svc.hash_password(data.password),
             email_verified=False,
@@ -193,10 +193,10 @@ class AuthController(Controller):
             full_name=full_name,
             email=data.email,
             phone=normalized_phone,
-            user_handle=data.user_handle,
+            user_handle=data.user_id,
         ))
 
-        return {"user_id": str(user.id)}
+        return {"uuid": str(user.id)}
 
     @post("/login", status_code=200)
     async def login(
@@ -233,8 +233,8 @@ class AuthController(Controller):
         )
 
         body: dict[str, Any] = {
-            "user_id": str(user.id),
-            "user_handle": user.user_handle,
+            "uuid": str(user.id),
+            "user_id": user.user_handle,
             "email": user.email,
             "full_name": user.full_name,
             "is_admin": user.is_admin,
@@ -292,8 +292,8 @@ class AuthController(Controller):
                 detail={"code": "unauthenticated", "message": "Not authenticated"},
             )
         return {
-            "user_id": payload["sub"],
-            "user_handle": payload.get("handle", ""),
+            "uuid": payload["sub"],
+            "user_id": payload.get("handle", ""),
             "email": payload.get("email", ""),
             "full_name": payload.get("full_name", ""),
             "is_admin": payload.get("is_admin", False),

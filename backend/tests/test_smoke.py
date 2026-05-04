@@ -33,23 +33,23 @@ async def test_register_and_login(client: AsyncClient) -> None:
     resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
     assert resp.status_code == 201, resp.text
     data = resp.json()
-    assert "user_id" in data
-    user_id = data["user_id"]
+    assert "uuid" in data
+    user_uuid = data["uuid"]
 
     # Login
     resp = await client.post("/auth/login", json={"identifier": email, "password": password})
     assert resp.status_code == 200, resp.text
     data = resp.json()
-    assert data["user_id"] == user_id
+    assert data["uuid"] == user_uuid
     assert data["email"] == email
-    assert data["user_handle"] == handle
+    assert data["user_id"] == handle
     assert not data["is_admin"]
     assert not data["email_verified"]
 
     # Me endpoint
     resp = await client.get("/auth/me")
     assert resp.status_code == 200
-    assert resp.json()["user_id"] == user_id
+    assert resp.json()["uuid"] == user_uuid
 
     # Logout
     resp = await client.post("/auth/logout")
@@ -92,11 +92,11 @@ async def test_full_flow_register_verify_profile_admin(client: AsyncClient) -> N
     # Register
     resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
     assert resp.status_code == 201
-    user_id = resp.json()["user_id"]
+    user_uuid = resp.json()["uuid"]
 
     # Manually verify email in DB
     async with AsyncSessionLocal() as session:
-        result = await session.execute(select(User).where(User.id == uuid.UUID(user_id)))
+        result = await session.execute(select(User).where(User.id == uuid.UUID(user_uuid)))
         user = result.scalar_one()
         user.email_verified = True
         await session.commit()

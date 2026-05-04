@@ -113,7 +113,7 @@ async def _create_verified_user_and_login(client: Any, db_session: Any) -> tuple
 
     resp = await client.post("/auth/register", json={"email": email, "password": password})
     assert resp.status_code == 201, resp.text
-    user_id = resp.json()["user_id"]
+    user_id = resp.json()["uuid"]
 
     result = await db_session.execute(sa_select(User).where(User.id == uuid.UUID(user_id)))
     user = result.scalar_one()
