@@ -657,114 +657,80 @@
 		<div class="my-6 rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{error}</div>
 	{:else if dashboard}
 		<div class="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-			<!-- Users card -->
-			<div class="card space-y-3 {activeTab === 'users' ? 'ring-2 ring-maroon/40 border-maroon/30' : ''}">
-				<div class="flex items-center gap-2">
-					<Users size={20} class="text-saffron shrink-0" />
-					<span class="font-serif font-semibold text-maroon">Users</span>
-					<span class="ml-auto tabular-nums text-2xl font-bold text-ink">{dashboard.stats.users}</span>
-				</div>
-				<div class="flex flex-wrap gap-2">
-					<button
-						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
-						onclick={() => selectTab('users')}
-						title="View all users"
-					>
-						&#9888; Unverified: {dashboard.pending_users.length}
-					</button>
-					<button
-						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
-						onclick={() => selectTab('users')}
-						title="View all users"
-					>
-						&#10003; Verified: {dashboard.stats.users - dashboard.pending_users.length}
-					</button>
-				</div>
-			</div>
 
-			<!-- Profiles card -->
-			<div class="card space-y-3 {activeTab === 'profiles' ? 'ring-2 ring-maroon/40 border-maroon/30' : ''}">
-				<div class="flex items-center gap-2">
-					<UserCheck size={20} class="text-gold shrink-0" />
-					<span class="font-serif font-semibold text-maroon">Profiles</span>
-					<span class="ml-auto tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_total}</span>
-				</div>
-				<div class="flex flex-wrap gap-2">
+			<!-- ── All Profiles card ───────────────────────────────────────── -->
+			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'profiles' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
+				<!-- Header — click to show All Profiles -->
+				<button
+					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'profiles' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
+					onclick={() => { selectTab('profiles'); profileStatusFilter = 'all'; }}
+				>
+					<UserCheck size={20} class="{activeTab === 'profiles' ? 'text-saffron' : 'text-gold'} shrink-0" />
+					<span class="font-serif font-semibold {activeTab === 'profiles' ? 'text-cream' : 'text-maroon'}">All Profiles</span>
+					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'profiles' ? 'text-cream' : 'text-ink'}">{dashboard.stats.profiles_total}</span>
+				</button>
+				<!-- Filter pills -->
+				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button
 						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
 						onclick={() => { selectTab('profiles'); profileStatusFilter = 'pending'; }}
-						title="View pending profiles"
-					>
-						&#9203; Pending: {dashboard.stats.profiles_pending}
-					</button>
+					>&#9203; Pending: {dashboard.stats.profiles_pending}</button>
 					<button
 						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
 						onclick={() => { selectTab('profiles'); profileStatusFilter = 'approved'; }}
-						title="View approved profiles"
-					>
-						&#10003; Approved: {dashboard.stats.profiles_approved}
-					</button>
-					<button
-						class="rounded-full border border-ink/20 bg-ink/5 px-3 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/10 transition-colors"
-						onclick={() => { selectTab('profiles'); profileStatusFilter = 'all'; }}
-						title="View all profiles"
-					>
-						All profiles &rarr;
-					</button>
+					>&#10003; Approved: {dashboard.stats.profiles_approved}</button>
 				</div>
 			</div>
 
-			<!-- Requests card -->
-			<div class="card space-y-3 {activeTab === 'requests' ? 'ring-2 ring-maroon/40 border-maroon/30' : ''}">
-				<div class="flex items-center gap-2">
-					<Inbox size={20} class="text-sky-500 shrink-0" />
-					<span class="font-serif font-semibold text-maroon">Requests</span>
-					<span class="ml-auto tabular-nums text-2xl font-bold text-ink">{dashboard.stats.requests_pending}</span>
-				</div>
-				<div class="flex flex-wrap gap-2">
+			<!-- ── All Requests card ───────────────────────────────────────── -->
+			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'requests' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
+				<button
+					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'requests' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
+					onclick={() => { selectTab('requests'); requestStatusFilter = 'all'; }}
+				>
+					<Inbox size={20} class="{activeTab === 'requests' ? 'text-saffron' : 'text-sky-500'} shrink-0" />
+					<span class="font-serif font-semibold {activeTab === 'requests' ? 'text-cream' : 'text-maroon'}">All Requests</span>
+					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'requests' ? 'text-cream' : 'text-ink'}">{dashboard.stats.requests_pending}</span>
+				</button>
+				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button
 						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
 						onclick={() => { selectTab('requests'); requestStatusFilter = 'pending'; }}
-						title="View pending requests"
-					>
-						&#9203; Pending: {dashboard.stats.requests_pending}
-					</button>
+					>&#9203; Pending: {dashboard.stats.requests_pending}</button>
 					<button
 						class="rounded-full border border-ink/20 bg-ink/5 px-3 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/10 transition-colors"
 						onclick={() => { selectTab('requests'); requestStatusFilter = 'all'; }}
-						title="View all requests"
-					>
-						All requests &rarr;
-					</button>
+					>All &rarr;</button>
 				</div>
 			</div>
+
+			<!-- ── All Users card ─────────────────────────────────────────── -->
+			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'users' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
+				<button
+					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'users' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
+					onclick={() => selectTab('users')}
+				>
+					<Users size={20} class="{activeTab === 'users' ? 'text-saffron' : 'text-saffron'} shrink-0" />
+					<span class="font-serif font-semibold {activeTab === 'users' ? 'text-cream' : 'text-maroon'}">All Users</span>
+					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'users' ? 'text-cream' : 'text-ink'}">{dashboard.stats.users}</span>
+				</button>
+				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
+					<button
+						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+						onclick={() => selectTab('users')}
+					>&#9888; Unverified: {dashboard.pending_users.length}</button>
+					<button
+						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
+						onclick={() => selectTab('users')}
+					>&#10003; Verified: {dashboard.stats.users - dashboard.pending_users.length}</button>
+				</div>
+			</div>
+
 		</div>
 	{/if}
 
-	<!-- ── Section tab bar ───────────────────────────────────────────────────── -->
-	<div bind:this={contentSectionEl} class="mt-4 mb-0 flex border-b border-gold/30 bg-white/60 backdrop-blur-sm rounded-t-lg overflow-hidden shadow-sm">
-		<button
-			class="flex-1 px-4 py-3 text-sm font-semibold transition-all {activeTab === 'profiles' ? 'bg-maroon text-cream' : 'text-ink/60 hover:bg-saffron/10 hover:text-maroon'}"
-			onclick={() => selectTab('profiles')}
-		>
-			All Profiles
-			<span class="ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold {activeTab === 'profiles' ? 'bg-white/20 text-cream' : 'bg-ink/10 text-ink/60'}">{allProfiles?.length ?? dashboard?.stats.profiles_total ?? '…'}</span>
-		</button>
-		<button
-			class="flex-1 px-4 py-3 text-sm font-semibold transition-all {activeTab === 'requests' ? 'bg-maroon text-cream' : 'text-ink/60 hover:bg-saffron/10 hover:text-maroon'}"
-			onclick={() => selectTab('requests')}
-		>
-			All Requests
-			<span class="ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold {activeTab === 'requests' ? 'bg-white/20 text-cream' : 'bg-ink/10 text-ink/60'}">{allRequests?.length ?? dashboard?.stats.requests_pending ?? '…'}</span>
-		</button>
-		<button
-			class="flex-1 px-4 py-3 text-sm font-semibold transition-all {activeTab === 'users' ? 'bg-maroon text-cream' : 'text-ink/60 hover:bg-saffron/10 hover:text-maroon'}"
-			onclick={() => selectTab('users')}
-		>
-			All Users
-			<span class="ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold {activeTab === 'users' ? 'bg-white/20 text-cream' : 'bg-ink/10 text-ink/60'}">{allUsers?.length ?? dashboard?.stats.users ?? '…'}</span>
-		</button>
-	</div>
+	<!-- anchor for scroll-into-view when stat card is clicked -->
+	<div bind:this={contentSectionEl}></div>
 	{#if activeTab === 'profiles'}
 		{#if allProfilesLoading}
 			<div class="flex items-center justify-center py-20">
