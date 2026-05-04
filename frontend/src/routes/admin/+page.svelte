@@ -121,7 +121,9 @@
 	// ── Mount: load dashboard + pre-load profiles ────────────────────────────────
 
 	onMount(async () => {
-		loadAllUsers(); // start immediately so users show without waiting for dashboard
+		loadAllUsers();    // preload all three so stat card chips are complete on first render
+		loadAllProfiles();
+		loadAllRequests();
 		try {
 			dashboard = await adminApi.dashboard();
 		} catch (err) {
@@ -683,7 +685,7 @@
 					<button
 						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
 						onclick={() => { selectTab('users'); userFilter = 'all'; }}
-					>All · {dashboard.stats.users}</button>
+					>All</button>
 					{#if dashboard.pending_users.length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'unverified' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
@@ -713,7 +715,7 @@
 					<button
 						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
 						onclick={() => { selectTab('profiles'); profileStatusFilter = 'all'; }}
-					>All · {dashboard.stats.profiles_total}</button>
+					>All</button>
 					{#if dashboard.stats.profiles_pending > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
@@ -755,7 +757,7 @@
 					<button
 						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
 						onclick={() => { selectTab('requests'); requestStatusFilter = 'all'; }}
-					>All · {allRequests ? allRequests.length : '…'}</button>
+					>All</button>
 					{#if dashboard.stats.requests_pending > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
