@@ -9,7 +9,6 @@
 		type AdminDashboard,
 		type PendingProfileSummary,
 		type PendingRequest,
-		type PendingUser,
 		type Profile,
 		type DetailRequest,
 		type User
@@ -21,16 +20,15 @@
 		Users,
 		UserCheck,
 		Inbox,
-		CheckCheck,
-		X
+		ShieldCheck
 	} from 'lucide-svelte';
 
 	// ── Tab state ────────────────────────────────────────────────────────────────
 
-	type Tab = 'pending' | 'profiles' | 'requests' | 'users' | 'broadcast';
-	let activeTab = $state<Tab>('pending');
+	type Tab = 'profiles' | 'requests' | 'users';
+	let activeTab = $state<Tab>('profiles');
 
-	// ── Pending tab state ────────────────────────────────────────────────────────
+	// ── Dashboard state ──────────────────────────────────────────────────────────
 
 	let dashboard = $state<AdminDashboard | null>(null);
 	let loading = $state(true);
@@ -68,7 +66,7 @@
 	let selectedUser = $state<User | null>(null);
 	let userActionLoading = $state(false);
 
-	// ── Broadcast Email tab state ─────────────────────────────────────────────────
+	// ── Broadcast Email state ─────────────────────────────────────────────────────
 
 	let broadcastSubject = $state('');
 	let broadcastBody = $state('');
@@ -100,7 +98,7 @@
 		}
 	}
 
-	// ── Mount: load pending dashboard ────────────────────────────────────────────
+	// ── Mount: load dashboard + pre-load profiles ────────────────────────────────
 
 	onMount(async () => {
 		try {
@@ -114,6 +112,7 @@
 		} finally {
 			loading = false;
 		}
+		loadAllProfiles(); // pre-load for default tab
 	});
 
 	// ── Lazy tab loaders ─────────────────────────────────────────────────────────
@@ -299,12 +298,12 @@
 
 	function selectTab(tab: Tab) {
 		activeTab = tab;
-		if (tab === 'profiles') loadAllProfiles();
+		if (tab === 'profiles') loadAllProfiles(); // no-op if already loaded
 		if (tab === 'requests') loadAllRequests();
 		if (tab === 'users') loadAllUsers();
 	}
 
-	// ── Profile actions ──────────────────────────────────────────────────────────
+	// ── Profile actions (pending tab legacy — kept for dashboard stat cards) ─────
 
 	async function approveProfile(p: PendingProfileSummary) {
 		actionLoading[p.id] = true;
@@ -338,7 +337,7 @@
 		}
 	}
 
-	// ── Request actions ──────────────────────────────────────────────────────────
+	// ── Request actions (legacy — kept for type compat) ──────────────────────────
 
 	async function approveRequest(r: PendingRequest) {
 		actionLoading[r.id] = true;
@@ -371,25 +370,79 @@
 		}
 	}
 
-	// ── User actions ─────────────────────────────────────────────────────────────
+	// ── Inline profile approve/reject (Profiles tab, works on full Profile) ──────
 
-	async function verifyUser(u: PendingUser) {
-		actionLoading[u.id] = true;
+	async function approvePendingProfile(p: Profile) {
+		actionLoading[p.id] = true;
 		try {
-			await adminApi.users.verifyEmail(u.id);
-			dashboard!.pending_users = dashboard!.pending_users.filter(x => x.id !== u.id);
-			toastStore.success('Email verified');
+			await adminApi.profiles.approve(p.id);
+			allProfiles = allProfiles!.map(x => x.id === p.id ? { ...x, status: 'approved' as const } : x);
+			toastStore.success('Profile approved');
 		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
 		} finally {
-			actionLoading[u.id] = false;
+			actionLoading[p.id] = false;
 		}
 	}
 
-	function toggleReject(id: string) {
+	async function rejectPendingProfile(p: Profile) {
+		const notes = rejectNotes[p.id] ?? '';
+		if (!notes.trim()) { toastStore.error('Add a rejection reason'); return; }
+		actionLoading[p.id] = true;
+		try {
+			await adminApi.profiles.reject(p.id, notes);
+			allProfiles = allProfiles!.map(x => x.id === p.id ? { ...x, status: 'rejected' as const } : x);
+			rejectOpen[p.id] = false;
+			toastStore.success('Profile rejected');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			actionLoading[p.id] = false;
+		}
+	}
+
+	function toggleRejectProfile(id: string) {
 		rejectOpen[id] = !rejectOpen[id];
 		if (!rejectOpen[id]) rejectNotes[id] = '';
 	}
+
+	// ── Inline request approve/reject (Requests tab, works on full DetailRequest) ─
+
+	async function approvePendingRequest(r: DetailRequest) {
+		actionLoading[r.id] = true;
+		try {
+			await adminApi.requests.approve(r.id);
+			allRequests = allRequests!.map(x => x.id === r.id ? { ...x, status: 'approved' as const } : x);
+			toastStore.success('Request approved — email sent');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			actionLoading[r.id] = false;
+		}
+	}
+
+	async function rejectPendingRequest(r: DetailRequest) {
+		const notes = rejectNotes[r.id] ?? '';
+		if (!notes.trim()) { toastStore.error('Add a rejection reason'); return; }
+		actionLoading[r.id] = true;
+		try {
+			await adminApi.requests.reject(r.id, notes);
+			allRequests = allRequests!.map(x => x.id === r.id ? { ...x, status: 'rejected' as const } : x);
+			rejectOpen[r.id] = false;
+			toastStore.success('Request rejected');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			actionLoading[r.id] = false;
+		}
+	}
+
+	function toggleRejectRequest(id: string) {
+		rejectOpen[id] = !rejectOpen[id];
+		if (!rejectOpen[id]) rejectNotes[id] = '';
+	}
+
+	// ── Helpers ──────────────────────────────────────────────────────────────────
 
 	function fmtDate(iso: string) {
 		return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -425,7 +478,13 @@
 	<p class="mt-1 text-sm text-ink/60">Platform overview and quick approvals</p>
 
 	<!-- ── Stats row (always visible) ────────────────────────────────────────── -->
-	{#if dashboard}
+	{#if loading}
+		<div class="my-6 flex items-center justify-center py-10">
+			<Loader size={36} class="animate-spin text-saffron" />
+		</div>
+	{:else if error}
+		<div class="my-6 rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{error}</div>
+	{:else if dashboard}
 		<div class="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 			<!-- Users card -->
 			<div class="card space-y-3">
@@ -440,14 +499,14 @@
 						onclick={() => selectTab('users')}
 						title="View all users"
 					>
-						⚠ Unverified: {dashboard.pending_users.length}
+						&#9888; Unverified: {dashboard.pending_users.length}
 					</button>
 					<button
 						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
 						onclick={() => selectTab('users')}
 						title="View all users"
 					>
-						✓ Verified: {dashboard.stats.users - dashboard.pending_users.length}
+						&#10003; Verified: {dashboard.stats.users - dashboard.pending_users.length}
 					</button>
 				</div>
 			</div>
@@ -465,21 +524,21 @@
 						onclick={() => { selectTab('profiles'); profileStatusFilter = 'pending'; }}
 						title="View pending profiles"
 					>
-						⏳ Pending: {dashboard.stats.profiles_pending}
+						&#9203; Pending: {dashboard.stats.profiles_pending}
 					</button>
 					<button
 						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
 						onclick={() => { selectTab('profiles'); profileStatusFilter = 'approved'; }}
 						title="View approved profiles"
 					>
-						✓ Approved: {dashboard.stats.profiles_approved}
+						&#10003; Approved: {dashboard.stats.profiles_approved}
 					</button>
 					<button
 						class="rounded-full border border-ink/20 bg-ink/5 px-3 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/10 transition-colors"
 						onclick={() => { selectTab('profiles'); profileStatusFilter = 'all'; }}
 						title="View all profiles"
 					>
-						All profiles →
+						All profiles &rarr;
 					</button>
 				</div>
 			</div>
@@ -497,14 +556,14 @@
 						onclick={() => { selectTab('requests'); requestStatusFilter = 'pending'; }}
 						title="View pending requests"
 					>
-						⏳ Pending: {dashboard.stats.requests_pending}
+						&#9203; Pending: {dashboard.stats.requests_pending}
 					</button>
 					<button
 						class="rounded-full border border-ink/20 bg-ink/5 px-3 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/10 transition-colors"
 						onclick={() => { selectTab('requests'); requestStatusFilter = 'all'; }}
 						title="View all requests"
 					>
-						All requests →
+						All requests &rarr;
 					</button>
 				</div>
 			</div>
@@ -513,245 +572,13 @@
 
 	<!-- ── Tab bar ─────────────────────────────────────────────────────────────── -->
 	<div class="mb-8 flex flex-wrap gap-1 rounded-full border border-gold/30 bg-white px-1.5 py-1.5 w-fit shadow-sm">
-		<button class={tabClass('pending')} onclick={() => selectTab('pending')}>
-			Action Required
-			{#if dashboard && (dashboard.stats.profiles_pending + dashboard.pending_users.length + dashboard.stats.requests_pending) > 0}
-				<span class="ml-1.5 rounded-full bg-vermilion text-white text-[10px] font-bold px-1.5 py-0.5">
-					{dashboard.stats.profiles_pending + dashboard.pending_users.length + dashboard.stats.requests_pending}
-				</span>
-			{/if}
-		</button>
 		<button class={tabClass('profiles')} onclick={() => selectTab('profiles')}>Profiles</button>
 		<button class={tabClass('requests')} onclick={() => selectTab('requests')}>Requests</button>
 		<button class={tabClass('users')} onclick={() => selectTab('users')}>Users</button>
-		<button class={tabClass('broadcast')} onclick={() => selectTab('broadcast')}>Broadcast</button>
 	</div>
 
-	<!-- ── Pending tab ─────────────────────────────────────────────────────────── -->
-	{#if activeTab === 'pending'}
-
-		{#if loading}
-			<div class="flex items-center justify-center py-20">
-				<Loader size={36} class="animate-spin text-saffron" />
-			</div>
-		{:else if error}
-			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{error}</div>
-		{:else if dashboard}
-
-			<!-- ── Pending profile approvals ──────────────────────────────────────── -->
-			<section class="mb-10">
-				<div class="mb-3 flex items-center justify-between">
-					<h2 class="font-serif text-xl font-semibold text-maroon">
-						Pending Profile Approvals
-						<span class="ml-2 rounded-full bg-saffron/20 text-saffron text-xs font-semibold px-2 py-0.5">
-							{dashboard.pending_profiles.length}
-						</span>
-					</h2>
-					<a href="/admin/profiles" class="text-sm text-saffron hover:underline">View all →</a>
-				</div>
-
-				{#if dashboard.pending_profiles.length === 0}
-					<div class="card flex items-center gap-3 text-ink/60">
-						<CheckCheck size={20} class="shrink-0 text-green-500" />
-						<span class="text-sm">All caught up — no pending profiles</span>
-					</div>
-				{:else}
-					<div class="space-y-3">
-						{#each dashboard.pending_profiles as p (p.id)}
-							<div class="card space-y-2">
-								<!-- Profile summary row -->
-								<div class="flex flex-wrap items-start justify-between gap-2">
-									<div class="min-w-0">
-										<p class="font-semibold text-ink">
-											{p.first_name} {p.last_name}
-											<span class="badge badge-pending ml-1">{p.gender}</span>
-										</p>
-										<p class="mt-0.5 text-xs text-ink/60">
-											Age {p.age} · {p.city}, {p.state} · Gotra: {p.gotra} · Nakshatram: {p.nakshatram}
-										</p>
-										<p class="mt-0.5 text-xs text-ink/50">
-											Owner: {p.owner_email} · Submitted {fmtDate(p.created_at)}
-										</p>
-									</div>
-									<div class="flex shrink-0 gap-2">
-										<button
-											class="btn-primary text-xs px-3 py-1.5"
-											disabled={actionLoading[p.id]}
-											onclick={() => approveProfile(p)}
-										>
-											{#if actionLoading[p.id] && !rejectOpen[p.id]}
-												<Loader size={12} class="animate-spin" />
-											{:else}
-												Approve
-											{/if}
-										</button>
-										<button
-											class="btn-danger text-xs px-3 py-1.5"
-											disabled={actionLoading[p.id]}
-											onclick={() => toggleReject(p.id)}
-										>
-											<X size={12} class="inline" /> Reject
-										</button>
-									</div>
-								</div>
-
-								<!-- Inline reject form -->
-								{#if rejectOpen[p.id]}
-									<div class="flex gap-2 pt-1">
-										<input
-											type="text"
-											class="input text-sm flex-1"
-											placeholder="Rejection reason (required)"
-											bind:value={rejectNotes[p.id]}
-										/>
-										<button
-											class="btn-danger text-xs px-3 py-1.5 shrink-0"
-											disabled={actionLoading[p.id]}
-											onclick={() => rejectProfile(p)}
-										>
-											{#if actionLoading[p.id]}
-												<Loader size={12} class="animate-spin" />
-											{:else}
-												Confirm
-											{/if}
-										</button>
-									</div>
-								{/if}
-							</div>
-						{/each}
-					</div>
-				{/if}
-			</section>
-
-			<!-- ── Pending detail-info requests ───────────────────────────────────── -->
-			<section class="mb-10">
-				<div class="mb-3 flex items-center justify-between">
-					<h2 class="font-serif text-xl font-semibold text-maroon">
-						Pending Detail Requests
-						<span class="ml-2 rounded-full bg-saffron/20 text-saffron text-xs font-semibold px-2 py-0.5">
-							{dashboard.pending_requests.length}
-						</span>
-					</h2>
-					<a href="/admin/requests" class="text-sm text-saffron hover:underline">View all →</a>
-				</div>
-
-				{#if dashboard.pending_requests.length === 0}
-					<div class="card flex items-center gap-3 text-ink/60">
-						<CheckCheck size={20} class="shrink-0 text-green-500" />
-						<span class="text-sm">All caught up — no pending requests</span>
-					</div>
-				{:else}
-					<div class="space-y-3">
-						{#each dashboard.pending_requests as r (r.id)}
-							<div class="card space-y-2">
-								<div class="flex flex-wrap items-start justify-between gap-2">
-									<div class="min-w-0">
-										<p class="font-semibold text-ink">
-											{r.requester_email}
-											<span class="text-ink/50 font-normal"> → </span>
-											{r.profile_first_name} {r.profile_last_name}
-										</p>
-										{#if r.message}
-											<p class="mt-0.5 text-xs text-ink/60 line-clamp-1">"{r.message}"</p>
-										{/if}
-										<p class="mt-0.5 text-xs text-ink/50">Requested {fmtDate(r.created_at)}</p>
-									</div>
-									<div class="flex shrink-0 gap-2">
-										<button
-											class="btn-primary text-xs px-3 py-1.5"
-											disabled={actionLoading[r.id]}
-											onclick={() => approveRequest(r)}
-										>
-											{#if actionLoading[r.id] && !rejectOpen[r.id]}
-												<Loader size={12} class="animate-spin" />
-											{:else}
-												Approve
-											{/if}
-										</button>
-										<button
-											class="btn-danger text-xs px-3 py-1.5"
-											disabled={actionLoading[r.id]}
-											onclick={() => toggleReject(r.id)}
-										>
-											<X size={12} class="inline" /> Reject
-										</button>
-									</div>
-								</div>
-
-								{#if rejectOpen[r.id]}
-									<div class="flex gap-2 pt-1">
-										<input
-											type="text"
-											class="input text-sm flex-1"
-											placeholder="Rejection reason (required)"
-											bind:value={rejectNotes[r.id]}
-										/>
-										<button
-											class="btn-danger text-xs px-3 py-1.5 shrink-0"
-											disabled={actionLoading[r.id]}
-											onclick={() => rejectRequest(r)}
-										>
-											{#if actionLoading[r.id]}
-												<Loader size={12} class="animate-spin" />
-											{:else}
-												Confirm
-											{/if}
-										</button>
-									</div>
-								{/if}
-							</div>
-						{/each}
-					</div>
-				{/if}
-			</section>
-
-			<!-- ── Recently registered — pending email verification ───────────────── -->
-			<section class="mb-10">
-				<div class="mb-3 flex items-center justify-between">
-					<h2 class="font-serif text-xl font-semibold text-maroon">
-						Pending User Verification
-						<span class="ml-2 rounded-full bg-saffron/20 text-saffron text-xs font-semibold px-2 py-0.5">
-							{dashboard.pending_users.length}
-						</span>
-					</h2>
-					<a href="/admin/users" class="text-sm text-saffron hover:underline">View all →</a>
-				</div>
-
-				{#if dashboard.pending_users.length === 0}
-					<div class="card flex items-center gap-3 text-ink/60">
-						<CheckCheck size={20} class="shrink-0 text-green-500" />
-						<span class="text-sm">All caught up — no unverified users</span>
-					</div>
-				{:else}
-					<div class="space-y-3">
-						{#each dashboard.pending_users as u (u.id)}
-							<div class="card flex flex-wrap items-center justify-between gap-3">
-								<div class="min-w-0">
-									<p class="font-medium text-ink">{u.email}</p>
-									<p class="mt-0.5 text-xs text-ink/50">Registered {fmtDate(u.created_at)}</p>
-								</div>
-								<button
-									class="btn-secondary text-xs px-3 py-1.5 shrink-0 flex items-center gap-1.5"
-									disabled={actionLoading[u.id]}
-									onclick={() => verifyUser(u)}
-								>
-									{#if actionLoading[u.id]}
-										<Loader size={12} class="animate-spin" />
-									{:else}
-										<ShieldCheck size={14} />
-										Verify email
-									{/if}
-								</button>
-							</div>
-						{/each}
-					</div>
-				{/if}
-			</section>
-
-		{/if}
-
 	<!-- ── All Profiles tab ────────────────────────────────────────────────────── -->
-	{:else if activeTab === 'profiles'}
+	{#if activeTab === 'profiles'}
 		{#if allProfilesLoading}
 			<div class="flex items-center justify-center py-20">
 				<Loader size={36} class="animate-spin text-saffron" />
@@ -794,7 +621,7 @@
 								<th class="px-4 py-3">City · State</th>
 								<th class="px-4 py-3">Education</th>
 								<th class="px-4 py-3">Submitted</th>
-								<th class="px-4 py-3"></th>
+								<th class="px-4 py-3">Actions</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gold/20">
@@ -809,7 +636,46 @@
 									<td class="px-4 py-3 text-ink/60 text-xs">{p.education ?? '—'}</td>
 									<td class="px-4 py-3 text-ink/50 text-xs">{fmtDate(p.created_at)}</td>
 									<td class="px-4 py-3">
-										<a href="/profiles/{p.id}" class="text-saffron hover:underline text-xs">View →</a>
+										{#if profileStatusFilter === 'pending'}
+											<div class="flex items-center gap-1.5">
+												<button
+													class="rounded px-2 py-1 text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+													disabled={actionLoading[p.id]}
+													onclick={() => approvePendingProfile(p)}
+													title="Approve this profile"
+												>
+													{actionLoading[p.id] ? '…' : '✓'}
+												</button>
+												<button
+													class="rounded px-2 py-1 text-xs font-semibold bg-vermilion text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+													disabled={actionLoading[p.id]}
+													onclick={() => toggleRejectProfile(p.id)}
+													title="Reject this profile"
+												>
+													✕
+												</button>
+												<a href="/profiles/{p.id}" class="text-saffron hover:underline text-xs ml-1">View</a>
+											</div>
+											{#if rejectOpen[p.id]}
+												<div class="flex gap-1.5 mt-1.5">
+													<input
+														type="text"
+														class="input text-xs flex-1"
+														placeholder="Rejection reason"
+														bind:value={rejectNotes[p.id]}
+													/>
+													<button
+														class="rounded px-2 py-1 text-xs font-semibold bg-vermilion text-white hover:bg-red-700 disabled:opacity-50"
+														disabled={actionLoading[p.id]}
+														onclick={() => rejectPendingProfile(p)}
+													>
+														Confirm
+													</button>
+												</div>
+											{/if}
+										{:else}
+											<a href="/profiles/{p.id}" class="text-saffron hover:underline text-xs">View &rarr;</a>
+										{/if}
 									</td>
 								</tr>
 							{/each}
@@ -862,6 +728,7 @@
 								<th class="px-4 py-3">Profile</th>
 								<th class="px-4 py-3">Status</th>
 								<th class="px-4 py-3">Date</th>
+								<th class="px-4 py-3">Actions</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gold/20">
@@ -874,6 +741,39 @@
 										<span class={statusBadgeClass(r.status)}>{r.status}</span>
 									</td>
 									<td class="px-4 py-3 text-ink/50 text-xs">{fmtDate(r.created_at)}</td>
+									<td class="px-4 py-3">
+										{#if requestStatusFilter === 'pending'}
+											<div class="flex items-center gap-1.5">
+												<button
+													class="rounded px-2 py-1 text-xs font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+													disabled={actionLoading[r.id]}
+													onclick={() => approvePendingRequest(r)}
+												>
+													{actionLoading[r.id] ? '…' : '✓'}
+												</button>
+												<button
+													class="rounded px-2 py-1 text-xs font-semibold bg-vermilion text-white hover:bg-red-700 disabled:opacity-50"
+													disabled={actionLoading[r.id]}
+													onclick={() => toggleRejectRequest(r.id)}
+												>✕</button>
+											</div>
+											{#if rejectOpen[r.id]}
+												<div class="flex gap-1.5 mt-1.5">
+													<input
+														type="text"
+														class="input text-xs flex-1"
+														placeholder="Rejection reason"
+														bind:value={rejectNotes[r.id]}
+													/>
+													<button
+														class="rounded px-2 py-1 text-xs font-semibold bg-vermilion text-white disabled:opacity-50"
+														disabled={actionLoading[r.id]}
+														onclick={() => rejectPendingRequest(r)}
+													>Confirm</button>
+												</div>
+											{/if}
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -980,79 +880,49 @@
 					</div>
 				{/if}
 			{/if}
-		{/if}
 
-	{/if}
-
-	<!-- ── Broadcast Email tab ─────────────────────────────────────────────────── -->
-	{#if activeTab === 'broadcast'}
-		<div class="max-w-2xl">
-			<h2 class="text-xl font-semibold text-ink mb-1">Broadcast Email</h2>
-			<p class="text-sm text-ink/60 mb-6">Send a message to all registered users.</p>
-
-			<div class="bg-white rounded-xl border border-gold/20 shadow-sm p-6 space-y-5">
-				<!-- Audience filters -->
-				<fieldset class="space-y-2">
-					<legend class="text-sm font-medium text-ink">Audience</legend>
-					<label class="flex items-center gap-2 text-sm cursor-pointer">
-						<input type="checkbox" bind:checked={broadcastVerifiedOnly} class="accent-maroon" />
-						Only email-verified users
-					</label>
-					<label class="flex items-center gap-2 text-sm cursor-pointer">
-						<input type="checkbox" bind:checked={broadcastApprovedOnly} class="accent-maroon" />
-						Only admin-approved users
-					</label>
-				</fieldset>
-
-				<!-- Subject -->
-				<div class="space-y-1">
-					<label for="bc-subject" class="label text-sm">Subject</label>
+			<!-- Broadcast Email section -->
+			<div class="mt-8 rounded-lg border border-gold/30 bg-white p-5 shadow-sm">
+				<h3 class="font-serif text-lg font-semibold text-maroon mb-4">Send Broadcast Email</h3>
+				{#if broadcastResult}
+					<div class="mb-3 rounded border border-green-300 bg-green-50 px-4 py-2 text-sm text-green-800">
+						Sent: {broadcastResult.sent} · Failed: {broadcastResult.failed}
+					</div>
+				{/if}
+				<div class="space-y-3">
 					<input
-						id="bc-subject"
 						type="text"
-						class="input"
+						class="input w-full"
+						placeholder="Subject"
 						bind:value={broadcastSubject}
-						placeholder="e.g. Important update from Maratha Kalyanam"
-						disabled={broadcastSending}
 					/>
-				</div>
-
-				<!-- Body -->
-				<div class="space-y-1">
-					<label for="bc-body" class="label text-sm">Message</label>
-					<p class="text-xs text-ink/50">Plain text or simple HTML. Will be embedded in a branded email template.</p>
 					<textarea
-						id="bc-body"
-						rows="10"
-						class="input font-mono text-sm resize-y"
+						class="input w-full h-28 resize-y font-mono text-sm"
+						placeholder="HTML body…"
 						bind:value={broadcastBody}
-						placeholder="Dear members,&#10;&#10;We are pleased to announce..."
-						disabled={broadcastSending}
 					></textarea>
-				</div>
-
-				<!-- Send button -->
-				<div class="flex items-center gap-4">
-					<button
-						class="btn-primary px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
-						disabled={broadcastSending || !broadcastSubject.trim() || !broadcastBody.trim()}
-						onclick={sendBroadcast}
-					>
-						{#if broadcastSending}
-							Sending…
-						{:else}
+					<div class="flex flex-wrap items-center gap-4">
+						<label class="flex items-center gap-2 text-sm">
+							<input type="checkbox" bind:checked={broadcastVerifiedOnly} class="rounded" />
+							Verified emails only
+						</label>
+						<label class="flex items-center gap-2 text-sm">
+							<input type="checkbox" bind:checked={broadcastApprovedOnly} class="rounded" />
+							Approved users only
+						</label>
+						<button
+							class="btn-primary ml-auto px-6"
+							disabled={broadcastSending}
+							onclick={sendBroadcast}
+						>
+							{#if broadcastSending}<Loader size={14} class="inline animate-spin mr-1" />{/if}
 							Send Broadcast
-						{/if}
-					</button>
-					{#if broadcastResult}
-						<span class="text-sm text-ink/70">
-							Sent <strong class="text-green-700">{broadcastResult.sent}</strong> ·
-							Failed <strong class={broadcastResult.failed > 0 ? 'text-red-600' : 'text-ink/40'}>{broadcastResult.failed}</strong>
-						</span>
-					{/if}
+						</button>
+					</div>
 				</div>
 			</div>
-		</div>
+		{/if}
+
 	{/if}
 
 </div>
