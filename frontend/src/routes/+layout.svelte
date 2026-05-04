@@ -200,7 +200,7 @@
 							<span class="rounded px-1 py-px text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
 						{/if}
 						{#if !siteInfo.is_prod}
-							<span class="rounded px-1 py-px text-[10px] font-semibold leading-none bg-vermilion text-cream">Test mode</span>
+							<span class="rounded px-1 py-px text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
 						{/if}
 					</span>
 				</span>
@@ -315,7 +315,7 @@
 						<span class="rounded px-1.5 py-px text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
 					{/if}
 					{#if !siteInfo.is_prod}
-						<span class="rounded px-1.5 py-px text-[10px] font-semibold leading-none bg-vermilion text-cream">Test mode</span>
+						<span class="rounded px-1.5 py-px text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
 					{/if}
 				</div>
 				<button

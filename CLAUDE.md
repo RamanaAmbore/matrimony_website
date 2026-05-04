@@ -84,10 +84,13 @@ async (no sync). SQLAlchemy 2.x with typed Column mappings.
 - **Bootstrap admin:** on first startup, if no users exist, seed admin at `OWNER_EMAIL` with
   temp password logged to stderr (check startup logs). Admin must change password on login.
 - **Settings cache:** `SettingsService` loads DB settings into memory at startup and on write.
-  Avoids N+1 queries. Editable only via `/admin/settings` endpoint.
+  Avoids N+1 queries. Editable only via `/admin/settings` endpoint. `is_prod` setting controls
+  duplicate email/phone rejection (prod mode) vs test mode leniency.
 - **Email fallback:** if SMTP unconfigured, `email_service` logs to stdout instead of failing
-  (useful for dev/test). All email subjects include IST timestamp (e.g. "· 3 May 2026, 11:30 PM IST").
-  Email templates receive site_url, ist_time, et_time context variables via _render().
+  (useful for dev/test). All email subjects include `[TEST MODE]` prefix when `is_prod=false`.
+  Email templates receive site_url, ist_time, et_time, is_test_mode context variables.
+- **Public site info:** `/site/info` endpoint returns `is_prod` and `site_url` so frontend can
+  adjust validation strictness and banner injection per deployment.
 
 **Models:** User, Profile (with gender/manglik/diet/astrology fields), Photo (3 variants),
 DetailRequest (pending→approved→emailed), Setting (JSON config store).
@@ -124,17 +127,24 @@ data loading (via `+layout.ts` / `+page.ts` load functions).
 
 - Header with branding (Heart icon + "मराठा कल्याणम्" + "Maratha Kalyanam")
 - Desktop nav: Home, Search, About, My Profiles (if logged in), Requests, Admin (if admin)
+- Navbar role chips: User/Admin status; Test mode badge (when `is_prod=false`)
 - Mobile: hamburger drawer (focus-trapped, Escape to close, Tab cycles)
 - Tailwind theme: maroon (primary), saffron (accent), cream (light), ink (dark text)
+
+**Admin page lazy loading:**
+
+- On mount, fetches `/api/admin/dashboard` (stats + up to 25 pending items per category)
+- Full user/profile/request lists loaded only when tabs clicked (chip navigation)
+- ag-Grid v33+ displays filtered/sorted lists; requires `ModuleRegistry.registerModules()`
 
 **API client** (`lib/api.ts`):
 
 - Typed fetch wrapper: credentials: 'include' for cookies
 - Error handling: thrown as `ApiError(status, code, message)`
-- Endpoints: `.auth`, `.profiles`, `.photos`, `.search`, `.requests`, `.admin`, `.settings`
+- Endpoints: `.site`, `.auth`, `.profiles`, `.photos`, `.search`, `.requests`, `.admin`, `.settings`
 
 **State management:** Svelte 5 runes (not stores for component state); toast notifications via
-`toastStore` for async feedback.
+`toastStore` for async feedback. Site info (is_prod, site_url) loaded in +layout.ts via `/site/info`.
 
 ## API contract
 
@@ -147,6 +157,7 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 | POST | /auth/logout | yes | Clear session |
 | POST | /auth/verify-email | none | Token → user email_verified=true |
 | GET | /auth/me | yes* | Current user (or null if not logged in) |
+| GET | /site/info | none | Public config: `{is_prod: bool, site_url: string}` |
 | GET | /profiles | yes | List user's own profiles |
 | POST | /profiles | yes | Create draft profile |
 | GET | /profiles/{id} | yes* | Get profile (full if owner/admin, partial if approved) |
@@ -155,10 +166,12 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 | POST | /profiles/{id}/submit | yes | Draft → pending (or approved, if setting allows) |
 | POST | /profiles/{id}/photos | yes | Upload photo (multipart) |
 | DELETE | /profiles/{id}/photos/{photo_id} | yes | Delete photo |
+| POST | /profiles/{id}/photos/{photo_id}/primary | yes | Set photo as primary |
 | GET | /search | none | List approved profiles; filters: gender, age_min, age_max, gotra, nakshatram, rashi, city, state, country, pin_code, mother_tongue, manglik, diet, page, per_page |
 | POST | /profiles/{id}/request | yes | Create detail request (requester → profile owner) |
-| GET | /requests | yes | List user's detail requests (both made + received) |
-| GET | /admin/profiles | admin | List all profiles with status filter |
+| GET | /requests/mine | yes | List user's detail requests (both made + received) |
+| GET | /admin/dashboard | admin | Single call returning stats + pending profiles/users/requests (up to 25 each) |
+| GET | /admin/profiles | admin | List all profiles with optional status filter |
 | POST | /admin/profiles/{id}/approve | admin | Approve profile + send email |
 | POST | /admin/profiles/{id}/reject | admin | Reject profile + send email |
 | GET | /admin/requests | admin | List all detail requests |
@@ -168,14 +181,15 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 | POST | /admin/users/{id}/promote | admin | Grant admin role |
 | POST | /admin/users/{id}/approve | admin | Approve user account (sets is_approved=true) + send account_approved email |
 | POST | /admin/users/{id}/unapprove | admin | Revoke user approval |
+| POST | /admin/users/{id}/verify_email | admin | Mark email as verified (sets email_verified=true) |
 | POST | /admin/broadcast-email | admin | Send broadcast email to filtered user subset; body: {subject, body_html, filter_verified_only, filter_approved_only} |
 | GET | /admin/settings | admin | Get all settings (mask smtp_password) |
 | PUT | /admin/settings | admin | Update settings (JSON body) |
-| GET | /admin/stats | admin | Count users, profiles, requests |
 | GET | /health | none | Service health check |
 | GET | /media/* | none | Serve photo files (passport/blurred/thumb) |
 
-*GET /auth/me and unauthenticated GET /profiles/{id} do not require login but check session.
+*GET /auth/me, GET /site/info, and unauthenticated GET /profiles/{id} do not require login but check session.
+**Dashboard endpoint replaces /admin/stats; returns expanded stats with profile/request rejection counts plus pending item summaries (lazy-loaded on chip click in frontend).
 
 ## Data model
 
@@ -210,8 +224,8 @@ secrets).
 | upload_max_mb | int | 10 | Max file upload size (MB) |
 | require_face_detection | bool | true | Enforce single-face photo validation via OpenCV |
 | require_admin_approval_for_profiles | bool | true | Profiles require admin approval (pending→approved) or auto-approve on submit |
-| is_prod | bool | false | When true: reject duplicate email/phone registrations. When false (test mode): allow multiple accounts with same contact info. |
-| site_url | string | https://marathakalyanam.com | Base URL injected into all email templates for links (verify_email, approve, etc.) |
+| is_prod | bool | false | **Production mode flag.** When true: reject duplicate email/phone; email subjects omit `[TEST MODE]` prefix; frontend validation is strict. When false (test): allow duplicates; add `[TEST MODE]` to subjects; frontend can be lenient. |
+| site_url | string | https://marathakalyanam.com | Base URL injected into all email templates for links (verify_email, approve, etc.). Read by frontend via `/site/info`. |
 
 ## Local dev workflow
 
@@ -287,6 +301,18 @@ functions.
 - **`test`** — pytest coverage; `backend/tests`
 - **`doc`** — *.md updates; `CLAUDE.md`, `USER_GUIDE.md`, `ADMIN_GUIDE.md`
 
+## Recent changes (May 2026)
+
+- Added `/site/info` public endpoint for frontend to query `is_prod` and `site_url`
+- Added `/admin/dashboard` endpoint returning stats + up to 25 pending items (replaces
+  `/admin/stats`); dashboard stats now include `profiles_rejected`, `profiles_draft`,
+  `requests_approved`, `requests_rejected`
+- Admin UI now lazy-loads full user/profile/request lists on tab chip clicks (no longer pre-fetches)
+- Email subjects now include `[TEST MODE]` prefix when `is_prod=false`
+- Navbar shows role chips (User/Admin/Test mode badge)
+- Image baseline: home.jpg 556 KB JPEG, logo.png 76 KB
+- ag-Grid v33 requires explicit ModuleRegistry registration
+
 ## Conventions
 
 - **Async-only:** no sync DB calls anywhere. All routes async, all services async, all DB ops
@@ -304,3 +330,7 @@ functions.
   approved/rejected. Editing an approved profile resets it to pending for re-approval.
 - **Email fallback:** if `smtp_host` is empty or unreachable, `email_svc._send()` logs HTML to
   stdout instead of raising. Useful for dev/test without real SMTP.
+- **ag-Grid in frontend:** v33+ requires `ModuleRegistry.registerModules([AllCommunityModule])`
+  before instantiating grids. Without this, grids render but silently fail to populate row data.
+- **Hardcoded URLs:** always read site_url from settings service; never hardcode
+  `https://marathakalyanam.com` in code. Use `/site/info` endpoint on frontend if needed.

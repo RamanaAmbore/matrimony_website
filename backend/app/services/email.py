@@ -51,7 +51,7 @@ async def _send(
 ) -> None:
     """Send an email. Falls back to stdout if SMTP not configured."""
     if not settings_service.get_bool("is_prod", False):
-        subject = f"[TEST MODE] {subject}"
+        subject = f"[TEST] {subject}"
     smtp_host = settings_service.get_str("smtp_host", "localhost")
     smtp_port = settings_service.get_int("smtp_port", 1025)
     smtp_user = settings_service.get_str("smtp_user", "")

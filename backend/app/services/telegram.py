@@ -24,7 +24,7 @@ def _now_times() -> str:
 
 async def _send(text: str) -> None:
     if not settings_service.get_bool("is_prod", False):
-        text = f"🧪 <b>TEST MODE</b>\n{text}"
+        text = f"🧪 <b>TEST</b>\n{text}"
     token = settings_service.get_str("matrimony_tg_token", "")
     chat_id = settings_service.get_str("matrimony_tg_chat_id", "")
     if not token or not chat_id:
