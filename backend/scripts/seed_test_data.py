@@ -169,12 +169,13 @@ def _profile_demographics(idx: int, gender: GenderEnum) -> dict:
         "devak": rng.choice(["Tulsi", "Kalas", "Bel"]),
         "nakshatram": rng.choice(NAKSHATRAMS),
         "rashi": rng.choice(RASHIS),
-        "manglik": rng.choice([ManglikEnum.no, ManglikEnum.no, ManglikEnum.partial,
-                               ManglikEnum.yes, ManglikEnum.unknown]),
+        # Pass string VALUES (not enum members) so SQLAlchemy + asyncpg
+        # round-trip them as DB enum literals like "non-veg" rather than
+        # the Python attribute name "non_veg".
+        "manglik": rng.choice(["no", "no", "partial", "yes", "unknown"]),
         "education": rng.choice(EDUCATIONS),
         "occupation": rng.choice(OCCUPATIONS),
-        "diet": rng.choice([DietEnum.veg, DietEnum.veg, DietEnum.non_veg,
-                            DietEnum.eggetarian]),
+        "diet": rng.choice(["veg", "veg", "non-veg", "eggetarian"]),
         "city": city,
         "state": state,
         "country": "India",
