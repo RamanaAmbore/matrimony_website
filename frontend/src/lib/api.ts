@@ -250,7 +250,11 @@ export interface AdminDashboard {
 		profiles_total: number;
 		profiles_pending: number;
 		profiles_approved: number;
+		profiles_rejected: number;
+		profiles_draft: number;
 		requests_pending: number;
+		requests_approved: number;
+		requests_rejected: number;
 		requests_total: number;
 	};
 	pending_profiles: PendingProfileSummary[];

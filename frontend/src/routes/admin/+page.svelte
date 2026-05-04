@@ -65,26 +65,6 @@
 	let allUsersError = $state('');
 	let userFilter = $state<'all' | 'unverified' | 'verified' | null>(null);
 
-	// Derived filtered data for each grid
-	const filteredProfiles = $derived(
-		!allProfiles ? [] :
-		(!profileStatusFilter || profileStatusFilter === 'all') ? allProfiles :
-		allProfiles.filter(p => p.status === profileStatusFilter)
-	);
-
-	const filteredRequests = $derived(
-		!allRequests ? [] :
-		(!requestStatusFilter || requestStatusFilter === 'all') ? allRequests :
-		allRequests.filter(r => r.status === requestStatusFilter)
-	);
-
-	const filteredUsers = $derived(
-		!allUsers ? [] :
-		userFilter === 'unverified' ? allUsers.filter((u: any) => !u.email_verified) :
-		userFilter === 'verified' ? allUsers.filter((u: any) => u.email_verified) :
-		(allUsers ?? [])
-	);
-
 	// ag-Grid state
 	let usersGridApi: GridApi | undefined;
 	let selectedUser = $state<User | null>(null);
@@ -140,12 +120,9 @@
 		}
 	}
 
-	// ── Mount: load dashboard + pre-load profiles ────────────────────────────────
+	// ── Mount: dashboard only — full lists fetched lazily on chip click ──────────
 
 	onMount(async () => {
-		loadAllUsers();    // preload all three so stat card chips are complete on first render
-		loadAllProfiles();
-		loadAllRequests();
 		try {
 			dashboard = await adminApi.dashboard();
 		} catch (err) {
@@ -347,9 +324,7 @@
 			if (activeTab === 'users') selectedUser = null;
 		}
 		activeTab = tab;
-		if (tab === 'profiles') loadAllProfiles(); // no-op if already loaded
-		if (tab === 'requests') loadAllRequests();
-		if (tab === 'users') loadAllUsers();
+		// Lists are fetched lazily by applyXFilter — header click alone doesn't load
 		setTimeout(() => contentSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
 	}
 
@@ -423,39 +398,42 @@
 	// ── Helpers ──────────────────────────────────────────────────────────────────
 
 	function computeUsersRows(f: typeof userFilter): User[] {
-		return !allUsers ? [] :
-			f === 'unverified' ? allUsers.filter((u: any) => !u.email_verified) :
-			f === 'verified'   ? allUsers.filter((u: any) =>  u.email_verified) :
-			(allUsers ?? []);
+		if (!f || !allUsers) return [];
+		if (f === 'unverified') return allUsers.filter((u: any) => !u.email_verified);
+		if (f === 'verified')   return allUsers.filter((u: any) =>  u.email_verified);
+		return allUsers; // 'all'
 	}
 
 	function computeProfilesRows(f: typeof profileStatusFilter): Profile[] {
-		return !allProfiles ? [] :
-			(!f || f === 'all') ? allProfiles :
-			allProfiles.filter(p => p.status === f);
+		if (!f || !allProfiles) return [];
+		if (f === 'all') return allProfiles;
+		return allProfiles.filter(p => p.status === f);
 	}
 
 	function computeRequestsRows(f: typeof requestStatusFilter): DetailRequest[] {
-		return !allRequests ? [] :
-			(!f || f === 'all') ? allRequests :
-			allRequests.filter(r => r.status === f);
+		if (!f || !allRequests) return [];
+		if (f === 'all') return allRequests;
+		return allRequests.filter(r => r.status === f);
 	}
 
 	function applyUserFilter(f: typeof userFilter) {
 		userFilter = f;
 		selectedUser = null;
+		if (f) loadAllUsers(); // lazy fetch on chip click
 	}
 
 	function applyProfileFilter(f: typeof profileStatusFilter) {
 		profileStatusFilter = f;
 		selectedProfile = null;
 		profileRejectOpen = false;
+		if (f) loadAllProfiles();
 	}
 
 	function applyRequestFilter(f: typeof requestStatusFilter) {
 		requestStatusFilter = f;
 		selectedRequest = null;
 		requestRejectOpen = false;
+		if (f) loadAllRequests();
 	}
 
 	// ── Grid actions (use:action pattern) ────────────────────────────────────────
@@ -643,17 +621,17 @@
 							onclick={() => { selectTab('profiles'); applyProfileFilter('approved'); }}
 						>Approved · {dashboard.stats.profiles_approved}</button>
 					{/if}
-					{#if allProfiles && allProfiles.filter(p => p.status === 'rejected').length > 0}
+					{#if dashboard.stats.profiles_rejected > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'rejected' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
 							onclick={() => { selectTab('profiles'); applyProfileFilter('rejected'); }}
-						>Rejected · {allProfiles.filter(p => p.status === 'rejected').length}</button>
+						>Rejected · {dashboard.stats.profiles_rejected}</button>
 					{/if}
-					{#if allProfiles && allProfiles.filter(p => p.status === 'draft').length > 0}
+					{#if dashboard.stats.profiles_draft > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'draft' ? 'border-maroon bg-maroon text-cream' : 'border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100'}"
 							onclick={() => { selectTab('profiles'); applyProfileFilter('draft'); }}
-						>Draft · {allProfiles.filter(p => p.status === 'draft').length}</button>
+						>Draft · {dashboard.stats.profiles_draft}</button>
 					{/if}
 				</div>
 			</div>
@@ -679,17 +657,17 @@
 							onclick={() => { selectTab('requests'); applyRequestFilter('pending'); }}
 						>Pending · {dashboard.stats.requests_pending}</button>
 					{/if}
-					{#if allRequests && allRequests.filter(r => r.status === 'approved').length > 0}
+					{#if dashboard.stats.requests_approved > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'approved' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
 							onclick={() => { selectTab('requests'); applyRequestFilter('approved'); }}
-						>Approved · {allRequests.filter(r => r.status === 'approved').length}</button>
+						>Approved · {dashboard.stats.requests_approved}</button>
 					{/if}
-					{#if allRequests && allRequests.filter(r => r.status === 'rejected').length > 0}
+					{#if dashboard.stats.requests_rejected > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'rejected' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
 							onclick={() => { selectTab('requests'); applyRequestFilter('rejected'); }}
-						>Rejected · {allRequests.filter(r => r.status === 'rejected').length}</button>
+						>Rejected · {dashboard.stats.requests_rejected}</button>
 					{/if}
 				</div>
 			</div>
@@ -700,7 +678,9 @@
 	<!-- anchor for scroll-into-view when stat card is clicked -->
 	<div bind:this={contentSectionEl}></div>
 	{#if activeTab === 'users'}
-		{#if allUsersLoading}
+		{#if userFilter === null}
+			<div class="card text-sm text-ink/60 text-center py-6">Click a chip above to view users.</div>
+		{:else if allUsersLoading}
 			<div class="flex items-center justify-center py-20">
 				<Loader size={36} class="animate-spin text-saffron" />
 			</div>
@@ -795,51 +775,54 @@
 				{/if}
 			{/if}
 
-			<!-- Broadcast Email section -->
-			<div class="mt-8 rounded-lg border border-gold/30 bg-white p-5 shadow-sm">
-				<h3 class="font-serif text-lg font-semibold text-maroon mb-4">Send Broadcast Email</h3>
-				{#if broadcastResult}
-					<div class="mb-3 rounded border border-green-300 bg-green-50 px-4 py-2 text-sm text-green-800">
-						Sent: {broadcastResult.sent} · Failed: {broadcastResult.failed}
-					</div>
-				{/if}
-				<div class="space-y-3">
-					<input
-						type="text"
-						class="input w-full"
-						placeholder="Subject"
-						bind:value={broadcastSubject}
-					/>
-					<textarea
-						class="input w-full h-28 resize-y font-mono text-sm"
-						placeholder="HTML body…"
-						bind:value={broadcastBody}
-					></textarea>
-					<div class="flex flex-wrap items-center gap-4">
-						<label class="flex items-center gap-2 text-sm">
-							<input type="checkbox" bind:checked={broadcastVerifiedOnly} class="rounded" />
-							Verified emails only
-						</label>
-						<label class="flex items-center gap-2 text-sm">
-							<input type="checkbox" bind:checked={broadcastApprovedOnly} class="rounded" />
-							Approved users only
-						</label>
-						<button
-							class="btn-primary ml-auto px-6"
-							disabled={broadcastSending}
-							onclick={sendBroadcast}
-						>
-							{#if broadcastSending}<Loader size={14} class="inline animate-spin mr-1" />{/if}
-							Send Broadcast
-						</button>
-					</div>
+		{/if}
+
+		<!-- Broadcast Email section — always visible on Users tab regardless of filter -->
+		<div class="mt-8 rounded-lg border border-gold/30 bg-white p-5 shadow-sm">
+			<h3 class="font-serif text-lg font-semibold text-maroon mb-4">Send Broadcast Email</h3>
+			{#if broadcastResult}
+				<div class="mb-3 rounded border border-green-300 bg-green-50 px-4 py-2 text-sm text-green-800">
+					Sent: {broadcastResult.sent} · Failed: {broadcastResult.failed}
+				</div>
+			{/if}
+			<div class="space-y-3">
+				<input
+					type="text"
+					class="input w-full"
+					placeholder="Subject"
+					bind:value={broadcastSubject}
+				/>
+				<textarea
+					class="input w-full h-28 resize-y font-mono text-sm"
+					placeholder="HTML body…"
+					bind:value={broadcastBody}
+				></textarea>
+				<div class="flex flex-wrap items-center gap-4">
+					<label class="flex items-center gap-2 text-sm">
+						<input type="checkbox" bind:checked={broadcastVerifiedOnly} class="rounded" />
+						Verified emails only
+					</label>
+					<label class="flex items-center gap-2 text-sm">
+						<input type="checkbox" bind:checked={broadcastApprovedOnly} class="rounded" />
+						Approved users only
+					</label>
+					<button
+						class="btn-primary ml-auto px-6"
+						disabled={broadcastSending}
+						onclick={sendBroadcast}
+					>
+						{#if broadcastSending}<Loader size={14} class="inline animate-spin mr-1" />{/if}
+						Send Broadcast
+					</button>
 				</div>
 			</div>
-		{/if}
+		</div>
 
 	<!-- ── All Profiles tab ────────────────────────────────────────────────────── -->
 	{:else if activeTab === 'profiles'}
-		{#if allProfilesLoading}
+		{#if profileStatusFilter === null}
+			<div class="card text-sm text-ink/60 text-center py-6">Click a chip above to view profiles.</div>
+		{:else if allProfilesLoading}
 			<div class="flex items-center justify-center py-20">
 				<Loader size={36} class="animate-spin text-saffron" />
 			</div>
@@ -930,7 +913,9 @@
 
 	<!-- ── All Requests tab ────────────────────────────────────────────────────── -->
 	{:else if activeTab === 'requests'}
-		{#if allRequestsLoading}
+		{#if requestStatusFilter === null}
+			<div class="card text-sm text-ink/60 text-center py-6">Click a chip above to view requests.</div>
+		{:else if allRequestsLoading}
 			<div class="flex items-center justify-center py-20">
 				<Loader size={36} class="animate-spin text-saffron" />
 			</div>

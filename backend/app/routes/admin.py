@@ -128,9 +128,29 @@ class AdminController(Controller):
                 select(func.count()).select_from(Profile).where(Profile.status == ProfileStatusEnum.approved)
             )
         ).scalar_one()
+        profiles_rejected = (
+            await db.execute(
+                select(func.count()).select_from(Profile).where(Profile.status == ProfileStatusEnum.rejected)
+            )
+        ).scalar_one()
+        profiles_draft = (
+            await db.execute(
+                select(func.count()).select_from(Profile).where(Profile.status == ProfileStatusEnum.draft)
+            )
+        ).scalar_one()
         requests_pending = (
             await db.execute(
                 select(func.count()).select_from(DetailRequest).where(DetailRequest.status == RequestStatusEnum.pending)
+            )
+        ).scalar_one()
+        requests_approved = (
+            await db.execute(
+                select(func.count()).select_from(DetailRequest).where(DetailRequest.status == RequestStatusEnum.approved)
+            )
+        ).scalar_one()
+        requests_rejected = (
+            await db.execute(
+                select(func.count()).select_from(DetailRequest).where(DetailRequest.status == RequestStatusEnum.rejected)
             )
         ).scalar_one()
         requests_total = (
@@ -144,7 +164,11 @@ class AdminController(Controller):
             "profiles_total": profiles_total,
             "profiles_pending": profiles_pending,
             "profiles_approved": profiles_approved,
+            "profiles_rejected": profiles_rejected,
+            "profiles_draft": profiles_draft,
             "requests_pending": requests_pending,
+            "requests_approved": requests_approved,
+            "requests_rejected": requests_rejected,
             "requests_total": requests_total,
         }
 
