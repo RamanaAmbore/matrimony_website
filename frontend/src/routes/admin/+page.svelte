@@ -72,6 +72,18 @@
 	// list shows just regular users. Toggle to true to include admins.
 	let userIncludeAdmins = $state(false);
 
+	// Stat-card display counts for the Users tab — depend on dashboard +
+	// the include-admins toggle. Derived so they update when either changes.
+	let usersTotal = $derived(
+		dashboard
+			? userIncludeAdmins
+				? dashboard.stats.users
+				: dashboard.stats.users - (dashboard.stats.users_admins ?? 0)
+			: 0
+	);
+	let usersUnverified = $derived(dashboard?.pending_users.length ?? 0);
+	let usersVerified = $derived(Math.max(0, usersTotal - usersUnverified));
+
 	// ag-Grid state
 	let usersGridApi: GridApi | undefined;
 	let selectedUser = $state<User | null>(null);
@@ -578,9 +590,6 @@
 		<div class="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 
 			<!-- ── All Users card ─────────────────────────────────────────── -->
-			{@const usersTotal = userIncludeAdmins ? dashboard.stats.users : dashboard.stats.users - (dashboard.stats.users_admins ?? 0)}
-			{@const usersUnverified = dashboard.pending_users.length}
-			{@const usersVerified = Math.max(0, usersTotal - usersUnverified)}
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'users' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
 				<button
 					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'users' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
