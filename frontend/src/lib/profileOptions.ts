@@ -15,7 +15,8 @@ export const INDIA_STATES = [
 	'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
 	'Andaman & Nicobar Islands', 'Chandigarh',
 	'Dadra & Nagar Haveli and Daman & Diu', 'Delhi',
-	'Jammu & Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+	'Jammu & Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
+	'Other'
 ];
 
 export const COUNTRIES_PRIORITY = [
