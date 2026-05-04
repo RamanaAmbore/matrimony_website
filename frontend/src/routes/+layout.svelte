@@ -58,18 +58,19 @@
 	// Current path for active link highlighting
 	let currentPath = $derived($page.url.pathname);
 
-	function isActive(href: string) {
-		return currentPath === href || (href !== '/' && currentPath.startsWith(href));
+	function isActive(href: string, exact = false) {
+		if (exact) return currentPath === href;
+		return currentPath === href || (href !== '/' && currentPath.startsWith(href + '/'));
 	}
 
-	function navLinkClass(href: string) {
-		return isActive(href)
+	function navLinkClass(href: string, exact = false) {
+		return isActive(href, exact)
 			? 'text-amber font-semibold border-b-2 border-amber pb-0.5'
 			: 'text-cream/80 hover:text-amber transition-colors duration-150';
 	}
 
-	function drawerLinkClass(href: string) {
-		return isActive(href)
+	function drawerLinkClass(href: string, exact = false) {
+		return isActive(href, exact)
 			? 'flex items-center gap-2 rounded-lg px-3 py-2.5 bg-tangerine/20 text-tangerine font-semibold'
 			: 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-ink hover:bg-amber/20 hover:text-terracotta transition-colors duration-150';
 	}
@@ -185,7 +186,7 @@
 					{T.requests.en} <span lang="te">{T.requests.te}</span>
 				</a>
 				{#if user.is_admin}
-					<a href="/admin" class="whitespace-nowrap text-sm {navLinkClass('/admin')}" aria-current={isActive('/admin') ? 'page' : undefined}>
+					<a href="/admin" class="whitespace-nowrap text-sm {navLinkClass('/admin', true)}" aria-current={isActive('/admin', true) ? 'page' : undefined}>
 						{T.admin.en} <span lang="te">{T.admin.te}</span>
 					</a>
 				{/if}
@@ -287,7 +288,7 @@
 					<p class="px-3 text-xs font-semibold tracking-wider text-ink/40 uppercase">
 						{T.admin.en} <span lang="te" class="normal-case">{T.admin.te}</span>
 					</p>
-					<a href="/admin" class={drawerLinkClass('/admin')} aria-current={isActive('/admin') ? 'page' : undefined} onclick={closeDrawer}>Admin Panel</a>
+					<a href="/admin" class={drawerLinkClass('/admin', true)} aria-current={isActive('/admin', true) ? 'page' : undefined} onclick={closeDrawer}>Admin Panel</a>
 					<a href="/admin/settings" class={drawerLinkClass('/admin/settings')} aria-current={isActive('/admin/settings') ? 'page' : undefined} onclick={closeDrawer}>
 						Settings
 					</a>

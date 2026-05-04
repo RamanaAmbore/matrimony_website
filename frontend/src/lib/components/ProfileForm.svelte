@@ -904,72 +904,54 @@
 						</div>
 
 						<!-- Family Type -->
-						<fieldset class="mt-4">
-							<legend class="label">
-								<span class="block">{T.familyType.en}</span>
-								<span class="block text-xs leading-tight font-normal text-ink/60" lang="te">{T.familyType.te}</span>
-							</legend>
-							<div class="mt-1 flex flex-wrap gap-6">
-								{#each [{ value: '', label: 'Not specified' }, { value: 'nuclear', label: 'Nuclear' }, { value: 'joint', label: 'Joint' }] as opt}
-									<label class="flex cursor-pointer items-center gap-2">
-										<input type="radio" name="family_type" value={opt.value} bind:group={family_type} class="accent-maroon" />
-										<span>{opt.label}</span>
-									</label>
-								{/each}
-							</div>
+						<div class="mt-4">
+							<BilingualLabel key="familyType" for="family_type_sel_w" />
+							<select id="family_type_sel_w" class="input" bind:value={family_type}>
+								<option value="">Not specified</option>
+								<option value="nuclear">Nuclear</option>
+								<option value="joint">Joint</option>
+							</select>
 							{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.family_type}</p>{/if}
-						</fieldset>
+						</div>
 
 					{:else if i === 5}
 						<!-- ── Section 5: Lifestyle ─────────────────────────────────── -->
 						<div class="space-y-4">
-							<!-- Diet -->
-							<fieldset>
-								<legend class="label">
-									<span class="block">{T.diet.en} <span class="text-vermilion">*</span></span>
-									<span class="block text-xs leading-tight font-normal text-ink/60" lang="te">{T.diet.te}</span>
-								</legend>
-								<div class="mt-1 flex flex-wrap gap-4">
-									{#each [{ value: 'veg', label: 'Vegetarian' }, { value: 'non-veg', label: 'Non-Vegetarian' }, { value: 'eggetarian', label: 'Eggetarian' }, { value: 'jain', label: 'Jain' }, { value: 'vegan', label: 'Vegan' }] as opt}
-										<label class="flex cursor-pointer items-center gap-2">
-											<input type="radio" name="diet" value={opt.value} bind:group={diet} class="accent-maroon" />
-											<span>{opt.label}</span>
-										</label>
-									{/each}
+							<div class="grid gap-4 sm:grid-cols-3">
+								<!-- Diet -->
+								<div>
+									<BilingualLabel key="diet" for="diet_sel_w" />
+									<select id="diet_sel_w" class="input" bind:value={diet}>
+										<option value="veg">Vegetarian</option>
+										<option value="non-veg">Non-Vegetarian</option>
+										<option value="eggetarian">Eggetarian</option>
+										<option value="jain">Jain</option>
+										<option value="vegan">Vegan</option>
+									</select>
 								</div>
-							</fieldset>
 
-							<!-- Smokes -->
-							<fieldset>
-								<legend class="label">
-									<span class="block">{T.smokes.en}</span>
-									<span class="block text-xs leading-tight font-normal text-ink/60" lang="te">{T.smokes.te}</span>
-								</legend>
-								<div class="mt-1 flex flex-wrap gap-4">
-									{#each [{ value: '', label: 'Prefer not to say' }, { value: 'no', label: 'No' }, { value: 'occasionally', label: 'Occasionally' }, { value: 'yes', label: 'Yes' }] as opt}
-										<label class="flex cursor-pointer items-center gap-2">
-											<input type="radio" name="smokes" value={opt.value} bind:group={smokes} class="accent-maroon" />
-											<span>{opt.label}</span>
-										</label>
-									{/each}
+								<!-- Smokes -->
+								<div>
+									<BilingualLabel key="smokes" for="smokes_sel_w" />
+									<select id="smokes_sel_w" class="input" bind:value={smokes}>
+										<option value="">Prefer not to say</option>
+										<option value="no">No</option>
+										<option value="occasionally">Occasionally</option>
+										<option value="yes">Yes</option>
+									</select>
 								</div>
-							</fieldset>
 
-							<!-- Drinks -->
-							<fieldset>
-								<legend class="label">
-									<span class="block">{T.drinks.en}</span>
-									<span class="block text-xs leading-tight font-normal text-ink/60" lang="te">{T.drinks.te}</span>
-								</legend>
-								<div class="mt-1 flex flex-wrap gap-4">
-									{#each [{ value: '', label: 'Prefer not to say' }, { value: 'no', label: 'No' }, { value: 'occasionally', label: 'Occasionally' }, { value: 'yes', label: 'Yes' }] as opt}
-										<label class="flex cursor-pointer items-center gap-2">
-											<input type="radio" name="drinks" value={opt.value} bind:group={drinks} class="accent-maroon" />
-											<span>{opt.label}</span>
-										</label>
-									{/each}
+								<!-- Drinks -->
+								<div>
+									<BilingualLabel key="drinks" for="drinks_sel_w" />
+									<select id="drinks_sel_w" class="input" bind:value={drinks}>
+										<option value="">Prefer not to say</option>
+										<option value="no">No</option>
+										<option value="occasionally">Occasionally</option>
+										<option value="yes">Yes</option>
+									</select>
 								</div>
-							</fieldset>
+							</div>
 
 							<!-- Hobbies (optional textarea) -->
 							<div>
@@ -1791,31 +1773,17 @@
 		</div>
 
 		<!-- Family Type -->
-		<fieldset class="mt-4">
-			<legend class="label">
-				<span class="block">{T.familyType.en}</span>
-				<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
-					>{T.familyType.te}</span
-				>
-			</legend>
-			<div class="mt-1 flex flex-wrap gap-6">
-				{#each [{ value: '', label: 'Not specified' }, { value: 'nuclear', label: 'Nuclear' }, { value: 'joint', label: 'Joint' }] as opt}
-					<label class="flex cursor-pointer items-center gap-2">
-						<input
-							type="radio"
-							name="family_type"
-							value={opt.value}
-							bind:group={family_type}
-							class="accent-maroon"
-						/>
-						<span>{opt.label}</span>
-					</label>
-				{/each}
-			</div>
+		<div class="mt-4">
+			<BilingualLabel key="familyType" for="family_type_sel_n" />
+			<select id="family_type_sel_n" class="input" bind:value={family_type}>
+				<option value="">Not specified</option>
+				<option value="nuclear">Nuclear</option>
+				<option value="joint">Joint</option>
+			</select>
 			{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">
 					{errors.family_type}
 				</p>{/if}
-		</fieldset>
+		</div>
 	</details>
 
 	<!-- ── Section: Lifestyle ────────────────────────────────────────────────── -->
@@ -1832,77 +1800,41 @@
 		</summary>
 
 		<div class="mt-4 space-y-4">
-			<!-- Diet -->
-			<fieldset>
-				<legend class="label">
-					<span class="block">{T.diet.en} <span class="text-vermilion">*</span></span>
-					<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
-						>{T.diet.te}</span
-					>
-				</legend>
-				<div class="mt-1 flex flex-wrap gap-4">
-					{#each [{ value: 'veg', label: 'Vegetarian' }, { value: 'non-veg', label: 'Non-Vegetarian' }, { value: 'eggetarian', label: 'Eggetarian' }, { value: 'jain', label: 'Jain' }, { value: 'vegan', label: 'Vegan' }] as opt}
-						<label class="flex cursor-pointer items-center gap-2">
-							<input
-								type="radio"
-								name="diet"
-								value={opt.value}
-								bind:group={diet}
-								class="accent-maroon"
-							/>
-							<span>{opt.label}</span>
-						</label>
-					{/each}
+			<div class="grid gap-4 sm:grid-cols-3">
+				<!-- Diet -->
+				<div>
+					<BilingualLabel key="diet" for="diet_sel_n" />
+					<select id="diet_sel_n" class="input" bind:value={diet}>
+						<option value="veg">Vegetarian</option>
+						<option value="non-veg">Non-Vegetarian</option>
+						<option value="eggetarian">Eggetarian</option>
+						<option value="jain">Jain</option>
+						<option value="vegan">Vegan</option>
+					</select>
 				</div>
-			</fieldset>
 
-			<!-- Smokes -->
-			<fieldset>
-				<legend class="label">
-					<span class="block">{T.smokes.en}</span>
-					<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
-						>{T.smokes.te}</span
-					>
-				</legend>
-				<div class="mt-1 flex flex-wrap gap-4">
-					{#each [{ value: '', label: 'Prefer not to say' }, { value: 'no', label: 'No' }, { value: 'occasionally', label: 'Occasionally' }, { value: 'yes', label: 'Yes' }] as opt}
-						<label class="flex cursor-pointer items-center gap-2">
-							<input
-								type="radio"
-								name="smokes"
-								value={opt.value}
-								bind:group={smokes}
-								class="accent-maroon"
-							/>
-							<span>{opt.label}</span>
-						</label>
-					{/each}
+				<!-- Smokes -->
+				<div>
+					<BilingualLabel key="smokes" for="smokes_sel_n" />
+					<select id="smokes_sel_n" class="input" bind:value={smokes}>
+						<option value="">Prefer not to say</option>
+						<option value="no">No</option>
+						<option value="occasionally">Occasionally</option>
+						<option value="yes">Yes</option>
+					</select>
 				</div>
-			</fieldset>
 
-			<!-- Drinks -->
-			<fieldset>
-				<legend class="label">
-					<span class="block">{T.drinks.en}</span>
-					<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
-						>{T.drinks.te}</span
-					>
-				</legend>
-				<div class="mt-1 flex flex-wrap gap-4">
-					{#each [{ value: '', label: 'Prefer not to say' }, { value: 'no', label: 'No' }, { value: 'occasionally', label: 'Occasionally' }, { value: 'yes', label: 'Yes' }] as opt}
-						<label class="flex cursor-pointer items-center gap-2">
-							<input
-								type="radio"
-								name="drinks"
-								value={opt.value}
-								bind:group={drinks}
-								class="accent-maroon"
-							/>
-							<span>{opt.label}</span>
-						</label>
-					{/each}
+				<!-- Drinks -->
+				<div>
+					<BilingualLabel key="drinks" for="drinks_sel_n" />
+					<select id="drinks_sel_n" class="input" bind:value={drinks}>
+						<option value="">Prefer not to say</option>
+						<option value="no">No</option>
+						<option value="occasionally">Occasionally</option>
+						<option value="yes">Yes</option>
+					</select>
 				</div>
-			</fieldset>
+			</div>
 
 			<!-- Hobbies (optional textarea) -->
 			<div>

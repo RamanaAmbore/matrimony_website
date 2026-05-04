@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community';
 	import 'ag-grid-community/styles/ag-grid.css';
 	import 'ag-grid-community/styles/ag-theme-quartz.css';
@@ -62,9 +62,28 @@
 
 	// ag-Grid state
 	let usersGridDiv = $state<HTMLDivElement | undefined>(undefined);
-	let usersGridApi = $state<GridApi | undefined>(undefined);
+	let usersGridApi: GridApi | undefined;
 	let selectedUser = $state<User | null>(null);
 	let userActionLoading = $state(false);
+
+	// Profiles grid
+	let profilesGridDiv = $state<HTMLDivElement | undefined>(undefined);
+	let profilesGridApi: GridApi | undefined;
+	let selectedProfile = $state<Profile | null>(null);
+	let profileActionLoading = $state(false);
+	let profileRejectNote = $state('');
+	let profileRejectOpen = $state(false);
+
+	// Requests grid
+	let requestsGridDiv = $state<HTMLDivElement | undefined>(undefined);
+	let requestsGridApi: GridApi | undefined;
+	let selectedRequest = $state<DetailRequest | null>(null);
+	let requestActionLoading = $state(false);
+	let requestRejectNote = $state('');
+	let requestRejectOpen = $state(false);
+
+	// Content section anchor for scroll-into-view on tab change
+	let contentSectionEl = $state<HTMLElement | undefined>();
 
 	// ── Broadcast Email state ─────────────────────────────────────────────────────
 
@@ -157,16 +176,11 @@
 		// Grid initialised by $effect once usersGridDiv is bound and allUsers is populated
 	}
 
-	// Grid is created reactively when the div is available and data is loaded.
-	// The $effect cleanup (return fn) destroys the grid when the div unmounts
-	// (e.g. when the user switches away from the Users tab).
+	// Users grid — creation/destruction only (reruns when div or data first arrives)
 	$effect(() => {
-		if (!usersGridDiv || !allUsers) return;
-		if (usersGridApi) {
-			// Already created — just refresh row data
-			usersGridApi.setGridOption('rowData', allUsers);
-			return;
-		}
+		const div = usersGridDiv;
+		const data = allUsers;
+		if (!div || !data) return;
 
 		const columnDefs = [
 			{
@@ -212,7 +226,7 @@
 
 		const gridOptions: GridOptions = {
 			columnDefs,
-			rowData: allUsers,
+			rowData: untrack(() => data),
 			rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
 			onRowClicked: (e) => { selectedUser = e.data as User; },
 			defaultColDef: { resizable: true, floatingFilter: true, filter: true },
@@ -221,13 +235,194 @@
 			theme: 'legacy'
 		};
 
-		const api = createGrid(usersGridDiv, gridOptions);
-		usersGridApi = api;
+		usersGridApi = createGrid(div, gridOptions);
 
 		return () => {
-			api.destroy();
+			usersGridApi?.destroy();
 			usersGridApi = undefined;
 		};
+	});
+
+	// Users grid — rowData updates after approve/unapprove actions
+	$effect(() => {
+		const data = allUsers;
+		if (!data) return;
+		usersGridApi?.setGridOption('rowData', data);
+	});
+
+	// Profiles grid — creation/destruction only
+	$effect(() => {
+		const div = profilesGridDiv;
+		const data = allProfiles;
+		if (!div || !data) return;
+
+		const initialData = untrack(() =>
+			profileStatusFilter === 'all' ? data : data.filter(p => p.status === profileStatusFilter)
+		);
+
+		const columnDefs = [
+			{
+				field: 'profile_number', headerName: 'ID', width: 130, sortable: true, filter: true,
+				headerClass: 'mk-header',
+				cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#6b7280' }
+			},
+			{
+				headerName: 'Name', flex: 1.5, sortable: true, filter: true,
+				headerClass: 'mk-header',
+				valueGetter: (p: { data: Profile }) => `${p.data.first_name} ${p.data.last_name ?? ''}`.trim()
+			},
+			{
+				field: 'gender', headerName: 'Gender', width: 100, sortable: true, filter: true,
+				headerClass: 'mk-header',
+				valueFormatter: (p: { value: string }) => p.value.charAt(0).toUpperCase() + p.value.slice(1)
+			},
+			{
+				field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true,
+				headerClass: 'mk-header',
+				cellRenderer: (p: { value: string }) => {
+					const styles: Record<string, string> = {
+						approved: 'background:#dcfce7;color:#16a34a',
+						pending:  'background:#fef3c7;color:#92400e',
+						rejected: 'background:#fee2e2;color:#dc2626',
+						draft:    'background:#f3f4f6;color:#6b7280'
+					};
+					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${p.value}</span>`;
+				}
+			},
+			{
+				headerName: 'Location', flex: 1, filter: true,
+				headerClass: 'mk-header',
+				valueGetter: (p: { data: Profile }) => [p.data.city, p.data.state].filter(Boolean).join(', ')
+			},
+			{
+				field: 'education', headerName: 'Education', flex: 1, filter: true, sortable: true,
+				headerClass: 'mk-header'
+			},
+			{
+				field: 'created_at', headerName: 'Submitted', width: 130, sortable: true,
+				headerClass: 'mk-header',
+				valueFormatter: (p: { value: string }) =>
+					new Date(p.value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+			}
+		];
+
+		const gridOptions: GridOptions = {
+			columnDefs,
+			rowData: initialData,
+			rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
+			onRowClicked: (e) => {
+				selectedProfile = e.data as Profile;
+				profileRejectOpen = false;
+				profileRejectNote = '';
+			},
+			defaultColDef: { resizable: true, floatingFilter: true, filter: true },
+			pagination: true,
+			paginationPageSize: 20,
+			theme: 'legacy'
+		};
+
+		profilesGridApi = createGrid(div, gridOptions);
+
+		return () => {
+			profilesGridApi?.destroy();
+			profilesGridApi = undefined;
+			selectedProfile = null;
+		};
+	});
+
+	// Profiles grid — filter updates (separate effect, reruns when filter or data changes)
+	$effect(() => {
+		const filter = profileStatusFilter;
+		const data = allProfiles;
+		if (!data) return;
+		const filteredData = filter === 'all' ? data : data.filter(p => p.status === filter);
+		profilesGridApi?.setGridOption('rowData', filteredData);
+		selectedProfile = null;
+		profileRejectOpen = false;
+	});
+
+	// Requests grid — creation/destruction only
+	$effect(() => {
+		const div = requestsGridDiv;
+		const data = allRequests;
+		if (!div || !data) return;
+
+		const initialData = untrack(() =>
+			requestStatusFilter === 'all' ? data : data.filter(r => r.status === requestStatusFilter)
+		);
+
+		const columnDefs = [
+			{
+				field: 'id', headerName: 'Request ID', width: 130, filter: true,
+				headerClass: 'mk-header',
+				cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#9ca3af' },
+				valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…'
+			},
+			{
+				field: 'requester_user_id', headerName: 'Requester', flex: 1, filter: true,
+				headerClass: 'mk-header',
+				cellStyle: { fontFamily: 'monospace', fontSize: '12px' },
+				valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…'
+			},
+			{
+				field: 'profile_id', headerName: 'Profile', flex: 1, filter: true,
+				headerClass: 'mk-header',
+				cellStyle: { fontFamily: 'monospace', fontSize: '12px' },
+				valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…'
+			},
+			{
+				field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true,
+				headerClass: 'mk-header',
+				cellRenderer: (p: { value: string }) => {
+					const styles: Record<string, string> = {
+						approved: 'background:#dcfce7;color:#16a34a',
+						pending:  'background:#fef3c7;color:#92400e',
+						rejected: 'background:#fee2e2;color:#dc2626'
+					};
+					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${p.value}</span>`;
+				}
+			},
+			{
+				field: 'created_at', headerName: 'Date', width: 130, sortable: true,
+				headerClass: 'mk-header',
+				valueFormatter: (p: { value: string }) =>
+					new Date(p.value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+			}
+		];
+
+		const gridOptions: GridOptions = {
+			columnDefs,
+			rowData: initialData,
+			rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
+			onRowClicked: (e) => {
+				selectedRequest = e.data as DetailRequest;
+				requestRejectOpen = false;
+				requestRejectNote = '';
+			},
+			defaultColDef: { resizable: true, floatingFilter: true, filter: true },
+			pagination: true,
+			paginationPageSize: 20,
+			theme: 'legacy'
+		};
+
+		requestsGridApi = createGrid(div, gridOptions);
+
+		return () => {
+			requestsGridApi?.destroy();
+			requestsGridApi = undefined;
+			selectedRequest = null;
+		};
+	});
+
+	// Requests grid — filter updates (separate effect)
+	$effect(() => {
+		const filter = requestStatusFilter;
+		const data = allRequests;
+		if (!data) return;
+		const filteredData = filter === 'all' ? data : data.filter(r => r.status === filter);
+		requestsGridApi?.setGridOption('rowData', filteredData);
+		selectedRequest = null;
+		requestRejectOpen = false;
 	});
 
 	// ── User action functions ─────────────────────────────────────────────────────
@@ -292,8 +487,77 @@
 		}
 	}
 
+	async function doApproveProfile() {
+		if (!selectedProfile) return;
+		profileActionLoading = true;
+		try {
+			await adminApi.profiles.approve(selectedProfile.id);
+			allProfiles = allProfiles!.map(p => p.id === selectedProfile!.id ? { ...p, status: 'approved' as const } : p);
+			selectedProfile = { ...selectedProfile, status: 'approved' };
+			toastStore.success('Profile approved');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			profileActionLoading = false;
+		}
+	}
+
+	async function doRejectProfile() {
+		if (!selectedProfile || !profileRejectNote.trim()) { toastStore.error('Add a rejection reason'); return; }
+		profileActionLoading = true;
+		try {
+			await adminApi.profiles.reject(selectedProfile.id, profileRejectNote.trim());
+			allProfiles = allProfiles!.map(p => p.id === selectedProfile!.id ? { ...p, status: 'rejected' as const } : p);
+			selectedProfile = { ...selectedProfile, status: 'rejected' };
+			profileRejectOpen = false;
+			profileRejectNote = '';
+			toastStore.success('Profile rejected');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			profileActionLoading = false;
+		}
+	}
+
+	async function doApproveRequest() {
+		if (!selectedRequest) return;
+		requestActionLoading = true;
+		try {
+			await adminApi.requests.approve(selectedRequest.id);
+			allRequests = allRequests!.map(r => r.id === selectedRequest!.id ? { ...r, status: 'approved' as const } : r);
+			selectedRequest = { ...selectedRequest, status: 'approved' };
+			toastStore.success('Request approved — email sent');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			requestActionLoading = false;
+		}
+	}
+
+	async function doRejectRequest() {
+		if (!selectedRequest || !requestRejectNote.trim()) { toastStore.error('Add a rejection reason'); return; }
+		requestActionLoading = true;
+		try {
+			await adminApi.requests.reject(selectedRequest.id, requestRejectNote.trim());
+			allRequests = allRequests!.map(r => r.id === selectedRequest!.id ? { ...r, status: 'rejected' as const } : r);
+			selectedRequest = { ...selectedRequest, status: 'rejected' };
+			requestRejectOpen = false;
+			requestRejectNote = '';
+			toastStore.success('Request rejected');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			requestActionLoading = false;
+		}
+	}
+
 	onDestroy(() => {
 		usersGridApi?.destroy();
+		usersGridApi = undefined;
+		profilesGridApi?.destroy();
+		profilesGridApi = undefined;
+		requestsGridApi?.destroy();
+		requestsGridApi = undefined;
 	});
 
 	function selectTab(tab: Tab) {
@@ -301,6 +565,7 @@
 		if (tab === 'profiles') loadAllProfiles(); // no-op if already loaded
 		if (tab === 'requests') loadAllRequests();
 		if (tab === 'users') loadAllUsers();
+		setTimeout(() => contentSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
 	}
 
 	// ── Profile actions (pending tab legacy — kept for dashboard stat cards) ─────
@@ -370,96 +635,8 @@
 		}
 	}
 
-	// ── Inline profile approve/reject (Profiles tab, works on full Profile) ──────
-
-	async function approvePendingProfile(p: Profile) {
-		actionLoading[p.id] = true;
-		try {
-			await adminApi.profiles.approve(p.id);
-			allProfiles = allProfiles!.map(x => x.id === p.id ? { ...x, status: 'approved' as const } : x);
-			toastStore.success('Profile approved');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
-		} finally {
-			actionLoading[p.id] = false;
-		}
-	}
-
-	async function rejectPendingProfile(p: Profile) {
-		const notes = rejectNotes[p.id] ?? '';
-		if (!notes.trim()) { toastStore.error('Add a rejection reason'); return; }
-		actionLoading[p.id] = true;
-		try {
-			await adminApi.profiles.reject(p.id, notes);
-			allProfiles = allProfiles!.map(x => x.id === p.id ? { ...x, status: 'rejected' as const } : x);
-			rejectOpen[p.id] = false;
-			toastStore.success('Profile rejected');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
-		} finally {
-			actionLoading[p.id] = false;
-		}
-	}
-
-	function toggleRejectProfile(id: string) {
-		rejectOpen[id] = !rejectOpen[id];
-		if (!rejectOpen[id]) rejectNotes[id] = '';
-	}
-
-	// ── Inline request approve/reject (Requests tab, works on full DetailRequest) ─
-
-	async function approvePendingRequest(r: DetailRequest) {
-		actionLoading[r.id] = true;
-		try {
-			await adminApi.requests.approve(r.id);
-			allRequests = allRequests!.map(x => x.id === r.id ? { ...x, status: 'approved' as const } : x);
-			toastStore.success('Request approved — email sent');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
-		} finally {
-			actionLoading[r.id] = false;
-		}
-	}
-
-	async function rejectPendingRequest(r: DetailRequest) {
-		const notes = rejectNotes[r.id] ?? '';
-		if (!notes.trim()) { toastStore.error('Add a rejection reason'); return; }
-		actionLoading[r.id] = true;
-		try {
-			await adminApi.requests.reject(r.id, notes);
-			allRequests = allRequests!.map(x => x.id === r.id ? { ...x, status: 'rejected' as const } : x);
-			rejectOpen[r.id] = false;
-			toastStore.success('Request rejected');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
-		} finally {
-			actionLoading[r.id] = false;
-		}
-	}
-
-	function toggleRejectRequest(id: string) {
-		rejectOpen[id] = !rejectOpen[id];
-		if (!rejectOpen[id]) rejectNotes[id] = '';
-	}
-
 	// ── Helpers ──────────────────────────────────────────────────────────────────
 
-	function fmtDate(iso: string) {
-		return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-	}
-
-	function truncateId(id: string) {
-		return id.slice(0, 8) + '…';
-	}
-
-	function statusBadgeClass(status: string) {
-		switch (status) {
-			case 'approved': return 'badge-approved';
-			case 'pending':  return 'badge-pending';
-			case 'rejected': return 'badge-rejected';
-			default:         return 'badge-draft';
-		}
-	}
 
 </script>
 
@@ -481,7 +658,7 @@
 	{:else if dashboard}
 		<div class="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 			<!-- Users card -->
-			<div class="card space-y-3">
+			<div class="card space-y-3 {activeTab === 'users' ? 'ring-2 ring-maroon/40 border-maroon/30' : ''}">
 				<div class="flex items-center gap-2">
 					<Users size={20} class="text-saffron shrink-0" />
 					<span class="font-serif font-semibold text-maroon">Users</span>
@@ -506,7 +683,7 @@
 			</div>
 
 			<!-- Profiles card -->
-			<div class="card space-y-3">
+			<div class="card space-y-3 {activeTab === 'profiles' ? 'ring-2 ring-maroon/40 border-maroon/30' : ''}">
 				<div class="flex items-center gap-2">
 					<UserCheck size={20} class="text-gold shrink-0" />
 					<span class="font-serif font-semibold text-maroon">Profiles</span>
@@ -538,7 +715,7 @@
 			</div>
 
 			<!-- Requests card -->
-			<div class="card space-y-3">
+			<div class="card space-y-3 {activeTab === 'requests' ? 'ring-2 ring-maroon/40 border-maroon/30' : ''}">
 				<div class="flex items-center gap-2">
 					<Inbox size={20} class="text-sky-500 shrink-0" />
 					<span class="font-serif font-semibold text-maroon">Requests</span>
@@ -565,6 +742,7 @@
 	{/if}
 
 	<!-- ── Content area ───────────────────────────────────────────────────────── -->
+	<div bind:this={contentSectionEl}></div>
 	{#if activeTab === 'profiles'}
 		{#if allProfilesLoading}
 			<div class="flex items-center justify-center py-20">
@@ -580,97 +758,95 @@
 					{profileStatusFilter === 'all' ? 'total' : profileStatusFilter}
 				</span>
 			</div>
-			<!-- Status filter pills -->
+			<!-- Status filter chips -->
 			<div class="mb-4 flex flex-wrap gap-1.5">
-				{#each ['all', 'pending', 'approved', 'rejected', 'draft'] as s}
+				{#each (['all', 'pending', 'approved', 'rejected', 'draft'] as const) as s}
 					{@const count = s === 'all' ? allProfiles.length : allProfiles.filter(p => p.status === s).length}
 					<button
 						class="rounded-full px-3 py-1 text-xs font-semibold border transition-all {profileStatusFilter === s
 							? 'bg-maroon text-cream border-maroon'
 							: 'bg-white text-ink/60 border-gold/40 hover:border-maroon/40 hover:text-maroon'}"
-						onclick={() => { profileStatusFilter = s as typeof profileStatusFilter; }}
+						onclick={() => { profileStatusFilter = s; }}
 					>
 						{s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
 						<span class="ml-1 opacity-70">({count})</span>
 					</button>
 				{/each}
 			</div>
-			{#if allProfiles.filter(p => profileStatusFilter === 'all' || p.status === profileStatusFilter).length === 0}
-				<div class="card text-sm text-ink/60">No {profileStatusFilter === 'all' ? '' : profileStatusFilter} profiles found.</div>
-			{:else}
-				<div class="overflow-x-auto rounded-lg border border-gold/30 bg-white shadow-sm">
-					<table class="w-full text-sm">
-						<thead>
-							<tr class="border-b border-gold/30 bg-[#6b0f1a] text-left text-xs font-bold text-cream uppercase tracking-wider">
-								<th class="px-4 py-3">Name</th>
-								<th class="px-4 py-3">ID</th>
-								<th class="px-4 py-3">Gender</th>
-								<th class="px-4 py-3">Status</th>
-								<th class="px-4 py-3">City · State</th>
-								<th class="px-4 py-3">Education</th>
-								<th class="px-4 py-3">Submitted</th>
-								<th class="px-4 py-3">Actions</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-gold/20">
-							{#each allProfiles.filter(p => profileStatusFilter === 'all' || p.status === profileStatusFilter) as p (p.id)}
-								<tr class="hover:bg-cream/40 transition-colors">
-									<td class="px-4 py-3 font-medium text-ink">{p.first_name} {p.last_name}</td>
-									<td class="px-4 py-3 font-mono text-xs text-ink/50">{p.profile_number ?? '—'}</td>
-									<td class="px-4 py-3 text-ink/70 capitalize">{p.gender}</td>
-									<td class="px-4 py-3">
-										<span class={statusBadgeClass(p.status)}>{p.status}</span>
-									</td>
-									<td class="px-4 py-3 text-ink/70">{p.city}{p.state ? `, ${p.state}` : ''}</td>
-									<td class="px-4 py-3 text-ink/60 text-xs">{p.education ?? '—'}</td>
-									<td class="px-4 py-3 text-ink/50 text-xs">{fmtDate(p.created_at)}</td>
-									<td class="px-4 py-3">
-										{#if profileStatusFilter === 'pending'}
-											<div class="flex items-center gap-1.5">
-												<button
-													class="rounded px-2 py-1 text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
-													disabled={actionLoading[p.id]}
-													onclick={() => approvePendingProfile(p)}
-													title="Approve this profile"
-												>
-													{actionLoading[p.id] ? '…' : '✓'}
-												</button>
-												<button
-													class="rounded px-2 py-1 text-xs font-semibold bg-vermilion text-white hover:bg-red-700 transition-colors disabled:opacity-50"
-													disabled={actionLoading[p.id]}
-													onclick={() => toggleRejectProfile(p.id)}
-													title="Reject this profile"
-												>
-													✕
-												</button>
-												<a href="/profiles/{p.id}" class="text-saffron hover:underline text-xs ml-1">View</a>
-											</div>
-											{#if rejectOpen[p.id]}
-												<div class="flex gap-1.5 mt-1.5">
-													<input
-														type="text"
-														class="input text-xs flex-1"
-														placeholder="Rejection reason"
-														bind:value={rejectNotes[p.id]}
-													/>
-													<button
-														class="rounded px-2 py-1 text-xs font-semibold bg-vermilion text-white hover:bg-red-700 disabled:opacity-50"
-														disabled={actionLoading[p.id]}
-														onclick={() => rejectPendingProfile(p)}
-													>
-														Confirm
-													</button>
-												</div>
-											{/if}
-										{:else}
-											<a href="/profiles/{p.id}" class="text-saffron hover:underline text-xs">View &rarr;</a>
-										{/if}
-									</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
+
+			<!-- ag-Grid -->
+			<div bind:this={profilesGridDiv}
+				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
+				style="height: 460px;
+					--ag-header-background-color: #6b0f1a;
+					--ag-header-foreground-color: #fff8e7;
+					--ag-header-column-separator-display: block;
+					--ag-header-column-separator-color: #a01428;
+					--ag-header-column-separator-width: 1px;
+					--ag-cell-horizontal-border: solid #e8dcc8;
+					--ag-row-border-color: #e8dcc8;
+					--ag-row-border-width: 1px;
+					--ag-selected-row-background-color: #fdf3e7;
+					--ag-row-hover-color: #fdf8f0;
+					--ag-font-size: 13px;
+					--ag-grid-size: 6px;
+					--ag-list-item-height: 36px;
+					--ag-header-height: 42px;"
+			></div>
+
+			<!-- Selected profile action panel -->
+			{#if selectedProfile}
+				<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
+					<div class="min-w-0 flex-1">
+						<p class="font-semibold text-ink">
+							{selectedProfile.profile_number} — {selectedProfile.first_name} {selectedProfile.last_name ?? ''}
+						</p>
+						<p class="text-sm text-ink/60 capitalize">
+							{selectedProfile.gender} · <span class="{selectedProfile.status === 'approved' ? 'text-green-600' : selectedProfile.status === 'rejected' ? 'text-vermilion' : 'text-saffron'} font-medium">{selectedProfile.status}</span>
+							· {selectedProfile.city}{selectedProfile.state ? `, ${selectedProfile.state}` : ''}
+						</p>
+					</div>
+					<div class="flex shrink-0 flex-wrap gap-2">
+						<a href="/profiles/{selectedProfile.id}" class="btn-secondary text-xs px-4 py-2">View →</a>
+						{#if selectedProfile.status === 'pending'}
+							<button
+								class="btn-primary text-xs px-4 py-2"
+								disabled={profileActionLoading}
+								onclick={doApproveProfile}
+							>
+								{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+								✓ Approve
+							</button>
+							<button
+								class="btn-danger text-xs px-4 py-2"
+								disabled={profileActionLoading}
+								onclick={() => { profileRejectOpen = !profileRejectOpen; profileRejectNote = ''; }}
+							>
+								✕ Reject
+							</button>
+						{/if}
+					</div>
 				</div>
+				{#if profileRejectOpen && selectedProfile.status === 'pending'}
+					<div class="flex gap-2 mt-2">
+						<input
+							type="text"
+							class="input flex-1 text-sm"
+							placeholder="Rejection reason (required)"
+							bind:value={profileRejectNote}
+						/>
+						<button
+							class="btn-danger text-sm px-4"
+							disabled={profileActionLoading}
+							onclick={doRejectProfile}
+						>
+							{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+							Confirm
+						</button>
+					</div>
+				{/if}
+			{:else}
+				<p class="mt-3 text-xs text-ink/40 text-center">Click a row to select and act on it</p>
 			{/if}
 		{:else}
 			<div class="flex items-center justify-center py-20">
@@ -694,84 +870,92 @@
 					{requestStatusFilter === 'all' ? 'total' : requestStatusFilter}
 				</span>
 			</div>
-			<!-- Status filter pills -->
+			<!-- Status filter chips -->
 			<div class="mb-4 flex flex-wrap gap-1.5">
-				{#each ['all', 'pending', 'approved', 'rejected'] as s}
+				{#each (['all', 'pending', 'approved', 'rejected'] as const) as s}
 					{@const count = s === 'all' ? allRequests.length : allRequests.filter(r => r.status === s).length}
 					<button
 						class="rounded-full px-3 py-1 text-xs font-semibold border transition-all {requestStatusFilter === s
 							? 'bg-maroon text-cream border-maroon'
 							: 'bg-white text-ink/60 border-gold/40 hover:border-maroon/40 hover:text-maroon'}"
-						onclick={() => { requestStatusFilter = s as typeof requestStatusFilter; }}
+						onclick={() => { requestStatusFilter = s; }}
 					>
 						{s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
 						<span class="ml-1 opacity-70">({count})</span>
 					</button>
 				{/each}
 			</div>
-			{#if allRequests.filter(r => requestStatusFilter === 'all' || r.status === requestStatusFilter).length === 0}
-				<div class="card text-sm text-ink/60">No {requestStatusFilter === 'all' ? '' : requestStatusFilter} requests found.</div>
-			{:else}
-				<div class="overflow-x-auto rounded-lg border border-gold/30 bg-white shadow-sm">
-					<table class="w-full text-sm">
-						<thead>
-							<tr class="border-b border-gold/30 bg-[#6b0f1a] text-left text-xs font-bold text-cream uppercase tracking-wider">
-								<th class="px-4 py-3">Request ID</th>
-								<th class="px-4 py-3">Requester</th>
-								<th class="px-4 py-3">Profile</th>
-								<th class="px-4 py-3">Status</th>
-								<th class="px-4 py-3">Date</th>
-								<th class="px-4 py-3">Actions</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-gold/20">
-							{#each allRequests.filter(r => requestStatusFilter === 'all' || r.status === requestStatusFilter) as r (r.id)}
-								<tr class="hover:bg-cream/40 transition-colors">
-									<td class="px-4 py-3 font-mono text-xs text-ink/40">{r.id.slice(0, 8)}…</td>
-									<td class="px-4 py-3 font-mono text-xs text-ink/60">{r.requester_user_id.slice(0, 8)}…</td>
-									<td class="px-4 py-3 font-mono text-xs text-ink/60">{r.profile_id.slice(0, 8)}…</td>
-									<td class="px-4 py-3">
-										<span class={statusBadgeClass(r.status)}>{r.status}</span>
-									</td>
-									<td class="px-4 py-3 text-ink/50 text-xs">{fmtDate(r.created_at)}</td>
-									<td class="px-4 py-3">
-										{#if requestStatusFilter === 'pending'}
-											<div class="flex items-center gap-1.5">
-												<button
-													class="rounded px-2 py-1 text-xs font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
-													disabled={actionLoading[r.id]}
-													onclick={() => approvePendingRequest(r)}
-												>
-													{actionLoading[r.id] ? '…' : '✓'}
-												</button>
-												<button
-													class="rounded px-2 py-1 text-xs font-semibold bg-vermilion text-white hover:bg-red-700 disabled:opacity-50"
-													disabled={actionLoading[r.id]}
-													onclick={() => toggleRejectRequest(r.id)}
-												>✕</button>
-											</div>
-											{#if rejectOpen[r.id]}
-												<div class="flex gap-1.5 mt-1.5">
-													<input
-														type="text"
-														class="input text-xs flex-1"
-														placeholder="Rejection reason"
-														bind:value={rejectNotes[r.id]}
-													/>
-													<button
-														class="rounded px-2 py-1 text-xs font-semibold bg-vermilion text-white disabled:opacity-50"
-														disabled={actionLoading[r.id]}
-														onclick={() => rejectPendingRequest(r)}
-													>Confirm</button>
-												</div>
-											{/if}
-										{/if}
-									</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
+
+			<!-- ag-Grid -->
+			<div bind:this={requestsGridDiv}
+				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
+				style="height: 400px;
+					--ag-header-background-color: #6b0f1a;
+					--ag-header-foreground-color: #fff8e7;
+					--ag-header-column-separator-display: block;
+					--ag-header-column-separator-color: #a01428;
+					--ag-header-column-separator-width: 1px;
+					--ag-cell-horizontal-border: solid #e8dcc8;
+					--ag-row-border-color: #e8dcc8;
+					--ag-row-border-width: 1px;
+					--ag-selected-row-background-color: #fdf3e7;
+					--ag-row-hover-color: #fdf8f0;
+					--ag-font-size: 13px;
+					--ag-grid-size: 6px;
+					--ag-list-item-height: 36px;
+					--ag-header-height: 42px;"
+			></div>
+
+			<!-- Selected request action panel -->
+			{#if selectedRequest}
+				<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
+					<div class="min-w-0 flex-1">
+						<p class="font-semibold text-ink font-mono text-sm">{selectedRequest.id.slice(0, 8)}…</p>
+						<p class="text-sm text-ink/60">
+							Status: <span class="{selectedRequest.status === 'approved' ? 'text-green-600' : selectedRequest.status === 'rejected' ? 'text-vermilion' : 'text-saffron'} font-medium capitalize">{selectedRequest.status}</span>
+							{#if selectedRequest.message} · "{selectedRequest.message}"{/if}
+						</p>
+					</div>
+					<div class="flex shrink-0 flex-wrap gap-2">
+						{#if selectedRequest.status === 'pending'}
+							<button
+								class="btn-primary text-xs px-4 py-2"
+								disabled={requestActionLoading}
+								onclick={doApproveRequest}
+							>
+								{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+								✓ Approve
+							</button>
+							<button
+								class="btn-danger text-xs px-4 py-2"
+								disabled={requestActionLoading}
+								onclick={() => { requestRejectOpen = !requestRejectOpen; requestRejectNote = ''; }}
+							>
+								✕ Reject
+							</button>
+						{/if}
+					</div>
 				</div>
+				{#if requestRejectOpen && selectedRequest.status === 'pending'}
+					<div class="flex gap-2 mt-2">
+						<input
+							type="text"
+							class="input flex-1 text-sm"
+							placeholder="Rejection reason (required)"
+							bind:value={requestRejectNote}
+						/>
+						<button
+							class="btn-danger text-sm px-4"
+							disabled={requestActionLoading}
+							onclick={doRejectRequest}
+						>
+							{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+							Confirm
+						</button>
+					</div>
+				{/if}
+			{:else}
+				<p class="mt-3 text-xs text-ink/40 text-center">Click a row to select and act on it</p>
 			{/if}
 		{:else}
 			<div class="flex items-center justify-center py-20">
