@@ -12,7 +12,7 @@ from app.config import SESSION_SECRET
 logger = logging.getLogger(__name__)
 
 _ALGORITHM = "HS256"
-_EXPIRY_SECONDS = 86400 * 30  # 30 days
+_EXPIRY_SECONDS = 86400 * 7  # 7 days — keep in sync with auth.py _COOKIE_MAX_AGE
 
 
 def mint_jwt(user_id: str, handle: str, email: str, full_name: str, is_admin: bool, email_verified: bool, is_approved: bool = False) -> str:
@@ -27,7 +27,7 @@ def mint_jwt(user_id: str, handle: str, email: str, full_name: str, is_admin: bo
         email_verified — bool
         is_approved    — bool
         iat            — issued-at (UTC epoch)
-        exp            — expiry (iat + 30 days)
+        exp            — expiry (iat + 7 days)
     """
     now = datetime.now(timezone.utc)
     payload: dict[str, Any] = {
