@@ -681,20 +681,20 @@
 				</button>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button
-						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 bg-ink/5 text-ink/60 hover:bg-ink/10'}"
+						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
 						onclick={() => { selectTab('users'); userFilter = 'all'; }}
-					>All: {dashboard.stats.users}</button>
+					>All · {dashboard.stats.users}</button>
 					{#if dashboard.pending_users.length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'unverified' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
 							onclick={() => { selectTab('users'); userFilter = 'unverified'; }}
-						>&#9888; Unverified: {dashboard.pending_users.length}</button>
+						>Unverified · {dashboard.pending_users.length}</button>
 					{/if}
 					{#if dashboard.stats.users - dashboard.pending_users.length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'verified' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
 							onclick={() => { selectTab('users'); userFilter = 'verified'; }}
-						>&#10003; Verified: {dashboard.stats.users - dashboard.pending_users.length}</button>
+						>Verified · {dashboard.stats.users - dashboard.pending_users.length}</button>
 					{/if}
 				</div>
 			</div>
@@ -711,32 +711,32 @@
 				</button>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button
-						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 bg-ink/5 text-ink/60 hover:bg-ink/10'}"
+						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
 						onclick={() => { selectTab('profiles'); profileStatusFilter = 'all'; }}
-					>All: {dashboard.stats.profiles_total}</button>
+					>All · {dashboard.stats.profiles_total}</button>
 					{#if dashboard.stats.profiles_pending > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
 							onclick={() => { selectTab('profiles'); profileStatusFilter = 'pending'; }}
-						>⏳ Pending: {dashboard.stats.profiles_pending}</button>
+						>Pending · {dashboard.stats.profiles_pending}</button>
 					{/if}
 					{#if dashboard.stats.profiles_approved > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'approved' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
 							onclick={() => { selectTab('profiles'); profileStatusFilter = 'approved'; }}
-						>✓ Approved: {dashboard.stats.profiles_approved}</button>
+						>Approved · {dashboard.stats.profiles_approved}</button>
 					{/if}
 					{#if allProfiles && allProfiles.filter(p => p.status === 'rejected').length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'rejected' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
 							onclick={() => { selectTab('profiles'); profileStatusFilter = 'rejected'; }}
-						>✕ Rejected: {allProfiles.filter(p => p.status === 'rejected').length}</button>
+						>Rejected · {allProfiles.filter(p => p.status === 'rejected').length}</button>
 					{/if}
 					{#if allProfiles && allProfiles.filter(p => p.status === 'draft').length > 0}
 						<button
-							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'draft' ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 bg-ink/5 text-ink/60 hover:bg-ink/10'}"
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'draft' ? 'border-maroon bg-maroon text-cream' : 'border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100'}"
 							onclick={() => { selectTab('profiles'); profileStatusFilter = 'draft'; }}
-						>✎ Draft: {allProfiles.filter(p => p.status === 'draft').length}</button>
+						>Draft · {allProfiles.filter(p => p.status === 'draft').length}</button>
 					{/if}
 				</div>
 			</div>
@@ -753,26 +753,26 @@
 				</button>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button
-						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 bg-ink/5 text-ink/60 hover:bg-ink/10'}"
+						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
 						onclick={() => { selectTab('requests'); requestStatusFilter = 'all'; }}
-					>All: {allRequests ? allRequests.length : dashboard.stats.requests_pending}</button>
+					>All · {allRequests ? allRequests.length : '…'}</button>
 					{#if dashboard.stats.requests_pending > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
 							onclick={() => { selectTab('requests'); requestStatusFilter = 'pending'; }}
-						>⏳ Pending: {dashboard.stats.requests_pending}</button>
+						>Pending · {dashboard.stats.requests_pending}</button>
 					{/if}
 					{#if allRequests && allRequests.filter(r => r.status === 'approved').length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'approved' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
 							onclick={() => { selectTab('requests'); requestStatusFilter = 'approved'; }}
-						>✓ Approved: {allRequests.filter(r => r.status === 'approved').length}</button>
+						>Approved · {allRequests.filter(r => r.status === 'approved').length}</button>
 					{/if}
 					{#if allRequests && allRequests.filter(r => r.status === 'rejected').length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'rejected' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
 							onclick={() => { selectTab('requests'); requestStatusFilter = 'rejected'; }}
-						>✕ Rejected: {allRequests.filter(r => r.status === 'rejected').length}</button>
+						>Rejected · {allRequests.filter(r => r.status === 'rejected').length}</button>
 					{/if}
 				</div>
 			</div>
