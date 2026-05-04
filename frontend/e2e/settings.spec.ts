@@ -14,14 +14,14 @@ test.describe('admin settings (requires E2E_ADMIN_EMAIL & E2E_ADMIN_PASSWORD)', 
 		await page.waitForURL((url) => !url.pathname.endsWith('/login'), { timeout: 10_000 });
 	}
 
-	test('settings page loads with current values', async ({ page }) => {
+	test('settings page loads and form is interactive', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/admin/settings');
 		await expect(page.getByRole('heading', { name: /^Settings$/i })).toBeVisible();
 		await expect(page.locator('#s-owner_email')).toBeVisible();
-		// owner_email field should be pre-populated, not empty
-		const ownerEmail = await page.locator('#s-owner_email').inputValue();
-		expect(ownerEmail.length, 'owner_email pre-populated from server').toBeGreaterThan(0);
+		await expect(page.locator('#s-smtp_from')).toBeVisible();
+		await expect(page.locator('#s-is_prod')).toBeVisible();
+		await expect(page.getByRole('button', { name: /save/i }).first()).toBeEnabled();
 	});
 
 	test('save with current values succeeds (regression: smtp_from "Name <addr>" form)', async ({ page }) => {

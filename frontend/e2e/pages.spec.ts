@@ -83,14 +83,34 @@ test.describe('search page filter interactions', () => {
 });
 
 test.describe('site config drives navbar Test chip', () => {
-	test('Test chip is present iff is_prod is false', async ({ page, request }) => {
+	const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL;
+	const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD;
+	test.skip(
+		!ADMIN_EMAIL || !ADMIN_PASSWORD,
+		'navbar chips only render when logged in — needs admin creds'
+	);
+
+	test('Test chip is present iff is_prod is false (logged in)', async ({ page, request }) => {
 		// Read the live setting
 		const r = await request.get('/api/site/info');
 		const body = await r.json();
-		await page.goto('/');
+
+		// Log in so the navbar user-info block (which contains the chips) renders
+		await page.goto('/login');
+		await page.locator('#identifier').fill(ADMIN_EMAIL!);
+		await page.locator('input[type="password"]').fill(ADMIN_PASSWORD!);
+		await page.getByRole('button', { name: /log\s*in|sign\s*in/i }).first().click();
+		await page.waitForURL((url) => !url.pathname.endsWith('/login'), { timeout: 10_000 });
+
+		// On mobile the chips are inside the hamburger drawer; open it
+		const isMobile = (await page.viewportSize())?.width !== undefined && (await page.viewportSize())!.width < 768;
+		if (isMobile) {
+			await page.getByRole('button', { name: /open menu/i }).click();
+		}
+
 		const testChip = page.locator('text=/^Test$/').last();
 		if (body.is_prod === false) {
-			await expect(testChip).toBeVisible();
+			await expect(testChip).toBeVisible({ timeout: 5_000 });
 		} else {
 			await expect(testChip).toHaveCount(0);
 		}
