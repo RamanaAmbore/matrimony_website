@@ -371,6 +371,8 @@
 						<option value="veg">Vegetarian</option>
 						<option value="non-veg">Non-Vegetarian</option>
 						<option value="eggetarian">Eggetarian</option>
+						<option value="jain">Jain</option>
+						<option value="vegan">Vegan</option>
 					</select>
 				</div>
 
