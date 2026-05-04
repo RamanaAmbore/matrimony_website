@@ -289,6 +289,37 @@
 		{ value: 'liberal', label: 'Liberal' }
 	];
 
+	// Blood groups as {value,label} so 'unknown' renders as 'Unknown'
+	const BLOOD_GROUPS_OPTS = BLOOD_GROUPS.map(bg => ({
+		value: bg,
+		label: bg === 'unknown' ? 'Unknown' : bg
+	}));
+
+	const FAMILY_TYPES = [
+		{ value: '', label: 'Not specified' },
+		{ value: 'nuclear', label: 'Nuclear' },
+		{ value: 'joint', label: 'Joint' }
+	];
+
+	const DIET_OPTS = [
+		{ value: 'veg', label: 'Vegetarian' },
+		{ value: 'non-veg', label: 'Non-Vegetarian' },
+		{ value: 'eggetarian', label: 'Eggetarian' },
+		{ value: 'jain', label: 'Jain' },
+		{ value: 'vegan', label: 'Vegan' }
+	];
+
+	const SMOKE_DRINK_OPTS = [
+		{ value: '', label: 'Prefer not to say' },
+		{ value: 'no', label: 'No' },
+		{ value: 'occasionally', label: 'Occasionally' },
+		{ value: 'yes', label: 'Yes' }
+	];
+
+	const TIME_HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
+	const TIME_MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
+	const TIME_AMPM = ['AM', 'PM'];
+
 	// Small hint shown under every ASCII-only text field
 	const ASCII_HINT = 'English characters only · ఆంగ్ల అక్షరాలు మాత్రమే';
 
@@ -576,12 +607,13 @@
 								<!-- Marital Status -->
 								<div>
 									<BilingualLabel key="maritalStatus" for="marital_status" />
-									<select id="marital_status" class="input" class:border-vermilion={errors.marital_status} bind:value={marital_status}>
-										<option value="">Select…</option>
-										{#each MARITAL_STATUSES as ms}
-											<option value={ms.value}>{ms.label}</option>
-										{/each}
-									</select>
+									<Combobox
+										id="marital_status"
+										bind:value={marital_status}
+										options={MARITAL_STATUSES}
+										placeholder="Select…"
+										class={errors.marital_status ? 'border-vermilion' : ''}
+									/>
 									{#if errors.marital_status}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.marital_status}</p>{/if}
 								</div>
 
@@ -622,34 +654,19 @@
 							<!-- Complexion -->
 							<div>
 								<BilingualLabel key="complexion" for="complexion" />
-								<select id="complexion" class="input" bind:value={complexion}>
-									<option value="">Select…</option>
-									{#each COMPLEXIONS as c}
-										<option value={c.value}>{c.label}</option>
-									{/each}
-								</select>
+								<Combobox id="complexion" bind:value={complexion} options={COMPLEXIONS} placeholder="Select…" />
 							</div>
 
 							<!-- Body Type (optional) -->
 							<div>
 								<BilingualLabel key="bodyType" for="body_type" />
-								<select id="body_type" class="input" bind:value={body_type}>
-									<option value="">Select… (optional)</option>
-									{#each BODY_TYPES as bt}
-										<option value={bt.value}>{bt.label}</option>
-									{/each}
-								</select>
+								<Combobox id="body_type" bind:value={body_type} options={BODY_TYPES} placeholder="Select… (optional)" />
 							</div>
 
 							<!-- Blood Group (optional) -->
 							<div>
 								<BilingualLabel key="bloodGroup" for="blood_group" />
-								<select id="blood_group" class="input" bind:value={blood_group}>
-									<option value="">Select… (optional)</option>
-									{#each BLOOD_GROUPS as bg}
-										<option value={bg}>{bg === 'unknown' ? 'Unknown' : bg}</option>
-									{/each}
-								</select>
+								<Combobox id="blood_group" bind:value={blood_group} options={BLOOD_GROUPS_OPTS} placeholder="Select… (optional)" />
 							</div>
 						</div>
 
@@ -686,24 +703,26 @@
 							<!-- Nakshatram -->
 							<div>
 								<BilingualLabel key="nakshatram" for="nakshatram" />
-								<select id="nakshatram" class="input" class:border-vermilion={errors.nakshatram} bind:value={nakshatram}>
-									<option value="">Select…</option>
-									{#each NAKSHATRAS as n}
-										<option value={n}>{n}</option>
-									{/each}
-								</select>
+								<Combobox
+									id="nakshatram"
+									bind:value={nakshatram}
+									options={NAKSHATRAS}
+									placeholder="Select…"
+									class={errors.nakshatram ? 'border-vermilion' : ''}
+								/>
 								{#if errors.nakshatram}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.nakshatram}</p>{/if}
 							</div>
 
 							<!-- Rashi -->
 							<div>
 								<BilingualLabel key="rashi" for="rashi" />
-								<select id="rashi" class="input" class:border-vermilion={errors.rashi} bind:value={rashi}>
-									<option value="">Select…</option>
-									{#each RASHIS as r}
-										<option value={r}>{r}</option>
-									{/each}
-								</select>
+								<Combobox
+									id="rashi"
+									bind:value={rashi}
+									options={RASHIS}
+									placeholder="Select…"
+									class={errors.rashi ? 'border-vermilion' : ''}
+								/>
 								{#if errors.rashi}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.rashi}</p>{/if}
 							</div>
 
@@ -716,21 +735,10 @@
 								</div>
 								{#if timeEnabled}
 								<div class="mt-2 flex items-center gap-2">
-									<select class="input w-20" bind:value={time_hour}>
-										{#each Array.from({length: 12}, (_, i) => String(i + 1)) as h}
-											<option value={h}>{h}</option>
-										{/each}
-									</select>
+									<Combobox bind:value={time_hour} options={TIME_HOURS} placeholder="H" class="w-20" />
 									<span class="text-ink/60">:</span>
-									<select class="input w-20" bind:value={time_minute}>
-										{#each ['00','05','10','15','20','25','30','35','40','45','50','55'] as m}
-											<option value={m}>{m}</option>
-										{/each}
-									</select>
-									<select class="input w-20" bind:value={time_ampm}>
-										<option value="AM">AM</option>
-										<option value="PM">PM</option>
-									</select>
+									<Combobox bind:value={time_minute} options={TIME_MINUTES} placeholder="MM" class="w-20" />
+									<Combobox bind:value={time_ampm} options={TIME_AMPM} placeholder="AM" class="w-20" />
 								</div>
 								{/if}
 								<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · జన్మ సమయం</p>
@@ -873,23 +881,13 @@
 							<!-- Family Status -->
 							<div>
 								<BilingualLabel key="familyStatus" for="family_status" />
-								<select id="family_status" class="input" bind:value={family_status}>
-									<option value="">Select… (optional)</option>
-									{#each FAMILY_STATUSES as fs}
-										<option value={fs.value}>{fs.label}</option>
-									{/each}
-								</select>
+								<Combobox id="family_status" bind:value={family_status} options={FAMILY_STATUSES} placeholder="Select… (optional)" />
 							</div>
 
 							<!-- Family Values -->
 							<div>
 								<BilingualLabel key="familyValues" for="family_values" />
-								<select id="family_values" class="input" bind:value={family_values}>
-									<option value="">Select… (optional)</option>
-									{#each FAMILY_VALUES_OPTS as fv}
-										<option value={fv.value}>{fv.label}</option>
-									{/each}
-								</select>
+								<Combobox id="family_values" bind:value={family_values} options={FAMILY_VALUES_OPTS} placeholder="Select… (optional)" />
 							</div>
 
 							<!-- Native Place -->
@@ -905,11 +903,7 @@
 						<!-- Family Type -->
 						<div class="mt-4">
 							<BilingualLabel key="familyType" for="family_type_sel_w" />
-							<select id="family_type_sel_w" class="input" bind:value={family_type}>
-								<option value="">Not specified</option>
-								<option value="nuclear">Nuclear</option>
-								<option value="joint">Joint</option>
-							</select>
+							<Combobox id="family_type_sel_w" bind:value={family_type} options={FAMILY_TYPES} placeholder="Not specified" />
 							{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.family_type}</p>{/if}
 						</div>
 
@@ -920,35 +914,19 @@
 								<!-- Diet -->
 								<div>
 									<BilingualLabel key="diet" for="diet_sel_w" />
-									<select id="diet_sel_w" class="input" bind:value={diet}>
-										<option value="veg">Vegetarian</option>
-										<option value="non-veg">Non-Vegetarian</option>
-										<option value="eggetarian">Eggetarian</option>
-										<option value="jain">Jain</option>
-										<option value="vegan">Vegan</option>
-									</select>
+									<Combobox id="diet_sel_w" bind:value={diet} options={DIET_OPTS} placeholder="Select…" />
 								</div>
 
 								<!-- Smokes -->
 								<div>
 									<BilingualLabel key="smokes" for="smokes_sel_w" />
-									<select id="smokes_sel_w" class="input" bind:value={smokes}>
-										<option value="">Prefer not to say</option>
-										<option value="no">No</option>
-										<option value="occasionally">Occasionally</option>
-										<option value="yes">Yes</option>
-									</select>
+									<Combobox id="smokes_sel_w" bind:value={smokes} options={SMOKE_DRINK_OPTS} placeholder="Prefer not to say" />
 								</div>
 
 								<!-- Drinks -->
 								<div>
 									<BilingualLabel key="drinks" for="drinks_sel_w" />
-									<select id="drinks_sel_w" class="input" bind:value={drinks}>
-										<option value="">Prefer not to say</option>
-										<option value="no">No</option>
-										<option value="occasionally">Occasionally</option>
-										<option value="yes">Yes</option>
-									</select>
+									<Combobox id="drinks_sel_w" bind:value={drinks} options={SMOKE_DRINK_OPTS} placeholder="Prefer not to say" />
 								</div>
 							</div>
 
@@ -1158,17 +1136,13 @@
 				<!-- Marital Status -->
 				<div>
 					<BilingualLabel key="maritalStatus" for="marital_status" />
-					<select
+					<Combobox
 						id="marital_status"
-						class="input"
-						class:border-vermilion={errors.marital_status}
 						bind:value={marital_status}
-					>
-						<option value="">Select…</option>
-						{#each MARITAL_STATUSES as ms}
-							<option value={ms.value}>{ms.label}</option>
-						{/each}
-					</select>
+						options={MARITAL_STATUSES}
+						placeholder="Select…"
+						class={errors.marital_status ? 'border-vermilion' : ''}
+					/>
 					{#if errors.marital_status}<p class="mt-1 text-xs text-vermilion" data-error="true">
 							{errors.marital_status}
 						</p>{/if}
@@ -1259,34 +1233,19 @@
 			<!-- Complexion -->
 			<div>
 				<BilingualLabel key="complexion" for="complexion" />
-				<select id="complexion" class="input" bind:value={complexion}>
-					<option value="">Select…</option>
-					{#each COMPLEXIONS as c}
-						<option value={c.value}>{c.label}</option>
-					{/each}
-				</select>
+				<Combobox id="complexion" bind:value={complexion} options={COMPLEXIONS} placeholder="Select…" />
 			</div>
 
 			<!-- Body Type (optional) -->
 			<div>
 				<BilingualLabel key="bodyType" for="body_type" />
-				<select id="body_type" class="input" bind:value={body_type}>
-					<option value="">Select… (optional)</option>
-					{#each BODY_TYPES as bt}
-						<option value={bt.value}>{bt.label}</option>
-					{/each}
-				</select>
+				<Combobox id="body_type" bind:value={body_type} options={BODY_TYPES} placeholder="Select… (optional)" />
 			</div>
 
 			<!-- Blood Group (optional) -->
 			<div>
 				<BilingualLabel key="bloodGroup" for="blood_group" />
-				<select id="blood_group" class="input" bind:value={blood_group}>
-					<option value="">Select… (optional)</option>
-					{#each BLOOD_GROUPS as bg}
-						<option value={bg}>{bg === 'unknown' ? 'Unknown' : bg}</option>
-					{/each}
-				</select>
+				<Combobox id="blood_group" bind:value={blood_group} options={BLOOD_GROUPS_OPTS} placeholder="Select… (optional)" />
 			</div>
 		</div>
 	</details>
@@ -1368,17 +1327,13 @@
 			<!-- Nakshatram -->
 			<div>
 				<BilingualLabel key="nakshatram" for="nakshatram" required />
-				<select
+				<Combobox
 					id="nakshatram"
-					class="input"
-					class:border-vermilion={errors.nakshatram}
 					bind:value={nakshatram}
-				>
-					<option value="">Select…</option>
-					{#each NAKSHATRAS as n}
-						<option value={n}>{n}</option>
-					{/each}
-				</select>
+					options={NAKSHATRAS}
+					placeholder="Select…"
+					class={errors.nakshatram ? 'border-vermilion' : ''}
+				/>
 				{#if errors.nakshatram}<p class="mt-1 text-xs text-vermilion" data-error="true">
 						{errors.nakshatram}
 					</p>{/if}
@@ -1387,12 +1342,13 @@
 			<!-- Rashi -->
 			<div>
 				<BilingualLabel key="rashi" for="rashi" required />
-				<select id="rashi" class="input" class:border-vermilion={errors.rashi} bind:value={rashi}>
-					<option value="">Select…</option>
-					{#each RASHIS as r}
-						<option value={r}>{r}</option>
-					{/each}
-				</select>
+				<Combobox
+					id="rashi"
+					bind:value={rashi}
+					options={RASHIS}
+					placeholder="Select…"
+					class={errors.rashi ? 'border-vermilion' : ''}
+				/>
 				{#if errors.rashi}<p class="mt-1 text-xs text-vermilion" data-error="true">
 						{errors.rashi}
 					</p>{/if}
@@ -1407,21 +1363,10 @@
 				</div>
 				{#if timeEnabled}
 				<div class="mt-2 flex items-center gap-2">
-					<select class="input w-20" bind:value={time_hour}>
-						{#each Array.from({length: 12}, (_, i) => String(i + 1)) as h}
-							<option value={h}>{h}</option>
-						{/each}
-					</select>
+					<Combobox bind:value={time_hour} options={TIME_HOURS} placeholder="H" class="w-20" />
 					<span class="text-ink/60">:</span>
-					<select class="input w-20" bind:value={time_minute}>
-						{#each ['00','05','10','15','20','25','30','35','40','45','50','55'] as m}
-							<option value={m}>{m}</option>
-						{/each}
-					</select>
-					<select class="input w-20" bind:value={time_ampm}>
-						<option value="AM">AM</option>
-						<option value="PM">PM</option>
-					</select>
+					<Combobox bind:value={time_minute} options={TIME_MINUTES} placeholder="MM" class="w-20" />
+					<Combobox bind:value={time_ampm} options={TIME_AMPM} placeholder="AM" class="w-20" />
 				</div>
 				{/if}
 				<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · జన్మ సమయం</p>
@@ -1730,23 +1675,13 @@
 			<!-- Family Status -->
 			<div>
 				<BilingualLabel key="familyStatus" for="family_status" />
-				<select id="family_status" class="input" bind:value={family_status}>
-					<option value="">Select… (optional)</option>
-					{#each FAMILY_STATUSES as fs}
-						<option value={fs.value}>{fs.label}</option>
-					{/each}
-				</select>
+				<Combobox id="family_status" bind:value={family_status} options={FAMILY_STATUSES} placeholder="Select… (optional)" />
 			</div>
 
 			<!-- Family Values -->
 			<div>
 				<BilingualLabel key="familyValues" for="family_values" />
-				<select id="family_values" class="input" bind:value={family_values}>
-					<option value="">Select… (optional)</option>
-					{#each FAMILY_VALUES_OPTS as fv}
-						<option value={fv.value}>{fv.label}</option>
-					{/each}
-				</select>
+				<Combobox id="family_values" bind:value={family_values} options={FAMILY_VALUES_OPTS} placeholder="Select… (optional)" />
 			</div>
 
 			<!-- Native Place (optional) -->
@@ -1774,11 +1709,7 @@
 		<!-- Family Type -->
 		<div class="mt-4">
 			<BilingualLabel key="familyType" for="family_type_sel_n" />
-			<select id="family_type_sel_n" class="input" bind:value={family_type}>
-				<option value="">Not specified</option>
-				<option value="nuclear">Nuclear</option>
-				<option value="joint">Joint</option>
-			</select>
+			<Combobox id="family_type_sel_n" bind:value={family_type} options={FAMILY_TYPES} placeholder="Not specified" />
 			{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">
 					{errors.family_type}
 				</p>{/if}
@@ -1803,35 +1734,19 @@
 				<!-- Diet -->
 				<div>
 					<BilingualLabel key="diet" for="diet_sel_n" />
-					<select id="diet_sel_n" class="input" bind:value={diet}>
-						<option value="veg">Vegetarian</option>
-						<option value="non-veg">Non-Vegetarian</option>
-						<option value="eggetarian">Eggetarian</option>
-						<option value="jain">Jain</option>
-						<option value="vegan">Vegan</option>
-					</select>
+					<Combobox id="diet_sel_n" bind:value={diet} options={DIET_OPTS} placeholder="Select…" />
 				</div>
 
 				<!-- Smokes -->
 				<div>
 					<BilingualLabel key="smokes" for="smokes_sel_n" />
-					<select id="smokes_sel_n" class="input" bind:value={smokes}>
-						<option value="">Prefer not to say</option>
-						<option value="no">No</option>
-						<option value="occasionally">Occasionally</option>
-						<option value="yes">Yes</option>
-					</select>
+					<Combobox id="smokes_sel_n" bind:value={smokes} options={SMOKE_DRINK_OPTS} placeholder="Prefer not to say" />
 				</div>
 
 				<!-- Drinks -->
 				<div>
 					<BilingualLabel key="drinks" for="drinks_sel_n" />
-					<select id="drinks_sel_n" class="input" bind:value={drinks}>
-						<option value="">Prefer not to say</option>
-						<option value="no">No</option>
-						<option value="occasionally">Occasionally</option>
-						<option value="yes">Yes</option>
-					</select>
+					<Combobox id="drinks_sel_n" bind:value={drinks} options={SMOKE_DRINK_OPTS} placeholder="Prefer not to say" />
 				</div>
 			</div>
 
