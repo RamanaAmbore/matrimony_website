@@ -823,7 +823,8 @@
 									{#if userActionLoading}<Loader size={13} class="animate-spin" />{/if}
 									Approve User
 								</button>
-							{:else}
+							{:else if !selectedUser.is_admin || loggedInUser?.is_super}
+								<!-- Revoking approval from an admin is super-only -->
 								<button
 									class="btn-secondary text-sm px-4 py-1.5"
 									disabled={userActionLoading}

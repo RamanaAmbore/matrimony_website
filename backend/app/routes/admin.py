@@ -755,8 +755,14 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        """Admin: revoke approval from a user."""
-        _require_admin(request)
+        """Revoke approval from a user.
+
+        Permission rules:
+          - admin → can unapprove only non-admin users
+          - super → can unapprove any user (incl. other admins)
+          - never targets a super-user
+        """
+        payload = _require_admin(request)
 
         try:
             uid = uuid.UUID(user_id)
@@ -767,6 +773,13 @@ class AdminController(Controller):
         user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_super:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot unapprove a super-user"})
+        if user.is_admin and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Only super-user can revoke approval from an admin"},
+            )
 
         user.is_approved = False
         await db.commit()
