@@ -673,13 +673,17 @@
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'users' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
 				<button
 					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'users' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
-					onclick={() => { selectTab('users'); userFilter = 'all'; }}
+					onclick={() => selectTab('users')}
 				>
 					<Users size={20} class="text-saffron shrink-0" />
-					<span class="font-serif font-semibold {activeTab === 'users' ? 'text-cream' : 'text-maroon'}">All Users</span>
+					<span class="font-serif font-semibold {activeTab === 'users' ? 'text-cream' : 'text-maroon'}">Users</span>
 					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'users' ? 'text-cream' : 'text-ink'}">{dashboard.stats.users}</span>
 				</button>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
+					<button
+						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 bg-ink/5 text-ink/60 hover:bg-ink/10'}"
+						onclick={() => { selectTab('users'); userFilter = 'all'; }}
+					>All: {dashboard.stats.users}</button>
 					{#if dashboard.pending_users.length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'unverified' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
@@ -699,13 +703,17 @@
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'profiles' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
 				<button
 					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'profiles' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
-					onclick={() => { selectTab('profiles'); profileStatusFilter = 'all'; }}
+					onclick={() => selectTab('profiles')}
 				>
 					<UserCheck size={20} class="{activeTab === 'profiles' ? 'text-saffron' : 'text-gold'} shrink-0" />
-					<span class="font-serif font-semibold {activeTab === 'profiles' ? 'text-cream' : 'text-maroon'}">All Profiles</span>
+					<span class="font-serif font-semibold {activeTab === 'profiles' ? 'text-cream' : 'text-maroon'}">Profiles</span>
 					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'profiles' ? 'text-cream' : 'text-ink'}">{dashboard.stats.profiles_total}</span>
 				</button>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
+					<button
+						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 bg-ink/5 text-ink/60 hover:bg-ink/10'}"
+						onclick={() => { selectTab('profiles'); profileStatusFilter = 'all'; }}
+					>All: {dashboard.stats.profiles_total}</button>
 					{#if dashboard.stats.profiles_pending > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
@@ -737,13 +745,17 @@
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'requests' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
 				<button
 					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'requests' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
-					onclick={() => { selectTab('requests'); requestStatusFilter = 'all'; }}
+					onclick={() => selectTab('requests')}
 				>
 					<Inbox size={20} class="{activeTab === 'requests' ? 'text-saffron' : 'text-sky-500'} shrink-0" />
-					<span class="font-serif font-semibold {activeTab === 'requests' ? 'text-cream' : 'text-maroon'}">All Requests</span>
+					<span class="font-serif font-semibold {activeTab === 'requests' ? 'text-cream' : 'text-maroon'}">Requests</span>
 					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'requests' ? 'text-cream' : 'text-ink'}">{dashboard.stats.requests_pending}</span>
 				</button>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
+					<button
+						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 bg-ink/5 text-ink/60 hover:bg-ink/10'}"
+						onclick={() => { selectTab('requests'); requestStatusFilter = 'all'; }}
+					>All: {allRequests ? allRequests.length : dashboard.stats.requests_pending}</button>
 					{#if dashboard.stats.requests_pending > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
