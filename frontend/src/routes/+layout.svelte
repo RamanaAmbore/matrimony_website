@@ -207,7 +207,7 @@
 						{:else}
 							<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
 						{/if}
-						{#if !siteInfo.is_prod}
+						{#if !siteInfo.is_prod && user.is_admin}
 							<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
 						{/if}
 					</span>
@@ -229,8 +229,8 @@
 		</nav>
 
 		<!-- Mobile-only chips (User/Admin/Super + Test). Always visible on the
-		     navbar so users see their role and the test-mode flag without
-		     opening the drawer. Mirrors the desktop xl-only chip block. -->
+		     navbar so users see their role without opening the drawer. The
+		     Test chip is operator-only — only admin/super see it. -->
 		{#if user}
 			<span class="ml-auto flex flex-wrap items-center gap-1 md:hidden" title={user.email}>
 				{#if user.is_super}
@@ -240,20 +240,15 @@
 				{:else}
 					<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
 				{/if}
-				{#if !siteInfo.is_prod}
+				{#if !siteInfo.is_prod && user.is_admin}
 					<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
 				{/if}
-			</span>
-		{:else if !siteInfo.is_prod}
-			<!-- Anonymous: still surface the Test flag on mobile -->
-			<span class="ml-auto md:hidden">
-				<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
 			</span>
 		{/if}
 
 		<!-- Mobile hamburger -->
 		<button
-			class="rounded p-2 text-cream hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-cream md:hidden {user || !siteInfo.is_prod ? 'ml-1' : 'ml-auto'}"
+			class="rounded p-2 text-cream hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-cream md:hidden {user ? 'ml-1' : 'ml-auto'}"
 			onclick={openDrawer}
 			aria-label="Open menu"
 			aria-expanded={drawerOpen}
