@@ -15,6 +15,7 @@ from sqlalchemy.orm import selectinload
 
 from app.config import MEDIA_ROOT
 from app.models.photo import Photo
+from app.models.request import DetailRequest, RequestStatusEnum
 from app.models.profile import (
     BloodGroupEnum,
     BodyTypeEnum,
@@ -404,9 +405,23 @@ class ProfileController(Controller):
             photos_data = full.pop("photos", [])
             return {"profile": full, "photos": photos_data}
 
-        # Non-owner: only approved profiles get partial view
+        # Non-owner: only approved profiles are visible at all
         if profile.status != ProfileStatusEnum.approved:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
+
+        # Check if the current user has an approved detail request for this profile
+        if user:
+            has_approval = await db.execute(
+                select(DetailRequest.id).where(
+                    DetailRequest.requester_user_id == uuid.UUID(user["sub"]),
+                    DetailRequest.profile_id == profile.id,
+                    DetailRequest.status == RequestStatusEnum.approved,
+                ).limit(1)
+            )
+            if has_approval.scalar_one_or_none() is not None:
+                full = _serialize_full_profile(profile, request)
+                photos_data = full.pop("photos", [])
+                return {"profile": full, "photos": photos_data}
 
         partial = _serialize_partial_profile(profile, request)
         return {"profile": partial, "photos": []}

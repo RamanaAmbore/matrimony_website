@@ -90,6 +90,8 @@ def _serialize_profile(profile: Profile, request: Request) -> dict[str, Any]:
 
 
 def _serialize_request(req: DetailRequest) -> dict[str, Any]:
+    requester = getattr(req, "requester", None)
+    profile = getattr(req, "profile", None)
     return {
         "id": str(req.id),
         "requester_user_id": str(req.requester_user_id),
@@ -99,6 +101,13 @@ def _serialize_request(req: DetailRequest) -> dict[str, Any]:
         "admin_notes": req.admin_notes,
         "responded_at": req.responded_at.isoformat() if req.responded_at else None,
         "created_at": req.created_at.isoformat(),
+        "requester_email": requester.email if requester else None,
+        "requester_name": requester.full_name if requester else None,
+        "profile_number": profile.profile_number if profile else None,
+        "profile_first_name": profile.first_name if profile else None,
+        "profile_last_name": profile.last_name if profile else None,
+        "profile_gender": profile.gender.value if profile else None,
+        "profile_city": profile.city if profile else None,
     }
 
 
@@ -380,7 +389,10 @@ class AdminController(Controller):
         status: Optional[str] = None,
     ) -> list[dict[str, Any]]:
         _require_admin(request)
-        query = select(DetailRequest)
+        query = select(DetailRequest).options(
+            selectinload(DetailRequest.requester),
+            selectinload(DetailRequest.profile),
+        )
         if status:
             try:
                 st = RequestStatusEnum(status)
@@ -461,7 +473,16 @@ class AdminController(Controller):
         ))
 
         await db.refresh(req)
-        return _serialize_request(req)
+        # Reload relationships for enriched serialization
+        enriched = await db.execute(
+            select(DetailRequest)
+            .where(DetailRequest.id == req.id)
+            .options(
+                selectinload(DetailRequest.requester),
+                selectinload(DetailRequest.profile),
+            )
+        )
+        return _serialize_request(enriched.scalar_one())
 
     @post("/requests/{request_id:str}/reject")
     async def reject_request(
@@ -516,7 +537,16 @@ class AdminController(Controller):
         ))
 
         await db.refresh(req)
-        return _serialize_request(req)
+        # Reload relationships for enriched serialization
+        enriched = await db.execute(
+            select(DetailRequest)
+            .where(DetailRequest.id == req.id)
+            .options(
+                selectinload(DetailRequest.requester),
+                selectinload(DetailRequest.profile),
+            )
+        )
+        return _serialize_request(enriched.scalar_one())
 
     # --- Users ---
     @get("/users")

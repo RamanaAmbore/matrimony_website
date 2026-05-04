@@ -141,6 +141,15 @@ export interface DetailRequest {
 	admin_notes?: string;
 	created_at: string;
 	updated_at: string;
+	// Enriched fields from /admin/requests list — populated by the backend
+	// when DetailRequest.requester and .profile are eager-loaded.
+	requester_email?: string | null;
+	requester_name?: string | null;
+	profile_number?: string | null;
+	profile_first_name?: string | null;
+	profile_last_name?: string | null;
+	profile_gender?: Gender | null;
+	profile_city?: string | null;
 }
 
 export interface SearchResult {

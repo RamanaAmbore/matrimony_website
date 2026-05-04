@@ -195,12 +195,12 @@
 					<span class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 {user.is_admin ? 'border-cream/30 bg-maroon/20' : 'border-cream/20'}">
 						<span class="font-mono text-xs text-cream/70">{user.user_handle}</span>
 						{#if user.is_admin}
-							<span class="rounded px-1 py-px text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
+							<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
 						{:else}
-							<span class="rounded px-1 py-px text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
+							<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
 						{/if}
 						{#if !siteInfo.is_prod}
-							<span class="rounded px-1 py-px text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
+							<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
 						{/if}
 					</span>
 				</span>
@@ -310,12 +310,12 @@
 				<div class="px-3 py-1 flex flex-wrap items-center gap-1.5" title={user.email}>
 					<span class="font-mono text-sm text-ink/60">{user.user_handle}</span>
 					{#if user.is_admin}
-						<span class="rounded px-1.5 py-px text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
+						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
 					{:else}
-						<span class="rounded px-1.5 py-px text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
+						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
 					{/if}
 					{#if !siteInfo.is_prod}
-						<span class="rounded px-1.5 py-px text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
+						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
 					{/if}
 				</div>
 				<button

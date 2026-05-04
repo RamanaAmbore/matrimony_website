@@ -17,3 +17,10 @@ class DetailRequestResponse(msgspec.Struct):
     admin_notes: str | None
     responded_at: str | None
     created_at: str
+    requester_email: str | None = None
+    requester_name: str | None = None
+    profile_number: str | None = None
+    profile_first_name: str | None = None
+    profile_last_name: str | None = None
+    profile_gender: str | None = None
+    profile_city: str | None = None

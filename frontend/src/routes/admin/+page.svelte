@@ -512,15 +512,14 @@
 		const makeGrid = (rows: DetailRequest[]) => {
 			requestsGridApi?.destroy();
 			const columnDefs = [
-				{ field: 'id', headerName: 'Request ID', width: 130, filter: true, headerClass: 'mk-header',
-				  cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#9ca3af' },
-				  valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…' },
-				{ field: 'requester_user_id', headerName: 'Requester', width: 160, filter: true, headerClass: 'mk-header',
-				  cellStyle: { fontFamily: 'monospace', fontSize: '12px' },
-				  valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…' },
-				{ field: 'profile_id', headerName: 'Profile', width: 160, filter: true, headerClass: 'mk-header',
-				  cellStyle: { fontFamily: 'monospace', fontSize: '12px' },
-				  valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…' },
+				{ field: 'profile_number', headerName: 'Profile ID', width: 130, sortable: true, filter: true, headerClass: 'mk-header',
+				  cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#6b7280' } },
+				{ headerName: 'Profile Name', width: 200, sortable: true, filter: true, headerClass: 'mk-header',
+				  valueGetter: (p: { data: DetailRequest }) => `${p.data.profile_first_name ?? ''} ${p.data.profile_last_name ?? ''}`.trim() || '—' },
+				{ field: 'profile_gender', headerName: 'Gender', width: 100, sortable: true, headerClass: 'mk-header',
+				  valueFormatter: (p: { value: string | null }) => p.value ? p.value.charAt(0).toUpperCase() + p.value.slice(1) : '' },
+				{ field: 'profile_city', headerName: 'City', width: 140, sortable: true, filter: true, headerClass: 'mk-header' },
+				{ field: 'requester_email', headerName: 'Requester', width: 240, sortable: true, filter: true, headerClass: 'mk-header' },
 				{ field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true, headerClass: 'mk-header',
 				  cellRenderer: (p: { value: string }) => {
 					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', rejected: 'background:#fee2e2;color:#dc2626' };
