@@ -59,6 +59,7 @@
 	let allUsers = $state<User[] | null>(null);
 	let allUsersLoading = $state(false);
 	let allUsersError = $state('');
+	let userFilter = $state<'all' | 'unverified' | 'verified'>('all');
 
 	// ag-Grid state
 	let usersGridDiv = $state<HTMLDivElement | undefined>(undefined);
@@ -226,7 +227,11 @@
 
 		const gridOptions: GridOptions = {
 			columnDefs,
-			rowData: untrack(() => data),
+			rowData: untrack(() => {
+				if (userFilter === 'unverified') return data.filter((u: any) => !u.email_verified);
+				if (userFilter === 'verified') return data.filter((u: any) => u.email_verified);
+				return data;
+			}),
 			rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
 			onRowClicked: (e) => { selectedUser = e.data as User; },
 			defaultColDef: { resizable: true, floatingFilter: true, filter: true },
@@ -243,11 +248,21 @@
 		};
 	});
 
-	// Users grid — rowData updates after approve/unapprove actions
+	// Users grid — rowData updates after approve/unapprove actions or filter changes
 	$effect(() => {
+		const filter = userFilter;
 		const data = allUsers;
 		if (!data) return;
-		usersGridApi?.setGridOption('rowData', data);
+		let filtered = data;
+		if (filter === 'unverified') filtered = data.filter(u => !u.email_verified);
+		else if (filter === 'verified') filtered = data.filter(u => u.email_verified);
+		usersGridApi?.setGridOption('rowData', filtered);
+	});
+
+	// Clear user selection when filter changes (not when data mutates after actions)
+	$effect(() => {
+		const _f = userFilter;
+		selectedUser = null;
 	});
 
 	// Profiles grid — creation/destruction only
@@ -433,7 +448,6 @@
 			const updated = await adminApi.users.approve(u.user_id);
 			allUsers = allUsers!.map(x => x.user_id === u.user_id ? updated : x);
 			selectedUser = updated;
-			usersGridApi?.setGridOption('rowData', allUsers);
 			toastStore.success('User approved');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -448,7 +462,6 @@
 			const updated = await adminApi.users.unapprove(u.user_id);
 			allUsers = allUsers!.map(x => x.user_id === u.user_id ? updated : x);
 			selectedUser = updated;
-			usersGridApi?.setGridOption('rowData', allUsers);
 			toastStore.success('Approval revoked');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -463,7 +476,6 @@
 			await adminApi.users.promote(u.user_id);
 			allUsers = allUsers!.map(x => x.user_id === u.user_id ? { ...x, is_admin: true } : x);
 			selectedUser = { ...u, is_admin: true };
-			usersGridApi?.setGridOption('rowData', allUsers);
 			toastStore.success('Promoted to admin');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -478,7 +490,6 @@
 			await adminApi.users.verifyEmail(u.user_id);
 			allUsers = allUsers!.map(x => x.user_id === u.user_id ? { ...x, email_verified: true } : x);
 			selectedUser = { ...u, email_verified: true };
-			usersGridApi?.setGridOption('rowData', allUsers);
 			toastStore.success('Email verified');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -662,21 +673,25 @@
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'users' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
 				<button
 					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'users' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
-					onclick={() => selectTab('users')}
+					onclick={() => { selectTab('users'); userFilter = 'all'; }}
 				>
 					<Users size={20} class="text-saffron shrink-0" />
 					<span class="font-serif font-semibold {activeTab === 'users' ? 'text-cream' : 'text-maroon'}">All Users</span>
 					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'users' ? 'text-cream' : 'text-ink'}">{dashboard.stats.users}</span>
 				</button>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
-					<button
-						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
-						onclick={() => selectTab('users')}
-					>&#9888; Unverified: {dashboard.pending_users.length}</button>
-					<button
-						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
-						onclick={() => selectTab('users')}
-					>&#10003; Verified: {dashboard.stats.users - dashboard.pending_users.length}</button>
+					{#if dashboard.pending_users.length > 0}
+						<button
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'unverified' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
+							onclick={() => { selectTab('users'); userFilter = 'unverified'; }}
+						>&#9888; Unverified: {dashboard.pending_users.length}</button>
+					{/if}
+					{#if dashboard.stats.users - dashboard.pending_users.length > 0}
+						<button
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'verified' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
+							onclick={() => { selectTab('users'); userFilter = 'verified'; }}
+						>&#10003; Verified: {dashboard.stats.users - dashboard.pending_users.length}</button>
+					{/if}
 				</div>
 			</div>
 
@@ -691,14 +706,30 @@
 					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'profiles' ? 'text-cream' : 'text-ink'}">{dashboard.stats.profiles_total}</span>
 				</button>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
-					<button
-						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
-						onclick={() => { selectTab('profiles'); profileStatusFilter = 'pending'; }}
-					>&#9203; Pending: {dashboard.stats.profiles_pending}</button>
-					<button
-						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
-						onclick={() => { selectTab('profiles'); profileStatusFilter = 'approved'; }}
-					>&#10003; Approved: {dashboard.stats.profiles_approved}</button>
+					{#if dashboard.stats.profiles_pending > 0}
+						<button
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
+							onclick={() => { selectTab('profiles'); profileStatusFilter = 'pending'; }}
+						>⏳ Pending: {dashboard.stats.profiles_pending}</button>
+					{/if}
+					{#if dashboard.stats.profiles_approved > 0}
+						<button
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'approved' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
+							onclick={() => { selectTab('profiles'); profileStatusFilter = 'approved'; }}
+						>✓ Approved: {dashboard.stats.profiles_approved}</button>
+					{/if}
+					{#if allProfiles && allProfiles.filter(p => p.status === 'rejected').length > 0}
+						<button
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'rejected' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
+							onclick={() => { selectTab('profiles'); profileStatusFilter = 'rejected'; }}
+						>✕ Rejected: {allProfiles.filter(p => p.status === 'rejected').length}</button>
+					{/if}
+					{#if allProfiles && allProfiles.filter(p => p.status === 'draft').length > 0}
+						<button
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'draft' ? 'border-maroon bg-maroon text-cream' : 'border-ink/20 bg-ink/5 text-ink/60 hover:bg-ink/10'}"
+							onclick={() => { selectTab('profiles'); profileStatusFilter = 'draft'; }}
+						>✎ Draft: {allProfiles.filter(p => p.status === 'draft').length}</button>
+					{/if}
 				</div>
 			</div>
 
@@ -713,14 +744,24 @@
 					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'requests' ? 'text-cream' : 'text-ink'}">{dashboard.stats.requests_pending}</span>
 				</button>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
-					<button
-						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
-						onclick={() => { selectTab('requests'); requestStatusFilter = 'pending'; }}
-					>&#9203; Pending: {dashboard.stats.requests_pending}</button>
-					<button
-						class="rounded-full border border-ink/20 bg-ink/5 px-3 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/10 transition-colors"
-						onclick={() => { selectTab('requests'); requestStatusFilter = 'all'; }}
-					>All &rarr;</button>
+					{#if dashboard.stats.requests_pending > 0}
+						<button
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
+							onclick={() => { selectTab('requests'); requestStatusFilter = 'pending'; }}
+						>⏳ Pending: {dashboard.stats.requests_pending}</button>
+					{/if}
+					{#if allRequests && allRequests.filter(r => r.status === 'approved').length > 0}
+						<button
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'approved' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
+							onclick={() => { selectTab('requests'); requestStatusFilter = 'approved'; }}
+						>✓ Approved: {allRequests.filter(r => r.status === 'approved').length}</button>
+					{/if}
+					{#if allRequests && allRequests.filter(r => r.status === 'rejected').length > 0}
+						<button
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'rejected' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
+							onclick={() => { selectTab('requests'); requestStatusFilter = 'rejected'; }}
+						>✕ Rejected: {allRequests.filter(r => r.status === 'rejected').length}</button>
+					{/if}
 				</div>
 			</div>
 
@@ -874,22 +915,6 @@
 		{:else if allProfilesError}
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allProfilesError}</div>
 		{:else if allProfiles}
-			<!-- Status filter chips -->
-			<div class="mb-4 flex flex-wrap gap-1.5">
-				{#each (['all', 'pending', 'approved', 'rejected', 'draft'] as const) as s}
-					{@const count = s === 'all' ? allProfiles.length : allProfiles.filter(p => p.status === s).length}
-					<button
-						class="rounded-full px-3 py-1 text-xs font-semibold border transition-all {profileStatusFilter === s
-							? 'bg-maroon text-cream border-maroon'
-							: 'bg-white text-ink/60 border-gold/40 hover:border-maroon/40 hover:text-maroon'}"
-						onclick={() => { profileStatusFilter = s; }}
-					>
-						{s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
-						<span class="ml-1 opacity-70">({count})</span>
-					</button>
-				{/each}
-			</div>
-
 			<!-- ag-Grid -->
 			<div bind:this={profilesGridDiv}
 				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
@@ -979,22 +1004,6 @@
 		{:else if allRequestsError}
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allRequestsError}</div>
 		{:else if allRequests}
-			<!-- Status filter chips -->
-			<div class="mb-4 flex flex-wrap gap-1.5">
-				{#each (['all', 'pending', 'approved', 'rejected'] as const) as s}
-					{@const count = s === 'all' ? allRequests.length : allRequests.filter(r => r.status === s).length}
-					<button
-						class="rounded-full px-3 py-1 text-xs font-semibold border transition-all {requestStatusFilter === s
-							? 'bg-maroon text-cream border-maroon'
-							: 'bg-white text-ink/60 border-gold/40 hover:border-maroon/40 hover:text-maroon'}"
-						onclick={() => { requestStatusFilter = s; }}
-					>
-						{s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
-						<span class="ml-1 opacity-70">({count})</span>
-					</button>
-				{/each}
-			</div>
-
 			<!-- ag-Grid -->
 			<div bind:this={requestsGridDiv}
 				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
