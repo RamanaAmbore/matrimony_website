@@ -461,12 +461,6 @@
 		}
 	}
 
-	// Tab button class helper
-	function tabClass(tab: Tab) {
-		return activeTab === tab
-			? 'rounded-full px-4 py-1.5 text-sm font-semibold bg-maroon text-cream transition-colors duration-150'
-			: 'rounded-full px-4 py-1.5 text-sm font-medium text-ink/60 hover:text-maroon transition-colors duration-150';
-	}
 </script>
 
 <svelte:head>
@@ -570,14 +564,7 @@
 		</div>
 	{/if}
 
-	<!-- ── Tab bar ─────────────────────────────────────────────────────────────── -->
-	<div class="mb-8 flex flex-wrap gap-1 rounded-full border border-gold/30 bg-white px-1.5 py-1.5 w-fit shadow-sm">
-		<button class={tabClass('profiles')} onclick={() => selectTab('profiles')}>Profiles</button>
-		<button class={tabClass('requests')} onclick={() => selectTab('requests')}>Requests</button>
-		<button class={tabClass('users')} onclick={() => selectTab('users')}>Users</button>
-	</div>
-
-	<!-- ── All Profiles tab ────────────────────────────────────────────────────── -->
+	<!-- ── Content area ───────────────────────────────────────────────────────── -->
 	{#if activeTab === 'profiles'}
 		{#if allProfilesLoading}
 			<div class="flex items-center justify-center py-20">
