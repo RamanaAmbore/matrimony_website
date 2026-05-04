@@ -45,21 +45,41 @@
 	let allProfiles = $state<Profile[] | null>(null);
 	let allProfilesLoading = $state(false);
 	let allProfilesError = $state('');
-	let profileStatusFilter = $state<'all' | 'pending' | 'approved' | 'rejected' | 'draft'>('all');
+	let profileStatusFilter = $state<'all' | 'pending' | 'approved' | 'rejected' | 'draft' | null>(null);
 
 	// ── All Requests tab state ───────────────────────────────────────────────────
 
 	let allRequests = $state<DetailRequest[] | null>(null);
 	let allRequestsLoading = $state(false);
 	let allRequestsError = $state('');
-	let requestStatusFilter = $state<'all' | 'pending' | 'approved' | 'rejected'>('all');
+	let requestStatusFilter = $state<'all' | 'pending' | 'approved' | 'rejected' | null>(null);
 
 	// ── All Users tab state ──────────────────────────────────────────────────────
 
 	let allUsers = $state<User[] | null>(null);
 	let allUsersLoading = $state(false);
 	let allUsersError = $state('');
-	let userFilter = $state<'all' | 'unverified' | 'verified'>('all');
+	let userFilter = $state<'all' | 'unverified' | 'verified' | null>(null);
+
+	// Derived filtered data for each grid
+	const filteredProfiles = $derived(
+		!allProfiles ? [] :
+		(!profileStatusFilter || profileStatusFilter === 'all') ? allProfiles :
+		allProfiles.filter(p => p.status === profileStatusFilter)
+	);
+
+	const filteredRequests = $derived(
+		!allRequests ? [] :
+		(!requestStatusFilter || requestStatusFilter === 'all') ? allRequests :
+		allRequests.filter(r => r.status === requestStatusFilter)
+	);
+
+	const filteredUsers = $derived(
+		!allUsers ? [] :
+		userFilter === 'unverified' ? allUsers.filter((u: any) => !u.email_verified) :
+		userFilter === 'verified' ? allUsers.filter((u: any) => u.email_verified) :
+		(allUsers ?? [])
+	);
 
 	// ag-Grid state
 	let usersGridDiv = $state<HTMLDivElement | undefined>(undefined);
@@ -229,11 +249,7 @@
 
 		const gridOptions: GridOptions = {
 			columnDefs,
-			rowData: untrack(() => {
-				if (userFilter === 'unverified') return data.filter((u: any) => !u.email_verified);
-				if (userFilter === 'verified') return data.filter((u: any) => u.email_verified);
-				return data;
-			}),
+			rowData: untrack(() => [...filteredUsers]),
 			rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
 			onRowClicked: (e) => { selectedUser = e.data as User; },
 			defaultColDef: { resizable: true, floatingFilter: true, filter: true },
@@ -250,32 +266,13 @@
 		};
 	});
 
-	// Users grid — rowData updates after approve/unapprove actions or filter changes
-	$effect(() => {
-		const filter = userFilter;
-		const data = allUsers;
-		if (!data) return;
-		let filtered = data;
-		if (filter === 'unverified') filtered = data.filter(u => !u.email_verified);
-		else if (filter === 'verified') filtered = data.filter(u => u.email_verified);
-		usersGridApi?.setGridOption('rowData', filtered);
-	});
-
-	// Clear user selection when filter changes (not when data mutates after actions)
-	$effect(() => {
-		const _f = userFilter;
-		selectedUser = null;
-	});
-
 	// Profiles grid — creation/destruction only
 	$effect(() => {
 		const div = profilesGridDiv;
 		const data = allProfiles;
 		if (!div || !data) return;
 
-		const initialData = untrack(() =>
-			profileStatusFilter === 'all' ? data : data.filter(p => p.status === profileStatusFilter)
-		);
+		const initialData = untrack(() => [...filteredProfiles]);
 
 		const columnDefs = [
 			{
@@ -347,26 +344,13 @@
 		};
 	});
 
-	// Profiles grid — filter updates (separate effect, reruns when filter or data changes)
-	$effect(() => {
-		const filter = profileStatusFilter;
-		const data = allProfiles;
-		if (!data) return;
-		const filteredData = filter === 'all' ? data : data.filter(p => p.status === filter);
-		profilesGridApi?.setGridOption('rowData', filteredData);
-		selectedProfile = null;
-		profileRejectOpen = false;
-	});
-
 	// Requests grid — creation/destruction only
 	$effect(() => {
 		const div = requestsGridDiv;
 		const data = allRequests;
 		if (!div || !data) return;
 
-		const initialData = untrack(() =>
-			requestStatusFilter === 'all' ? data : data.filter(r => r.status === requestStatusFilter)
-		);
+		const initialData = untrack(() => [...filteredRequests]);
 
 		const columnDefs = [
 			{
@@ -429,17 +413,6 @@
 			requestsGridApi = undefined;
 			selectedRequest = null;
 		};
-	});
-
-	// Requests grid — filter updates (separate effect)
-	$effect(() => {
-		const filter = requestStatusFilter;
-		const data = allRequests;
-		if (!data) return;
-		const filteredData = filter === 'all' ? data : data.filter(r => r.status === filter);
-		requestsGridApi?.setGridOption('rowData', filteredData);
-		selectedRequest = null;
-		requestRejectOpen = false;
 	});
 
 	// ── User action functions ─────────────────────────────────────────────────────
@@ -650,6 +623,31 @@
 
 	// ── Helpers ──────────────────────────────────────────────────────────────────
 
+	function applyUserFilter(f: typeof userFilter) {
+		userFilter = f;
+		selectedUser = null;
+		if (usersGridApi && allUsers) {
+			usersGridApi.setGridOption('rowData', [...filteredUsers]);
+		}
+	}
+
+	function applyProfileFilter(f: typeof profileStatusFilter) {
+		profileStatusFilter = f;
+		selectedProfile = null;
+		profileRejectOpen = false;
+		if (profilesGridApi && allProfiles) {
+			profilesGridApi.setGridOption('rowData', [...filteredProfiles]);
+		}
+	}
+
+	function applyRequestFilter(f: typeof requestStatusFilter) {
+		requestStatusFilter = f;
+		selectedRequest = null;
+		requestRejectOpen = false;
+		if (requestsGridApi && allRequests) {
+			requestsGridApi.setGridOption('rowData', [...filteredRequests]);
+		}
+	}
 
 </script>
 
@@ -675,7 +673,7 @@
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'users' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
 				<button
 					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'users' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
-					onclick={() => selectTab('users')}
+					onclick={() => { selectTab('users'); applyUserFilter(null); }}
 				>
 					<Users size={20} class="text-saffron shrink-0" />
 					<span class="font-serif font-semibold {activeTab === 'users' ? 'text-cream' : 'text-maroon'}">Users</span>
@@ -684,18 +682,18 @@
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button
 						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
-						onclick={() => { selectTab('users'); userFilter = 'all'; }}
+						onclick={() => { selectTab('users'); applyUserFilter('all'); }}
 					>All</button>
 					{#if dashboard.pending_users.length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'unverified' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
-							onclick={() => { selectTab('users'); userFilter = 'unverified'; }}
+							onclick={() => { selectTab('users'); applyUserFilter('unverified'); }}
 						>Unverified · {dashboard.pending_users.length}</button>
 					{/if}
 					{#if dashboard.stats.users - dashboard.pending_users.length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'verified' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
-							onclick={() => { selectTab('users'); userFilter = 'verified'; }}
+							onclick={() => { selectTab('users'); applyUserFilter('verified'); }}
 						>Verified · {dashboard.stats.users - dashboard.pending_users.length}</button>
 					{/if}
 				</div>
@@ -705,7 +703,7 @@
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'profiles' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
 				<button
 					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'profiles' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
-					onclick={() => selectTab('profiles')}
+					onclick={() => { selectTab('profiles'); applyProfileFilter(null); }}
 				>
 					<UserCheck size={20} class="{activeTab === 'profiles' ? 'text-saffron' : 'text-gold'} shrink-0" />
 					<span class="font-serif font-semibold {activeTab === 'profiles' ? 'text-cream' : 'text-maroon'}">Profiles</span>
@@ -714,30 +712,30 @@
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button
 						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
-						onclick={() => { selectTab('profiles'); profileStatusFilter = 'all'; }}
+						onclick={() => { selectTab('profiles'); applyProfileFilter('all'); }}
 					>All</button>
 					{#if dashboard.stats.profiles_pending > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
-							onclick={() => { selectTab('profiles'); profileStatusFilter = 'pending'; }}
+							onclick={() => { selectTab('profiles'); applyProfileFilter('pending'); }}
 						>Pending · {dashboard.stats.profiles_pending}</button>
 					{/if}
 					{#if dashboard.stats.profiles_approved > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'approved' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
-							onclick={() => { selectTab('profiles'); profileStatusFilter = 'approved'; }}
+							onclick={() => { selectTab('profiles'); applyProfileFilter('approved'); }}
 						>Approved · {dashboard.stats.profiles_approved}</button>
 					{/if}
 					{#if allProfiles && allProfiles.filter(p => p.status === 'rejected').length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'rejected' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
-							onclick={() => { selectTab('profiles'); profileStatusFilter = 'rejected'; }}
+							onclick={() => { selectTab('profiles'); applyProfileFilter('rejected'); }}
 						>Rejected · {allProfiles.filter(p => p.status === 'rejected').length}</button>
 					{/if}
 					{#if allProfiles && allProfiles.filter(p => p.status === 'draft').length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'draft' ? 'border-maroon bg-maroon text-cream' : 'border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100'}"
-							onclick={() => { selectTab('profiles'); profileStatusFilter = 'draft'; }}
+							onclick={() => { selectTab('profiles'); applyProfileFilter('draft'); }}
 						>Draft · {allProfiles.filter(p => p.status === 'draft').length}</button>
 					{/if}
 				</div>
@@ -747,7 +745,7 @@
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'requests' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
 				<button
 					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'requests' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
-					onclick={() => selectTab('requests')}
+					onclick={() => { selectTab('requests'); applyRequestFilter(null); }}
 				>
 					<Inbox size={20} class="{activeTab === 'requests' ? 'text-saffron' : 'text-sky-500'} shrink-0" />
 					<span class="font-serif font-semibold {activeTab === 'requests' ? 'text-cream' : 'text-maroon'}">Requests</span>
@@ -756,24 +754,24 @@
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button
 						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
-						onclick={() => { selectTab('requests'); requestStatusFilter = 'all'; }}
+						onclick={() => { selectTab('requests'); applyRequestFilter('all'); }}
 					>All</button>
 					{#if dashboard.stats.requests_pending > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
-							onclick={() => { selectTab('requests'); requestStatusFilter = 'pending'; }}
+							onclick={() => { selectTab('requests'); applyRequestFilter('pending'); }}
 						>Pending · {dashboard.stats.requests_pending}</button>
 					{/if}
 					{#if allRequests && allRequests.filter(r => r.status === 'approved').length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'approved' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
-							onclick={() => { selectTab('requests'); requestStatusFilter = 'approved'; }}
+							onclick={() => { selectTab('requests'); applyRequestFilter('approved'); }}
 						>Approved · {allRequests.filter(r => r.status === 'approved').length}</button>
 					{/if}
 					{#if allRequests && allRequests.filter(r => r.status === 'rejected').length > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'rejected' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
-							onclick={() => { selectTab('requests'); requestStatusFilter = 'rejected'; }}
+							onclick={() => { selectTab('requests'); applyRequestFilter('rejected'); }}
 						>Rejected · {allRequests.filter(r => r.status === 'rejected').length}</button>
 					{/if}
 				</div>
