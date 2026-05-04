@@ -42,7 +42,7 @@
 			title: 'Profile Approval',
 			fields: [
 				{ key: 'require_admin_approval_for_profiles', label: 'Require Admin Approval', description: 'Profiles need review before going live. Disable to auto-approve on submit.', type: 'boolean' },
-				{ key: 'require_face_detection', label: 'Require Face Detection', description: 'Enforce single-face validation on uploaded photos. Disable for testing.', type: 'boolean' }
+				{ key: 'require_face_detection', label: 'Require Face Detection (primary photo)', description: 'Enforce single-face validation on the PRIMARY photo (the one shown blurred in search). Non-primary photos can be lifestyle / full-body shots. Disable for testing.', type: 'boolean' }
 			]
 		},
 		{
@@ -50,6 +50,7 @@
 			fields: [
 				{ key: 'upload_max_mb', label: 'Max Upload Size (MB)', description: 'Maximum raw upload file size before processing', type: 'number' },
 				{ key: 'photo_max_kb', label: 'Max JPEG Size (KB)', description: 'Target file size after compression', type: 'number' },
+				{ key: 'photo_min_kb', label: 'Min JPEG Size (KB)', description: 'Reject photos that compress below this size — guards against grainy / low-resolution uploads', type: 'number' },
 				{ key: 'photos_max_per_profile', label: 'Max Photos per Profile', description: 'How many photos a single profile can have', type: 'number' },
 				{ key: 'photo_passport_width', label: 'Passport Width (px)', description: 'Width of the full-resolution passport variant', type: 'number' },
 				{ key: 'photo_passport_height', label: 'Passport Height (px)', description: 'Height of the full-resolution passport variant', type: 'number' },

@@ -87,8 +87,14 @@ class PhotoController(Controller):
         file_bytes = await data.read()
         filename = data.filename or "upload.jpg"
 
+        # First photo on the profile is the primary by default;
+        # face detection is only enforced for the primary photo.
+        is_primary = len(profile.photos) == 0
+
         try:
-            passport_bytes, blurred_bytes, thumb_bytes = process_upload(file_bytes, filename)
+            passport_bytes, blurred_bytes, thumb_bytes = process_upload(
+                file_bytes, filename, is_primary=is_primary
+            )
         except PhotoValidationError as exc:
             raise HTTPException(
                 status_code=422,
@@ -106,8 +112,6 @@ class PhotoController(Controller):
         (photo_dir / "passport.jpg").write_bytes(passport_bytes)
         (photo_dir / "blurred.jpg").write_bytes(blurred_bytes)
         (photo_dir / "thumb.jpg").write_bytes(thumb_bytes)
-
-        is_primary = len(profile.photos) == 0
 
         photo = Photo(
             id=photo_id,

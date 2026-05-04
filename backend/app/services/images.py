@@ -122,8 +122,17 @@ def _encode_jpeg(img: Image.Image, max_bytes: int) -> bytes:
 def process_upload(
     file_bytes: bytes,
     filename: str,
+    is_primary: bool = False,
 ) -> tuple[bytes, bytes, bytes]:
     """Process uploaded photo.
+
+    Args:
+        file_bytes: raw upload bytes
+        filename: original filename (used for error messages)
+        is_primary: True when this upload becomes the profile's primary
+            photo. Face detection is enforced ONLY for primary photos
+            (the photo shown blurred in search must be a clear face).
+            Non-primary photos can be lifestyle/full-body shots.
 
     Returns (passport_bytes, blurred_bytes, thumb_bytes).
     Raises PhotoValidationError on rejection.
@@ -151,7 +160,10 @@ def process_upload(
     iw, ih = img.size
     image_area = iw * ih
 
-    require_face = settings_service.get_bool("require_face_detection", True)
+    # Face detection only enforced on the primary photo (shown blurred
+    # in search) — non-primary photos may be lifestyle / full-body /
+    # group shots where a strict single-face check would over-reject.
+    require_face = is_primary and settings_service.get_bool("require_face_detection", True)
     passport_w = settings_service.get_int("photo_passport_width", 413)
     passport_h = settings_service.get_int("photo_passport_height", 531)
     photo_max_kb = settings_service.get_int("photo_max_kb", 500)
