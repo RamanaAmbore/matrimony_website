@@ -81,6 +81,11 @@
 		(allUsers ?? [])
 	);
 
+	// Version counters — incrementing forces Effect A to destroy+recreate the grid with fresh data
+	let usersGridVersion = $state(0);
+	let profilesGridVersion = $state(0);
+	let requestsGridVersion = $state(0);
+
 	// ag-Grid state
 	let usersGridDiv = $state<HTMLDivElement | undefined>(undefined);
 	let usersGridApi: GridApi | undefined;
@@ -199,10 +204,11 @@
 		// Grid initialised by $effect once usersGridDiv is bound and allUsers is populated
 	}
 
-	// Users grid — creation/destruction only (reruns when div or data first arrives)
+	// Users grid — reruns when div, data, or version changes
 	$effect(() => {
 		const div = usersGridDiv;
 		const data = allUsers;
+		const _v = usersGridVersion;
 		if (!div || !data) return;
 
 		const columnDefs = [
@@ -270,6 +276,7 @@
 	$effect(() => {
 		const div = profilesGridDiv;
 		const data = allProfiles;
+		const _v = profilesGridVersion;
 		if (!div || !data) return;
 
 		const initialData = untrack(() => [...filteredProfiles]);
@@ -340,7 +347,6 @@
 		return () => {
 			profilesGridApi?.destroy();
 			profilesGridApi = undefined;
-			selectedProfile = null;
 		};
 	});
 
@@ -348,6 +354,7 @@
 	$effect(() => {
 		const div = requestsGridDiv;
 		const data = allRequests;
+		const _v = requestsGridVersion;
 		if (!div || !data) return;
 
 		const initialData = untrack(() => [...filteredRequests]);
@@ -411,7 +418,6 @@
 		return () => {
 			requestsGridApi?.destroy();
 			requestsGridApi = undefined;
-			selectedRequest = null;
 		};
 	});
 
@@ -547,6 +553,12 @@
 	});
 
 	function selectTab(tab: Tab) {
+		// Clear selection when leaving a tab so stale panels don't persist
+		if (activeTab !== tab) {
+			if (activeTab === 'profiles') { selectedProfile = null; profileRejectOpen = false; }
+			if (activeTab === 'requests') { selectedRequest = null; requestRejectOpen = false; }
+			if (activeTab === 'users') selectedUser = null;
+		}
 		activeTab = tab;
 		if (tab === 'profiles') loadAllProfiles(); // no-op if already loaded
 		if (tab === 'requests') loadAllRequests();
@@ -626,32 +638,21 @@
 	function applyUserFilter(f: typeof userFilter) {
 		userFilter = f;
 		selectedUser = null;
-		if (usersGridApi && allUsers) {
-			const rows = f === 'unverified' ? allUsers.filter((u: any) => !u.email_verified)
-				: f === 'verified' ? allUsers.filter((u: any) => u.email_verified)
-				: [...allUsers];
-			usersGridApi.setGridOption('rowData', rows);
-		}
+		usersGridVersion++;
 	}
 
 	function applyProfileFilter(f: typeof profileStatusFilter) {
 		profileStatusFilter = f;
 		selectedProfile = null;
 		profileRejectOpen = false;
-		if (profilesGridApi && allProfiles) {
-			const rows = (!f || f === 'all') ? [...allProfiles] : allProfiles.filter(p => p.status === f);
-			profilesGridApi.setGridOption('rowData', rows);
-		}
+		profilesGridVersion++;
 	}
 
 	function applyRequestFilter(f: typeof requestStatusFilter) {
 		requestStatusFilter = f;
 		selectedRequest = null;
 		requestRejectOpen = false;
-		if (requestsGridApi && allRequests) {
-			const rows = (!f || f === 'all') ? [...allRequests] : allRequests.filter(r => r.status === f);
-			requestsGridApi.setGridOption('rowData', rows);
-		}
+		requestsGridVersion++;
 	}
 
 </script>
