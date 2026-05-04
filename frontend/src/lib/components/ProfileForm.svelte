@@ -1018,34 +1018,43 @@
 					{/if}
 
 					<!-- Section footer: equal-width Cancel / Save / Submit row.
-					     Each button is flex-1 so they share width evenly,
-					     min-h-[56px] gives a generous tap target with room for
-					     bilingual text wrapping if needed. -->
+					     English on top, Telugu underneath (no delimiter). -->
 					<div class="mt-4 flex items-stretch gap-2 border-t border-gold/30 pt-4">
 						<a
 							href="/dashboard"
-							class="btn-secondary flex flex-1 items-center justify-center text-center text-xs sm:text-sm leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
+							class="btn-secondary flex flex-1 flex-col items-center justify-center text-center leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
 						>
-							{T.cancel.en} · <span lang="te" class="ml-1">{T.cancel.te}</span>
+							<span class="text-xs sm:text-sm">{T.cancel.en}</span>
+							<span lang="te" class="text-[10px] sm:text-xs opacity-90">{T.cancel.te}</span>
 						</a>
 						{#if i === 8}
 							<!-- Last step: Save Draft + Submit for Approval -->
 							<button
 								type="button"
 								onclick={() => saveSection(i)}
-								class="btn-secondary flex flex-1 items-center justify-center text-center text-xs sm:text-sm leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
+								class="btn-secondary flex flex-1 flex-col items-center justify-center text-center leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
 								disabled={submitting}
 							>
-								{submitting && activeSection === i ? 'Saving…' : T.save.en + ' · ' + T.save.te}
+								{#if submitting && activeSection === i}
+									<span class="text-xs sm:text-sm">Saving…</span>
+								{:else}
+									<span class="text-xs sm:text-sm">{T.save.en}</span>
+									<span lang="te" class="text-[10px] sm:text-xs opacity-90">{T.save.te}</span>
+								{/if}
 							</button>
 							{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
 								<button
 									type="button"
 									onclick={handleSubmitForApproval}
-									class="btn-primary flex flex-1 items-center justify-center text-center text-xs sm:text-sm leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
+									class="btn-primary flex flex-1 flex-col items-center justify-center text-center leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
 									disabled={!isSectionValid(8) || submittingForApproval}
 								>
-									{submittingForApproval ? 'Submitting…' : 'Submit for Approval'}
+									{#if submittingForApproval}
+										<span class="text-xs sm:text-sm">Submitting…</span>
+									{:else}
+										<span class="text-xs sm:text-sm">Submit for Approval</span>
+										<span lang="te" class="text-[10px] sm:text-xs opacity-90">అనుమతి కోసం సమర్పించండి</span>
+									{/if}
 								</button>
 							{/if}
 						{:else}
@@ -1053,10 +1062,14 @@
 							<button
 								type="button"
 								onclick={() => saveSection(i)}
-								class="btn-primary flex flex-1 items-center justify-center text-center text-xs sm:text-sm leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
+								class="btn-primary flex flex-1 flex-col items-center justify-center text-center leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
 								disabled={!isSectionValid(i) || submitting}
 							>
-								{submitting && activeSection === i ? 'Saving…' : 'Save & Continue →'}
+								{#if submitting && activeSection === i}
+									<span class="text-xs sm:text-sm">Saving…</span>
+								{:else}
+									<span class="text-xs sm:text-sm">Save & Continue →</span>
+								{/if}
 							</button>
 						{/if}
 					</div>
@@ -1941,32 +1954,35 @@
 		<div class="flex items-stretch gap-2">
 			<a
 				href="/dashboard"
-				class="btn-secondary flex flex-1 items-center justify-center text-center text-xs sm:text-sm leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
+				class="btn-secondary flex flex-1 flex-col items-center justify-center text-center leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
 			>
-				{T.cancel.en} · <span lang="te" class="ml-1">{T.cancel.te}</span>
+				<span class="text-xs sm:text-sm">{T.cancel.en}</span>
+				<span lang="te" class="text-[10px] sm:text-xs opacity-90">{T.cancel.te}</span>
 			</a>
 			<button
 				type="submit"
-				class="btn-secondary flex flex-1 items-center justify-center text-center text-xs sm:text-sm leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
+				class="btn-secondary flex flex-1 flex-col items-center justify-center text-center leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
 				disabled={submitting}
 			>
 				{#if submitting}
-					Saving…
+					<span class="text-xs sm:text-sm">Saving…</span>
 				{:else}
-					{T.save.en} · <span lang="te" class="ml-1">{T.save.te}</span>
+					<span class="text-xs sm:text-sm">{T.save.en}</span>
+					<span lang="te" class="text-[10px] sm:text-xs opacity-90">{T.save.te}</span>
 				{/if}
 			</button>
 			{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
 				<button
 					type="button"
 					onclick={handleSubmitForApproval}
-					class="btn-primary flex flex-1 items-center justify-center text-center text-xs sm:text-sm leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
+					class="btn-primary flex flex-1 flex-col items-center justify-center text-center leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
 					disabled={submittingForApproval}
 				>
 					{#if submittingForApproval}
-						Submitting…
+						<span class="text-xs sm:text-sm">Submitting…</span>
 					{:else}
-						Submit for Approval · <span lang="te" class="ml-1">అనుమతి కోసం సమర్పించండి</span>
+						<span class="text-xs sm:text-sm">Submit for Approval</span>
+						<span lang="te" class="text-[10px] sm:text-xs opacity-90">అనుమతి కోసం సమర్పించండి</span>
 					{/if}
 				</button>
 			{/if}
