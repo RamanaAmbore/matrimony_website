@@ -15,6 +15,7 @@
 	import { asciiOnly } from '$lib/inputFilters';
 	import BilingualLabel from '$lib/components/BilingualLabel.svelte';
 	import PhotoUpload from '$lib/components/PhotoUpload.svelte';
+	import { MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER, DIET_OPTIONS } from '$lib/profileOptions';
 
 	function cmToFtIn(cm: number): string {
 		const totalInches = Math.round(cm / 2.54);
@@ -244,53 +245,6 @@
 		'Meena (Pisces)'
 	];
 
-	const INDIA_STATES = [
-		'Andhra Pradesh',
-		'Arunachal Pradesh',
-		'Assam',
-		'Bihar',
-		'Chhattisgarh',
-		'Goa',
-		'Gujarat',
-		'Haryana',
-		'Himachal Pradesh',
-		'Jharkhand',
-		'Karnataka',
-		'Kerala',
-		'Madhya Pradesh',
-		'Maharashtra',
-		'Manipur',
-		'Meghalaya',
-		'Mizoram',
-		'Nagaland',
-		'Odisha',
-		'Punjab',
-		'Rajasthan',
-		'Sikkim',
-		'Tamil Nadu',
-		'Telangana',
-		'Tripura',
-		'Uttar Pradesh',
-		'Uttarakhand',
-		'West Bengal',
-		'Andaman & Nicobar Islands',
-		'Chandigarh',
-		'Dadra & Nagar Haveli and Daman & Diu',
-		'Delhi',
-		'Jammu & Kashmir',
-		'Ladakh',
-		'Lakshadweep',
-		'Puducherry'
-	];
-
-	const COUNTRIES_PRIORITY = ['India', 'United States', 'United Kingdom', 'United Arab Emirates'];
-	const COUNTRIES_OTHER = [
-		'Australia', 'Austria', 'Bahrain', 'Belgium', 'Canada', 'Denmark',
-		'Finland', 'France', 'Germany', 'Greece', 'Hong Kong', 'Ireland',
-		'Italy', 'Japan', 'Kuwait', 'Malaysia', 'Netherlands', 'New Zealand',
-		'Norway', 'Oman', 'Portugal', 'Qatar', 'Saudi Arabia', 'Singapore',
-		'South Africa', 'Spain', 'Sweden', 'Switzerland', 'Thailand'
-	];
 
 	const COMPLEXIONS = [
 		{ value: 'very_fair', label: 'Very Fair' },

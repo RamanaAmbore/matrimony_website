@@ -9,6 +9,7 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { ChevronLeft, ChevronRight, User, Loader, Search } from 'lucide-svelte';
 	import DualRangeSlider from '$lib/components/DualRangeSlider.svelte';
+	import { MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER, DIET_OPTIONS } from '$lib/profileOptions';
 
 	const NAKSHATRAS = [
 		'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashirsha', 'Ardra',
@@ -243,42 +244,7 @@
 					<label for="f-state" class="label">State · <span lang="te">రాష్ట్రం</span></label>
 					<input id="f-state" type="text" class="input text-sm" list="states_opts_search" bind:value={state_filter} placeholder="Any state" />
 					<datalist id="states_opts_search">
-						<option value="Andhra Pradesh"></option>
-						<option value="Arunachal Pradesh"></option>
-						<option value="Assam"></option>
-						<option value="Bihar"></option>
-						<option value="Chhattisgarh"></option>
-						<option value="Goa"></option>
-						<option value="Gujarat"></option>
-						<option value="Haryana"></option>
-						<option value="Himachal Pradesh"></option>
-						<option value="Jharkhand"></option>
-						<option value="Karnataka"></option>
-						<option value="Kerala"></option>
-						<option value="Madhya Pradesh"></option>
-						<option value="Maharashtra"></option>
-						<option value="Manipur"></option>
-						<option value="Meghalaya"></option>
-						<option value="Mizoram"></option>
-						<option value="Nagaland"></option>
-						<option value="Odisha"></option>
-						<option value="Punjab"></option>
-						<option value="Rajasthan"></option>
-						<option value="Sikkim"></option>
-						<option value="Tamil Nadu"></option>
-						<option value="Telangana"></option>
-						<option value="Tripura"></option>
-						<option value="Uttar Pradesh"></option>
-						<option value="Uttarakhand"></option>
-						<option value="West Bengal"></option>
-						<option value="Andaman & Nicobar Islands"></option>
-						<option value="Chandigarh"></option>
-						<option value="Dadra & Nagar Haveli and Daman & Diu"></option>
-						<option value="Delhi"></option>
-						<option value="Jammu & Kashmir"></option>
-						<option value="Ladakh"></option>
-						<option value="Lakshadweep"></option>
-						<option value="Puducherry"></option>
+						{#each INDIA_STATES as s}<option value={s}></option>{/each}
 					</datalist>
 				</div>
 
@@ -287,40 +253,9 @@
 					<label for="f-country" class="label">Country · <span lang="te">దేశం</span></label>
 					<select id="f-country" class="input text-sm" bind:value={country_filter}>
 						<option value="">Any country</option>
-						<option value="India">India</option>
-						<option value="United States">United States</option>
-						<option value="United Kingdom">United Kingdom</option>
-						<option value="United Arab Emirates">United Arab Emirates</option>
+						{#each COUNTRIES_PRIORITY as c}<option value={c}>{c}</option>{/each}
 						<option disabled>──────────</option>
-						<option value="Australia">Australia</option>
-						<option value="Austria">Austria</option>
-						<option value="Bahrain">Bahrain</option>
-						<option value="Belgium">Belgium</option>
-						<option value="Canada">Canada</option>
-						<option value="Denmark">Denmark</option>
-						<option value="Finland">Finland</option>
-						<option value="France">France</option>
-						<option value="Germany">Germany</option>
-						<option value="Greece">Greece</option>
-						<option value="Hong Kong">Hong Kong</option>
-						<option value="Ireland">Ireland</option>
-						<option value="Italy">Italy</option>
-						<option value="Japan">Japan</option>
-						<option value="Kuwait">Kuwait</option>
-						<option value="Malaysia">Malaysia</option>
-						<option value="Netherlands">Netherlands</option>
-						<option value="New Zealand">New Zealand</option>
-						<option value="Norway">Norway</option>
-						<option value="Oman">Oman</option>
-						<option value="Portugal">Portugal</option>
-						<option value="Qatar">Qatar</option>
-						<option value="Saudi Arabia">Saudi Arabia</option>
-						<option value="Singapore">Singapore</option>
-						<option value="South Africa">South Africa</option>
-						<option value="Spain">Spain</option>
-						<option value="Sweden">Sweden</option>
-						<option value="Switzerland">Switzerland</option>
-						<option value="Thailand">Thailand</option>
+						{#each COUNTRIES_OTHER as c}<option value={c}>{c}</option>{/each}
 					</select>
 				</div>
 
@@ -336,17 +271,7 @@
 					<label for="f-lang" class="label">Language · <span lang="te">భాష</span></label>
 					<input id="f-lang" type="text" class="input text-sm" list="mother_tongue_opts_search" bind:value={mother_tongue_filter} placeholder="e.g. Telugu" />
 					<datalist id="mother_tongue_opts_search">
-						<option value="Telugu"></option>
-						<option value="Marathi"></option>
-						<option value="Kannada"></option>
-						<option value="Tamil"></option>
-						<option value="Hindi"></option>
-						<option value="Malayalam"></option>
-						<option value="Gujarati"></option>
-						<option value="Bengali"></option>
-						<option value="Punjabi"></option>
-						<option value="Odia"></option>
-						<option value="Urdu"></option>
+						{#each MOTHER_TONGUES as lang}<option value={lang}></option>{/each}
 					</datalist>
 					<p class="mt-0.5 text-xs text-ink/45">e.g. Telugu, Hindi, Marathi · భాష పేరు</p>
 				</div>
@@ -368,11 +293,7 @@
 					<label for="f-diet" class="label">Diet · <span lang="te">ఆహారం</span></label>
 					<select id="f-diet" class="input text-sm" bind:value={diet}>
 						<option value="">Any</option>
-						<option value="veg">Vegetarian</option>
-						<option value="non-veg">Non-Vegetarian</option>
-						<option value="eggetarian">Eggetarian</option>
-						<option value="jain">Jain</option>
-						<option value="vegan">Vegan</option>
+						{#each DIET_OPTIONS as d}<option value={d.value}>{d.label}</option>{/each}
 					</select>
 				</div>
 
