@@ -421,6 +421,39 @@ class AdminController(Controller):
         await db.refresh(profile)
         return _serialize_profile(profile, request)
 
+    @post("/profiles/{profile_id:str}/delete", status_code=200)
+    async def delete_profile(
+        self,
+        profile_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Hard-delete a profile (cascades photos and detail requests).
+
+        Any admin or super may delete any profile.
+        """
+        _require_admin(request)
+
+        try:
+            pid = uuid.UUID(profile_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
+
+        result = await db.execute(select(Profile).where(Profile.id == pid))
+        profile = result.scalar_one_or_none()
+        if not profile:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
+
+        deleted = {
+            "id": str(profile.id),
+            "profile_number": profile.profile_number,
+            "first_name": profile.first_name,
+            "last_name": profile.last_name,
+        }
+        await db.delete(profile)
+        await db.commit()
+        return {"deleted": deleted}
+
     # --- Requests ---
     @get("/requests")
     async def list_requests(

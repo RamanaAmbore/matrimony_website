@@ -507,6 +507,11 @@ export const admin = {
 				method: 'POST',
 				body: JSON.stringify({ admin_notes })
 			});
+		},
+		async delete(
+			id: string
+		): Promise<{ deleted: { id: string; profile_number: string; first_name: string; last_name: string } }> {
+			return request(`/api/admin/profiles/${id}/delete`, { method: 'POST' });
 		}
 	},
 

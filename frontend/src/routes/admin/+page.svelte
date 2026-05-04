@@ -294,6 +294,36 @@
 		}
 	}
 
+	async function doDeleteProfile() {
+		if (!selectedProfile) return;
+		const label = `${selectedProfile.profile_number} (${selectedProfile.first_name} ${selectedProfile.last_name ?? ''})`.trim();
+		if (!confirm(`Delete profile ${label}? This cannot be undone — photos and detail requests on this profile are also removed.`)) {
+			return;
+		}
+		profileActionLoading = true;
+		try {
+			await adminApi.profiles.delete(selectedProfile.id);
+			const wasStatus = selectedProfile.status;
+			allProfiles = (allProfiles ?? []).filter(p => p.id !== selectedProfile!.id);
+			selectedProfile = null;
+			profileRejectOpen = false;
+			profileRejectNote = '';
+			profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
+			// Decrement dashboard counters so chip totals stay accurate
+			if (dashboard) {
+				dashboard.stats.profiles_total = Math.max(0, dashboard.stats.profiles_total - 1);
+				const k = `profiles_${wasStatus}` as keyof typeof dashboard.stats;
+				const cur = dashboard.stats[k];
+				if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
+			}
+			toastStore.success('Profile deleted');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			profileActionLoading = false;
+		}
+	}
+
 	async function doApproveRequest() {
 		if (!selectedRequest) return;
 		requestActionLoading = true;
@@ -884,6 +914,15 @@
 								✕ Reject
 							</button>
 						{/if}
+						<!-- Delete is always available on any profile status -->
+						<button
+							class="text-xs px-4 py-2 rounded bg-vermilion text-cream hover:bg-vermilion/90 disabled:opacity-50"
+							disabled={profileActionLoading}
+							onclick={doDeleteProfile}
+						>
+							{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+							🗑 Delete
+						</button>
 					</div>
 				</div>
 				{#if profileRejectOpen && selectedProfile.status === 'pending'}
