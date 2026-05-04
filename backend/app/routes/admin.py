@@ -884,6 +884,16 @@ class AdminController(Controller):
         if not isinstance(body, dict):
             raise HTTPException(status_code=422, detail={"code": "invalid_body", "message": "Body must be a JSON object"})
 
+        # SECURITY: Sensitive values (smtp_password, matrimony_tg_token, ...)
+        # are returned as the mask string '***' from GET /admin/settings.
+        # If a save round-trips that mask back unchanged, do NOT overwrite the
+        # real stored secret. The admin must explicitly type a new value to
+        # change it. This prevents accidental credential corruption when the
+        # admin saves settings without touching the masked fields.
+        for k in list(body.keys()):
+            if k in SENSITIVE_KEYS and body[k] in ("***", None):
+                del body[k]
+
         # Validate email-shaped settings before persisting.
         # Accept either bare 'name@example.com' or RFC display-name form
         # 'Display Name <name@example.com>' (smtp_from typically uses the latter).

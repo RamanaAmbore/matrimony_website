@@ -138,6 +138,12 @@
 			const allFields = GROUPS.flatMap((g) => g.fields);
 			for (const [k, v] of Object.entries(values)) {
 				const field = allFields.find((f) => f.key === k);
+				// Don't ship the masked placeholder back — it would overwrite
+				// the real secret stored on the server. Backend ALSO rejects
+				// '***' for sensitive keys, but skip it here too as a first line.
+				if (field?.type === 'password' && v === '***') {
+					continue;
+				}
 				if (field?.type === 'boolean') {
 					payload[k] = v === 'true';
 				} else if (field?.type === 'number') {

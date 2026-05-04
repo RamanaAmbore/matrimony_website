@@ -193,6 +193,37 @@ async def test_admin_can_update_settings(
     assert data.get("photo_max_kb") == 600 and data.get("upload_max_mb") == 12
 
 
+async def test_admin_settings_save_does_not_overwrite_masked_secrets(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Regression: saving settings with smtp_password='***' (the mask) must
+    NOT corrupt the real stored secret. Same for matrimony_tg_token."""
+    await _login_admin(client, db_session)
+    # First set a real secret
+    real = "super-secret-app-password-1234"
+    real_token = "1234567890:AAExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    await client.put(
+        "/admin/settings",
+        json={"smtp_password": real, "matrimony_tg_token": real_token},
+    )
+    # Now simulate the UI saving without changing the masked fields:
+    # mask values are sent back literally.
+    resp = await client.put(
+        "/admin/settings",
+        json={
+            "smtp_password": "***",
+            "matrimony_tg_token": "***",
+            "photo_max_kb": 700,  # innocent change
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    # The real secrets must still be there.
+    from app.services.settings import settings_service
+    assert settings_service.get_str("smtp_password") == real
+    assert settings_service.get_str("matrimony_tg_token") == real_token
+    assert settings_service.get_int("photo_max_kb") == 700
+
+
 async def test_promote_user_to_admin(client: AsyncClient, db_session: AsyncSession) -> None:
     """Admin can promote a user to admin."""
     user_id, _ = await _create_verified_user(client, db_session)
