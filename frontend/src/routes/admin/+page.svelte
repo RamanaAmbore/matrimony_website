@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community';
+	import { createGrid, ModuleRegistry, AllCommunityModule, type GridApi, type GridOptions } from 'ag-grid-community';
 	import 'ag-grid-community/styles/ag-grid.css';
 	import 'ag-grid-community/styles/ag-theme-quartz.css';
+
+	// ag-Grid v33+ requires explicit module registration — without this the grid
+	// silently fails to render rows even though createGrid returns an api object.
+	ModuleRegistry.registerModules([AllCommunityModule]);
 	import {
 		admin as adminApi,
 		ApiError,
@@ -100,15 +104,6 @@
 	let requestRejectNote = $state('');
 	let requestRejectOpen = $state(false);
 
-	// ── Debug instrumentation (visible on-page) ──────────────────────────────────
-	let debugLog = $state<string[]>([]);
-	function dbg(msg: string) {
-		const ts = new Date().toISOString().slice(11, 23);
-		debugLog = [...debugLog.slice(-15), `${ts} ${msg}`];
-		console.log('[admin]', msg);
-		// Also ping server so I can see it in nginx access log
-		fetch('/api/health?_dbg=' + encodeURIComponent(msg)).catch(() => {});
-	}
 
 	// Content section anchor for scroll-into-view on tab change
 	let contentSectionEl = $state<HTMLElement | undefined>();
@@ -447,20 +442,17 @@
 	}
 
 	function applyUserFilter(f: typeof userFilter) {
-		dbg(`applyUserFilter ${userFilter}->${f} allUsers=${allUsers?.length}`);
 		userFilter = f;
 		selectedUser = null;
 	}
 
 	function applyProfileFilter(f: typeof profileStatusFilter) {
-		dbg(`applyProfileFilter ${profileStatusFilter}->${f} allProfiles=${allProfiles?.length}`);
 		profileStatusFilter = f;
 		selectedProfile = null;
 		profileRejectOpen = false;
 	}
 
 	function applyRequestFilter(f: typeof requestStatusFilter) {
-		dbg(`applyRequestFilter ${requestStatusFilter}->${f} allRequests=${allRequests?.length}`);
 		requestStatusFilter = f;
 		selectedRequest = null;
 		requestRejectOpen = false;
@@ -469,9 +461,7 @@
 	// ── Grid actions (use:action pattern) ────────────────────────────────────────
 
 	function usersGridAction(node: HTMLDivElement, data: User[]) {
-		dbg(`usersGridAction MOUNT rows=${data?.length} userFilter=${userFilter}`);
 		const makeGrid = (rows: User[]) => {
-			dbg(`makeGrid users rows=${rows?.length}`);
 			usersGridApi?.destroy();
 			const columnDefs = [
 				{ field: 'email', headerName: 'Email', flex: 2, filter: true, sortable: true, headerClass: 'mk-header' },
@@ -500,14 +490,12 @@
 		};
 		makeGrid(data);
 		return {
-			destroy: () => { dbg('usersGridAction DESTROY'); usersGridApi?.destroy(); usersGridApi = undefined; }
+			destroy: () => { usersGridApi?.destroy(); usersGridApi = undefined; }
 		};
 	}
 
 	function profilesGridAction(node: HTMLDivElement, data: Profile[]) {
-		dbg(`profilesGridAction MOUNT rows=${data?.length} profileStatusFilter=${profileStatusFilter}`);
 		const makeGrid = (rows: Profile[]) => {
-			dbg(`makeGrid profiles rows=${rows?.length}`);
 			profilesGridApi?.destroy();
 			const columnDefs = [
 				{ field: 'profile_number', headerName: 'ID', width: 130, sortable: true, filter: true, headerClass: 'mk-header',
@@ -538,14 +526,12 @@
 		};
 		makeGrid(data);
 		return {
-			destroy: () => { dbg('profilesGridAction DESTROY'); profilesGridApi?.destroy(); profilesGridApi = undefined; }
+			destroy: () => { profilesGridApi?.destroy(); profilesGridApi = undefined; }
 		};
 	}
 
 	function requestsGridAction(node: HTMLDivElement, data: DetailRequest[]) {
-		dbg(`requestsGridAction MOUNT rows=${data?.length} requestStatusFilter=${requestStatusFilter}`);
 		const makeGrid = (rows: DetailRequest[]) => {
-			dbg(`makeGrid requests rows=${rows?.length}`);
 			requestsGridApi?.destroy();
 			const columnDefs = [
 				{ field: 'id', headerName: 'Request ID', width: 130, filter: true, headerClass: 'mk-header',
@@ -576,7 +562,7 @@
 		};
 		makeGrid(data);
 		return {
-			destroy: () => { dbg('requestsGridAction DESTROY'); requestsGridApi?.destroy(); requestsGridApi = undefined; }
+			destroy: () => { requestsGridApi?.destroy(); requestsGridApi = undefined; }
 		};
 	}
 
@@ -585,17 +571,6 @@
 <svelte:head>
 	<title>Admin Dashboard — Maratha Kalyanam</title>
 </svelte:head>
-
-<!-- ── DEBUG PANEL (temporary) ────────────────────────────────────────────── -->
-<div style="position:fixed;bottom:0;right:0;background:#000;color:#0f0;font-family:ui-monospace,monospace;font-size:10px;padding:8px;max-width:480px;max-height:280px;overflow:auto;z-index:99999;border-top-left-radius:6px;line-height:1.3;opacity:0.92;">
-	<div style="color:#fff;font-weight:bold;margin-bottom:4px;border-bottom:1px solid #444;padding-bottom:2px;">
-		DEBUG · activeTab={activeTab} · userF={userFilter ?? 'null'} · profF={profileStatusFilter ?? 'null'} · reqF={requestStatusFilter ?? 'null'}
-	</div>
-	<div style="color:#aaa;">users={allUsers?.length ?? 'null'} profiles={allProfiles?.length ?? 'null'} requests={allRequests?.length ?? 'null'}</div>
-	{#each debugLog as line (line)}
-		<div>{line}</div>
-	{/each}
-</div>
 
 <div class="mx-auto max-w-6xl px-4 py-10">
 	<h1 class="font-serif text-3xl font-bold text-maroon">Admin Dashboard</h1>
