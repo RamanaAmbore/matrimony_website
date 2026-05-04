@@ -101,7 +101,7 @@ test.describe('login + admin flow (requires E2E_ADMIN_EMAIL & E2E_ADMIN_PASSWORD
 
 	test('admin can log in and see admin dashboard', async ({ page }) => {
 		await page.goto('/login');
-		await page.locator('input[type="email"], input[name="identifier"]').first().fill(email!);
+		await page.locator('#identifier').first().fill(email!);
 		await page.locator('input[type="password"]').first().fill(password!);
 		await page.getByRole('button', { name: /log\s*in|sign\s*in/i }).first().click();
 
@@ -122,7 +122,7 @@ test.describe('login + admin flow (requires E2E_ADMIN_EMAIL & E2E_ADMIN_PASSWORD
 
 	test('chip click filters grid (admin)', async ({ page }) => {
 		await page.goto('/login');
-		await page.locator('input[type="email"], input[name="identifier"]').first().fill(email!);
+		await page.locator('#identifier').first().fill(email!);
 		await page.locator('input[type="password"]').first().fill(password!);
 		await page.getByRole('button', { name: /log\s*in|sign\s*in/i }).first().click();
 		await page.waitForURL((url) => !url.pathname.endsWith('/login'));

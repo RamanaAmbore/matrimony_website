@@ -155,6 +155,7 @@ def process_upload(
     passport_w = settings_service.get_int("photo_passport_width", 413)
     passport_h = settings_service.get_int("photo_passport_height", 531)
     photo_max_kb = settings_service.get_int("photo_max_kb", 500)
+    photo_min_kb = settings_service.get_int("photo_min_kb", 100)
     blur_width = settings_service.get_int("photo_blur_width", 600)
     blur_radius = settings_service.get_int("photo_blur_radius", 14)
     thumb_size = settings_service.get_int("photo_thumb_size", 150)
@@ -181,6 +182,11 @@ def process_upload(
     passport_img = _smart_crop(img, passport_w, passport_h, cx, cy)
     passport_img = passport_img.resize((passport_w, passport_h), Image.LANCZOS)
     passport_bytes = _encode_jpeg(passport_img, photo_max_kb * 1024)
+    if len(passport_bytes) < photo_min_kb * 1024:
+        raise PhotoValidationError(
+            f"Photo is too low quality after processing ({len(passport_bytes) // 1024} KB; "
+            f"minimum {photo_min_kb} KB). Please upload a higher-resolution photo."
+        )
 
     # --- Blurred variant ---
     blur_ratio = blur_width / img.width

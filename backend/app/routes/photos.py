@@ -74,7 +74,7 @@ class PhotoController(Controller):
                 status_code=403, detail={"code": "forbidden", "message": "Not your profile"}
             )
 
-        max_photos = settings_service.get_int("photos_max_per_profile", 5)
+        max_photos = settings_service.get_int("photos_max_per_profile", 3)
         if len(profile.photos) >= max_photos:
             raise HTTPException(
                 status_code=409,
