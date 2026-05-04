@@ -171,24 +171,44 @@
 		}
 
 		const columnDefs = [
-			{ field: 'email', headerName: 'Email', flex: 2, filter: true, sortable: true },
+			{
+				field: 'email', headerName: 'Email', flex: 2, filter: true, sortable: true,
+				headerClass: 'mk-header',
+			},
 			{
 				field: 'user_handle', headerName: 'Handle', flex: 1, filter: true, sortable: true,
+				headerClass: 'mk-header',
 				valueFormatter: (p: { value: string }) => `@${p.value}`
 			},
-			{ field: 'full_name', headerName: 'Name', flex: 1, filter: true, sortable: true },
-			{ field: 'phone_number', headerName: 'Phone', flex: 1 },
 			{
-				field: 'email_verified', headerName: 'Email Verified', width: 140, sortable: true,
-				cellRenderer: (p: { value: boolean }) => p.value ? '✓ Verified' : '⚠ Pending'
+				field: 'full_name', headerName: 'Name', flex: 1, filter: true, sortable: true,
+				headerClass: 'mk-header',
 			},
 			{
-				field: 'is_approved', headerName: 'Approved', width: 120, sortable: true,
-				cellRenderer: (p: { value: boolean }) => p.value ? '✓ Approved' : '— Pending'
+				field: 'phone_number', headerName: 'Phone', flex: 1,
+				headerClass: 'mk-header',
 			},
 			{
-				field: 'is_admin', headerName: 'Admin', width: 90, sortable: true,
-				cellRenderer: (p: { value: boolean }) => p.value ? '★ Admin' : ''
+				field: 'email_verified', headerName: 'Email Verified', width: 150, sortable: true,
+				headerClass: 'mk-header',
+				cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-green' : 'mk-cell-amber',
+				cellRenderer: (p: { value: boolean }) => p.value
+					? '<span>&#10003; Verified</span>'
+					: '<span>&#9888; Pending</span>'
+			},
+			{
+				field: 'is_approved', headerName: 'Approved', width: 130, sortable: true,
+				headerClass: 'mk-header',
+				cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-green' : 'mk-cell-amber',
+				cellRenderer: (p: { value: boolean }) => p.value
+					? '<span>&#10003; Approved</span>'
+					: '<span>&mdash; Pending</span>'
+			},
+			{
+				field: 'is_admin', headerName: 'Admin', width: 100, sortable: true,
+				headerClass: 'mk-header',
+				cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-maroon' : '',
+				cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#9733; Admin</span>' : ''
 			}
 		];
 
@@ -780,7 +800,22 @@
 				<div class="card text-sm text-ink/60">No users found.</div>
 			{:else}
 				<!-- ag-Grid container -->
-				<div bind:this={usersGridDiv} class="ag-theme-quartz w-full" style="height: 480px;"></div>
+				<div bind:this={usersGridDiv} class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm" style="height: 480px;
+					--ag-header-background-color: #6b0f1a;
+					--ag-header-foreground-color: #fff8e7;
+					--ag-header-column-separator-display: block;
+					--ag-header-column-separator-color: #a01428;
+					--ag-header-column-separator-width: 1px;
+					--ag-cell-horizontal-border: solid #e8dcc8;
+					--ag-row-border-color: #e8dcc8;
+					--ag-row-border-width: 1px;
+					--ag-selected-row-background-color: #fdf3e7;
+					--ag-row-hover-color: #fdf8f0;
+					--ag-font-size: 13px;
+					--ag-grid-size: 6px;
+					--ag-list-item-height: 36px;
+					--ag-header-height: 42px;
+				"></div>
 
 				<!-- Selected-user action panel -->
 				{#if selectedUser}
@@ -912,3 +947,38 @@
 	{/if}
 
 </div>
+
+<style>
+	/* ag-Grid header decoration */
+	:global(.mk-header) {
+		font-weight: 700 !important;
+		font-size: 12px !important;
+		letter-spacing: 0.06em !important;
+		text-transform: uppercase !important;
+	}
+	:global(.mk-header .ag-header-cell-text) {
+		color: #fff8e7 !important;
+	}
+	:global(.mk-header .ag-icon) {
+		color: #ffb627 !important;
+	}
+	/* Status cell colours */
+	:global(.ag-theme-quartz .mk-cell-green) {
+		color: #166534 !important;
+		font-weight: 600;
+	}
+	:global(.ag-theme-quartz .mk-cell-amber) {
+		color: #92400e !important;
+		font-weight: 600;
+	}
+	:global(.ag-theme-quartz .mk-cell-maroon) {
+		color: #6b0f1a !important;
+		font-weight: 700;
+	}
+	/* Sort/filter icons in header */
+	:global(.ag-theme-quartz .mk-header .ag-sort-indicator-icon),
+	:global(.ag-theme-quartz .mk-header .ag-header-icon) {
+		color: #ffb627 !important;
+		opacity: 1 !important;
+	}
+</style>
