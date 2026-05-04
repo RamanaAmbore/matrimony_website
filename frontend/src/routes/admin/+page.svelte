@@ -442,11 +442,11 @@
 		const makeGrid = (rows: User[]) => {
 			usersGridApi?.destroy();
 			const columnDefs = [
-				{ field: 'email', headerName: 'Email', flex: 2, filter: true, sortable: true, headerClass: 'mk-header' },
-				{ field: 'user_handle', headerName: 'Handle', flex: 1, filter: true, sortable: true, headerClass: 'mk-header',
+				{ field: 'email', headerName: 'Email', width: 260, filter: true, sortable: true, headerClass: 'mk-header' },
+				{ field: 'user_handle', headerName: 'Handle', width: 160, filter: true, sortable: true, headerClass: 'mk-header',
 				  valueFormatter: (p: { value: string }) => `@${p.value}` },
-				{ field: 'full_name', headerName: 'Name', flex: 1, filter: true, sortable: true, headerClass: 'mk-header' },
-				{ field: 'phone_number', headerName: 'Phone', flex: 1, headerClass: 'mk-header' },
+				{ field: 'full_name', headerName: 'Name', width: 180, filter: true, sortable: true, headerClass: 'mk-header' },
+				{ field: 'phone_number', headerName: 'Phone', width: 150, headerClass: 'mk-header' },
 				{ field: 'email_verified', headerName: 'Email Verified', width: 150, sortable: true, headerClass: 'mk-header',
 				  cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-green' : 'mk-cell-amber',
 				  cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#10003; Verified</span>' : '<span>&#9888; Pending</span>' },
@@ -478,7 +478,7 @@
 			const columnDefs = [
 				{ field: 'profile_number', headerName: 'ID', width: 130, sortable: true, filter: true, headerClass: 'mk-header',
 				  cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#6b7280' } },
-				{ headerName: 'Name', flex: 1.5, sortable: true, filter: true, headerClass: 'mk-header',
+				{ headerName: 'Name', width: 200, sortable: true, filter: true, headerClass: 'mk-header',
 				  valueGetter: (p: { data: Profile }) => `${p.data.first_name} ${p.data.last_name ?? ''}`.trim() },
 				{ field: 'gender', headerName: 'Gender', width: 100, sortable: true, filter: true, headerClass: 'mk-header',
 				  valueFormatter: (p: { value: string }) => p.value.charAt(0).toUpperCase() + p.value.slice(1) },
@@ -487,9 +487,9 @@
 					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', rejected: 'background:#fee2e2;color:#dc2626', draft: 'background:#f3f4f6;color:#6b7280' };
 					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${p.value}</span>`;
 				  }},
-				{ headerName: 'Location', flex: 1, filter: true, headerClass: 'mk-header',
+				{ headerName: 'Location', width: 200, filter: true, headerClass: 'mk-header',
 				  valueGetter: (p: { data: Profile }) => [p.data.city, p.data.state].filter(Boolean).join(', ') },
-				{ field: 'education', headerName: 'Education', flex: 1, filter: true, sortable: true, headerClass: 'mk-header' },
+				{ field: 'education', headerName: 'Education', width: 180, filter: true, sortable: true, headerClass: 'mk-header' },
 				{ field: 'created_at', headerName: 'Submitted', width: 130, sortable: true, headerClass: 'mk-header',
 				  valueFormatter: (p: { value: string }) => new Date(p.value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }
 			];
@@ -515,10 +515,10 @@
 				{ field: 'id', headerName: 'Request ID', width: 130, filter: true, headerClass: 'mk-header',
 				  cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#9ca3af' },
 				  valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…' },
-				{ field: 'requester_user_id', headerName: 'Requester', flex: 1, filter: true, headerClass: 'mk-header',
+				{ field: 'requester_user_id', headerName: 'Requester', width: 160, filter: true, headerClass: 'mk-header',
 				  cellStyle: { fontFamily: 'monospace', fontSize: '12px' },
 				  valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…' },
-				{ field: 'profile_id', headerName: 'Profile', flex: 1, filter: true, headerClass: 'mk-header',
+				{ field: 'profile_id', headerName: 'Profile', width: 160, filter: true, headerClass: 'mk-header',
 				  cellStyle: { fontFamily: 'monospace', fontSize: '12px' },
 				  valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…' },
 				{ field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true, headerClass: 'mk-header',
