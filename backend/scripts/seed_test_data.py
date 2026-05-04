@@ -239,7 +239,7 @@ async def main():
             demo = _profile_demographics(i, gender)
             profile = Profile(
                 id=uuid.uuid4(),
-                profile_number=f"E2E-{run_tag % 1000000:06d}-{i:03d}"[-12:],
+                profile_number=f"Z{run_tag % 1000:03d}{i:04d}",  # 8 chars, fits VARCHAR(9)
                 owner_user_id=user.id,
                 gender=gender,
                 status=statuses[i],
