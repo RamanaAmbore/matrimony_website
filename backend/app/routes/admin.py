@@ -743,6 +743,23 @@ class AdminController(Controller):
         if not isinstance(body, dict):
             raise HTTPException(status_code=422, detail={"code": "invalid_body", "message": "Body must be a JSON object"})
 
+        # Validate email-shaped settings before persisting.
+        # Same regex shape used in /auth — local@domain.tld.
+        import re as _re
+        _EMAIL_RE = _re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+        EMAIL_KEYS = {"owner_email", "smtp_from"}
+        for k in EMAIL_KEYS:
+            if k in body and body[k] not in (None, ""):
+                value = str(body[k]).strip()
+                if not _EMAIL_RE.match(value):
+                    raise HTTPException(
+                        status_code=422,
+                        detail={
+                            "code": "invalid_email",
+                            "message": f"{k}: enter a valid email address (e.g. name@example.com)",
+                        },
+                    )
+
         updated_by = uuid.UUID(payload["sub"]) if payload else None
         await settings_service.set_many(body, db, updated_by)
         await db.commit()

@@ -75,6 +75,24 @@
 	let saving = $state(false);
 	let showPasswords = $state<Record<string, boolean>>({});
 	let extraKeys = $state<string[]>([]);
+	let fieldErrors = $state<Record<string, string>>({});
+
+	// Same shape as backend: local@domain.tld
+	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+	function validateAll(): boolean {
+		const errs: Record<string, string> = {};
+		for (const group of GROUPS) {
+			for (const f of group.fields) {
+				const v = (values[f.key] ?? '').trim();
+				if (f.type === 'email' && v !== '' && !EMAIL_RE.test(v)) {
+					errs[f.key] = 'Enter a valid email address (e.g. name@example.com)';
+				}
+			}
+		}
+		fieldErrors = errs;
+		return Object.keys(errs).length === 0;
+	}
 
 	function rawToValues(raw: unknown): Record<string, string> {
 		const entries: [string, unknown][] = Array.isArray(raw)
@@ -100,6 +118,10 @@
 	});
 
 	async function save() {
+		if (!validateAll()) {
+			toastStore.error('Fix the highlighted fields and try again.');
+			return;
+		}
 		saving = true;
 		try {
 			const payload: Record<string, unknown> = {};
@@ -116,9 +138,12 @@
 			}
 			const raw = await adminApi.settings.update(payload as Record<string, string>);
 			values = rawToValues(raw);
+			fieldErrors = {};
 			toastStore.success('Settings saved');
-		} catch {
-			toastStore.error('Failed to save settings');
+		} catch (err) {
+			// Surface backend validation errors when present (e.g. invalid_email)
+			const msg = err instanceof ApiError ? err.message : 'Failed to save settings';
+			toastStore.error(msg);
 		} finally {
 			saving = false;
 		}
@@ -202,9 +227,13 @@
 									<input
 										id="s-{field.key}"
 										type={field.type}
-										class="input font-mono text-sm"
+										class="input font-mono text-sm {fieldErrors[field.key] ? 'border-vermilion' : ''}"
 										bind:value={values[field.key]}
+										onblur={() => { if (field.type === 'email') validateAll(); }}
 									/>
+									{#if fieldErrors[field.key]}
+										<p class="mt-1 text-xs text-vermilion">{fieldErrors[field.key]}</p>
+									{/if}
 								{/if}
 							</div>
 						{/each}
