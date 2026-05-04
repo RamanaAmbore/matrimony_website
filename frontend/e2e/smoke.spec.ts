@@ -99,7 +99,7 @@ test.describe('login + admin flow (requires E2E_ADMIN_EMAIL & E2E_ADMIN_PASSWORD
 	const password = process.env.E2E_ADMIN_PASSWORD;
 	test.skip(!email || !password, 'no admin creds in env — set E2E_ADMIN_EMAIL/PASSWORD to enable');
 
-	test('admin can log in and see admin dashboard', async ({ page }) => {
+	test('admin can log in and see admin dashboard', async ({ page, isMobile }) => {
 		await page.goto('/login');
 		await page.locator('#identifier').first().fill(email!);
 		await page.locator('input[type="password"]').first().fill(password!);
@@ -107,8 +107,13 @@ test.describe('login + admin flow (requires E2E_ADMIN_EMAIL & E2E_ADMIN_PASSWORD
 
 		await page.waitForURL((url) => !url.pathname.endsWith('/login'), { timeout: 10_000 });
 
-		// Admin chip should be visible in navbar
-		await expect(page.locator('text=/^Admin$/').first()).toBeVisible({ timeout: 5_000 });
+		// On mobile the Admin chip lives in the hamburger drawer; open it first.
+		// Use .last() because on mobile the desktop-navbar chip is also in the DOM
+		// (hidden by Tailwind responsive classes) and would match .first() instead.
+		if (isMobile) {
+			await page.getByRole('button', { name: /open menu/i }).click();
+		}
+		await expect(page.locator('text=/^Admin$/').last()).toBeVisible({ timeout: 5_000 });
 
 		// Navigate to admin
 		await page.goto('/admin');
