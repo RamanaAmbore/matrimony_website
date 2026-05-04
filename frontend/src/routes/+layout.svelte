@@ -228,9 +228,32 @@
 			{/if}
 		</nav>
 
+		<!-- Mobile-only chips (User/Admin/Super + Test). Always visible on the
+		     navbar so users see their role and the test-mode flag without
+		     opening the drawer. Mirrors the desktop xl-only chip block. -->
+		{#if user}
+			<span class="ml-auto flex flex-wrap items-center gap-1 md:hidden" title={user.email}>
+				{#if user.is_super}
+					<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold leading-none bg-saffron text-maroon">Super</span>
+				{:else if user.is_admin}
+					<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-maroon text-cream border border-cream/40">Admin</span>
+				{:else}
+					<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
+				{/if}
+				{#if !siteInfo.is_prod}
+					<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
+				{/if}
+			</span>
+		{:else if !siteInfo.is_prod}
+			<!-- Anonymous: still surface the Test flag on mobile -->
+			<span class="ml-auto md:hidden">
+				<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
+			</span>
+		{/if}
+
 		<!-- Mobile hamburger -->
 		<button
-			class="ml-auto rounded p-2 text-cream hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-cream md:hidden"
+			class="rounded p-2 text-cream hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-cream md:hidden {user || !siteInfo.is_prod ? 'ml-1' : 'ml-auto'}"
 			onclick={openDrawer}
 			aria-label="Open menu"
 			aria-expanded={drawerOpen}
@@ -320,18 +343,10 @@
 					</a>
 				{/if}
 				<div class="my-2 h-px bg-gold/20"></div>
-				<div class="px-3 py-1 flex flex-wrap items-center gap-1.5" title={user.email}>
-					<span class="font-mono text-sm text-ink/60">{user.user_id}</span>
-					{#if user.is_super}
-						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold leading-none bg-saffron text-maroon">Super</span>
-					{:else if user.is_admin}
-						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
-					{:else}
-						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
-					{/if}
-					{#if !siteInfo.is_prod}
-						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-vermilion text-cream">Test</span>
-					{/if}
+				<div class="px-3 py-1 text-sm text-ink/60 truncate" title={user.email}>
+					<span class="font-mono">{user.user_id}</span>
+					<span class="text-ink/40">·</span>
+					<span class="text-xs">{user.email}</span>
 				</div>
 				<button
 					onclick={logout}
