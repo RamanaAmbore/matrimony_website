@@ -744,19 +744,26 @@ class AdminController(Controller):
             raise HTTPException(status_code=422, detail={"code": "invalid_body", "message": "Body must be a JSON object"})
 
         # Validate email-shaped settings before persisting.
-        # Same regex shape used in /auth — local@domain.tld.
+        # Accept either bare 'name@example.com' or RFC display-name form
+        # 'Display Name <name@example.com>' (smtp_from typically uses the latter).
         import re as _re
         _EMAIL_RE = _re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+        _ANGLE_RE = _re.compile(r"<([^>]+)>")
         EMAIL_KEYS = {"owner_email", "smtp_from"}
         for k in EMAIL_KEYS:
             if k in body and body[k] not in (None, ""):
                 value = str(body[k]).strip()
-                if not _EMAIL_RE.match(value):
+                m = _ANGLE_RE.search(value)
+                addr = m.group(1).strip() if m else value
+                if not _EMAIL_RE.match(addr):
                     raise HTTPException(
                         status_code=422,
                         detail={
                             "code": "invalid_email",
-                            "message": f"{k}: enter a valid email address (e.g. name@example.com)",
+                            "message": (
+                                f"{k}: enter a valid email address "
+                                f"(e.g. name@example.com or 'Display Name <name@example.com>')"
+                            ),
                         },
                     )
 

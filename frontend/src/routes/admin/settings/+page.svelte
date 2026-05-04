@@ -3,7 +3,7 @@
 	import { admin as adminApi } from '$lib/api';
 	import { ApiError } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { Loader, Save, Eye, EyeOff } from 'lucide-svelte';
 
 	type FieldType = 'text' | 'password' | 'number' | 'boolean' | 'email';
@@ -77,16 +77,25 @@
 	let extraKeys = $state<string[]>([]);
 	let fieldErrors = $state<Record<string, string>>({});
 
-	// Same shape as backend: local@domain.tld
+	// Accept either bare email or RFC display-name form: 'Name <addr@example.com>'
 	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	const ANGLE_RE = /<([^>]+)>/;
+
+	function isValidEmailLike(value: string): boolean {
+		const v = value.trim();
+		if (v === '') return true; // empty is allowed (clears the setting)
+		const m = ANGLE_RE.exec(v);
+		const addr = m ? m[1].trim() : v;
+		return EMAIL_RE.test(addr);
+	}
 
 	function validateAll(): boolean {
 		const errs: Record<string, string> = {};
 		for (const group of GROUPS) {
 			for (const f of group.fields) {
-				const v = (values[f.key] ?? '').trim();
-				if (f.type === 'email' && v !== '' && !EMAIL_RE.test(v)) {
-					errs[f.key] = 'Enter a valid email address (e.g. name@example.com)';
+				const v = values[f.key] ?? '';
+				if (f.type === 'email' && !isValidEmailLike(v)) {
+					errs[f.key] = "Enter a valid email (e.g. name@example.com or 'Name <name@example.com>')";
 				}
 			}
 		}
@@ -139,6 +148,9 @@
 			const raw = await adminApi.settings.update(payload as Record<string, string>);
 			values = rawToValues(raw);
 			fieldErrors = {};
+			// Refresh layout data so the navbar Test/Admin chips reflect the
+			// new is_prod / role state immediately (no manual reload needed).
+			await invalidateAll();
 			toastStore.success('Settings saved');
 		} catch (err) {
 			// Surface backend validation errors when present (e.g. invalid_email)
@@ -226,7 +238,7 @@
 								{:else}
 									<input
 										id="s-{field.key}"
-										type={field.type}
+										type="text"
 										class="input font-mono text-sm {fieldErrors[field.key] ? 'border-vermilion' : ''}"
 										bind:value={values[field.key]}
 										onblur={() => { if (field.type === 'email') validateAll(); }}
