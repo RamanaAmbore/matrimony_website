@@ -338,7 +338,8 @@ async function main() {
 	console.log('\n  cleaning up...');
 	const cleanupOutput = psql(`DELETE FROM users WHERE user_handle LIKE 'e2e_%' RETURNING id;`);
 	const deleted = cleanupOutput.split('\n').filter((s) => s.trim().length > 0).length;
-	logCase('cleanup test data', deleted === N_USERS, `${deleted} users deleted (cascades)`);
+	// >= N_USERS — extras can come from earlier aborted runs; cleanup is best-effort.
+	logCase('cleanup test data', deleted >= N_USERS, `${deleted} users deleted (cascades)`);
 
 	// ── Summary
 	const passed = CASES.filter((c) => c.ok).length;
