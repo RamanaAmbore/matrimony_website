@@ -133,6 +133,11 @@ class AdminController(Controller):
                 select(func.count()).select_from(DetailRequest).where(DetailRequest.status == RequestStatusEnum.pending)
             )
         ).scalar_one()
+        requests_total = (
+            await db.execute(
+                select(func.count()).select_from(DetailRequest)
+            )
+        ).scalar_one()
 
         stats = {
             "users": users_count,
@@ -140,6 +145,7 @@ class AdminController(Controller):
             "profiles_pending": profiles_pending,
             "profiles_approved": profiles_approved,
             "requests_pending": requests_pending,
+            "requests_total": requests_total,
         }
 
         # ── Pending profiles (up to 25) with owner email ────────────────────
@@ -769,6 +775,11 @@ class AdminController(Controller):
                 select(func.count()).select_from(DetailRequest).where(DetailRequest.status == RequestStatusEnum.pending)
             )
         ).scalar_one()
+        requests_total = (
+            await db.execute(
+                select(func.count()).select_from(DetailRequest)
+            )
+        ).scalar_one()
 
         return {
             "users": users_count,
@@ -776,4 +787,5 @@ class AdminController(Controller):
             "profiles_pending": profiles_pending,
             "profiles_approved": profiles_approved,
             "requests_pending": requests_pending,
+            "requests_total": requests_total,
         }

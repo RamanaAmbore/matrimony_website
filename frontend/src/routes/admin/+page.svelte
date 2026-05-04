@@ -627,7 +627,10 @@
 		userFilter = f;
 		selectedUser = null;
 		if (usersGridApi && allUsers) {
-			usersGridApi.setGridOption('rowData', [...filteredUsers]);
+			const rows = f === 'unverified' ? allUsers.filter((u: any) => !u.email_verified)
+				: f === 'verified' ? allUsers.filter((u: any) => u.email_verified)
+				: [...allUsers];
+			usersGridApi.setGridOption('rowData', rows);
 		}
 	}
 
@@ -636,7 +639,8 @@
 		selectedProfile = null;
 		profileRejectOpen = false;
 		if (profilesGridApi && allProfiles) {
-			profilesGridApi.setGridOption('rowData', [...filteredProfiles]);
+			const rows = (!f || f === 'all') ? [...allProfiles] : allProfiles.filter(p => p.status === f);
+			profilesGridApi.setGridOption('rowData', rows);
 		}
 	}
 
@@ -645,7 +649,8 @@
 		selectedRequest = null;
 		requestRejectOpen = false;
 		if (requestsGridApi && allRequests) {
-			requestsGridApi.setGridOption('rowData', [...filteredRequests]);
+			const rows = (!f || f === 'all') ? [...allRequests] : allRequests.filter(r => r.status === f);
+			requestsGridApi.setGridOption('rowData', rows);
 		}
 	}
 
@@ -749,7 +754,7 @@
 				>
 					<Inbox size={20} class="{activeTab === 'requests' ? 'text-saffron' : 'text-sky-500'} shrink-0" />
 					<span class="font-serif font-semibold {activeTab === 'requests' ? 'text-cream' : 'text-maroon'}">Requests</span>
-					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'requests' ? 'text-cream' : 'text-ink'}">{dashboard.stats.requests_pending}</span>
+					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'requests' ? 'text-cream' : 'text-ink'}">{dashboard.stats.requests_total}</span>
 				</button>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button

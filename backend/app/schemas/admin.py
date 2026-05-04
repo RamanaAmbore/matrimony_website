@@ -26,6 +26,7 @@ class AdminStatsResponse(msgspec.Struct):
     profiles_pending: int
     profiles_approved: int
     requests_pending: int
+    requests_total: int
 
 
 class AdminUserResponse(msgspec.Struct):
