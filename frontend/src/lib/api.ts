@@ -531,6 +531,11 @@ export const admin = {
 				method: 'POST',
 				body: JSON.stringify({ admin_notes })
 			});
+		},
+		async delete(
+			id: string
+		): Promise<{ deleted: { id: string; request_number: string; status: string } }> {
+			return request(`/api/admin/requests/${id}/delete`, { method: 'POST' });
 		}
 	},
 

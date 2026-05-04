@@ -358,6 +358,33 @@
 		}
 	}
 
+	async function doDeleteRequest() {
+		if (!selectedRequest) return;
+		const label = selectedRequest.request_number || selectedRequest.id.slice(0, 8) + '…';
+		if (!confirm(`Delete request ${label}? This cannot be undone.`)) return;
+		requestActionLoading = true;
+		try {
+			await adminApi.requests.delete(selectedRequest.id);
+			const wasStatus = selectedRequest.status;
+			allRequests = (allRequests ?? []).filter(r => r.id !== selectedRequest!.id);
+			selectedRequest = null;
+			requestRejectOpen = false;
+			requestRejectNote = '';
+			requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
+			if (dashboard) {
+				dashboard.stats.requests_total = Math.max(0, dashboard.stats.requests_total - 1);
+				const k = `requests_${wasStatus}` as keyof typeof dashboard.stats;
+				const cur = dashboard.stats[k];
+				if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
+			}
+			toastStore.success('Request deleted');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			requestActionLoading = false;
+		}
+	}
+
 	onDestroy(() => {
 		usersGridApi?.destroy();
 		usersGridApi = undefined;
@@ -1013,6 +1040,15 @@
 								✕ Reject
 							</button>
 						{/if}
+						<!-- Delete is always available on any request status -->
+						<button
+							class="text-xs px-4 py-2 rounded bg-vermilion text-cream hover:bg-vermilion/90 disabled:opacity-50"
+							disabled={requestActionLoading}
+							onclick={doDeleteRequest}
+						>
+							{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+							🗑 Delete
+						</button>
 					</div>
 				</div>
 				{#if requestRejectOpen && selectedRequest.status === 'pending'}

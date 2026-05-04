@@ -622,6 +622,35 @@ class AdminController(Controller):
         )
         return _serialize_request(enriched.scalar_one())
 
+    @post("/requests/{request_id:str}/delete", status_code=200)
+    async def delete_request(
+        self,
+        request_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Hard-delete a detail request. Admin or super."""
+        _require_admin(request)
+
+        try:
+            rid = uuid.UUID(request_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Request not found"})
+
+        result = await db.execute(select(DetailRequest).where(DetailRequest.id == rid))
+        req = result.scalar_one_or_none()
+        if not req:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Request not found"})
+
+        deleted = {
+            "id": str(req.id),
+            "request_number": req.request_number,
+            "status": req.status.value,
+        }
+        await db.delete(req)
+        await db.commit()
+        return {"deleted": deleted}
+
     # --- Users ---
     @get("/users")
     async def list_users(
