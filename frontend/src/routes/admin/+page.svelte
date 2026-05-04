@@ -1052,4 +1052,31 @@
 		border-color: #6b0f1a !important;
 		outline: none !important;
 	}
+	/* --- Pagination panel: keep readable on mobile --- */
+	/* Allow children to wrap onto multiple lines instead of overlapping. */
+	:global(.ag-theme-quartz .ag-paging-panel) {
+		flex-wrap: wrap !important;
+		row-gap: 4px !important;
+		column-gap: 8px !important;
+		padding: 6px 10px !important;
+		justify-content: center !important;
+	}
+	@media (max-width: 640px) {
+		/* Hide the verbose "Page Size: 20" selector and the
+		   "1 to 20 of 100" row-summary on small screens — pagination
+		   buttons + "Page X of Y" still convey enough. */
+		:global(.ag-theme-quartz .ag-paging-page-size),
+		:global(.ag-theme-quartz .ag-paging-row-summary-panel) {
+			display: none !important;
+		}
+		:global(.ag-theme-quartz .ag-paging-panel) {
+			font-size: 12px !important;
+			gap: 4px !important;
+		}
+		:global(.ag-theme-quartz .ag-paging-panel .ag-paging-button) {
+			min-width: 28px !important;
+			min-height: 28px !important;
+			padding: 2px !important;
+		}
+	}
 </style>
