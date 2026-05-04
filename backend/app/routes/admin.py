@@ -153,7 +153,19 @@ class AdminController(Controller):
         _require_admin(request)
 
         # ── Stats ────────────────────────────────────────────────────────────
-        users_count = (await db.execute(select(func.count()).select_from(User))).scalar_one()
+        # Exclude super-users from every users-derived count.
+        users_count = (
+            await db.execute(
+                select(func.count()).select_from(User).where(User.is_super == False)  # noqa: E712
+            )
+        ).scalar_one()
+        users_admins = (
+            await db.execute(
+                select(func.count()).select_from(User).where(
+                    User.is_admin == True, User.is_super == False  # noqa: E712
+                )
+            )
+        ).scalar_one()
         profiles_total = (await db.execute(select(func.count()).select_from(Profile))).scalar_one()
         profiles_pending = (
             await db.execute(
@@ -198,6 +210,7 @@ class AdminController(Controller):
 
         stats = {
             "users": users_count,
+            "users_admins": users_admins,
             "profiles_total": profiles_total,
             "profiles_pending": profiles_pending,
             "profiles_approved": profiles_approved,
@@ -896,7 +909,11 @@ class AdminController(Controller):
     ) -> dict[str, Any]:
         _require_admin(request)
 
-        users_count = (await db.execute(select(func.count()).select_from(User))).scalar_one()
+        users_count = (
+            await db.execute(
+                select(func.count()).select_from(User).where(User.is_super == False)  # noqa: E712
+            )
+        ).scalar_one()
         profiles_total = (await db.execute(select(func.count()).select_from(Profile))).scalar_one()
         profiles_pending = (
             await db.execute(

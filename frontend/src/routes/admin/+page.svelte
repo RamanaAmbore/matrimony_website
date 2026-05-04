@@ -68,6 +68,9 @@
 	let allUsersLoading = $state(false);
 	let allUsersError = $state('');
 	let userFilter = $state<'all' | 'unverified' | 'verified' | null>(null);
+	// When false (default), admins are hidden from the Users grid so the
+	// list shows just regular users. Toggle to true to include admins.
+	let userIncludeAdmins = $state(false);
 
 	// ag-Grid state
 	let usersGridApi: GridApi | undefined;
@@ -405,9 +408,13 @@
 
 	function computeUsersRows(f: typeof userFilter): User[] {
 		if (!f || !allUsers) return [];
-		if (f === 'unverified') return allUsers.filter((u: any) => !u.email_verified);
-		if (f === 'verified')   return allUsers.filter((u: any) =>  u.email_verified);
-		return allUsers; // 'all'
+		let rows: User[];
+		if (f === 'unverified') rows = allUsers.filter((u: any) => !u.email_verified);
+		else if (f === 'verified') rows = allUsers.filter((u: any) => u.email_verified);
+		else rows = allUsers; // 'all'
+		// Hide admins by default — operator opts in via the "Include admins" checkbox.
+		if (!userIncludeAdmins) rows = rows.filter((u: any) => !u.is_admin);
+		return rows;
 	}
 
 	function computeProfilesRows(f: typeof profileStatusFilter): Profile[] {
@@ -571,6 +578,9 @@
 		<div class="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 
 			<!-- ── All Users card ─────────────────────────────────────────── -->
+			{@const usersTotal = userIncludeAdmins ? dashboard.stats.users : dashboard.stats.users - (dashboard.stats.users_admins ?? 0)}
+			{@const usersUnverified = dashboard.pending_users.length}
+			{@const usersVerified = Math.max(0, usersTotal - usersUnverified)}
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'users' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
 				<button
 					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'users' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
@@ -578,25 +588,33 @@
 				>
 					<Users size={20} class="text-saffron shrink-0" />
 					<span class="font-serif font-semibold {activeTab === 'users' ? 'text-cream' : 'text-maroon'}">Users</span>
-					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'users' ? 'text-cream' : 'text-ink'}">{dashboard.stats.users}</span>
+					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'users' ? 'text-cream' : 'text-ink'}">{usersTotal}</span>
 				</button>
-				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
+				<div class="flex flex-wrap items-center gap-2 bg-white px-4 py-3">
 					<button
 						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
 						onclick={() => { selectTab('users'); applyUserFilter('all'); }}
 					>All</button>
-					{#if dashboard.pending_users.length > 0}
+					{#if usersUnverified > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'unverified' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
 							onclick={() => { selectTab('users'); applyUserFilter('unverified'); }}
-						>Unverified · {dashboard.pending_users.length}</button>
+						>Unverified · {usersUnverified}</button>
 					{/if}
-					{#if dashboard.stats.users - dashboard.pending_users.length > 0}
+					{#if usersVerified > 0}
 						<button
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'verified' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
 							onclick={() => { selectTab('users'); applyUserFilter('verified'); }}
-						>Verified · {dashboard.stats.users - dashboard.pending_users.length}</button>
+						>Verified · {usersVerified}</button>
 					{/if}
+					<label class="ml-auto inline-flex cursor-pointer items-center gap-1.5 text-xs text-ink/60">
+						<input
+							type="checkbox"
+							class="rounded accent-maroon"
+							bind:checked={userIncludeAdmins}
+						/>
+						Include admins
+					</label>
 				</div>
 			</div>
 
@@ -698,7 +716,7 @@
 				<div class="card text-sm text-ink/60">No users found.</div>
 			{:else}
 				<!-- ag-Grid container -->
-				{#key userFilter}
+				{#key `${userFilter}:${userIncludeAdmins}`}
 				<div use:usersGridAction={computeUsersRows(userFilter)} class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm" style="height: 480px;
 					--ag-header-background-color: #6b0f1a;
 					--ag-header-foreground-color: #fff8e7;

@@ -253,6 +253,7 @@ export interface PendingRequest {
 export interface AdminDashboard {
 	stats: {
 		users: number;
+		users_admins: number;
 		profiles_total: number;
 		profiles_pending: number;
 		profiles_approved: number;

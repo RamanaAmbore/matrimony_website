@@ -152,8 +152,8 @@
 	</script>
 </svelte:head>
 
-<!-- ── Header ─────────────────────────────────────────────────────────────── -->
-<header class="shadow-sm border-t-4 border-saffron border-b border-cream/10" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
+<!-- ── Header (sticky at top) ─────────────────────────────────────────────── -->
+<header class="sticky top-0 z-30 shadow-sm border-t-4 border-saffron border-b border-cream/10" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
 	<div class="mx-auto flex w-full max-w-5xl items-center justify-center gap-2 px-4 py-2">
 		<!-- Brand wordmark — shrink-0 keeps it from compressing -->
 		<a
