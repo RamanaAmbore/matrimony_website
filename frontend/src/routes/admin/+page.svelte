@@ -20,12 +20,9 @@
 		Loader,
 		Users,
 		UserCheck,
-		Clock,
-		CheckCircle2,
 		Inbox,
 		CheckCheck,
-		X,
-		ShieldCheck
+		X
 	} from 'lucide-svelte';
 
 	// ── Tab state ────────────────────────────────────────────────────────────────
@@ -429,52 +426,88 @@
 
 	<!-- ── Stats row (always visible) ────────────────────────────────────────── -->
 	{#if dashboard}
-		<div class="my-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-			<button
-				class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md hover:border-maroon/30 transition-all w-full"
-				onclick={() => selectTab('users')}
-			>
-				<Users size={24} class="text-saffron" />
-				<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.users}</p>
-				<p class="text-xs text-ink/60">Total Users</p>
-				<p class="text-[10px] text-ink/40">click to view</p>
-			</button>
-			<button
-				class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md hover:border-maroon/30 transition-all w-full"
-				onclick={() => selectTab('profiles')}
-			>
-				<UserCheck size={24} class="text-gold" />
-				<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_total}</p>
-				<p class="text-xs text-ink/60">Total Profiles</p>
-				<p class="text-[10px] text-ink/40">click to view</p>
-			</button>
-			<button
-				class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md hover:border-maroon/30 transition-all w-full"
-				onclick={() => selectTab('pending')}
-			>
-				<Clock size={24} class="text-marigold" />
-				<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_pending}</p>
-				<p class="text-xs text-ink/60">Pending Profiles</p>
-				<p class="text-[10px] text-ink/40">click to view</p>
-			</button>
-			<button
-				class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md hover:border-maroon/30 transition-all w-full"
-				onclick={() => selectTab('profiles')}
-			>
-				<CheckCircle2 size={24} class="text-green-600" />
-				<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_approved}</p>
-				<p class="text-xs text-ink/60">Approved</p>
-				<p class="text-[10px] text-ink/40">click to view</p>
-			</button>
-			<button
-				class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md hover:border-maroon/30 transition-all w-full"
-				onclick={() => selectTab('pending')}
-			>
-				<Inbox size={24} class="text-sky-500" />
-				<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.requests_pending}</p>
-				<p class="text-xs text-ink/60">Pending Requests</p>
-				<p class="text-[10px] text-ink/40">click to view</p>
-			</button>
+		<div class="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+			<!-- Users card -->
+			<div class="card space-y-3">
+				<div class="flex items-center gap-2">
+					<Users size={20} class="text-saffron shrink-0" />
+					<span class="font-serif font-semibold text-maroon">Users</span>
+					<span class="ml-auto tabular-nums text-2xl font-bold text-ink">{dashboard.stats.users}</span>
+				</div>
+				<div class="flex flex-wrap gap-2">
+					<button
+						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+						onclick={() => selectTab('users')}
+						title="View all users"
+					>
+						⚠ Unverified: {dashboard.pending_users.length}
+					</button>
+					<button
+						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
+						onclick={() => selectTab('users')}
+						title="View all users"
+					>
+						✓ Verified: {dashboard.stats.users - dashboard.pending_users.length}
+					</button>
+				</div>
+			</div>
+
+			<!-- Profiles card -->
+			<div class="card space-y-3">
+				<div class="flex items-center gap-2">
+					<UserCheck size={20} class="text-gold shrink-0" />
+					<span class="font-serif font-semibold text-maroon">Profiles</span>
+					<span class="ml-auto tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_total}</span>
+				</div>
+				<div class="flex flex-wrap gap-2">
+					<button
+						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+						onclick={() => { selectTab('profiles'); profileStatusFilter = 'pending'; }}
+						title="View pending profiles"
+					>
+						⏳ Pending: {dashboard.stats.profiles_pending}
+					</button>
+					<button
+						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
+						onclick={() => { selectTab('profiles'); profileStatusFilter = 'approved'; }}
+						title="View approved profiles"
+					>
+						✓ Approved: {dashboard.stats.profiles_approved}
+					</button>
+					<button
+						class="rounded-full border border-ink/20 bg-ink/5 px-3 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/10 transition-colors"
+						onclick={() => { selectTab('profiles'); profileStatusFilter = 'all'; }}
+						title="View all profiles"
+					>
+						All profiles →
+					</button>
+				</div>
+			</div>
+
+			<!-- Requests card -->
+			<div class="card space-y-3">
+				<div class="flex items-center gap-2">
+					<Inbox size={20} class="text-sky-500 shrink-0" />
+					<span class="font-serif font-semibold text-maroon">Requests</span>
+					<span class="ml-auto tabular-nums text-2xl font-bold text-ink">{dashboard.stats.requests_pending}</span>
+				</div>
+				<div class="flex flex-wrap gap-2">
+					<button
+						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+						onclick={() => { selectTab('requests'); requestStatusFilter = 'pending'; }}
+						title="View pending requests"
+					>
+						⏳ Pending: {dashboard.stats.requests_pending}
+					</button>
+					<button
+						class="rounded-full border border-ink/20 bg-ink/5 px-3 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/10 transition-colors"
+						onclick={() => { selectTab('requests'); requestStatusFilter = 'all'; }}
+						title="View all requests"
+					>
+						All requests →
+					</button>
+				</div>
+			</div>
 		</div>
 	{/if}
 

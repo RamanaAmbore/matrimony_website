@@ -440,7 +440,7 @@
 	// prettier-ignore
 	const formFingerprint = $derived(
 		[
-			gender, first_name, dob, marital_status, mother_tongue,
+			gender, first_name, last_name, dob, marital_status, mother_tongue,
 			sub_caste, surname_clan, height_cm, weight_kg, complexion, body_type,
 			blood_group, gotra, kuldevata, devak, nakshatram, rashi, manglik,
 			time_hour, time_minute, time_ampm, timeEnabled, place_of_birth,
@@ -454,13 +454,13 @@
 	);
 
 	$effect(() => {
-		formFingerprint; // subscribe to all field changes
-		if (!autoSaveMounted || !autoSave || submitting) return;
+		formFingerprint; // only fingerprint changes trigger auto-save
+		if (untrack(() => !autoSaveMounted || !autoSave || submitting)) return;
 		autoSaveStatus = 'pending';
 		clearTimeout(autoSaveTimer);
 		autoSaveTimer = setTimeout(() => {
 			autoSaveStatus = 'saving';
-			onSubmit(buildData());
+			untrack(() => onSubmit(buildData()));
 			setTimeout(() => {
 				autoSaveStatus = 'saved';
 				setTimeout(() => {
