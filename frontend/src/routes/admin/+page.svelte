@@ -511,6 +511,8 @@
 		const makeGrid = (rows: DetailRequest[]) => {
 			requestsGridApi?.destroy();
 			const columnDefs = [
+				{ field: 'request_number', headerName: 'Request ID', width: 150, sortable: true, filter: true, headerClass: 'mk-header',
+				  cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#6b7280' } },
 				{ field: 'profile_number', headerName: 'Profile ID', width: 130, sortable: true, filter: true, headerClass: 'mk-header',
 				  cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#6b7280' } },
 				{ headerName: 'Profile Name', width: 200, sortable: true, filter: true, headerClass: 'mk-header',

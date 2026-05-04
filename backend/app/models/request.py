@@ -9,6 +9,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    String,
     Text,
     UniqueConstraint,
     func,
@@ -33,6 +34,11 @@ class DetailRequest(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    # Public-facing identifier: RQ- prefix + 9-digit numeric, total 12 chars,
+    # unique across the table. Generated when a request is first created.
+    request_number: Mapped[str] = mapped_column(
+        String(12), unique=True, nullable=False, default=""
     )
     requester_user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

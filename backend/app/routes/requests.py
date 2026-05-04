@@ -1,6 +1,7 @@
 """Detail request routes."""
 
 import asyncio
+import random
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -19,9 +20,22 @@ from app.models.user import User
 from app.schemas.request import CreateDetailRequest
 
 
+async def _generate_request_number(db: AsyncSession) -> str:
+    """Generate unique RQ-#########  request number (12 chars total)."""
+    for _ in range(10):
+        num = f"RQ-{random.randint(0, 999_999_999):09d}"
+        result = await db.execute(
+            select(DetailRequest).where(DetailRequest.request_number == num)
+        )
+        if result.scalar_one_or_none() is None:
+            return num
+    raise RuntimeError("Could not generate unique request number after 10 attempts")
+
+
 def _serialize_request(req: DetailRequest) -> dict[str, Any]:
     return {
         "id": str(req.id),
+        "request_number": req.request_number,
         "requester_user_id": str(req.requester_user_id),
         "profile_id": str(req.profile_id),
         "status": req.status.value,
@@ -72,6 +86,7 @@ class RequestController(Controller):
 
         detail_req = DetailRequest(
             id=uuid.uuid4(),
+            request_number=await _generate_request_number(db),
             requester_user_id=requester_id,
             profile_id=pid,
             status=RequestStatusEnum.pending,

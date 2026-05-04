@@ -17,6 +17,7 @@ class DetailRequestResponse(msgspec.Struct):
     admin_notes: str | None
     responded_at: str | None
     created_at: str
+    request_number: str | None = None
     requester_email: str | None = None
     requester_name: str | None = None
     profile_number: str | None = None

@@ -93,8 +93,8 @@ test.describe('seeded data visible in admin UI (admin creds required)', () => {
 		await page.goto('/admin');
 		// click the Profiles card "All" chip
 		await page.getByRole('button', { name: /^All$/ }).nth(1).click(); // second "All" = profiles card
-		// at least one Z-prefixed profile_number should appear
-		await expect(page.locator('text=/^Z\\d{7}$/').first()).toBeVisible({ timeout: 10_000 });
+		// at least one TC-###### profile_number should appear
+		await expect(page.locator('text=/^TC-\\d{6}$/').first()).toBeVisible({ timeout: 10_000 });
 	});
 
 	test('admin sees seeded requests when "All" chip clicked', async ({ page }) => {

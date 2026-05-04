@@ -133,6 +133,7 @@ export type RequestStatus = 'pending' | 'approved' | 'rejected';
 
 export interface DetailRequest {
 	id: string;
+	request_number?: string | null;
 	requester_user_id: string;
 	profile_id: string;
 	profile?: Partial<Profile>;

@@ -94,6 +94,7 @@ def _serialize_request(req: DetailRequest) -> dict[str, Any]:
     profile = getattr(req, "profile", None)
     return {
         "id": str(req.id),
+        "request_number": req.request_number,
         "requester_user_id": str(req.requester_user_id),
         "profile_id": str(req.profile_id),
         "status": req.status.value,

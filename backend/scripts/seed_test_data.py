@@ -239,7 +239,10 @@ async def main():
             demo = _profile_demographics(i, gender)
             profile = Profile(
                 id=uuid.uuid4(),
-                profile_number=f"Z{run_tag % 1000:03d}{i:04d}",  # 8 chars, fits VARCHAR(9)
+                # Use the real TC-###### format (matching production
+                # generator). Pad with the seed index so values are
+                # unique within this batch.
+                profile_number=f"TC-{(run_tag + i) % 1_000_000:06d}",
                 owner_user_id=user.id,
                 gender=gender,
                 status=statuses[i],
@@ -307,6 +310,7 @@ async def main():
             status = request_status_dist[n_made % len(request_status_dist)]
             req = DetailRequest(
                 id=uuid.uuid4(),
+                request_number=f"RQ-{(run_tag * 1_000 + n_made) % 1_000_000_000:09d}",
                 requester_user_id=requester.id,
                 profile_id=target.id,
                 status=status,
