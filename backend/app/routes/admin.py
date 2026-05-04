@@ -64,6 +64,7 @@ def _serialize_profile(profile: Profile, request: Request) -> dict[str, Any]:
 
     return {
         "id": str(profile.id),
+        "profile_number": profile.profile_number,
         "owner_user_id": str(profile.owner_user_id),
         "gender": profile.gender.value,
         "first_name": profile.first_name,

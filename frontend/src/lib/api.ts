@@ -40,6 +40,7 @@ export type SmokeDrink = 'no' | 'occasionally' | 'yes';
 
 export interface Profile {
 	id: string;
+	profile_number: string;
 	owner_user_id: string;
 	status: ProfileStatus;
 
@@ -213,6 +214,7 @@ export interface AdminStats {
 
 export interface PendingProfileSummary {
 	id: string;
+	profile_number: string;
 	owner_email: string;
 	gender: Gender;
 	first_name: string;
@@ -380,7 +382,7 @@ export const auth = {
 
 // ─── Profiles ─────────────────────────────────────────────────────────────────
 
-export type ProfilePayload = Omit<Profile, 'id' | 'owner_user_id' | 'status' | 'created_at' | 'updated_at'>;
+export type ProfilePayload = Omit<Profile, 'id' | 'profile_number' | 'owner_user_id' | 'status' | 'created_at' | 'updated_at'>;
 
 export const profiles = {
 	async list(): Promise<Profile[]> {

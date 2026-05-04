@@ -92,7 +92,7 @@
 				Edit Profile — {profile.first_name}{profile.surname_clan ? ` ${profile.surname_clan}` : ''}
 			</h1>
 			<p class="mt-1 text-sm text-ink/60">
-				Profile ID: <span class="font-mono text-xs bg-ink/5 px-1.5 py-0.5 rounded select-all">{profile.id}</span>
+				Profile ID: <span class="font-mono text-xs bg-ink/5 px-1.5 py-0.5 rounded select-all">{profile.profile_number ?? profile.id.slice(0, 8)}</span>
 				&nbsp;·&nbsp;Status:
 				<span class="font-medium capitalize {profile.status === 'approved' ? 'text-green-600' : profile.status === 'rejected' ? 'text-vermilion' : 'text-saffron'}">
 					{profile.status}

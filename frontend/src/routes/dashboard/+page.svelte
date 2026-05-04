@@ -169,7 +169,7 @@
 							<p class="text-sm text-ink/60 capitalize">
 								{profile.gender} · {calcAge(profile.dob)} yrs
 							</p>
-							<span class="font-mono text-[0.65rem] text-maroon/60">MC-{profile.id.replace(/-/g, '').slice(0, 5).toUpperCase()}</span>
+							<span class="font-mono text-[0.65rem] text-maroon/60">{profile.profile_number ?? '—'}</span>
 						</div>
 						{#if data.user?.is_admin}
 							<a

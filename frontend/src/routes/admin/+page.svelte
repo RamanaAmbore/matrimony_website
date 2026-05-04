@@ -603,6 +603,7 @@
 						<thead>
 							<tr class="border-b border-gold/30 bg-[#6b0f1a] text-left text-xs font-bold text-cream uppercase tracking-wider">
 								<th class="px-4 py-3">Name</th>
+								<th class="px-4 py-3">ID</th>
 								<th class="px-4 py-3">Gender</th>
 								<th class="px-4 py-3">Status</th>
 								<th class="px-4 py-3">City · State</th>
@@ -615,6 +616,7 @@
 							{#each allProfiles.filter(p => profileStatusFilter === 'all' || p.status === profileStatusFilter) as p (p.id)}
 								<tr class="hover:bg-cream/40 transition-colors">
 									<td class="px-4 py-3 font-medium text-ink">{p.first_name} {p.last_name}</td>
+									<td class="px-4 py-3 font-mono text-xs text-ink/50">{p.profile_number ?? '—'}</td>
 									<td class="px-4 py-3 text-ink/70 capitalize">{p.gender}</td>
 									<td class="px-4 py-3">
 										<span class={statusBadgeClass(p.status)}>{p.status}</span>

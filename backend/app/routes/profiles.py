@@ -1,6 +1,7 @@
 """Profile CRUD routes."""
 
 import asyncio
+import random
 import uuid
 from datetime import date, datetime, time
 from typing import Any
@@ -80,6 +81,7 @@ def _serialize_full_profile(profile: Profile, request: Request) -> dict[str, Any
     photos = [_serialize_photo(p, request, include_passport=True) for p in profile.photos]
     return {
         "id": str(profile.id),
+        "profile_number": profile.profile_number,
         "owner_user_id": str(profile.owner_user_id),
         "gender": profile.gender.value,
         "first_name": profile.first_name,
@@ -234,6 +236,16 @@ def _validate_free_text_fields(data: ProfileCreateRequest | ProfilePatchRequest)
         _require_ascii(value, field)
 
 
+async def _generate_profile_number(db: AsyncSession) -> str:
+    """Generate unique TC-###### profile number."""
+    for _ in range(10):  # retry up to 10 times on collision
+        num = f"TC-{random.randint(0, 999999):06d}"
+        result = await db.execute(select(Profile).where(Profile.profile_number == num))
+        if result.scalar_one_or_none() is None:
+            return num
+    raise RuntimeError("Could not generate unique profile number after 10 attempts")
+
+
 # ---------------------------------------------------------------------------
 # Controller
 # ---------------------------------------------------------------------------
@@ -295,8 +307,10 @@ class ProfileController(Controller):
         # Extract keywords from partner_expectations
         keywords = extract_keywords(data.partner_expectations) if data.partner_expectations else []
 
+        profile_number = await _generate_profile_number(db)
         profile = Profile(
             id=uuid.uuid4(),
+            profile_number=profile_number,
             owner_user_id=uuid.UUID(user["sub"]),
             gender=_parse_enum(GenderEnum, data.gender, "gender"),
             first_name=data.first_name,

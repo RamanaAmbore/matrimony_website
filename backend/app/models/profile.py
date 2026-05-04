@@ -108,6 +108,7 @@ class Profile(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
+    profile_number: Mapped[str] = mapped_column(String(9), unique=True, nullable=False, default='')
     owner_user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
