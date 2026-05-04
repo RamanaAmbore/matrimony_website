@@ -238,9 +238,9 @@ def _validate_free_text_fields(data: ProfileCreateRequest | ProfilePatchRequest)
 
 
 async def _generate_profile_number(db: AsyncSession) -> str:
-    """Generate unique TC-###### profile number."""
+    """Generate unique PR-###### profile number (9 chars total)."""
     for _ in range(10):  # retry up to 10 times on collision
-        num = f"TC-{random.randint(0, 999999):06d}"
+        num = f"PR-{random.randint(0, 999999):06d}"
         result = await db.execute(select(Profile).where(Profile.profile_number == num))
         if result.scalar_one_or_none() is None:
             return num

@@ -167,11 +167,11 @@
 					<label for="f-gender" class="label">
 						Looking for · <span lang="te">వెతుకుతున్నది</span>
 					</label>
-					<select id="f-gender" class="input text-sm" bind:value={gender}>
-						<option value="">Any</option>
-						<option value="bride">Bride</option>
-						<option value="groom">Groom</option>
-					</select>
+					<Combobox id="f-gender" bind:value={gender} options={[
+						{ value: '', label: 'Any' },
+						{ value: 'bride', label: 'Bride' },
+						{ value: 'groom', label: 'Groom' }
+					]} placeholder="Any" />
 				</div>
 
 				<!-- Age range — dual-handle slider 18–60 -->
@@ -216,23 +216,13 @@
 				<!-- Nakshatram -->
 				<div>
 					<label for="f-naksh" class="label">Nakshatram · <span lang="te">నక్షత్రం</span></label>
-					<select id="f-naksh" class="input text-sm" bind:value={nakshatram}>
-						<option value="">Any</option>
-						{#each NAKSHATRAS as n}
-							<option value={n}>{n}</option>
-						{/each}
-					</select>
+					<Combobox id="f-naksh" bind:value={nakshatram} options={['', ...NAKSHATRAS]} placeholder="Any" />
 				</div>
 
 				<!-- Rashi -->
 				<div>
 					<label for="f-rashi" class="label">Rashi · <span lang="te">రాశి</span></label>
-					<select id="f-rashi" class="input text-sm" bind:value={rashi}>
-						<option value="">Any</option>
-						{#each RASHIS as r}
-							<option value={r}>{r}</option>
-						{/each}
-					</select>
+					<Combobox id="f-rashi" bind:value={rashi} options={['', ...RASHIS]} placeholder="Any" />
 				</div>
 
 				<!-- City -->
@@ -271,22 +261,22 @@
 				<!-- Manglik -->
 				<div>
 					<label for="f-manglik" class="label">Manglik · <span lang="te">మాంగళిక్</span></label>
-					<select id="f-manglik" class="input text-sm" bind:value={manglik}>
-						<option value="">Any</option>
-						<option value="yes">Yes</option>
-						<option value="no">No</option>
-						<option value="partial">Partial</option>
-						<option value="unknown">Unknown</option>
-					</select>
+					<Combobox id="f-manglik" bind:value={manglik} options={[
+						{ value: '', label: 'Any' },
+						{ value: 'yes', label: 'Yes' },
+						{ value: 'no', label: 'No' },
+						{ value: 'partial', label: 'Partial' },
+						{ value: 'unknown', label: 'Unknown' }
+					]} placeholder="Any" />
 				</div>
 
 				<!-- Diet -->
 				<div>
 					<label for="f-diet" class="label">Diet · <span lang="te">ఆహారం</span></label>
-					<select id="f-diet" class="input text-sm" bind:value={diet}>
-						<option value="">Any</option>
-						{#each DIET_OPTIONS as d}<option value={d.value}>{d.label}</option>{/each}
-					</select>
+					<Combobox id="f-diet" bind:value={diet} options={[
+						{ value: '', label: 'Any' },
+						...DIET_OPTIONS.map((d) => ({ value: d.value, label: d.label }))
+					]} placeholder="Any" />
 				</div>
 
 				<button

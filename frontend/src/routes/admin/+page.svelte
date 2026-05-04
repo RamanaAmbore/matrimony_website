@@ -88,38 +88,6 @@
 	// Content section anchor for scroll-into-view on tab change
 	let contentSectionEl = $state<HTMLElement | undefined>();
 
-	// ── Broadcast Email state ─────────────────────────────────────────────────────
-
-	let broadcastSubject = $state('');
-	let broadcastBody = $state('');
-	let broadcastVerifiedOnly = $state(true);
-	let broadcastApprovedOnly = $state(false);
-	let broadcastSending = $state(false);
-	let broadcastResult = $state<{ sent: number; failed: number } | null>(null);
-
-	async function sendBroadcast() {
-		if (!broadcastSubject.trim() || !broadcastBody.trim()) {
-			toastStore.error('Subject and message body are required.');
-			return;
-		}
-		broadcastSending = true;
-		broadcastResult = null;
-		try {
-			const result = await adminApi.broadcastEmail({
-				subject: broadcastSubject.trim(),
-				body_html: broadcastBody.trim(),
-				filter_verified_only: broadcastVerifiedOnly,
-				filter_approved_only: broadcastApprovedOnly
-			});
-			broadcastResult = result;
-			toastStore.success(`Broadcast sent: ${result.sent} delivered, ${result.failed} failed.`);
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message : 'Broadcast failed.');
-		} finally {
-			broadcastSending = false;
-		}
-	}
-
 	// ── Mount: dashboard only — full lists fetched lazily on chip click ──────────
 
 	onMount(async () => {
@@ -673,6 +641,32 @@
 			</div>
 
 		</div>
+
+		<!-- ── Quick-action row: Settings + Broadcast ─────────────────────── -->
+		<div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+			<a
+				href="/admin/settings"
+				class="flex items-center gap-3 rounded-xl border border-gold/40 bg-white px-4 py-3 shadow-sm transition-all hover:border-maroon/40 hover:shadow-md"
+			>
+				<ShieldCheck size={20} class="shrink-0 text-gold" />
+				<div>
+					<p class="font-serif font-semibold text-maroon">Settings</p>
+					<p class="text-xs text-ink/50">SMTP, photo limits, approval flags</p>
+				</div>
+				<span class="ml-auto text-sm text-ink/30">→</span>
+			</a>
+			<a
+				href="/admin/broadcast"
+				class="flex items-center gap-3 rounded-xl border border-gold/40 bg-white px-4 py-3 shadow-sm transition-all hover:border-maroon/40 hover:shadow-md"
+			>
+				<Inbox size={20} class="shrink-0 text-sky-500" />
+				<div>
+					<p class="font-serif font-semibold text-maroon">Broadcast Email</p>
+					<p class="text-xs text-ink/50">Send to verified / approved users</p>
+				</div>
+				<span class="ml-auto text-sm text-ink/30">→</span>
+			</a>
+		</div>
 	{/if}
 
 	<!-- anchor for scroll-into-view when stat card is clicked -->
@@ -766,47 +760,6 @@
 			{/if}
 
 		{/if}
-
-		<!-- Broadcast Email section — always visible on Users tab regardless of filter -->
-		<div class="mt-8 rounded-lg border border-gold/30 bg-white p-5 shadow-sm">
-			<h3 class="font-serif text-lg font-semibold text-maroon mb-4">Send Broadcast Email</h3>
-			{#if broadcastResult}
-				<div class="mb-3 rounded border border-green-300 bg-green-50 px-4 py-2 text-sm text-green-800">
-					Sent: {broadcastResult.sent} · Failed: {broadcastResult.failed}
-				</div>
-			{/if}
-			<div class="space-y-3">
-				<input
-					type="text"
-					class="input w-full"
-					placeholder="Subject"
-					bind:value={broadcastSubject}
-				/>
-				<textarea
-					class="input w-full h-28 resize-y font-mono text-sm"
-					placeholder="HTML body…"
-					bind:value={broadcastBody}
-				></textarea>
-				<div class="flex flex-wrap items-center gap-4">
-					<label class="flex items-center gap-2 text-sm">
-						<input type="checkbox" bind:checked={broadcastVerifiedOnly} class="rounded" />
-						Verified emails only
-					</label>
-					<label class="flex items-center gap-2 text-sm">
-						<input type="checkbox" bind:checked={broadcastApprovedOnly} class="rounded" />
-						Approved users only
-					</label>
-					<button
-						class="btn-primary ml-auto px-6"
-						disabled={broadcastSending}
-						onclick={sendBroadcast}
-					>
-						{#if broadcastSending}<Loader size={14} class="inline animate-spin mr-1" />{/if}
-						Send Broadcast
-					</button>
-				</div>
-			</div>
-		</div>
 
 	<!-- ── All Profiles tab ────────────────────────────────────────────────────── -->
 	{:else if activeTab === 'profiles'}

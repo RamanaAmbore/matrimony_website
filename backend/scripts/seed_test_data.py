@@ -239,10 +239,10 @@ async def main():
             demo = _profile_demographics(i, gender)
             profile = Profile(
                 id=uuid.uuid4(),
-                # Use the real TC-###### format (matching production
+                # Use the real PR-###### format (matching production
                 # generator). Pad with the seed index so values are
                 # unique within this batch.
-                profile_number=f"TC-{(run_tag + i) % 1_000_000:06d}",
+                profile_number=f"PR-{(run_tag + i) % 1_000_000:06d}",
                 owner_user_id=user.id,
                 gender=gender,
                 status=statuses[i],

@@ -305,6 +305,9 @@
 					<a href="/admin/settings" class={drawerLinkClass('/admin/settings')} aria-current={isActive('/admin/settings') ? 'page' : undefined} onclick={closeDrawer}>
 						Settings
 					</a>
+					<a href="/admin/broadcast" class={drawerLinkClass('/admin/broadcast')} aria-current={isActive('/admin/broadcast') ? 'page' : undefined} onclick={closeDrawer}>
+						Broadcast Email
+					</a>
 				{/if}
 				<div class="my-2 h-px bg-gold/20"></div>
 				<div class="px-3 py-1 flex flex-wrap items-center gap-1.5" title={user.email}>

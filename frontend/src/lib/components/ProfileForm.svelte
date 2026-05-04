@@ -1017,16 +1017,40 @@
 						{/if}
 					{/if}
 
-					<!-- Section footer: Save / Submit button -->
-					<div class="mt-4 flex items-center justify-end gap-3 border-t border-gold/10 pt-4">
+					<!-- Section footer: Cancel / Save Draft / Next or Submit -->
+					<div class="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-gold/30 pt-4">
+						<!-- Cancel — always left-most -->
+						<a href="/dashboard" class="btn-secondary text-sm px-4 py-2 mr-auto">
+							{T.cancel.en} · <span lang="te">{T.cancel.te}</span>
+						</a>
 						{#if i === 8}
+							<!-- Last step: Save Draft + Submit for Approval -->
+							<button
+								type="button"
+								onclick={() => saveSection(i)}
+								class="btn-secondary text-sm px-4 py-2"
+								disabled={submitting}
+							>
+								{submitting && activeSection === i ? 'Saving…' : T.save.en + ' · ' + T.save.te}
+							</button>
 							{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
-								<button type="button" onclick={handleSubmitForApproval} class="btn-primary px-8" disabled={!isSectionValid(8) || submittingForApproval}>
+								<button
+									type="button"
+									onclick={handleSubmitForApproval}
+									class="btn-primary text-sm px-4 py-2"
+									disabled={!isSectionValid(8) || submittingForApproval}
+								>
 									{submittingForApproval ? 'Submitting…' : 'Submit for Approval'}
 								</button>
 							{/if}
 						{:else}
-							<button type="button" onclick={() => saveSection(i)} class="btn-primary px-6" disabled={!isSectionValid(i) || submitting}>
+							<!-- Intermediate steps: Save Draft (saves + advances) -->
+							<button
+								type="button"
+								onclick={() => saveSection(i)}
+								class="btn-primary text-sm px-4 py-2"
+								disabled={!isSectionValid(i) || submitting}
+							>
 								{submitting && activeSection === i ? 'Saving…' : 'Save & Continue →'}
 							</button>
 						{/if}
@@ -1898,7 +1922,7 @@
 	</details>
 
 	<!-- ── Actions ────────────────────────────────────────────────────────────── -->
-	<div class="flex flex-wrap items-center justify-end gap-3 pb-8">
+	<div class="flex flex-wrap items-center justify-end gap-2 border-t border-gold/30 pb-8 pt-4">
 		{#if errors._photos}
 			<p class="w-full text-sm text-vermilion" data-error="true">{errors._photos}</p>
 		{/if}
@@ -1907,21 +1931,24 @@
 				{#if autoSaveStatus === 'pending' || autoSaveStatus === 'saving'}Saving…{:else}Saved ✓{/if}
 			</span>
 		{/if}
-		<a href="/dashboard" class="btn-secondary">
+		<!-- Cancel — left-most -->
+		<a href="/dashboard" class="btn-secondary text-sm px-4 py-2 mr-auto">
 			{T.cancel.en} · <span lang="te">{T.cancel.te}</span>
 		</a>
-		<button type="submit" class="btn-secondary px-8" disabled={submitting}>
+		<!-- Save Draft — secondary, middle -->
+		<button type="submit" class="btn-secondary text-sm px-4 py-2" disabled={submitting}>
 			{#if submitting}
 				Saving…
 			{:else}
 				{T.save.en} · <span lang="te">{T.save.te}</span>
 			{/if}
 		</button>
+		<!-- Submit for Approval — primary, right-most -->
 		{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
 			<button
 				type="button"
 				onclick={handleSubmitForApproval}
-				class="btn-primary flex items-center gap-2 px-8"
+				class="btn-primary text-sm px-4 py-2"
 				disabled={submittingForApproval}
 			>
 				{#if submittingForApproval}
