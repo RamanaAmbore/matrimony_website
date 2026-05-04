@@ -203,6 +203,7 @@
 			const updated = await adminApi.users.approve(u.user_id);
 			allUsers = allUsers!.map(x => x.user_id === u.user_id ? updated : x);
 			selectedUser = updated;
+			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
 			toastStore.success('User approved');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -217,6 +218,7 @@
 			const updated = await adminApi.users.unapprove(u.user_id);
 			allUsers = allUsers!.map(x => x.user_id === u.user_id ? updated : x);
 			selectedUser = updated;
+			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
 			toastStore.success('Approval revoked');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -231,6 +233,7 @@
 			await adminApi.users.promote(u.user_id);
 			allUsers = allUsers!.map(x => x.user_id === u.user_id ? { ...x, is_admin: true } : x);
 			selectedUser = { ...u, is_admin: true };
+			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
 			toastStore.success('Promoted to admin');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -245,6 +248,7 @@
 			await adminApi.users.verifyEmail(u.user_id);
 			allUsers = allUsers!.map(x => x.user_id === u.user_id ? { ...x, email_verified: true } : x);
 			selectedUser = { ...u, email_verified: true };
+			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
 			toastStore.success('Email verified');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -260,6 +264,7 @@
 			await adminApi.profiles.approve(selectedProfile.id);
 			allProfiles = allProfiles!.map(p => p.id === selectedProfile!.id ? { ...p, status: 'approved' as const } : p);
 			selectedProfile = { ...selectedProfile, status: 'approved' };
+			profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
 			toastStore.success('Profile approved');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -277,6 +282,7 @@
 			selectedProfile = { ...selectedProfile, status: 'rejected' };
 			profileRejectOpen = false;
 			profileRejectNote = '';
+			profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
 			toastStore.success('Profile rejected');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -292,6 +298,7 @@
 			await adminApi.requests.approve(selectedRequest.id);
 			allRequests = allRequests!.map(r => r.id === selectedRequest!.id ? { ...r, status: 'approved' as const } : r);
 			selectedRequest = { ...selectedRequest, status: 'approved' };
+			requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
 			toastStore.success('Request approved — email sent');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -309,6 +316,7 @@
 			selectedRequest = { ...selectedRequest, status: 'rejected' };
 			requestRejectOpen = false;
 			requestRejectNote = '';
+			requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
 			toastStore.success('Request rejected');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -409,21 +417,43 @@
 
 	// ── Helpers ──────────────────────────────────────────────────────────────────
 
+	function computeUsersRows(f: typeof userFilter): User[] {
+		return !allUsers ? [] :
+			f === 'unverified' ? allUsers.filter((u: any) => !u.email_verified) :
+			f === 'verified'   ? allUsers.filter((u: any) =>  u.email_verified) :
+			(allUsers ?? []);
+	}
+
+	function computeProfilesRows(f: typeof profileStatusFilter): Profile[] {
+		return !allProfiles ? [] :
+			(!f || f === 'all') ? allProfiles :
+			allProfiles.filter(p => p.status === f);
+	}
+
+	function computeRequestsRows(f: typeof requestStatusFilter): DetailRequest[] {
+		return !allRequests ? [] :
+			(!f || f === 'all') ? allRequests :
+			allRequests.filter(r => r.status === f);
+	}
+
 	function applyUserFilter(f: typeof userFilter) {
 		userFilter = f;
 		selectedUser = null;
+		usersGridApi?.setGridOption('rowData', [...computeUsersRows(f)]);
 	}
 
 	function applyProfileFilter(f: typeof profileStatusFilter) {
 		profileStatusFilter = f;
 		selectedProfile = null;
 		profileRejectOpen = false;
+		profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(f)]);
 	}
 
 	function applyRequestFilter(f: typeof requestStatusFilter) {
 		requestStatusFilter = f;
 		selectedRequest = null;
 		requestRejectOpen = false;
+		requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(f)]);
 	}
 
 	// ── Grid actions (use:action pattern) ────────────────────────────────────────
@@ -459,8 +489,7 @@
 		makeGrid(data);
 		return {
 			update: (newData: User[]) => {
-				selectedUser = null;
-				makeGrid(newData);
+				usersGridApi?.setGridOption('rowData', [...newData]);
 			},
 			destroy: () => { usersGridApi?.destroy(); usersGridApi = undefined; }
 		};
@@ -499,9 +528,7 @@
 		makeGrid(data);
 		return {
 			update: (newData: Profile[]) => {
-				selectedProfile = null;
-				profileRejectOpen = false;
-				makeGrid(newData);
+				profilesGridApi?.setGridOption('rowData', [...newData]);
 			},
 			destroy: () => { profilesGridApi?.destroy(); profilesGridApi = undefined; }
 		};
@@ -540,9 +567,7 @@
 		makeGrid(data);
 		return {
 			update: (newData: DetailRequest[]) => {
-				selectedRequest = null;
-				requestRejectOpen = false;
-				makeGrid(newData);
+				requestsGridApi?.setGridOption('rowData', [...newData]);
 			},
 			destroy: () => { requestsGridApi?.destroy(); requestsGridApi = undefined; }
 		};
