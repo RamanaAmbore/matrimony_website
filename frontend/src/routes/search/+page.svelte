@@ -368,6 +368,7 @@
 										role="presentation"
 										class="h-full w-full object-cover blur-sm scale-105 group-hover:blur-[6px] transition-all duration-300"
 										loading="lazy"
+										decoding="async"
 									/>
 								{:else}
 									<div class="flex h-full items-center justify-center text-gold/30">

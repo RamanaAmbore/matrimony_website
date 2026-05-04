@@ -112,6 +112,8 @@
 							src={isOwner && primaryPhoto.passport_url ? primaryPhoto.passport_url : primaryPhoto.blurred_url}
 							alt="{profile.first_name}'s photo"
 							class="h-full w-full object-cover {!isOwner ? 'blur-sm' : ''}"
+							loading="lazy"
+							decoding="async"
 						/>
 					{:else}
 						<div class="flex h-full items-center justify-center text-gold/40">

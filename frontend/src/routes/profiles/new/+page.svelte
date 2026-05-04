@@ -96,6 +96,7 @@
 			wizardMode={true}
 			profileId={savedProfile?.id ?? ''}
 			autoSave={false}
+			isProd={data.siteInfo?.is_prod ?? true}
 		/>
 	</div>
 </div>

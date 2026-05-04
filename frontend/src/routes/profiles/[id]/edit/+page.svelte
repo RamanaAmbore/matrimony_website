@@ -119,6 +119,7 @@
 				profileStatus={profile.status}
 				{photoCount}
 				autoSave={false}
+				isProd={data.siteInfo?.is_prod ?? true}
 			/>
 		</div>
 	{/if}

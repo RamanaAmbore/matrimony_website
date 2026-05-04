@@ -24,7 +24,8 @@
 		{
 			title: 'System',
 			fields: [
-				{ key: 'owner_email', label: 'Owner Email', description: 'Admin email — receives profile request notifications', type: 'email' }
+				{ key: 'owner_email', label: 'Owner Email', description: 'Admin email — receives profile request notifications', type: 'email' },
+				{ key: 'is_prod', label: 'Production mode', description: 'When OFF: relaxed validation, "TEST MODE" prefixed in emails/Telegram, duplicate email/phone allowed for testing. Turn ON for live site.', type: 'boolean' }
 			]
 		},
 		{

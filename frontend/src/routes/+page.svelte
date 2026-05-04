@@ -21,6 +21,7 @@
 		role="presentation"
 		class="absolute inset-0 h-full w-full object-cover object-left"
 		fetchpriority="high"
+		decoding="async"
 	/>
 
 	<!-- Warm gradient overlay — keeps photo visible while ensuring text legibility -->

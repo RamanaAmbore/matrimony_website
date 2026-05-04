@@ -38,7 +38,8 @@
 		photoCount = undefined,
 		autoSave = false,
 		wizardMode = false,
-		profileId = undefined
+		profileId = undefined,
+		isProd = true
 	}: {
 		initialData?: Partial<Profile>;
 		onSubmit: (data: Partial<ProfilePayload>) => void;
@@ -51,6 +52,7 @@
 		autoSave?: boolean;
 		wizardMode?: boolean;
 		profileId?: string;
+		isProd?: boolean;
 	} = $props();
 
 	// ── Form state — seeded once from initialData ─────────────────────────────
@@ -308,28 +310,30 @@
 
 	function validateSubmit(): boolean {
 		const e: Record<string, string> = {};
-		// Basic
+		// Basic — always required
 		if (!first_name.trim()) e.first_name = 'Required';
 		if (!dob) e.dob = 'Required';
 		else {
 			const age = new Date().getFullYear() - new Date(dob).getFullYear();
 			if (age < 18) e.dob = 'Must be at least 18 years old';
 		}
-		if (!marital_status) e.marital_status = 'Required';
-		if (!surname_clan.trim()) e.surname_clan = 'Required';
-		// Astrology — all fields optional, no validation required
-		// Education & Career
-		if (!education.trim()) e.education = 'Required';
-		if (!occupation.trim()) e.occupation = 'Required';
-		// Family
-		if (!father_name.trim()) e.father_name = 'Required for submission';
-		if (!mother_name.trim()) e.mother_name = 'Required for submission';
-		if (!family_type) e.family_type = 'Required';
-		if (!native_place.trim()) e.native_place = 'Required';
-		// Location
-		if (!city.trim()) e.city = 'Required';
-		// About
-		if (!about.trim()) e.about = 'Required';
+		if (isProd) {
+			// Full validation — production mode
+			if (!marital_status) e.marital_status = 'Required';
+			if (!surname_clan.trim()) e.surname_clan = 'Required';
+			// Education & Career
+			if (!education.trim()) e.education = 'Required';
+			if (!occupation.trim()) e.occupation = 'Required';
+			// Family
+			if (!father_name.trim()) e.father_name = 'Required for submission';
+			if (!mother_name.trim()) e.mother_name = 'Required for submission';
+			if (!family_type) e.family_type = 'Required';
+			if (!native_place.trim()) e.native_place = 'Required';
+			// Location
+			if (!city.trim()) e.city = 'Required';
+			// About
+			if (!about.trim()) e.about = 'Required';
+		}
 		if (about.length > 500) e.about = 'Max 500 characters';
 		if (partner_expectations.length > 800) e.partner_expectations = 'Max 800 characters';
 		// Photo — use wizardPhotoCount when in wizard mode, else photoCount prop

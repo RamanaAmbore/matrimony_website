@@ -21,6 +21,7 @@ from app.routes.search import SearchController
 from app.routes.requests import RequestController
 from app.routes.admin import AdminController
 from app.routes.media import serve_media
+from app.routes.site import SiteController
 from app.routes.telegram import TelegramRouter
 
 logging.basicConfig(
@@ -85,6 +86,7 @@ app = Litestar(
         RequestController,
         AdminController,
         serve_media,
+        SiteController,
         TelegramRouter,
     ],
     middleware=[JWTSessionMiddleware()],

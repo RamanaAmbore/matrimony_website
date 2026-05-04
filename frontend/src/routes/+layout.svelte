@@ -11,6 +11,7 @@
 	let { data, children } = $props();
 
 	let user = $derived<User | null>(data.user ?? null);
+	let siteInfo = $derived(data.siteInfo ?? { is_prod: true, site_url: '' });
 	let drawerOpen = $state(false);
 	let drawerEl = $state<HTMLElement | null>(null);
 
@@ -190,7 +191,19 @@
 						{T.admin.en} <span lang="te">{T.admin.te}</span>
 					</a>
 				{/if}
-				<span class="hidden font-mono text-xs text-cream/50 xl:inline" title={user.email}>@{user.user_handle}</span>
+				<span class="hidden xl:inline" title={user.email}>
+					<span class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 {user.is_admin ? 'border-cream/30 bg-maroon/20' : 'border-cream/20'}">
+						<span class="font-mono text-xs text-cream/70">{user.user_handle}</span>
+						{#if user.is_admin}
+							<span class="rounded px-1 py-px text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
+						{:else}
+							<span class="rounded px-1 py-px text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
+						{/if}
+						{#if !siteInfo.is_prod}
+							<span class="rounded px-1 py-px text-[10px] font-semibold leading-none bg-vermilion text-cream">Test mode</span>
+						{/if}
+					</span>
+				</span>
 				<button
 					onclick={logout}
 					class="whitespace-nowrap rounded border border-cream/50 px-3 py-0.5 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
@@ -294,7 +307,17 @@
 					</a>
 				{/if}
 				<div class="my-2 h-px bg-gold/20"></div>
-				<p class="px-3 py-1 font-mono text-sm text-ink/50" title={user.email}>@{user.user_handle}</p>
+				<div class="px-3 py-1 flex flex-wrap items-center gap-1.5" title={user.email}>
+					<span class="font-mono text-sm text-ink/60">{user.user_handle}</span>
+					{#if user.is_admin}
+						<span class="rounded px-1.5 py-px text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
+					{:else}
+						<span class="rounded px-1.5 py-px text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
+					{/if}
+					{#if !siteInfo.is_prod}
+						<span class="rounded px-1.5 py-px text-[10px] font-semibold leading-none bg-vermilion text-cream">Test mode</span>
+					{/if}
+				</div>
 				<button
 					onclick={logout}
 					class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-vermilion hover:bg-vermilion/10 focus-visible:outline-2 focus-visible:outline-tangerine"
@@ -327,6 +350,7 @@
 			alt=""
 			class="h-full w-full object-cover object-left opacity-55"
 			loading="lazy"
+			decoding="async"
 		/>
 		<!-- Cream wash keeps text and forms readable while letting the photo show through -->
 		<div class="absolute inset-0 bg-cream/72"></div>

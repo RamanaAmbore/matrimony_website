@@ -39,7 +39,8 @@ def _timestamps() -> dict[str, str]:
 def _render(template_name: str, **ctx: object) -> str:
     tmpl = _jinja_env.get_template(template_name)
     site_url = settings_service.get_str("site_url", "https://marathakalyanam.com").rstrip("/")
-    return tmpl.render(site_url=site_url, **_timestamps(), **ctx)
+    is_test_mode = not settings_service.get_bool("is_prod", False)
+    return tmpl.render(site_url=site_url, is_test_mode=is_test_mode, **_timestamps(), **ctx)
 
 
 async def _send(
@@ -49,6 +50,8 @@ async def _send(
     attachments: list[tuple[bytes, str, str]] | None = None,
 ) -> None:
     """Send an email. Falls back to stdout if SMTP not configured."""
+    if not settings_service.get_bool("is_prod", False):
+        subject = f"[TEST MODE] {subject}"
     smtp_host = settings_service.get_str("smtp_host", "localhost")
     smtp_port = settings_service.get_int("smtp_port", 1025)
     smtp_user = settings_service.get_str("smtp_user", "")

@@ -200,6 +200,11 @@ export interface Setting {
 	description?: string;
 }
 
+export interface SiteInfo {
+	is_prod: boolean;
+	site_url: string;
+}
+
 export interface AdminStats {
 	total_users: number;
 	total_profiles: number;
@@ -345,6 +350,14 @@ function buildQuery(params: Record<string, unknown>): string {
 	const s = q.toString();
 	return s ? `?${s}` : '';
 }
+
+// ─── Site ─────────────────────────────────────────────────────────────────────
+
+export const site = {
+	async info(): Promise<SiteInfo> {
+		return request('/api/site/info');
+	}
+};
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
