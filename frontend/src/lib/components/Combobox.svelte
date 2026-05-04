@@ -131,7 +131,7 @@
 					role="option"
 					aria-selected={value === opt}
 					class="w-full px-3 py-2 text-left text-sm transition-colors {value === opt ? 'bg-maroon text-cream font-medium' : 'text-ink hover:bg-saffron/15 hover:text-maroon'}"
-					onmousedown|preventDefault={() => select(opt)}
+					onmousedown={(e) => { e.preventDefault(); select(opt); }}
 				>
 					{opt}
 				</button>
