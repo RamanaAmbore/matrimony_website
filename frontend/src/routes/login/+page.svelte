@@ -26,10 +26,11 @@
 
 		loading = true;
 		try {
-			await auth.login(identifier.trim(), password);
+			const me = await auth.login(identifier.trim(), password);
 			await invalidateAll();
 			toastStore.success('Welcome back!');
-			goto('/dashboard');
+			// Admins (incl. super) land on the dashboard; everyone else on /dashboard (their profiles).
+			goto(me.is_admin ? '/admin' : '/dashboard');
 		} catch (err) {
 			if (err instanceof ApiError) {
 				if (err.status === 401) {

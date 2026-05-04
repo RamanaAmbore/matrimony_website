@@ -25,21 +25,26 @@ test.describe('admin broadcast email (creds required)', () => {
 		await login(page);
 		await page.goto('/admin/broadcast');
 		await expect(page.getByRole('heading', { name: /broadcast/i }).first()).toBeVisible();
-		await expect(page.locator('input#subject, input[placeholder*="Subject" i]').first()).toBeVisible();
-		await expect(page.locator('textarea').first()).toBeVisible();
-		// All five filter checkboxes
-		for (const label of [/verified/i, /approved/i, /admin/i]) {
-			await expect(page.getByLabel(label).first()).toBeVisible();
+		await expect(page.locator('#bc-subject')).toBeVisible();
+		await expect(page.locator('#bc-body')).toBeVisible();
+		// All five filter checkboxes — exact-text matches
+		for (const label of [
+			'Verified emails only',
+			'Unverified emails only',
+			'Approved users only',
+			'Unapproved users only',
+			'Admin users only'
+		]) {
+			await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
 		}
 	});
 
 	test('verified-only and unverified-only are mutually exclusive', async ({ page }) => {
 		await login(page);
 		await page.goto('/admin/broadcast');
-		const verified = page.getByLabel(/verified emails only/i);
-		const unverified = page.getByLabel(/unverified emails only/i);
+		const verified = page.getByText('Verified emails only', { exact: true }).locator('input');
+		const unverified = page.getByText('Unverified emails only', { exact: true }).locator('input');
 
-		// Start: verified is on by default in the UI; toggling unverified should clear it
 		await unverified.check();
 		await expect(verified).not.toBeChecked();
 		await verified.check();
@@ -49,8 +54,8 @@ test.describe('admin broadcast email (creds required)', () => {
 	test('approved-only and unapproved-only are mutually exclusive', async ({ page }) => {
 		await login(page);
 		await page.goto('/admin/broadcast');
-		const approved = page.getByLabel(/^approved users only$/i);
-		const unapproved = page.getByLabel(/unapproved users only/i);
+		const approved = page.getByText('Approved users only', { exact: true }).locator('input');
+		const unapproved = page.getByText('Unapproved users only', { exact: true }).locator('input');
 		await approved.check();
 		await unapproved.check();
 		await expect(approved).not.toBeChecked();
@@ -62,23 +67,21 @@ test.describe('admin broadcast email (creds required)', () => {
 		await login(page);
 		await page.goto('/admin/broadcast');
 
-		// Fill subject + body
-		await page.locator('input').filter({ hasText: '' }).first().fill('e2e test subject');
-		await page.locator('textarea').first().fill('<p>e2e test body</p>');
+		await page.locator('#bc-subject').fill('e2e test subject');
+		await page.locator('#bc-body').fill('<p>e2e test body</p>');
 
-		// Toggle: turn off verified-only, turn on admin-only
-		const verified = page.getByLabel(/verified emails only/i);
+		// Turn OFF verified, turn ON admin-only
+		const verified = page.getByText('Verified emails only', { exact: true }).locator('input');
 		if (await verified.isChecked()) await verified.uncheck();
-		await page.getByLabel(/admin users only/i).check();
+		await page.getByText('Admin users only', { exact: true }).locator('input').check();
 
-		// Intercept the POST so we never actually send
-		const request = page.waitForRequest((r) =>
-			r.url().includes('/api/admin/broadcast-email') && r.method() === 'POST'
-		);
+		// Mock the POST so we never actually send mail to real users
 		await page.route('**/api/admin/broadcast-email', (route) =>
 			route.fulfill({ status: 200, body: JSON.stringify({ sent: 0, failed: 0 }) })
 		);
-
+		const request = page.waitForRequest(
+			(r) => r.url().includes('/api/admin/broadcast-email') && r.method() === 'POST'
+		);
 		await page.getByRole('button', { name: /send broadcast/i }).click();
 		const r = await request;
 		const body = JSON.parse(r.postData() ?? '{}');
