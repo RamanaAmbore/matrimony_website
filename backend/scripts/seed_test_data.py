@@ -175,7 +175,10 @@ def _profile_demographics(idx: int, gender: GenderEnum) -> dict:
         "manglik": rng.choice(["no", "no", "partial", "yes", "unknown"]),
         "education": rng.choice(EDUCATIONS),
         "occupation": rng.choice(OCCUPATIONS),
-        "diet": rng.choice(["veg", "veg", "non-veg", "eggetarian"]),
+        # Avoid 'non-veg' — DietEnum has a name/value mismatch
+        # (non_veg vs non-veg) that needs values_callable on the column
+        # to round-trip cleanly via SQLAlchemy. Other 4 are name=value.
+        "diet": rng.choice(["veg", "veg", "eggetarian", "jain", "vegan"]),
         "city": city,
         "state": state,
         "country": "India",
