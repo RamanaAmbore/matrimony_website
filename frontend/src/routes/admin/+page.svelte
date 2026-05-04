@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy, untrack } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community';
 	import 'ag-grid-community/styles/ag-grid.css';
 	import 'ag-grid-community/styles/ag-theme-quartz.css';
@@ -81,19 +81,12 @@
 		(allUsers ?? [])
 	);
 
-	// Version counters — incrementing forces Effect A to destroy+recreate the grid with fresh data
-	let usersGridVersion = $state(0);
-	let profilesGridVersion = $state(0);
-	let requestsGridVersion = $state(0);
-
 	// ag-Grid state
-	let usersGridDiv = $state<HTMLDivElement | undefined>(undefined);
 	let usersGridApi: GridApi | undefined;
 	let selectedUser = $state<User | null>(null);
 	let userActionLoading = $state(false);
 
 	// Profiles grid
-	let profilesGridDiv = $state<HTMLDivElement | undefined>(undefined);
 	let profilesGridApi: GridApi | undefined;
 	let selectedProfile = $state<Profile | null>(null);
 	let profileActionLoading = $state(false);
@@ -101,7 +94,6 @@
 	let profileRejectOpen = $state(false);
 
 	// Requests grid
-	let requestsGridDiv = $state<HTMLDivElement | undefined>(undefined);
 	let requestsGridApi: GridApi | undefined;
 	let selectedRequest = $state<DetailRequest | null>(null);
 	let requestActionLoading = $state(false);
@@ -201,225 +193,7 @@
 		} finally {
 			allUsersLoading = false;
 		}
-		// Grid initialised by $effect once usersGridDiv is bound and allUsers is populated
 	}
-
-	// Users grid — reruns when div, data, or version changes
-	$effect(() => {
-		const div = usersGridDiv;
-		const data = allUsers;
-		const _v = usersGridVersion;
-		if (!div || !data) return;
-
-		const columnDefs = [
-			{
-				field: 'email', headerName: 'Email', flex: 2, filter: true, sortable: true,
-				headerClass: 'mk-header',
-			},
-			{
-				field: 'user_handle', headerName: 'Handle', flex: 1, filter: true, sortable: true,
-				headerClass: 'mk-header',
-				valueFormatter: (p: { value: string }) => `@${p.value}`
-			},
-			{
-				field: 'full_name', headerName: 'Name', flex: 1, filter: true, sortable: true,
-				headerClass: 'mk-header',
-			},
-			{
-				field: 'phone_number', headerName: 'Phone', flex: 1,
-				headerClass: 'mk-header',
-			},
-			{
-				field: 'email_verified', headerName: 'Email Verified', width: 150, sortable: true,
-				headerClass: 'mk-header',
-				cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-green' : 'mk-cell-amber',
-				cellRenderer: (p: { value: boolean }) => p.value
-					? '<span>&#10003; Verified</span>'
-					: '<span>&#9888; Pending</span>'
-			},
-			{
-				field: 'is_approved', headerName: 'Approved', width: 130, sortable: true,
-				headerClass: 'mk-header',
-				cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-green' : 'mk-cell-amber',
-				cellRenderer: (p: { value: boolean }) => p.value
-					? '<span>&#10003; Approved</span>'
-					: '<span>&mdash; Pending</span>'
-			},
-			{
-				field: 'is_admin', headerName: 'Admin', width: 100, sortable: true,
-				headerClass: 'mk-header',
-				cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-maroon' : '',
-				cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#9733; Admin</span>' : ''
-			}
-		];
-
-		const gridOptions: GridOptions = {
-			columnDefs,
-			rowData: untrack(() => [...filteredUsers]),
-			rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
-			onRowClicked: (e) => { selectedUser = e.data as User; },
-			defaultColDef: { resizable: true, floatingFilter: true, filter: true },
-			pagination: true,
-			paginationPageSize: 20,
-			theme: 'legacy'
-		};
-
-		usersGridApi = createGrid(div, gridOptions);
-
-		return () => {
-			usersGridApi?.destroy();
-			usersGridApi = undefined;
-		};
-	});
-
-	// Profiles grid — creation/destruction only
-	$effect(() => {
-		const div = profilesGridDiv;
-		const data = allProfiles;
-		const _v = profilesGridVersion;
-		if (!div || !data) return;
-
-		const initialData = untrack(() => [...filteredProfiles]);
-
-		const columnDefs = [
-			{
-				field: 'profile_number', headerName: 'ID', width: 130, sortable: true, filter: true,
-				headerClass: 'mk-header',
-				cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#6b7280' }
-			},
-			{
-				headerName: 'Name', flex: 1.5, sortable: true, filter: true,
-				headerClass: 'mk-header',
-				valueGetter: (p: { data: Profile }) => `${p.data.first_name} ${p.data.last_name ?? ''}`.trim()
-			},
-			{
-				field: 'gender', headerName: 'Gender', width: 100, sortable: true, filter: true,
-				headerClass: 'mk-header',
-				valueFormatter: (p: { value: string }) => p.value.charAt(0).toUpperCase() + p.value.slice(1)
-			},
-			{
-				field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true,
-				headerClass: 'mk-header',
-				cellRenderer: (p: { value: string }) => {
-					const styles: Record<string, string> = {
-						approved: 'background:#dcfce7;color:#16a34a',
-						pending:  'background:#fef3c7;color:#92400e',
-						rejected: 'background:#fee2e2;color:#dc2626',
-						draft:    'background:#f3f4f6;color:#6b7280'
-					};
-					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${p.value}</span>`;
-				}
-			},
-			{
-				headerName: 'Location', flex: 1, filter: true,
-				headerClass: 'mk-header',
-				valueGetter: (p: { data: Profile }) => [p.data.city, p.data.state].filter(Boolean).join(', ')
-			},
-			{
-				field: 'education', headerName: 'Education', flex: 1, filter: true, sortable: true,
-				headerClass: 'mk-header'
-			},
-			{
-				field: 'created_at', headerName: 'Submitted', width: 130, sortable: true,
-				headerClass: 'mk-header',
-				valueFormatter: (p: { value: string }) =>
-					new Date(p.value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-			}
-		];
-
-		const gridOptions: GridOptions = {
-			columnDefs,
-			rowData: initialData,
-			rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
-			onRowClicked: (e) => {
-				selectedProfile = e.data as Profile;
-				profileRejectOpen = false;
-				profileRejectNote = '';
-			},
-			defaultColDef: { resizable: true, floatingFilter: true, filter: true },
-			pagination: true,
-			paginationPageSize: 20,
-			theme: 'legacy'
-		};
-
-		profilesGridApi = createGrid(div, gridOptions);
-
-		return () => {
-			profilesGridApi?.destroy();
-			profilesGridApi = undefined;
-		};
-	});
-
-	// Requests grid — creation/destruction only
-	$effect(() => {
-		const div = requestsGridDiv;
-		const data = allRequests;
-		const _v = requestsGridVersion;
-		if (!div || !data) return;
-
-		const initialData = untrack(() => [...filteredRequests]);
-
-		const columnDefs = [
-			{
-				field: 'id', headerName: 'Request ID', width: 130, filter: true,
-				headerClass: 'mk-header',
-				cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#9ca3af' },
-				valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…'
-			},
-			{
-				field: 'requester_user_id', headerName: 'Requester', flex: 1, filter: true,
-				headerClass: 'mk-header',
-				cellStyle: { fontFamily: 'monospace', fontSize: '12px' },
-				valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…'
-			},
-			{
-				field: 'profile_id', headerName: 'Profile', flex: 1, filter: true,
-				headerClass: 'mk-header',
-				cellStyle: { fontFamily: 'monospace', fontSize: '12px' },
-				valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…'
-			},
-			{
-				field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true,
-				headerClass: 'mk-header',
-				cellRenderer: (p: { value: string }) => {
-					const styles: Record<string, string> = {
-						approved: 'background:#dcfce7;color:#16a34a',
-						pending:  'background:#fef3c7;color:#92400e',
-						rejected: 'background:#fee2e2;color:#dc2626'
-					};
-					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${p.value}</span>`;
-				}
-			},
-			{
-				field: 'created_at', headerName: 'Date', width: 130, sortable: true,
-				headerClass: 'mk-header',
-				valueFormatter: (p: { value: string }) =>
-					new Date(p.value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-			}
-		];
-
-		const gridOptions: GridOptions = {
-			columnDefs,
-			rowData: initialData,
-			rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
-			onRowClicked: (e) => {
-				selectedRequest = e.data as DetailRequest;
-				requestRejectOpen = false;
-				requestRejectNote = '';
-			},
-			defaultColDef: { resizable: true, floatingFilter: true, filter: true },
-			pagination: true,
-			paginationPageSize: 20,
-			theme: 'legacy'
-		};
-
-		requestsGridApi = createGrid(div, gridOptions);
-
-		return () => {
-			requestsGridApi?.destroy();
-			requestsGridApi = undefined;
-		};
-	});
 
 	// ── User action functions ─────────────────────────────────────────────────────
 
@@ -638,21 +412,140 @@
 	function applyUserFilter(f: typeof userFilter) {
 		userFilter = f;
 		selectedUser = null;
-		usersGridVersion++;
 	}
 
 	function applyProfileFilter(f: typeof profileStatusFilter) {
 		profileStatusFilter = f;
 		selectedProfile = null;
 		profileRejectOpen = false;
-		profilesGridVersion++;
 	}
 
 	function applyRequestFilter(f: typeof requestStatusFilter) {
 		requestStatusFilter = f;
 		selectedRequest = null;
 		requestRejectOpen = false;
-		requestsGridVersion++;
+	}
+
+	// ── Grid actions (use:action pattern) ────────────────────────────────────────
+
+	function usersGridAction(node: HTMLDivElement, data: User[]) {
+		const makeGrid = (rows: User[]) => {
+			usersGridApi?.destroy();
+			const columnDefs = [
+				{ field: 'email', headerName: 'Email', flex: 2, filter: true, sortable: true, headerClass: 'mk-header' },
+				{ field: 'user_handle', headerName: 'Handle', flex: 1, filter: true, sortable: true, headerClass: 'mk-header',
+				  valueFormatter: (p: { value: string }) => `@${p.value}` },
+				{ field: 'full_name', headerName: 'Name', flex: 1, filter: true, sortable: true, headerClass: 'mk-header' },
+				{ field: 'phone_number', headerName: 'Phone', flex: 1, headerClass: 'mk-header' },
+				{ field: 'email_verified', headerName: 'Email Verified', width: 150, sortable: true, headerClass: 'mk-header',
+				  cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-green' : 'mk-cell-amber',
+				  cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#10003; Verified</span>' : '<span>&#9888; Pending</span>' },
+				{ field: 'is_approved', headerName: 'Approved', width: 130, sortable: true, headerClass: 'mk-header',
+				  cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-green' : 'mk-cell-amber',
+				  cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#10003; Approved</span>' : '<span>&mdash; Pending</span>' },
+				{ field: 'is_admin', headerName: 'Admin', width: 100, sortable: true, headerClass: 'mk-header',
+				  cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-maroon' : '',
+				  cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#9733; Admin</span>' : '' }
+			];
+			usersGridApi = createGrid(node, {
+				columnDefs: columnDefs as any[],
+				rowData: [...rows],
+				rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
+				onRowClicked: (e) => { selectedUser = e.data as User; },
+				defaultColDef: { resizable: true, floatingFilter: true, filter: true },
+				pagination: true, paginationPageSize: 20, theme: 'legacy'
+			});
+		};
+		makeGrid(data);
+		return {
+			update: (newData: User[]) => {
+				selectedUser = null;
+				makeGrid(newData);
+			},
+			destroy: () => { usersGridApi?.destroy(); usersGridApi = undefined; }
+		};
+	}
+
+	function profilesGridAction(node: HTMLDivElement, data: Profile[]) {
+		const makeGrid = (rows: Profile[]) => {
+			profilesGridApi?.destroy();
+			const columnDefs = [
+				{ field: 'profile_number', headerName: 'ID', width: 130, sortable: true, filter: true, headerClass: 'mk-header',
+				  cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#6b7280' } },
+				{ headerName: 'Name', flex: 1.5, sortable: true, filter: true, headerClass: 'mk-header',
+				  valueGetter: (p: { data: Profile }) => `${p.data.first_name} ${p.data.last_name ?? ''}`.trim() },
+				{ field: 'gender', headerName: 'Gender', width: 100, sortable: true, filter: true, headerClass: 'mk-header',
+				  valueFormatter: (p: { value: string }) => p.value.charAt(0).toUpperCase() + p.value.slice(1) },
+				{ field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true, headerClass: 'mk-header',
+				  cellRenderer: (p: { value: string }) => {
+					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', rejected: 'background:#fee2e2;color:#dc2626', draft: 'background:#f3f4f6;color:#6b7280' };
+					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${p.value}</span>`;
+				  }},
+				{ headerName: 'Location', flex: 1, filter: true, headerClass: 'mk-header',
+				  valueGetter: (p: { data: Profile }) => [p.data.city, p.data.state].filter(Boolean).join(', ') },
+				{ field: 'education', headerName: 'Education', flex: 1, filter: true, sortable: true, headerClass: 'mk-header' },
+				{ field: 'created_at', headerName: 'Submitted', width: 130, sortable: true, headerClass: 'mk-header',
+				  valueFormatter: (p: { value: string }) => new Date(p.value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }
+			];
+			profilesGridApi = createGrid(node, {
+				columnDefs: columnDefs as any[],
+				rowData: [...rows],
+				rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
+				onRowClicked: (e) => { selectedProfile = e.data as Profile; profileRejectOpen = false; profileRejectNote = ''; },
+				defaultColDef: { resizable: true, floatingFilter: true, filter: true },
+				pagination: true, paginationPageSize: 20, theme: 'legacy'
+			});
+		};
+		makeGrid(data);
+		return {
+			update: (newData: Profile[]) => {
+				selectedProfile = null;
+				profileRejectOpen = false;
+				makeGrid(newData);
+			},
+			destroy: () => { profilesGridApi?.destroy(); profilesGridApi = undefined; }
+		};
+	}
+
+	function requestsGridAction(node: HTMLDivElement, data: DetailRequest[]) {
+		const makeGrid = (rows: DetailRequest[]) => {
+			requestsGridApi?.destroy();
+			const columnDefs = [
+				{ field: 'id', headerName: 'Request ID', width: 130, filter: true, headerClass: 'mk-header',
+				  cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#9ca3af' },
+				  valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…' },
+				{ field: 'requester_user_id', headerName: 'Requester', flex: 1, filter: true, headerClass: 'mk-header',
+				  cellStyle: { fontFamily: 'monospace', fontSize: '12px' },
+				  valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…' },
+				{ field: 'profile_id', headerName: 'Profile', flex: 1, filter: true, headerClass: 'mk-header',
+				  cellStyle: { fontFamily: 'monospace', fontSize: '12px' },
+				  valueFormatter: (p: { value: string }) => p.value.slice(0, 8) + '…' },
+				{ field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true, headerClass: 'mk-header',
+				  cellRenderer: (p: { value: string }) => {
+					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', rejected: 'background:#fee2e2;color:#dc2626' };
+					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${p.value}</span>`;
+				  }},
+				{ field: 'created_at', headerName: 'Date', width: 130, sortable: true, headerClass: 'mk-header',
+				  valueFormatter: (p: { value: string }) => new Date(p.value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }
+			];
+			requestsGridApi = createGrid(node, {
+				columnDefs: columnDefs as any[],
+				rowData: [...rows],
+				rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
+				onRowClicked: (e) => { selectedRequest = e.data as DetailRequest; requestRejectOpen = false; requestRejectNote = ''; },
+				defaultColDef: { resizable: true, floatingFilter: true, filter: true },
+				pagination: true, paginationPageSize: 20, theme: 'legacy'
+			});
+		};
+		makeGrid(data);
+		return {
+			update: (newData: DetailRequest[]) => {
+				selectedRequest = null;
+				requestRejectOpen = false;
+				makeGrid(newData);
+			},
+			destroy: () => { requestsGridApi?.destroy(); requestsGridApi = undefined; }
+		};
 	}
 
 </script>
@@ -810,7 +703,7 @@
 				</div>
 
 				<!-- ag-Grid container -->
-				<div bind:this={usersGridDiv} class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm" style="height: 480px;
+				<div use:usersGridAction={filteredUsers} class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm" style="height: 480px;
 					--ag-header-background-color: #6b0f1a;
 					--ag-header-foreground-color: #fff8e7;
 					--ag-header-column-separator-display: block;
@@ -934,7 +827,7 @@
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allProfilesError}</div>
 		{:else if allProfiles}
 			<!-- ag-Grid -->
-			<div bind:this={profilesGridDiv}
+			<div use:profilesGridAction={filteredProfiles}
 				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
 				style="height: 460px;
 					--ag-header-background-color: #6b0f1a;
@@ -1023,7 +916,7 @@
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allRequestsError}</div>
 		{:else if allRequests}
 			<!-- ag-Grid -->
-			<div bind:this={requestsGridDiv}
+			<div use:requestsGridAction={filteredRequests}
 				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
 				style="height: 400px;
 					--ag-header-background-color: #6b0f1a;
