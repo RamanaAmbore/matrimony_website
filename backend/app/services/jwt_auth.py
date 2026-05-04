@@ -15,20 +15,17 @@ _ALGORITHM = "HS256"
 _EXPIRY_SECONDS = 86400 * 7  # 7 days — keep in sync with auth.py _COOKIE_MAX_AGE
 
 
-def mint_jwt(user_id: str, handle: str, email: str, full_name: str, is_admin: bool, email_verified: bool, is_approved: bool = False) -> str:
-    """Create a signed JWT for the given user.
-
-    Payload keys:
-        sub            — user UUID as a string
-        handle         — user_handle (display / login name)
-        email          — user email
-        full_name      — user full name
-        is_admin       — bool
-        email_verified — bool
-        is_approved    — bool
-        iat            — issued-at (UTC epoch)
-        exp            — expiry (iat + 7 days)
-    """
+def mint_jwt(
+    user_id: str,
+    handle: str,
+    email: str,
+    full_name: str,
+    is_admin: bool,
+    email_verified: bool,
+    is_approved: bool = False,
+    is_super: bool = False,
+) -> str:
+    """Create a signed JWT for the given user."""
     now = datetime.now(timezone.utc)
     payload: dict[str, Any] = {
         "sub": user_id,
@@ -36,6 +33,7 @@ def mint_jwt(user_id: str, handle: str, email: str, full_name: str, is_admin: bo
         "email": email,
         "full_name": full_name,
         "is_admin": is_admin,
+        "is_super": is_super,
         "email_verified": email_verified,
         "is_approved": is_approved,
         "iat": now,

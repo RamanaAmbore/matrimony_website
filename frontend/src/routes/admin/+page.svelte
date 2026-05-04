@@ -24,8 +24,12 @@
 		Users,
 		UserCheck,
 		Inbox,
-		ShieldCheck
+		ShieldCheck,
+		Trash2
 	} from 'lucide-svelte';
+
+	let { data } = $props();
+	let loggedInUser = $derived<User | null>(data.user ?? null);
 
 	// ── Tab state ────────────────────────────────────────────────────────────────
 
@@ -200,6 +204,40 @@
 			selectedUser = { ...u, email_verified: true };
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
 			toastStore.success('Email verified');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
+	async function demoteUserFromGrid(u: User) {
+		userActionLoading = true;
+		try {
+			const updated = await adminApi.users.demote(u.uuid);
+			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
+			selectedUser = updated;
+			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			toastStore.success('Admin demoted');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
+	async function deleteUserFromGrid(u: User) {
+		if (!confirm(`Delete user "${u.email}"? This cannot be undone.`)) return;
+		userActionLoading = true;
+		try {
+			await adminApi.users.delete(u.uuid);
+			allUsers = allUsers!.filter(x => x.uuid !== u.uuid);
+			selectedUser = null;
+			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			if (dashboard) {
+				dashboard.stats.users = Math.max(0, dashboard.stats.users - 1);
+			}
+			toastStore.success('User deleted');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
 		} finally {
@@ -515,11 +553,11 @@
 </script>
 
 <svelte:head>
-	<title>Admin Dashboard — Maratha Kalyanam</title>
+	<title>Dashboard — Maratha Kalyanam</title>
 </svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 py-10">
-	<h1 class="font-serif text-3xl font-bold text-maroon">Admin Dashboard</h1>
+	<h1 class="font-serif text-3xl font-bold text-maroon">Dashboard</h1>
 	<p class="mt-1 text-sm text-ink/60">Platform overview and quick approvals</p>
 
 	<!-- ── Stats row (always visible) ────────────────────────────────────────── -->
@@ -642,31 +680,6 @@
 
 		</div>
 
-		<!-- ── Quick-action row: Settings + Broadcast ─────────────────────── -->
-		<div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-			<a
-				href="/admin/settings"
-				class="flex items-center gap-3 rounded-xl border border-gold/40 bg-white px-4 py-3 shadow-sm transition-all hover:border-maroon/40 hover:shadow-md"
-			>
-				<ShieldCheck size={20} class="shrink-0 text-gold" />
-				<div>
-					<p class="font-serif font-semibold text-maroon">Settings</p>
-					<p class="text-xs text-ink/50">SMTP, photo limits, approval flags</p>
-				</div>
-				<span class="ml-auto text-sm text-ink/30">→</span>
-			</a>
-			<a
-				href="/admin/broadcast"
-				class="flex items-center gap-3 rounded-xl border border-gold/40 bg-white px-4 py-3 shadow-sm transition-all hover:border-maroon/40 hover:shadow-md"
-			>
-				<Inbox size={20} class="shrink-0 text-sky-500" />
-				<div>
-					<p class="font-serif font-semibold text-maroon">Broadcast Email</p>
-					<p class="text-xs text-ink/50">Send to verified / approved users</p>
-				</div>
-				<span class="ml-auto text-sm text-ink/30">→</span>
-			</a>
-		</div>
 	{/if}
 
 	<!-- anchor for scroll-into-view when stat card is clicked -->
@@ -752,6 +765,25 @@
 									onclick={() => promoteUserFromGrid(selectedUser!)}
 								>
 									Make Admin
+								</button>
+							{/if}
+							{#if loggedInUser?.is_super && selectedUser.is_admin}
+								<button
+									class="text-sm px-4 py-1.5 rounded border border-vermilion/40 bg-white text-vermilion hover:bg-vermilion/5 disabled:opacity-50 flex items-center gap-1.5"
+									disabled={userActionLoading}
+									onclick={() => demoteUserFromGrid(selectedUser!)}
+								>
+									Demote to User
+								</button>
+							{/if}
+							{#if loggedInUser?.is_super || (loggedInUser?.is_admin && !selectedUser.is_admin)}
+								<button
+									class="text-sm px-4 py-1.5 rounded bg-vermilion text-cream hover:bg-vermilion/80 disabled:opacity-50 flex items-center gap-1.5"
+									disabled={userActionLoading}
+									onclick={() => deleteUserFromGrid(selectedUser!)}
+								>
+									<Trash2 size={13} />
+									Delete User
 								</button>
 							{/if}
 						</div>

@@ -32,6 +32,10 @@ class User(Base):
     is_approved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     email_verification_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Super-user role: above admin. Hidden from admin-facing lists. Only super
+    # can delete/demote admin users. There is exactly one super user
+    # (seeded in bootstrap), and they cannot be deleted.
+    is_super: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

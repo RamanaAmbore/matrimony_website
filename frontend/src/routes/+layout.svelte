@@ -190,11 +190,19 @@
 					<a href="/admin" class="whitespace-nowrap text-sm {navLinkClass('/admin', true)}" aria-current={isActive('/admin', true) ? 'page' : undefined}>
 						{T.admin.en} <span lang="te">{T.admin.te}</span>
 					</a>
+					<a href="/admin/settings" class="whitespace-nowrap text-sm {navLinkClass('/admin/settings')}" aria-current={isActive('/admin/settings') ? 'page' : undefined}>
+						Settings
+					</a>
+					<a href="/admin/broadcast" class="whitespace-nowrap text-sm {navLinkClass('/admin/broadcast')}" aria-current={isActive('/admin/broadcast') ? 'page' : undefined}>
+						Broadcast
+					</a>
 				{/if}
 				<span class="hidden xl:inline" title={user.email}>
 					<span class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 {user.is_admin ? 'border-cream/30 bg-maroon/20' : 'border-cream/20'}">
 						<span class="font-mono text-xs text-cream/70">{user.user_id}</span>
-						{#if user.is_admin}
+						{#if user.is_super}
+							<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold leading-none bg-saffron text-maroon">Super</span>
+						{:else if user.is_admin}
 							<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
 						{:else}
 							<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>
@@ -301,7 +309,7 @@
 					<p class="px-3 text-xs font-semibold tracking-wider text-ink/40 uppercase">
 						{T.admin.en} <span lang="te" class="normal-case">{T.admin.te}</span>
 					</p>
-					<a href="/admin" class={drawerLinkClass('/admin', true)} aria-current={isActive('/admin', true) ? 'page' : undefined} onclick={closeDrawer}>Admin Panel</a>
+					<a href="/admin" class={drawerLinkClass('/admin', true)} aria-current={isActive('/admin', true) ? 'page' : undefined} onclick={closeDrawer}>Dashboard</a>
 					<a href="/admin/settings" class={drawerLinkClass('/admin/settings')} aria-current={isActive('/admin/settings') ? 'page' : undefined} onclick={closeDrawer}>
 						Settings
 					</a>
@@ -312,7 +320,9 @@
 				<div class="my-2 h-px bg-gold/20"></div>
 				<div class="px-3 py-1 flex flex-wrap items-center gap-1.5" title={user.email}>
 					<span class="font-mono text-sm text-ink/60">{user.user_id}</span>
-					{#if user.is_admin}
+					{#if user.is_super}
+						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold leading-none bg-saffron text-maroon">Super</span>
+					{:else if user.is_admin}
 						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-maroon text-cream">Admin</span>
 					{:else}
 						<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none bg-saffron text-maroon">User</span>

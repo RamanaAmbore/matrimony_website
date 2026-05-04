@@ -35,6 +35,9 @@ class BroadcastEmailBody(msgspec.Struct):
     body_html: str
     filter_verified_only: bool = True
     filter_approved_only: bool = False
+    filter_admin_only: bool = False
+    filter_unapproved_only: bool = False
+    filter_unverified_only: bool = False
 
 
 def _require_admin(request: Request) -> dict[str, Any]:
@@ -44,6 +47,30 @@ def _require_admin(request: Request) -> dict[str, Any]:
     if not payload.get("is_admin"):
         raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Admin access required"})
     return payload
+
+
+def _require_super(request: Request) -> dict[str, Any]:
+    payload = request.scope.get("user_payload")
+    if not payload:
+        raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+    if not payload.get("is_super"):
+        raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Super-user access required"})
+    return payload
+
+
+def _serialize_user(u: User) -> dict[str, Any]:
+    return {
+        "uuid": str(u.id),
+        "email": u.email,
+        "full_name": u.full_name,
+        "user_id": u.user_handle,
+        "phone_number": u.phone_number,
+        "is_admin": u.is_admin,
+        "is_super": u.is_super,
+        "email_verified": u.email_verified,
+        "is_approved": u.is_approved,
+        "created_at": u.created_at.isoformat(),
+    }
 
 
 def _serialize_profile(profile: Profile, request: Request) -> dict[str, Any]:
@@ -557,22 +584,13 @@ class AdminController(Controller):
         db: AsyncSession,
     ) -> list[dict[str, Any]]:
         _require_admin(request)
-        result = await db.execute(select(User).order_by(User.created_at.desc()))
+        # Hide super-users from the admin list — super is a privileged
+        # invisible role that even other admins should not see or act on.
+        result = await db.execute(
+            select(User).where(User.is_super == False).order_by(User.created_at.desc())  # noqa: E712
+        )
         users = result.scalars().all()
-        return [
-            {
-                "uuid": str(u.id),
-                "email": u.email,
-                "full_name": u.full_name,
-                "user_id": u.user_handle,
-                "phone_number": u.phone_number,
-                "is_admin": u.is_admin,
-                "email_verified": u.email_verified,
-                "is_approved": u.is_approved,
-                "created_at": u.created_at.isoformat(),
-            }
-            for u in users
-        ]
+        return [_serialize_user(u) for u in users]
 
     @post("/users/{user_id:str}/promote")
     async def promote_user(
@@ -596,17 +614,7 @@ class AdminController(Controller):
         user.is_admin = True
         await db.commit()
         await db.refresh(user)
-        return {
-            "uuid": str(user.id),
-            "email": user.email,
-            "full_name": user.full_name,
-            "user_id": user.user_handle,
-            "phone_number": user.phone_number,
-            "is_admin": user.is_admin,
-            "email_verified": user.email_verified,
-            "is_approved": user.is_approved,
-            "created_at": user.created_at.isoformat(),
-        }
+        return _serialize_user(user)
 
     @post("/users/{user_id:str}/verify_email")
     async def verify_user_email(
@@ -632,17 +640,7 @@ class AdminController(Controller):
         user.email_verification_token = None
         await db.commit()
         await db.refresh(user)
-        return {
-            "uuid": str(user.id),
-            "email": user.email,
-            "full_name": user.full_name,
-            "user_id": user.user_handle,
-            "phone_number": user.phone_number,
-            "is_admin": user.is_admin,
-            "email_verified": user.email_verified,
-            "is_approved": user.is_approved,
-            "created_at": user.created_at.isoformat(),
-        }
+        return _serialize_user(user)
 
     @post("/users/{user_id:str}/approve")
     async def approve_user(
@@ -673,17 +671,7 @@ class AdminController(Controller):
 
         asyncio.create_task(email_svc.send_account_approved(user.email, user.full_name))
 
-        return {
-            "uuid": str(user.id),
-            "email": user.email,
-            "full_name": user.full_name,
-            "user_id": user.user_handle,
-            "phone_number": user.phone_number,
-            "is_admin": user.is_admin,
-            "email_verified": user.email_verified,
-            "is_approved": user.is_approved,
-            "created_at": user.created_at.isoformat(),
-        }
+        return _serialize_user(user)
 
     @post("/users/{user_id:str}/unapprove")
     async def unapprove_user(
@@ -708,18 +696,82 @@ class AdminController(Controller):
         user.is_approved = False
         await db.commit()
         await db.refresh(user)
+        return _serialize_user(user)
 
-        return {
+    @post("/users/{user_id:str}/demote", status_code=200)
+    async def demote_user(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Strip admin from a user. Super-only; cannot target super."""
+        _require_super(request)
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_super:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot demote a super-user"})
+
+        user.is_admin = False
+        await db.commit()
+        await db.refresh(user)
+        return _serialize_user(user)
+
+    @post("/users/{user_id:str}/delete", status_code=200)
+    async def delete_user(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Delete a user (cascades profiles, photos, requests).
+
+        Permission rules:
+          - super         → can delete any non-super user
+          - admin         → can delete only NON-admin users
+          - everyone else → forbidden
+          - cannot delete self
+          - never delete a super-user
+        """
+        payload = _require_admin(request)
+        caller_uid = uuid.UUID(payload["sub"])
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if uid == caller_uid:
+            raise HTTPException(status_code=400, detail={"code": "self_delete", "message": "Cannot delete your own account"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_super:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot delete a super-user"})
+        if user.is_admin and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Only super-user can delete admin accounts"},
+            )
+
+        deleted = {
             "uuid": str(user.id),
-            "email": user.email,
-            "full_name": user.full_name,
             "user_id": user.user_handle,
-            "phone_number": user.phone_number,
+            "email": user.email,
             "is_admin": user.is_admin,
-            "email_verified": user.email_verified,
-            "is_approved": user.is_approved,
-            "created_at": user.created_at.isoformat(),
         }
+        await db.delete(user)
+        await db.commit()
+        return {"deleted": deleted}
 
     # --- Settings ---
     @get("/settings")
@@ -785,11 +837,18 @@ class AdminController(Controller):
         """Send a custom broadcast email to all (or filtered) registered users."""
         _require_admin(request)
 
-        query = select(User)
+        # Always exclude super-users from broadcasts (privileged hidden role).
+        query = select(User).where(User.is_super == False)  # noqa: E712
         if data.filter_verified_only:
             query = query.where(User.email_verified == True)  # noqa: E712
+        if data.filter_unverified_only:
+            query = query.where(User.email_verified == False)  # noqa: E712
         if data.filter_approved_only:
             query = query.where(User.is_approved == True)  # noqa: E712
+        if data.filter_unapproved_only:
+            query = query.where(User.is_approved == False)  # noqa: E712
+        if data.filter_admin_only:
+            query = query.where(User.is_admin == True)  # noqa: E712
         result = await db.execute(query)
         users = result.scalars().all()
 

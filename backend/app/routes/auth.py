@@ -230,6 +230,7 @@ class AuthController(Controller):
             is_admin=user.is_admin,
             email_verified=user.email_verified,
             is_approved=user.is_approved,
+            is_super=user.is_super,
         )
 
         body: dict[str, Any] = {
@@ -238,6 +239,7 @@ class AuthController(Controller):
             "email": user.email,
             "full_name": user.full_name,
             "is_admin": user.is_admin,
+            "is_super": user.is_super,
             "email_verified": user.email_verified,
             "is_approved": user.is_approved,
         }
@@ -297,6 +299,7 @@ class AuthController(Controller):
             "email": payload.get("email", ""),
             "full_name": payload.get("full_name", ""),
             "is_admin": payload.get("is_admin", False),
+            "is_super": payload.get("is_super", False),
             "email_verified": payload.get("email_verified", False),
             "is_approved": payload.get("is_approved", True),
         }

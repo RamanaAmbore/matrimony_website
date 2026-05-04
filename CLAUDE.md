@@ -182,7 +182,9 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 | POST | /admin/users/{id}/approve | admin | Approve user account (sets is_approved=true) + send account_approved email |
 | POST | /admin/users/{id}/unapprove | admin | Revoke user approval |
 | POST | /admin/users/{id}/verify_email | admin | Mark email as verified (sets email_verified=true) |
-| POST | /admin/broadcast-email | admin | Send broadcast email to filtered user subset; body: {subject, body_html, filter_verified_only, filter_approved_only} |
+| POST | /admin/users/{id}/demote | admin | Strip admin role from a user. |
+| POST | /admin/users/{id}/delete | admin | Hard-delete a user. Cascades profiles, photos, detail requests. Cannot delete self. |
+| POST | /admin/broadcast-email | admin | Send broadcast email to filtered user subset. Lives at frontend route `/admin/broadcast`. Body booleans (all optional): `filter_verified_only` (default true), `filter_unverified_only`, `filter_approved_only`, `filter_unapproved_only`, `filter_admin_only`. Verified ↔ unverified and approved ↔ unapproved are mutually exclusive. |
 | GET | /admin/settings | admin | Get all settings (mask smtp_password) |
 | PUT | /admin/settings | admin | Update settings (JSON body) |
 | GET | /health | none | Service health check |

@@ -10,7 +10,7 @@ export const T = {
   logout: { en: 'Logout', te: 'లాగౌట్' },
   myProfiles: { en: 'My Profiles', te: 'నా ప్రొఫైల్‌లు' },
   requests: { en: 'My Requests', te: 'నా అభ్యర్థనలు' },
-  admin: { en: 'Admin', te: 'నిర్వాహకుడు' },
+  admin: { en: 'Dashboard', te: 'డాష్‌బోర్డ్' },
 
   // Actions
   submit: { en: 'Submit', te: 'సమర్పించు' },

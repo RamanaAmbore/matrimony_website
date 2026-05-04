@@ -21,6 +21,7 @@ export interface User {
 	phone_number: string;
 	full_name: string;
 	is_admin: boolean;
+	is_super: boolean;
 	is_approved: boolean;
 	email_verified: boolean;
 }
@@ -542,6 +543,12 @@ export const admin = {
 		},
 		async verifyEmail(userId: string): Promise<void> {
 			return request(`/api/admin/users/${userId}/verify_email`, { method: 'POST' });
+		},
+		async demote(id: string): Promise<User> {
+			return request(`/api/admin/users/${id}/demote`, { method: 'POST' });
+		},
+		async delete(id: string): Promise<{ deleted: { uuid: string; user_id: string; email: string; is_admin: boolean } }> {
+			return request(`/api/admin/users/${id}/delete`, { method: 'POST' });
 		}
 	},
 
@@ -560,8 +567,11 @@ export const admin = {
 	async broadcastEmail(payload: {
 		subject: string;
 		body_html: string;
-		filter_verified_only: boolean;
-		filter_approved_only: boolean;
+		filter_verified_only?: boolean;
+		filter_approved_only?: boolean;
+		filter_admin_only?: boolean;
+		filter_unapproved_only?: boolean;
+		filter_unverified_only?: boolean;
 	}): Promise<{ sent: number; failed: number }> {
 		return request('/api/admin/broadcast-email', {
 			method: 'POST',

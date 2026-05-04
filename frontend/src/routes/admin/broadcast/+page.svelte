@@ -5,10 +5,40 @@
 
 	let broadcastSubject = $state('');
 	let broadcastBody = $state('');
-	let broadcastVerifiedOnly = $state(true);
-	let broadcastApprovedOnly = $state(false);
+
+	// Audience filters
+	let filterVerifiedOnly = $state(false);
+	let filterUnverifiedOnly = $state(false);
+	let filterApprovedOnly = $state(false);
+	let filterUnapprovedOnly = $state(false);
+	let filterAdminOnly = $state(false);
+
 	let broadcastSending = $state(false);
 	let broadcastResult = $state<{ sent: number; failed: number } | null>(null);
+
+	// Mutually-exclusive guards: latest checked wins
+	function onVerifiedChange() {
+		if (filterVerifiedOnly) filterUnverifiedOnly = false;
+	}
+	function onUnverifiedChange() {
+		if (filterUnverifiedOnly) filterVerifiedOnly = false;
+	}
+	function onApprovedChange() {
+		if (filterApprovedOnly) filterUnapprovedOnly = false;
+	}
+	function onUnapprovedChange() {
+		if (filterUnapprovedOnly) filterApprovedOnly = false;
+	}
+
+	let filterSummary = $derived(() => {
+		const parts: string[] = [];
+		if (filterVerifiedOnly) parts.push('verified emails');
+		if (filterUnverifiedOnly) parts.push('unverified emails');
+		if (filterApprovedOnly) parts.push('approved users');
+		if (filterUnapprovedOnly) parts.push('unapproved users');
+		if (filterAdminOnly) parts.push('admin users');
+		return parts.length > 0 ? parts.join(', ') : null;
+	});
 
 	async function sendBroadcast() {
 		if (!broadcastSubject.trim() || !broadcastBody.trim()) {
@@ -21,8 +51,11 @@
 			const result = await adminApi.broadcastEmail({
 				subject: broadcastSubject.trim(),
 				body_html: broadcastBody.trim(),
-				filter_verified_only: broadcastVerifiedOnly,
-				filter_approved_only: broadcastApprovedOnly
+				filter_verified_only: filterVerifiedOnly || undefined,
+				filter_unverified_only: filterUnverifiedOnly || undefined,
+				filter_approved_only: filterApprovedOnly || undefined,
+				filter_unapproved_only: filterUnapprovedOnly || undefined,
+				filter_admin_only: filterAdminOnly || undefined
 			});
 			broadcastResult = result;
 			toastStore.success(`Broadcast sent: ${result.sent} delivered, ${result.failed} failed.`);
@@ -75,15 +108,62 @@
 				></textarea>
 			</div>
 
-			<div class="flex flex-wrap items-center gap-4">
-				<label class="flex cursor-pointer items-center gap-2 text-sm">
-					<input type="checkbox" bind:checked={broadcastVerifiedOnly} class="rounded accent-maroon" />
-					Verified emails only
-				</label>
-				<label class="flex cursor-pointer items-center gap-2 text-sm">
-					<input type="checkbox" bind:checked={broadcastApprovedOnly} class="rounded accent-maroon" />
-					Approved users only
-				</label>
+			<!-- Audience filters -->
+			<div class="rounded-lg border border-gold/20 bg-cream/40 px-4 py-3">
+				<p class="mb-3 text-xs font-semibold uppercase tracking-wider text-ink/50">Audience</p>
+				<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+					<label class="flex cursor-pointer items-center gap-2 text-sm">
+						<input
+							type="checkbox"
+							bind:checked={filterVerifiedOnly}
+							onchange={onVerifiedChange}
+							class="rounded accent-maroon"
+						/>
+						Verified emails only
+					</label>
+					<label class="flex cursor-pointer items-center gap-2 text-sm">
+						<input
+							type="checkbox"
+							bind:checked={filterUnverifiedOnly}
+							onchange={onUnverifiedChange}
+							class="rounded accent-maroon"
+						/>
+						Unverified emails only
+					</label>
+					<label class="flex cursor-pointer items-center gap-2 text-sm">
+						<input
+							type="checkbox"
+							bind:checked={filterApprovedOnly}
+							onchange={onApprovedChange}
+							class="rounded accent-maroon"
+						/>
+						Approved users only
+					</label>
+					<label class="flex cursor-pointer items-center gap-2 text-sm">
+						<input
+							type="checkbox"
+							bind:checked={filterUnapprovedOnly}
+							onchange={onUnapprovedChange}
+							class="rounded accent-maroon"
+						/>
+						Unapproved users only
+					</label>
+					<label class="flex cursor-pointer items-center gap-2 text-sm sm:col-span-2">
+						<input
+							type="checkbox"
+							bind:checked={filterAdminOnly}
+							class="rounded accent-maroon"
+						/>
+						Admin users only
+					</label>
+				</div>
+				<p class="mt-3 text-xs text-ink/60">
+					{#if filterSummary()}
+						Sending to: <span class="font-medium text-maroon">{filterSummary()}</span>
+					{:else}
+						Sending to: <span class="font-medium text-ink/80">all registered users</span>
+					{/if}
+				</p>
 			</div>
 
 			<div class="flex flex-wrap items-center justify-end gap-2 border-t border-gold/30 pt-4">
