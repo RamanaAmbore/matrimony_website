@@ -26,7 +26,7 @@
 	// ── Tab state ────────────────────────────────────────────────────────────────
 
 	type Tab = 'profiles' | 'requests' | 'users';
-	let activeTab = $state<Tab>('profiles');
+	let activeTab = $state<Tab>('users');
 
 	// ── Dashboard state ──────────────────────────────────────────────────────────
 
@@ -120,7 +120,7 @@
 	// ── Mount: load dashboard + pre-load profiles ────────────────────────────────
 
 	onMount(async () => {
-		loadAllProfiles(); // start immediately so profiles show without waiting for dashboard
+		loadAllUsers(); // start immediately so users show without waiting for dashboard
 		try {
 			dashboard = await adminApi.dashboard();
 		} catch (err) {
@@ -658,9 +658,30 @@
 	{:else if dashboard}
 		<div class="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 
+			<!-- ── All Users card ─────────────────────────────────────────── -->
+			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'users' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
+				<button
+					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'users' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
+					onclick={() => selectTab('users')}
+				>
+					<Users size={20} class="text-saffron shrink-0" />
+					<span class="font-serif font-semibold {activeTab === 'users' ? 'text-cream' : 'text-maroon'}">All Users</span>
+					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'users' ? 'text-cream' : 'text-ink'}">{dashboard.stats.users}</span>
+				</button>
+				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
+					<button
+						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+						onclick={() => selectTab('users')}
+					>&#9888; Unverified: {dashboard.pending_users.length}</button>
+					<button
+						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
+						onclick={() => selectTab('users')}
+					>&#10003; Verified: {dashboard.stats.users - dashboard.pending_users.length}</button>
+				</div>
+			</div>
+
 			<!-- ── All Profiles card ───────────────────────────────────────── -->
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'profiles' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
-				<!-- Header — click to show All Profiles -->
 				<button
 					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'profiles' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
 					onclick={() => { selectTab('profiles'); profileStatusFilter = 'all'; }}
@@ -669,7 +690,6 @@
 					<span class="font-serif font-semibold {activeTab === 'profiles' ? 'text-cream' : 'text-maroon'}">All Profiles</span>
 					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'profiles' ? 'text-cream' : 'text-ink'}">{dashboard.stats.profiles_total}</span>
 				</button>
-				<!-- Filter pills -->
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button
 						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
@@ -704,255 +724,12 @@
 				</div>
 			</div>
 
-			<!-- ── All Users card ─────────────────────────────────────────── -->
-			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'users' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
-				<button
-					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'users' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
-					onclick={() => selectTab('users')}
-				>
-					<Users size={20} class="{activeTab === 'users' ? 'text-saffron' : 'text-saffron'} shrink-0" />
-					<span class="font-serif font-semibold {activeTab === 'users' ? 'text-cream' : 'text-maroon'}">All Users</span>
-					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'users' ? 'text-cream' : 'text-ink'}">{dashboard.stats.users}</span>
-				</button>
-				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
-					<button
-						class="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
-						onclick={() => selectTab('users')}
-					>&#9888; Unverified: {dashboard.pending_users.length}</button>
-					<button
-						class="rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
-						onclick={() => selectTab('users')}
-					>&#10003; Verified: {dashboard.stats.users - dashboard.pending_users.length}</button>
-				</div>
-			</div>
-
 		</div>
 	{/if}
 
 	<!-- anchor for scroll-into-view when stat card is clicked -->
 	<div bind:this={contentSectionEl}></div>
-	{#if activeTab === 'profiles'}
-		{#if allProfilesLoading}
-			<div class="flex items-center justify-center py-20">
-				<Loader size={36} class="animate-spin text-saffron" />
-			</div>
-		{:else if allProfilesError}
-			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allProfilesError}</div>
-		{:else if allProfiles}
-			<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-				<h2 class="font-serif text-xl font-semibold text-maroon">All Profiles</h2>
-				<span class="text-sm text-ink/50">
-					{allProfiles.filter(p => profileStatusFilter === 'all' || p.status === profileStatusFilter).length}
-					{profileStatusFilter === 'all' ? 'total' : profileStatusFilter}
-				</span>
-			</div>
-			<!-- Status filter chips -->
-			<div class="mb-4 flex flex-wrap gap-1.5">
-				{#each (['all', 'pending', 'approved', 'rejected', 'draft'] as const) as s}
-					{@const count = s === 'all' ? allProfiles.length : allProfiles.filter(p => p.status === s).length}
-					<button
-						class="rounded-full px-3 py-1 text-xs font-semibold border transition-all {profileStatusFilter === s
-							? 'bg-maroon text-cream border-maroon'
-							: 'bg-white text-ink/60 border-gold/40 hover:border-maroon/40 hover:text-maroon'}"
-						onclick={() => { profileStatusFilter = s; }}
-					>
-						{s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
-						<span class="ml-1 opacity-70">({count})</span>
-					</button>
-				{/each}
-			</div>
-
-			<!-- ag-Grid -->
-			<div bind:this={profilesGridDiv}
-				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
-				style="height: 460px;
-					--ag-header-background-color: #6b0f1a;
-					--ag-header-foreground-color: #fff8e7;
-					--ag-header-column-separator-display: block;
-					--ag-header-column-separator-color: #a01428;
-					--ag-header-column-separator-width: 1px;
-					--ag-cell-horizontal-border: solid #e8dcc8;
-					--ag-row-border-color: #e8dcc8;
-					--ag-row-border-width: 1px;
-					--ag-selected-row-background-color: #fdf3e7;
-					--ag-row-hover-color: #fdf8f0;
-					--ag-font-size: 13px;
-					--ag-grid-size: 6px;
-					--ag-list-item-height: 36px;
-					--ag-header-height: 42px;"
-			></div>
-
-			<!-- Selected profile action panel -->
-			{#if selectedProfile}
-				<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
-					<div class="min-w-0 flex-1">
-						<p class="font-semibold text-ink">
-							{selectedProfile.profile_number} — {selectedProfile.first_name} {selectedProfile.last_name ?? ''}
-						</p>
-						<p class="text-sm text-ink/60 capitalize">
-							{selectedProfile.gender} · <span class="{selectedProfile.status === 'approved' ? 'text-green-600' : selectedProfile.status === 'rejected' ? 'text-vermilion' : 'text-saffron'} font-medium">{selectedProfile.status}</span>
-							· {selectedProfile.city}{selectedProfile.state ? `, ${selectedProfile.state}` : ''}
-						</p>
-					</div>
-					<div class="flex shrink-0 flex-wrap gap-2">
-						<a href="/profiles/{selectedProfile.id}" class="btn-secondary text-xs px-4 py-2">View →</a>
-						{#if selectedProfile.status === 'pending'}
-							<button
-								class="btn-primary text-xs px-4 py-2"
-								disabled={profileActionLoading}
-								onclick={doApproveProfile}
-							>
-								{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-								✓ Approve
-							</button>
-							<button
-								class="btn-danger text-xs px-4 py-2"
-								disabled={profileActionLoading}
-								onclick={() => { profileRejectOpen = !profileRejectOpen; profileRejectNote = ''; }}
-							>
-								✕ Reject
-							</button>
-						{/if}
-					</div>
-				</div>
-				{#if profileRejectOpen && selectedProfile.status === 'pending'}
-					<div class="flex gap-2 mt-2">
-						<input
-							type="text"
-							class="input flex-1 text-sm"
-							placeholder="Rejection reason (required)"
-							bind:value={profileRejectNote}
-						/>
-						<button
-							class="btn-danger text-sm px-4"
-							disabled={profileActionLoading}
-							onclick={doRejectProfile}
-						>
-							{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-							Confirm
-						</button>
-					</div>
-				{/if}
-			{:else}
-				<p class="mt-3 text-xs text-ink/40 text-center">Click a row to select and act on it</p>
-			{/if}
-		{:else}
-			<div class="flex items-center justify-center py-20">
-				<Loader size={36} class="animate-spin text-saffron" />
-			</div>
-		{/if}
-
-	<!-- ── All Requests tab ────────────────────────────────────────────────────── -->
-	{:else if activeTab === 'requests'}
-		{#if allRequestsLoading}
-			<div class="flex items-center justify-center py-20">
-				<Loader size={36} class="animate-spin text-saffron" />
-			</div>
-		{:else if allRequestsError}
-			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allRequestsError}</div>
-		{:else if allRequests}
-			<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-				<h2 class="font-serif text-xl font-semibold text-maroon">All Requests</h2>
-				<span class="text-sm text-ink/50">
-					{allRequests.filter(r => requestStatusFilter === 'all' || r.status === requestStatusFilter).length}
-					{requestStatusFilter === 'all' ? 'total' : requestStatusFilter}
-				</span>
-			</div>
-			<!-- Status filter chips -->
-			<div class="mb-4 flex flex-wrap gap-1.5">
-				{#each (['all', 'pending', 'approved', 'rejected'] as const) as s}
-					{@const count = s === 'all' ? allRequests.length : allRequests.filter(r => r.status === s).length}
-					<button
-						class="rounded-full px-3 py-1 text-xs font-semibold border transition-all {requestStatusFilter === s
-							? 'bg-maroon text-cream border-maroon'
-							: 'bg-white text-ink/60 border-gold/40 hover:border-maroon/40 hover:text-maroon'}"
-						onclick={() => { requestStatusFilter = s; }}
-					>
-						{s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
-						<span class="ml-1 opacity-70">({count})</span>
-					</button>
-				{/each}
-			</div>
-
-			<!-- ag-Grid -->
-			<div bind:this={requestsGridDiv}
-				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
-				style="height: 400px;
-					--ag-header-background-color: #6b0f1a;
-					--ag-header-foreground-color: #fff8e7;
-					--ag-header-column-separator-display: block;
-					--ag-header-column-separator-color: #a01428;
-					--ag-header-column-separator-width: 1px;
-					--ag-cell-horizontal-border: solid #e8dcc8;
-					--ag-row-border-color: #e8dcc8;
-					--ag-row-border-width: 1px;
-					--ag-selected-row-background-color: #fdf3e7;
-					--ag-row-hover-color: #fdf8f0;
-					--ag-font-size: 13px;
-					--ag-grid-size: 6px;
-					--ag-list-item-height: 36px;
-					--ag-header-height: 42px;"
-			></div>
-
-			<!-- Selected request action panel -->
-			{#if selectedRequest}
-				<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
-					<div class="min-w-0 flex-1">
-						<p class="font-semibold text-ink font-mono text-sm">{selectedRequest.id.slice(0, 8)}…</p>
-						<p class="text-sm text-ink/60">
-							Status: <span class="{selectedRequest.status === 'approved' ? 'text-green-600' : selectedRequest.status === 'rejected' ? 'text-vermilion' : 'text-saffron'} font-medium capitalize">{selectedRequest.status}</span>
-							{#if selectedRequest.message} · "{selectedRequest.message}"{/if}
-						</p>
-					</div>
-					<div class="flex shrink-0 flex-wrap gap-2">
-						{#if selectedRequest.status === 'pending'}
-							<button
-								class="btn-primary text-xs px-4 py-2"
-								disabled={requestActionLoading}
-								onclick={doApproveRequest}
-							>
-								{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-								✓ Approve
-							</button>
-							<button
-								class="btn-danger text-xs px-4 py-2"
-								disabled={requestActionLoading}
-								onclick={() => { requestRejectOpen = !requestRejectOpen; requestRejectNote = ''; }}
-							>
-								✕ Reject
-							</button>
-						{/if}
-					</div>
-				</div>
-				{#if requestRejectOpen && selectedRequest.status === 'pending'}
-					<div class="flex gap-2 mt-2">
-						<input
-							type="text"
-							class="input flex-1 text-sm"
-							placeholder="Rejection reason (required)"
-							bind:value={requestRejectNote}
-						/>
-						<button
-							class="btn-danger text-sm px-4"
-							disabled={requestActionLoading}
-							onclick={doRejectRequest}
-						>
-							{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-							Confirm
-						</button>
-					</div>
-				{/if}
-			{:else}
-				<p class="mt-3 text-xs text-ink/40 text-center">Click a row to select and act on it</p>
-			{/if}
-		{:else}
-			<div class="flex items-center justify-center py-20">
-				<Loader size={36} class="animate-spin text-saffron" />
-			</div>
-		{/if}
-
-	<!-- ── All Users tab ───────────────────────────────────────────────────────── -->
-	{:else if activeTab === 'users'}
+	{#if activeTab === 'users'}
 		{#if allUsersLoading}
 			<div class="flex items-center justify-center py-20">
 				<Loader size={36} class="animate-spin text-saffron" />
@@ -960,10 +737,6 @@
 		{:else if allUsersError}
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allUsersError}</div>
 		{:else if allUsers !== null}
-			<div class="mb-3 flex items-center justify-between">
-				<h2 class="font-serif text-xl font-semibold text-maroon">All Users</h2>
-				<span class="text-sm text-ink/50">{allUsers.length} total · click a row to act</span>
-			</div>
 			{#if allUsers.length === 0}
 				<div class="card text-sm text-ink/60">No users found.</div>
 			{:else}
@@ -1089,6 +862,213 @@
 						</button>
 					</div>
 				</div>
+			</div>
+		{/if}
+
+	<!-- ── All Profiles tab ────────────────────────────────────────────────────── -->
+	{:else if activeTab === 'profiles'}
+		{#if allProfilesLoading}
+			<div class="flex items-center justify-center py-20">
+				<Loader size={36} class="animate-spin text-saffron" />
+			</div>
+		{:else if allProfilesError}
+			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allProfilesError}</div>
+		{:else if allProfiles}
+			<!-- Status filter chips -->
+			<div class="mb-4 flex flex-wrap gap-1.5">
+				{#each (['all', 'pending', 'approved', 'rejected', 'draft'] as const) as s}
+					{@const count = s === 'all' ? allProfiles.length : allProfiles.filter(p => p.status === s).length}
+					<button
+						class="rounded-full px-3 py-1 text-xs font-semibold border transition-all {profileStatusFilter === s
+							? 'bg-maroon text-cream border-maroon'
+							: 'bg-white text-ink/60 border-gold/40 hover:border-maroon/40 hover:text-maroon'}"
+						onclick={() => { profileStatusFilter = s; }}
+					>
+						{s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+						<span class="ml-1 opacity-70">({count})</span>
+					</button>
+				{/each}
+			</div>
+
+			<!-- ag-Grid -->
+			<div bind:this={profilesGridDiv}
+				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
+				style="height: 460px;
+					--ag-header-background-color: #6b0f1a;
+					--ag-header-foreground-color: #fff8e7;
+					--ag-header-column-separator-display: block;
+					--ag-header-column-separator-color: #a01428;
+					--ag-header-column-separator-width: 1px;
+					--ag-cell-horizontal-border: solid #e8dcc8;
+					--ag-row-border-color: #e8dcc8;
+					--ag-row-border-width: 1px;
+					--ag-selected-row-background-color: #fdf3e7;
+					--ag-row-hover-color: #fdf8f0;
+					--ag-font-size: 13px;
+					--ag-grid-size: 6px;
+					--ag-list-item-height: 36px;
+					--ag-header-height: 42px;"
+			></div>
+
+			<!-- Selected profile action panel -->
+			{#if selectedProfile}
+				<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
+					<div class="min-w-0 flex-1">
+						<p class="font-semibold text-ink">
+							{selectedProfile.profile_number} — {selectedProfile.first_name} {selectedProfile.last_name ?? ''}
+						</p>
+						<p class="text-sm text-ink/60 capitalize">
+							{selectedProfile.gender} · <span class="{selectedProfile.status === 'approved' ? 'text-green-600' : selectedProfile.status === 'rejected' ? 'text-vermilion' : 'text-saffron'} font-medium">{selectedProfile.status}</span>
+							· {selectedProfile.city}{selectedProfile.state ? `, ${selectedProfile.state}` : ''}
+						</p>
+					</div>
+					<div class="flex shrink-0 flex-wrap gap-2">
+						<a href="/profiles/{selectedProfile.id}" class="btn-secondary text-xs px-4 py-2">View →</a>
+						{#if selectedProfile.status === 'pending'}
+							<button
+								class="btn-primary text-xs px-4 py-2"
+								disabled={profileActionLoading}
+								onclick={doApproveProfile}
+							>
+								{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+								✓ Approve
+							</button>
+							<button
+								class="btn-danger text-xs px-4 py-2"
+								disabled={profileActionLoading}
+								onclick={() => { profileRejectOpen = !profileRejectOpen; profileRejectNote = ''; }}
+							>
+								✕ Reject
+							</button>
+						{/if}
+					</div>
+				</div>
+				{#if profileRejectOpen && selectedProfile.status === 'pending'}
+					<div class="flex gap-2 mt-2">
+						<input
+							type="text"
+							class="input flex-1 text-sm"
+							placeholder="Rejection reason (required)"
+							bind:value={profileRejectNote}
+						/>
+						<button
+							class="btn-danger text-sm px-4"
+							disabled={profileActionLoading}
+							onclick={doRejectProfile}
+						>
+							{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+							Confirm
+						</button>
+					</div>
+				{/if}
+			{:else}
+				<p class="mt-3 text-xs text-ink/40 text-center">Click a row to select and act on it</p>
+			{/if}
+		{:else}
+			<div class="flex items-center justify-center py-20">
+				<Loader size={36} class="animate-spin text-saffron" />
+			</div>
+		{/if}
+
+	<!-- ── All Requests tab ────────────────────────────────────────────────────── -->
+	{:else if activeTab === 'requests'}
+		{#if allRequestsLoading}
+			<div class="flex items-center justify-center py-20">
+				<Loader size={36} class="animate-spin text-saffron" />
+			</div>
+		{:else if allRequestsError}
+			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allRequestsError}</div>
+		{:else if allRequests}
+			<!-- Status filter chips -->
+			<div class="mb-4 flex flex-wrap gap-1.5">
+				{#each (['all', 'pending', 'approved', 'rejected'] as const) as s}
+					{@const count = s === 'all' ? allRequests.length : allRequests.filter(r => r.status === s).length}
+					<button
+						class="rounded-full px-3 py-1 text-xs font-semibold border transition-all {requestStatusFilter === s
+							? 'bg-maroon text-cream border-maroon'
+							: 'bg-white text-ink/60 border-gold/40 hover:border-maroon/40 hover:text-maroon'}"
+						onclick={() => { requestStatusFilter = s; }}
+					>
+						{s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+						<span class="ml-1 opacity-70">({count})</span>
+					</button>
+				{/each}
+			</div>
+
+			<!-- ag-Grid -->
+			<div bind:this={requestsGridDiv}
+				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
+				style="height: 400px;
+					--ag-header-background-color: #6b0f1a;
+					--ag-header-foreground-color: #fff8e7;
+					--ag-header-column-separator-display: block;
+					--ag-header-column-separator-color: #a01428;
+					--ag-header-column-separator-width: 1px;
+					--ag-cell-horizontal-border: solid #e8dcc8;
+					--ag-row-border-color: #e8dcc8;
+					--ag-row-border-width: 1px;
+					--ag-selected-row-background-color: #fdf3e7;
+					--ag-row-hover-color: #fdf8f0;
+					--ag-font-size: 13px;
+					--ag-grid-size: 6px;
+					--ag-list-item-height: 36px;
+					--ag-header-height: 42px;"
+			></div>
+
+			<!-- Selected request action panel -->
+			{#if selectedRequest}
+				<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
+					<div class="min-w-0 flex-1">
+						<p class="font-semibold text-ink font-mono text-sm">{selectedRequest.id.slice(0, 8)}…</p>
+						<p class="text-sm text-ink/60">
+							Status: <span class="{selectedRequest.status === 'approved' ? 'text-green-600' : selectedRequest.status === 'rejected' ? 'text-vermilion' : 'text-saffron'} font-medium capitalize">{selectedRequest.status}</span>
+							{#if selectedRequest.message} · "{selectedRequest.message}"{/if}
+						</p>
+					</div>
+					<div class="flex shrink-0 flex-wrap gap-2">
+						{#if selectedRequest.status === 'pending'}
+							<button
+								class="btn-primary text-xs px-4 py-2"
+								disabled={requestActionLoading}
+								onclick={doApproveRequest}
+							>
+								{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+								✓ Approve
+							</button>
+							<button
+								class="btn-danger text-xs px-4 py-2"
+								disabled={requestActionLoading}
+								onclick={() => { requestRejectOpen = !requestRejectOpen; requestRejectNote = ''; }}
+							>
+								✕ Reject
+							</button>
+						{/if}
+					</div>
+				</div>
+				{#if requestRejectOpen && selectedRequest.status === 'pending'}
+					<div class="flex gap-2 mt-2">
+						<input
+							type="text"
+							class="input flex-1 text-sm"
+							placeholder="Rejection reason (required)"
+							bind:value={requestRejectNote}
+						/>
+						<button
+							class="btn-danger text-sm px-4"
+							disabled={requestActionLoading}
+							onclick={doRejectRequest}
+						>
+							{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+							Confirm
+						</button>
+					</div>
+				{/if}
+			{:else}
+				<p class="mt-3 text-xs text-ink/40 text-center">Click a row to select and act on it</p>
+			{/if}
+		{:else}
+			<div class="flex items-center justify-center py-20">
+				<Loader size={36} class="animate-spin text-saffron" />
 			</div>
 		{/if}
 
