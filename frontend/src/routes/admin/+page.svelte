@@ -439,21 +439,21 @@
 	function applyUserFilter(f: typeof userFilter) {
 		userFilter = f;
 		selectedUser = null;
-		usersGridApi?.setGridOption('rowData', [...computeUsersRows(f)]);
+		// {#key userFilter} in template recreates grid with filtered data
 	}
 
 	function applyProfileFilter(f: typeof profileStatusFilter) {
 		profileStatusFilter = f;
 		selectedProfile = null;
 		profileRejectOpen = false;
-		profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(f)]);
+		// {#key profileStatusFilter} in template recreates grid with filtered data
 	}
 
 	function applyRequestFilter(f: typeof requestStatusFilter) {
 		requestStatusFilter = f;
 		selectedRequest = null;
 		requestRejectOpen = false;
-		requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(f)]);
+		// {#key requestStatusFilter} in template recreates grid with filtered data
 	}
 
 	// ── Grid actions (use:action pattern) ────────────────────────────────────────
@@ -488,9 +488,6 @@
 		};
 		makeGrid(data);
 		return {
-			update: (newData: User[]) => {
-				usersGridApi?.setGridOption('rowData', [...newData]);
-			},
 			destroy: () => { usersGridApi?.destroy(); usersGridApi = undefined; }
 		};
 	}
@@ -527,9 +524,6 @@
 		};
 		makeGrid(data);
 		return {
-			update: (newData: Profile[]) => {
-				profilesGridApi?.setGridOption('rowData', [...newData]);
-			},
 			destroy: () => { profilesGridApi?.destroy(); profilesGridApi = undefined; }
 		};
 	}
@@ -566,9 +560,6 @@
 		};
 		makeGrid(data);
 		return {
-			update: (newData: DetailRequest[]) => {
-				requestsGridApi?.setGridOption('rowData', [...newData]);
-			},
 			destroy: () => { requestsGridApi?.destroy(); requestsGridApi = undefined; }
 		};
 	}
@@ -728,7 +719,8 @@
 				</div>
 
 				<!-- ag-Grid container -->
-				<div use:usersGridAction={filteredUsers} class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm" style="height: 480px;
+				{#key userFilter}
+				<div use:usersGridAction={computeUsersRows(userFilter)} class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm" style="height: 480px;
 					--ag-header-background-color: #6b0f1a;
 					--ag-header-foreground-color: #fff8e7;
 					--ag-header-column-separator-display: block;
@@ -744,6 +736,7 @@
 					--ag-list-item-height: 36px;
 					--ag-header-height: 42px;
 				"></div>
+				{/key}
 
 				<!-- Selected-user action panel -->
 				{#if selectedUser}
@@ -852,7 +845,8 @@
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allProfilesError}</div>
 		{:else if allProfiles}
 			<!-- ag-Grid -->
-			<div use:profilesGridAction={filteredProfiles}
+			{#key profileStatusFilter}
+			<div use:profilesGridAction={computeProfilesRows(profileStatusFilter)}
 				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
 				style="height: 460px;
 					--ag-header-background-color: #6b0f1a;
@@ -870,6 +864,7 @@
 					--ag-list-item-height: 36px;
 					--ag-header-height: 42px;"
 			></div>
+			{/key}
 
 			<!-- Selected profile action panel -->
 			{#if selectedProfile}
@@ -941,7 +936,8 @@
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allRequestsError}</div>
 		{:else if allRequests}
 			<!-- ag-Grid -->
-			<div use:requestsGridAction={filteredRequests}
+			{#key requestStatusFilter}
+			<div use:requestsGridAction={computeRequestsRows(requestStatusFilter)}
 				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
 				style="height: 400px;
 					--ag-header-background-color: #6b0f1a;
@@ -959,6 +955,7 @@
 					--ag-list-item-height: 36px;
 					--ag-header-height: 42px;"
 			></div>
+			{/key}
 
 			<!-- Selected request action panel -->
 			{#if selectedRequest}
