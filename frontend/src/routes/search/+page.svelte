@@ -9,7 +9,10 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { ChevronLeft, ChevronRight, User, Loader, Search } from 'lucide-svelte';
 	import DualRangeSlider from '$lib/components/DualRangeSlider.svelte';
+	import Combobox from '$lib/components/Combobox.svelte';
 	import { MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER, DIET_OPTIONS } from '$lib/profileOptions';
+
+	const COUNTRIES = [...COUNTRIES_PRIORITY, ...COUNTRIES_OTHER];
 
 	const NAKSHATRAS = [
 		'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashirsha', 'Ardra',
@@ -242,21 +245,13 @@
 				<!-- State -->
 				<div>
 					<label for="f-state" class="label">State · <span lang="te">రాష్ట్రం</span></label>
-					<input id="f-state" type="text" class="input text-sm" list="states_opts_search" bind:value={state_filter} placeholder="Any state" />
-					<datalist id="states_opts_search">
-						{#each INDIA_STATES as s}<option value={s}></option>{/each}
-					</datalist>
+					<Combobox bind:value={state_filter} options={INDIA_STATES} allowCustom={true} placeholder="Any state" />
 				</div>
 
 				<!-- Country -->
 				<div>
 					<label for="f-country" class="label">Country · <span lang="te">దేశం</span></label>
-					<select id="f-country" class="input text-sm" bind:value={country_filter}>
-						<option value="">Any country</option>
-						{#each COUNTRIES_PRIORITY as c}<option value={c}>{c}</option>{/each}
-						<option disabled>──────────</option>
-						{#each COUNTRIES_OTHER as c}<option value={c}>{c}</option>{/each}
-					</select>
+					<Combobox bind:value={country_filter} options={COUNTRIES} placeholder="Any country" />
 				</div>
 
 				<!-- Pin Code -->
@@ -269,10 +264,7 @@
 				<!-- Language -->
 				<div>
 					<label for="f-lang" class="label">Language · <span lang="te">భాష</span></label>
-					<input id="f-lang" type="text" class="input text-sm" list="mother_tongue_opts_search" bind:value={mother_tongue_filter} placeholder="e.g. Telugu" />
-					<datalist id="mother_tongue_opts_search">
-						{#each MOTHER_TONGUES as lang}<option value={lang}></option>{/each}
-					</datalist>
+					<Combobox bind:value={mother_tongue_filter} options={MOTHER_TONGUES} placeholder="Any language" />
 					<p class="mt-0.5 text-xs text-ink/45">e.g. Telugu, Hindi, Marathi · భాష పేరు</p>
 				</div>
 

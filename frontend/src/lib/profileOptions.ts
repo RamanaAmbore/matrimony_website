@@ -1,3 +1,7 @@
+export const MARATHA_SUB_CASTES = [
+	'Maratha', 'Are Marathi', 'Are Kshatriya', 'Maratha Non-Brahmin'
+];
+
 export const MOTHER_TONGUES = [
 	'Telugu', 'Marathi', 'Kannada', 'Tamil', 'Hindi',
 	'Malayalam', 'Gujarati', 'Bengali', 'Punjabi', 'Odia', 'Urdu'

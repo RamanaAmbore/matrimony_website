@@ -15,7 +15,10 @@
 	import { asciiOnly } from '$lib/inputFilters';
 	import BilingualLabel from '$lib/components/BilingualLabel.svelte';
 	import PhotoUpload from '$lib/components/PhotoUpload.svelte';
-	import { MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER, DIET_OPTIONS } from '$lib/profileOptions';
+	import Combobox from '$lib/components/Combobox.svelte';
+	import { MARATHA_SUB_CASTES, MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER, DIET_OPTIONS } from '$lib/profileOptions';
+
+	const COUNTRIES = [...COUNTRIES_PRIORITY, ...COUNTRIES_OTHER];
 
 	function cmToFtIn(cm: number): string {
 		const totalInches = Math.round(cm / 2.54);
@@ -585,34 +588,15 @@
 
 								<!-- Mother Tongue -->
 								<div>
-									<BilingualLabel key="motherTongue" for="mother_tongue" />
-									<input id="mother_tongue" type="text" class="input" list="mother_tongue_opts" bind:value={mother_tongue} placeholder="Telugu" />
-									<datalist id="mother_tongue_opts">
-										<option value="Telugu"></option>
-										<option value="Marathi"></option>
-										<option value="Kannada"></option>
-										<option value="Tamil"></option>
-										<option value="Hindi"></option>
-										<option value="Malayalam"></option>
-										<option value="Gujarati"></option>
-										<option value="Bengali"></option>
-										<option value="Punjabi"></option>
-										<option value="Odia"></option>
-										<option value="Urdu"></option>
-									</datalist>
+									<BilingualLabel key="motherTongue" for="mother_tongue_w" />
+									<Combobox id="mother_tongue_w" bind:value={mother_tongue} options={MOTHER_TONGUES} placeholder="Select language" />
 									<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 								</div>
 
 								<!-- Sub-caste (optional) -->
 								<div class="sm:col-span-2">
 									<BilingualLabel key="subCaste" for="sub_caste" />
-									<input id="sub_caste" type="text" class="input" list="sub_caste_opts" bind:value={sub_caste} placeholder="Type or choose" />
-									<datalist id="sub_caste_opts">
-										<option value="Maratha"></option>
-										<option value="Are Marathi"></option>
-										<option value="Are Kshatriya"></option>
-										<option value="Maratha Non-Brahmin"></option>
-									</datalist>
+									<Combobox id="sub_caste" bind:value={sub_caste} options={MARATHA_SUB_CASTES} allowCustom={true} placeholder="Select or type sub-caste" />
 								</div>
 							</div>
 						</div>
@@ -1009,26 +993,13 @@
 							<!-- State -->
 							<div>
 								<BilingualLabel key="state" for="state_w" />
-								<input id="state_w" type="text" class="input" list="states_opts" bind:value={state_field} placeholder="e.g. Telangana" />
-								<datalist id="states_opts">
-									{#each INDIA_STATES as s}
-										<option value={s}></option>
-									{/each}
-								</datalist>
+								<Combobox id="state_w" bind:value={state_field} options={INDIA_STATES} allowCustom={true} placeholder="Select state" />
 							</div>
 
 							<!-- Country -->
 							<div>
 								<BilingualLabel key="country" for="country_w" />
-								<select id="country_w" class="input" bind:value={country}>
-									{#each COUNTRIES_PRIORITY as c}
-										<option value={c}>{c}</option>
-									{/each}
-									<option disabled>──────────</option>
-									{#each COUNTRIES_OTHER as c}
-										<option value={c}>{c}</option>
-									{/each}
-								</select>
+								<Combobox id="country_w" bind:value={country} options={COUNTRIES} placeholder="Select country" />
 							</div>
 
 							<!-- Pin Code (optional) -->
@@ -1224,28 +1195,8 @@
 
 				<!-- Mother Tongue -->
 				<div>
-					<BilingualLabel key="motherTongue" for="mother_tongue" />
-					<input
-						id="mother_tongue"
-						type="text"
-						class="input"
-						list="mother_tongue_opts_edit"
-						bind:value={mother_tongue}
-						placeholder="Telugu"
-					/>
-					<datalist id="mother_tongue_opts_edit">
-						<option value="Telugu"></option>
-						<option value="Marathi"></option>
-						<option value="Kannada"></option>
-						<option value="Tamil"></option>
-						<option value="Hindi"></option>
-						<option value="Malayalam"></option>
-						<option value="Gujarati"></option>
-						<option value="Bengali"></option>
-						<option value="Punjabi"></option>
-						<option value="Odia"></option>
-						<option value="Urdu"></option>
-					</datalist>
+					<BilingualLabel key="motherTongue" for="mother_tongue_e" />
+					<Combobox id="mother_tongue_e" bind:value={mother_tongue} options={MOTHER_TONGUES} placeholder="Select language" />
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 				</div>
 
@@ -1271,14 +1222,8 @@
 
 				<!-- Sub-caste (optional) -->
 				<div class="sm:col-span-2">
-					<BilingualLabel key="subCaste" for="sub_caste" />
-					<input id="sub_caste" type="text" class="input" list="sub_caste_opts_edit" bind:value={sub_caste} placeholder="Type or choose" />
-					<datalist id="sub_caste_opts_edit">
-						<option value="Maratha"></option>
-						<option value="Are Marathi"></option>
-						<option value="Are Kshatriya"></option>
-						<option value="Maratha Non-Brahmin"></option>
-					</datalist>
+					<BilingualLabel key="subCaste" for="sub_caste_edit" />
+					<Combobox id="sub_caste_edit" bind:value={sub_caste} options={MARATHA_SUB_CASTES} allowCustom={true} placeholder="Select or type sub-caste" />
 				</div>
 			</div>
 		</div>
@@ -2008,26 +1953,13 @@
 			<!-- State -->
 			<div>
 				<BilingualLabel key="state" for="state_n" />
-				<input id="state_n" type="text" class="input" list="states_opts_edit" bind:value={state_field} placeholder="e.g. Telangana" />
-				<datalist id="states_opts_edit">
-					{#each INDIA_STATES as s}
-						<option value={s}></option>
-					{/each}
-				</datalist>
+				<Combobox id="state_n" bind:value={state_field} options={INDIA_STATES} allowCustom={true} placeholder="Select state" />
 			</div>
 
 			<!-- Country -->
 			<div>
 				<BilingualLabel key="country" for="country_n" />
-				<select id="country_n" class="input" bind:value={country}>
-					{#each COUNTRIES_PRIORITY as c}
-						<option value={c}>{c}</option>
-					{/each}
-					<option disabled>──────────</option>
-					{#each COUNTRIES_OTHER as c}
-						<option value={c}>{c}</option>
-					{/each}
-				</select>
+				<Combobox id="country_n" bind:value={country} options={COUNTRIES} placeholder="Select country" />
 			</div>
 
 			<!-- Pin Code (optional) -->
