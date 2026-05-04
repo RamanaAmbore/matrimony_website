@@ -198,7 +198,7 @@ class AuthController(Controller):
 
         return {"user_id": str(user.id)}
 
-    @post("/login")
+    @post("/login", status_code=200)
     async def login(
         self,
         data: LoginRequest,
@@ -260,7 +260,7 @@ class AuthController(Controller):
         response.delete_cookie(key=_JWT_COOKIE, path="/")
         return response
 
-    @post("/verify-email")
+    @post("/verify-email", status_code=200)
     async def verify_email(
         self,
         data: VerifyEmailRequest,

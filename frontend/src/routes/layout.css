@@ -27,6 +27,11 @@
 /* Theme native popup highlights to maroon/saffron instead of OS blue */
 :root { accent-color: var(--color-maroon); }
 
+/* Global option theming — applies to every <select> regardless of class */
+option { background: var(--color-cream); color: var(--color-ink); }
+option:checked { background: var(--color-saffron); color: var(--color-maroon); font-weight: 600; }
+option:hover { background: var(--color-maroon); color: var(--color-cream); }
+
 @layer base {
 	html {
 		font-family: var(--font-family-sans);
@@ -146,10 +151,6 @@
 		background-repeat: no-repeat;
 		background-position: right 0.625rem center;
 	}
-
-	select.input option { background: var(--color-cream); color: var(--color-ink); }
-	select.input option:checked { background: var(--color-saffron); color: var(--color-maroon); font-weight: 600; }
-	select.input option:hover { background: var(--color-maroon); color: var(--color-cream); }
 
 	textarea.input {
 		@apply h-auto min-h-[5rem];

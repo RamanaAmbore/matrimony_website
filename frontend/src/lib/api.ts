@@ -214,16 +214,6 @@ export interface SiteInfo {
 	site_url: string;
 }
 
-export interface AdminStats {
-	total_users: number;
-	total_profiles: number;
-	pending_profiles: number;
-	approved_profiles: number;
-	rejected_profiles: number;
-	total_requests: number;
-	pending_requests: number;
-}
-
 // ─── Admin dashboard types ────────────────────────────────────────────────────
 
 export interface PendingProfileSummary {
@@ -494,10 +484,6 @@ export const requests = {
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
 export const admin = {
-	async getStats(): Promise<AdminStats> {
-		return request('/api/admin/stats');
-	},
-
 	async dashboard(): Promise<AdminDashboard> {
 		return request('/api/admin/dashboard');
 	},

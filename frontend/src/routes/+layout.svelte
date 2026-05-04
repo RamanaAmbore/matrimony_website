@@ -160,7 +160,7 @@
 			href="/"
 			class="flex shrink-0 items-center gap-2 focus-visible:outline-2 focus-visible:outline-cream"
 		>
-			<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto" /></div>
+			<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto" loading="eager" decoding="async" /></div>
 			<span class="whitespace-nowrap font-serif text-base font-semibold leading-tight">
 				<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
 				<span class="block leading-tight" lang="te">మరాఠా కల్యాణం</span>
@@ -261,7 +261,7 @@
 			style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);"
 		>
 			<div class="flex items-center gap-2">
-				<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto" /></div>
+				<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto" loading="lazy" decoding="async" /></div>
 				<span class="whitespace-nowrap font-serif text-base font-semibold leading-tight">
 					<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
 					<span class="block font-normal leading-tight" lang="te" style="color:#ffb627; -webkit-text-stroke: 0.65px #2b0a0e; paint-order: stroke fill; text-shadow: 0 1px 1px rgba(0,0,0,0.4); opacity: 1;">మరాఠా కల్యాణం</span>
@@ -368,7 +368,7 @@
 			<!-- Brand column -->
 			<div class="md:col-span-2">
 				<div class="flex items-center gap-3">
-					<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto" /></div>
+					<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto" loading="lazy" decoding="async" /></div>
 					<div class="leading-tight">
 						<p class="font-serif text-xl font-semibold text-cream leading-none">Maratha Kalyanam</p>
 						<p class="leading-snug" lang="te">మరాఠా కల్యాణం</p>
