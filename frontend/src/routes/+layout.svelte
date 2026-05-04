@@ -188,13 +188,13 @@
 				</a>
 				{#if user.is_admin}
 					<a href="/admin" class="whitespace-nowrap text-sm {navLinkClass('/admin', true)}" aria-current={isActive('/admin', true) ? 'page' : undefined}>
-						{T.admin.en} <span lang="te">{T.admin.te}</span>
+						{T.dashboard.en} <span lang="te">{T.dashboard.te}</span>
 					</a>
 					<a href="/admin/settings" class="whitespace-nowrap text-sm {navLinkClass('/admin/settings')}" aria-current={isActive('/admin/settings') ? 'page' : undefined}>
-						Settings
+						{T.settings.en} <span lang="te">{T.settings.te}</span>
 					</a>
 					<a href="/admin/broadcast" class="whitespace-nowrap text-sm {navLinkClass('/admin/broadcast')}" aria-current={isActive('/admin/broadcast') ? 'page' : undefined}>
-						Broadcast
+						{T.broadcast.en} <span lang="te">{T.broadcast.te}</span>
 					</a>
 				{/if}
 				<span class="hidden xl:inline" title={user.email}>
@@ -309,12 +309,14 @@
 					<p class="px-3 text-xs font-semibold tracking-wider text-ink/40 uppercase">
 						{T.admin.en} <span lang="te" class="normal-case">{T.admin.te}</span>
 					</p>
-					<a href="/admin" class={drawerLinkClass('/admin', true)} aria-current={isActive('/admin', true) ? 'page' : undefined} onclick={closeDrawer}>Dashboard</a>
+					<a href="/admin" class={drawerLinkClass('/admin', true)} aria-current={isActive('/admin', true) ? 'page' : undefined} onclick={closeDrawer}>
+						{T.dashboard.en} <span lang="te">{T.dashboard.te}</span>
+					</a>
 					<a href="/admin/settings" class={drawerLinkClass('/admin/settings')} aria-current={isActive('/admin/settings') ? 'page' : undefined} onclick={closeDrawer}>
-						Settings
+						{T.settings.en} <span lang="te">{T.settings.te}</span>
 					</a>
 					<a href="/admin/broadcast" class={drawerLinkClass('/admin/broadcast')} aria-current={isActive('/admin/broadcast') ? 'page' : undefined} onclick={closeDrawer}>
-						Broadcast Email
+						{T.broadcast.en} <span lang="te">{T.broadcast.te}</span>
 					</a>
 				{/if}
 				<div class="my-2 h-px bg-gold/20"></div>
