@@ -50,12 +50,14 @@
 	let allProfiles = $state<Profile[] | null>(null);
 	let allProfilesLoading = $state(false);
 	let allProfilesError = $state('');
+	let profileStatusFilter = $state<'all' | 'pending' | 'approved' | 'rejected' | 'draft'>('all');
 
 	// ── All Requests tab state ───────────────────────────────────────────────────
 
 	let allRequests = $state<DetailRequest[] | null>(null);
 	let allRequestsLoading = $state(false);
 	let allRequestsError = $state('');
+	let requestStatusFilter = $state<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
 	// ── All Users tab state ──────────────────────────────────────────────────────
 
@@ -217,7 +219,7 @@
 			rowData: allUsers,
 			rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
 			onRowClicked: (e) => { selectedUser = e.data as User; },
-			defaultColDef: { resizable: true },
+			defaultColDef: { resizable: true, floatingFilter: true, filter: true },
 			pagination: true,
 			paginationPageSize: 20,
 			theme: 'legacy'
@@ -425,26 +427,71 @@
 	<h1 class="font-serif text-3xl font-bold text-maroon">Admin Dashboard</h1>
 	<p class="mt-1 text-sm text-ink/60">Platform overview and quick approvals</p>
 
-
-	<!-- Quick nav to sub-pages -->
-	<nav class="mb-6 flex flex-wrap gap-3">
-		{#each [
-			{ href: '/admin/profiles', label: 'All Profiles' },
-			{ href: '/admin/requests', label: 'All Requests' },
-			{ href: '/admin/users', label: 'All Users' },
-			{ href: '/admin/settings', label: 'Settings' }
-		] as link}
-			<a href={link.href} class="btn-secondary text-sm">{link.label}</a>
-		{/each}
-	</nav>
+	<!-- ── Stats row (always visible) ────────────────────────────────────────── -->
+	{#if dashboard}
+		<div class="my-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+			<button
+				class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md hover:border-maroon/30 transition-all w-full"
+				onclick={() => selectTab('users')}
+			>
+				<Users size={24} class="text-saffron" />
+				<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.users}</p>
+				<p class="text-xs text-ink/60">Total Users</p>
+				<p class="text-[10px] text-ink/40">click to view</p>
+			</button>
+			<button
+				class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md hover:border-maroon/30 transition-all w-full"
+				onclick={() => selectTab('profiles')}
+			>
+				<UserCheck size={24} class="text-gold" />
+				<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_total}</p>
+				<p class="text-xs text-ink/60">Total Profiles</p>
+				<p class="text-[10px] text-ink/40">click to view</p>
+			</button>
+			<button
+				class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md hover:border-maroon/30 transition-all w-full"
+				onclick={() => selectTab('pending')}
+			>
+				<Clock size={24} class="text-marigold" />
+				<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_pending}</p>
+				<p class="text-xs text-ink/60">Pending Profiles</p>
+				<p class="text-[10px] text-ink/40">click to view</p>
+			</button>
+			<button
+				class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md hover:border-maroon/30 transition-all w-full"
+				onclick={() => selectTab('profiles')}
+			>
+				<CheckCircle2 size={24} class="text-green-600" />
+				<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_approved}</p>
+				<p class="text-xs text-ink/60">Approved</p>
+				<p class="text-[10px] text-ink/40">click to view</p>
+			</button>
+			<button
+				class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md hover:border-maroon/30 transition-all w-full"
+				onclick={() => selectTab('pending')}
+			>
+				<Inbox size={24} class="text-sky-500" />
+				<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.requests_pending}</p>
+				<p class="text-xs text-ink/60">Pending Requests</p>
+				<p class="text-[10px] text-ink/40">click to view</p>
+			</button>
+		</div>
+	{/if}
 
 	<!-- ── Tab bar ─────────────────────────────────────────────────────────────── -->
 	<div class="mb-8 flex flex-wrap gap-1 rounded-full border border-gold/30 bg-white px-1.5 py-1.5 w-fit shadow-sm">
-		<button class={tabClass('pending')} onclick={() => selectTab('pending')}>Pending</button>
-		<button class={tabClass('profiles')} onclick={() => selectTab('profiles')}>All Profiles</button>
-		<button class={tabClass('requests')} onclick={() => selectTab('requests')}>All Requests</button>
-		<button class={tabClass('users')} onclick={() => selectTab('users')}>All Users</button>
-		<button class={tabClass('broadcast')} onclick={() => selectTab('broadcast')}>Broadcast Email</button>
+		<button class={tabClass('pending')} onclick={() => selectTab('pending')}>
+			Action Required
+			{#if dashboard && (dashboard.stats.profiles_pending + dashboard.pending_users.length + dashboard.stats.requests_pending) > 0}
+				<span class="ml-1.5 rounded-full bg-vermilion text-white text-[10px] font-bold px-1.5 py-0.5">
+					{dashboard.stats.profiles_pending + dashboard.pending_users.length + dashboard.stats.requests_pending}
+				</span>
+			{/if}
+		</button>
+		<button class={tabClass('profiles')} onclick={() => selectTab('profiles')}>Profiles</button>
+		<button class={tabClass('requests')} onclick={() => selectTab('requests')}>Requests</button>
+		<button class={tabClass('users')} onclick={() => selectTab('users')}>Users</button>
+		<button class={tabClass('broadcast')} onclick={() => selectTab('broadcast')}>Broadcast</button>
 	</div>
 
 	<!-- ── Pending tab ─────────────────────────────────────────────────────────── -->
@@ -458,39 +505,15 @@
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{error}</div>
 		{:else if dashboard}
 
-			<!-- ── Stats row ──────────────────────────────────────────────────────── -->
-			<div class="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-				<div class="card flex flex-col items-center gap-1 text-center">
-					<Users size={24} class="text-saffron" />
-					<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.users}</p>
-					<p class="text-xs text-ink/60">Total Users</p>
-				</div>
-				<div class="card flex flex-col items-center gap-1 text-center">
-					<UserCheck size={24} class="text-gold" />
-					<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_total}</p>
-					<p class="text-xs text-ink/60">Total Profiles</p>
-				</div>
-				<a href="/admin/profiles" class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md transition-shadow">
-					<Clock size={24} class="text-marigold" />
-					<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_pending}</p>
-					<p class="text-xs text-ink/60">Pending Profiles</p>
-				</a>
-				<div class="card flex flex-col items-center gap-1 text-center">
-					<CheckCircle2 size={24} class="text-green-600" />
-					<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.profiles_approved}</p>
-					<p class="text-xs text-ink/60">Approved</p>
-				</div>
-				<a href="/admin/requests" class="card flex flex-col items-center gap-1 text-center cursor-pointer hover:shadow-md transition-shadow">
-					<Inbox size={24} class="text-sky-500" />
-					<p class="tabular-nums text-2xl font-bold text-ink">{dashboard.stats.requests_pending}</p>
-					<p class="text-xs text-ink/60">Pending Requests</p>
-				</a>
-			</div>
-
 			<!-- ── Pending profile approvals ──────────────────────────────────────── -->
 			<section class="mb-10">
 				<div class="mb-3 flex items-center justify-between">
-					<h2 class="font-serif text-xl font-semibold text-maroon">Pending Profile Approvals</h2>
+					<h2 class="font-serif text-xl font-semibold text-maroon">
+						Pending Profile Approvals
+						<span class="ml-2 rounded-full bg-saffron/20 text-saffron text-xs font-semibold px-2 py-0.5">
+							{dashboard.pending_profiles.length}
+						</span>
+					</h2>
 					<a href="/admin/profiles" class="text-sm text-saffron hover:underline">View all →</a>
 				</div>
 
@@ -570,7 +593,12 @@
 			<!-- ── Pending detail-info requests ───────────────────────────────────── -->
 			<section class="mb-10">
 				<div class="mb-3 flex items-center justify-between">
-					<h2 class="font-serif text-xl font-semibold text-maroon">Pending Detail-Info Requests</h2>
+					<h2 class="font-serif text-xl font-semibold text-maroon">
+						Pending Detail Requests
+						<span class="ml-2 rounded-full bg-saffron/20 text-saffron text-xs font-semibold px-2 py-0.5">
+							{dashboard.pending_requests.length}
+						</span>
+					</h2>
 					<a href="/admin/requests" class="text-sm text-saffron hover:underline">View all →</a>
 				</div>
 
@@ -648,7 +676,10 @@
 			<section class="mb-10">
 				<div class="mb-3 flex items-center justify-between">
 					<h2 class="font-serif text-xl font-semibold text-maroon">
-						Recently Registered (Pending Email Verification)
+						Pending User Verification
+						<span class="ml-2 rounded-full bg-saffron/20 text-saffron text-xs font-semibold px-2 py-0.5">
+							{dashboard.pending_users.length}
+						</span>
 					</h2>
 					<a href="/admin/users" class="text-sm text-saffron hover:underline">View all →</a>
 				</div>
@@ -695,39 +726,57 @@
 		{:else if allProfilesError}
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allProfilesError}</div>
 		{:else if allProfiles}
-			<div class="mb-3 flex items-center justify-between">
+			<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
 				<h2 class="font-serif text-xl font-semibold text-maroon">All Profiles</h2>
-				<span class="text-sm text-ink/50">{allProfiles.length} total</span>
+				<span class="text-sm text-ink/50">
+					{allProfiles.filter(p => profileStatusFilter === 'all' || p.status === profileStatusFilter).length}
+					{profileStatusFilter === 'all' ? 'total' : profileStatusFilter}
+				</span>
 			</div>
-			{#if allProfiles.length === 0}
-				<div class="card text-sm text-ink/60">No profiles found.</div>
+			<!-- Status filter pills -->
+			<div class="mb-4 flex flex-wrap gap-1.5">
+				{#each ['all', 'pending', 'approved', 'rejected', 'draft'] as s}
+					{@const count = s === 'all' ? allProfiles.length : allProfiles.filter(p => p.status === s).length}
+					<button
+						class="rounded-full px-3 py-1 text-xs font-semibold border transition-all {profileStatusFilter === s
+							? 'bg-maroon text-cream border-maroon'
+							: 'bg-white text-ink/60 border-gold/40 hover:border-maroon/40 hover:text-maroon'}"
+						onclick={() => { profileStatusFilter = s as typeof profileStatusFilter; }}
+					>
+						{s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+						<span class="ml-1 opacity-70">({count})</span>
+					</button>
+				{/each}
+			</div>
+			{#if allProfiles.filter(p => profileStatusFilter === 'all' || p.status === profileStatusFilter).length === 0}
+				<div class="card text-sm text-ink/60">No {profileStatusFilter === 'all' ? '' : profileStatusFilter} profiles found.</div>
 			{:else}
 				<div class="overflow-x-auto rounded-lg border border-gold/30 bg-white shadow-sm">
 					<table class="w-full text-sm">
 						<thead>
-							<tr class="border-b border-gold/30 bg-cream/60 text-left text-xs font-semibold text-ink/60 uppercase tracking-wider">
-								<th class="px-4 py-3">ID</th>
+							<tr class="border-b border-gold/30 bg-[#6b0f1a] text-left text-xs font-bold text-cream uppercase tracking-wider">
 								<th class="px-4 py-3">Name</th>
 								<th class="px-4 py-3">Gender</th>
 								<th class="px-4 py-3">Status</th>
-								<th class="px-4 py-3">City</th>
-								<th class="px-4 py-3">Created</th>
+								<th class="px-4 py-3">City · State</th>
+								<th class="px-4 py-3">Education</th>
+								<th class="px-4 py-3">Submitted</th>
 								<th class="px-4 py-3"></th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gold/20">
-							{#each allProfiles as p (p.id)}
+							{#each allProfiles.filter(p => profileStatusFilter === 'all' || p.status === profileStatusFilter) as p (p.id)}
 								<tr class="hover:bg-cream/40 transition-colors">
-									<td class="px-4 py-3 font-mono text-xs text-ink/50">{truncateId(p.id)}</td>
 									<td class="px-4 py-3 font-medium text-ink">{p.first_name} {p.last_name}</td>
 									<td class="px-4 py-3 text-ink/70 capitalize">{p.gender}</td>
 									<td class="px-4 py-3">
 										<span class={statusBadgeClass(p.status)}>{p.status}</span>
 									</td>
-									<td class="px-4 py-3 text-ink/70">{p.city}</td>
-									<td class="px-4 py-3 text-ink/50">{fmtDate(p.created_at)}</td>
+									<td class="px-4 py-3 text-ink/70">{p.city}{p.state ? `, ${p.state}` : ''}</td>
+									<td class="px-4 py-3 text-ink/60 text-xs">{p.education ?? '—'}</td>
+									<td class="px-4 py-3 text-ink/50 text-xs">{fmtDate(p.created_at)}</td>
 									<td class="px-4 py-3">
-										<a href="/admin/profiles/{p.id}" class="text-saffron hover:underline text-xs">View →</a>
+										<a href="/profiles/{p.id}" class="text-saffron hover:underline text-xs">View →</a>
 									</td>
 								</tr>
 							{/each}
@@ -746,35 +795,52 @@
 		{:else if allRequestsError}
 			<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">{allRequestsError}</div>
 		{:else if allRequests}
-			<div class="mb-3 flex items-center justify-between">
+			<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
 				<h2 class="font-serif text-xl font-semibold text-maroon">All Requests</h2>
-				<span class="text-sm text-ink/50">{allRequests.length} total</span>
+				<span class="text-sm text-ink/50">
+					{allRequests.filter(r => requestStatusFilter === 'all' || r.status === requestStatusFilter).length}
+					{requestStatusFilter === 'all' ? 'total' : requestStatusFilter}
+				</span>
 			</div>
-			{#if allRequests.length === 0}
-				<div class="card text-sm text-ink/60">No requests found.</div>
+			<!-- Status filter pills -->
+			<div class="mb-4 flex flex-wrap gap-1.5">
+				{#each ['all', 'pending', 'approved', 'rejected'] as s}
+					{@const count = s === 'all' ? allRequests.length : allRequests.filter(r => r.status === s).length}
+					<button
+						class="rounded-full px-3 py-1 text-xs font-semibold border transition-all {requestStatusFilter === s
+							? 'bg-maroon text-cream border-maroon'
+							: 'bg-white text-ink/60 border-gold/40 hover:border-maroon/40 hover:text-maroon'}"
+						onclick={() => { requestStatusFilter = s as typeof requestStatusFilter; }}
+					>
+						{s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+						<span class="ml-1 opacity-70">({count})</span>
+					</button>
+				{/each}
+			</div>
+			{#if allRequests.filter(r => requestStatusFilter === 'all' || r.status === requestStatusFilter).length === 0}
+				<div class="card text-sm text-ink/60">No {requestStatusFilter === 'all' ? '' : requestStatusFilter} requests found.</div>
 			{:else}
 				<div class="overflow-x-auto rounded-lg border border-gold/30 bg-white shadow-sm">
 					<table class="w-full text-sm">
 						<thead>
-							<tr class="border-b border-gold/30 bg-cream/60 text-left text-xs font-semibold text-ink/60 uppercase tracking-wider">
-								<th class="px-4 py-3">ID</th>
+							<tr class="border-b border-gold/30 bg-[#6b0f1a] text-left text-xs font-bold text-cream uppercase tracking-wider">
+								<th class="px-4 py-3">Request ID</th>
 								<th class="px-4 py-3">Requester</th>
-								<th class="px-4 py-3">Profile ID</th>
+								<th class="px-4 py-3">Profile</th>
 								<th class="px-4 py-3">Status</th>
 								<th class="px-4 py-3">Date</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gold/20">
-							{#each allRequests as r (r.id)}
+							{#each allRequests.filter(r => requestStatusFilter === 'all' || r.status === requestStatusFilter) as r (r.id)}
 								<tr class="hover:bg-cream/40 transition-colors">
-									<td class="px-4 py-3 font-mono text-xs text-ink/50">{truncateId(r.id)}</td>
-									<!-- DetailRequest.requester_user_id is the user UUID; no email available in this type -->
-									<td class="px-4 py-3 font-mono text-xs text-ink/70">{truncateId(r.requester_user_id)}</td>
-									<td class="px-4 py-3 font-mono text-xs text-ink/70">{truncateId(r.profile_id)}</td>
+									<td class="px-4 py-3 font-mono text-xs text-ink/40">{r.id.slice(0, 8)}…</td>
+									<td class="px-4 py-3 font-mono text-xs text-ink/60">{r.requester_user_id.slice(0, 8)}…</td>
+									<td class="px-4 py-3 font-mono text-xs text-ink/60">{r.profile_id.slice(0, 8)}…</td>
 									<td class="px-4 py-3">
 										<span class={statusBadgeClass(r.status)}>{r.status}</span>
 									</td>
-									<td class="px-4 py-3 text-ink/50">{fmtDate(r.created_at)}</td>
+									<td class="px-4 py-3 text-ink/50 text-xs">{fmtDate(r.created_at)}</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -799,6 +865,16 @@
 			{#if allUsers.length === 0}
 				<div class="card text-sm text-ink/60">No users found.</div>
 			{:else}
+				<!-- Quick search -->
+				<div class="mb-3 flex items-center gap-2">
+					<input
+						type="search"
+						placeholder="Search users…"
+						class="input text-sm w-64"
+						oninput={(e) => usersGridApi?.setGridOption('quickFilterText', e.currentTarget.value)}
+					/>
+				</div>
+
 				<!-- ag-Grid container -->
 				<div bind:this={usersGridDiv} class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm" style="height: 480px;
 					--ag-header-background-color: #6b0f1a;
@@ -980,5 +1056,20 @@
 	:global(.ag-theme-quartz .mk-header .ag-header-icon) {
 		color: #ffb627 !important;
 		opacity: 1 !important;
+	}
+	/* Floating filter row */
+	:global(.ag-theme-quartz .ag-floating-filter) {
+		background: #fdf8f0 !important;
+		border-bottom: 1px solid #e8dcc8 !important;
+	}
+	:global(.ag-theme-quartz .ag-floating-filter-input input) {
+		font-size: 12px !important;
+		border: 1px solid #e8dcc8 !important;
+		border-radius: 4px !important;
+		padding: 2px 6px !important;
+	}
+	:global(.ag-theme-quartz .ag-floating-filter-input input:focus) {
+		border-color: #6b0f1a !important;
+		outline: none !important;
 	}
 </style>
