@@ -331,7 +331,7 @@ class AdminController(Controller):
             admin_notes=data.admin_notes or "",
         ))
 
-        await db.refresh(profile, ["photos"])
+        await db.refresh(profile)
         return _serialize_profile(profile, request)
 
     @post("/profiles/{profile_id:str}/reject")
@@ -377,7 +377,7 @@ class AdminController(Controller):
             admin_notes=data.admin_notes or "",
         ))
 
-        await db.refresh(profile, ["photos"])
+        await db.refresh(profile)
         return _serialize_profile(profile, request)
 
     # --- Requests ---
