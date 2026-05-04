@@ -565,7 +565,7 @@
 		if (tab === 'profiles') loadAllProfiles(); // no-op if already loaded
 		if (tab === 'requests') loadAllRequests();
 		if (tab === 'users') loadAllUsers();
-		setTimeout(() => contentSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+		setTimeout(() => contentSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
 	}
 
 	// ── Profile actions (pending tab legacy — kept for dashboard stat cards) ─────
@@ -741,8 +741,30 @@
 		</div>
 	{/if}
 
-	<!-- ── Content area ───────────────────────────────────────────────────────── -->
-	<div bind:this={contentSectionEl}></div>
+	<!-- ── Section tab bar ───────────────────────────────────────────────────── -->
+	<div bind:this={contentSectionEl} class="mt-4 mb-0 flex border-b border-gold/30 bg-white/60 backdrop-blur-sm rounded-t-lg overflow-hidden shadow-sm">
+		<button
+			class="flex-1 px-4 py-3 text-sm font-semibold transition-all {activeTab === 'profiles' ? 'bg-maroon text-cream' : 'text-ink/60 hover:bg-saffron/10 hover:text-maroon'}"
+			onclick={() => selectTab('profiles')}
+		>
+			All Profiles
+			<span class="ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold {activeTab === 'profiles' ? 'bg-white/20 text-cream' : 'bg-ink/10 text-ink/60'}">{allProfiles?.length ?? dashboard?.stats.profiles_total ?? '…'}</span>
+		</button>
+		<button
+			class="flex-1 px-4 py-3 text-sm font-semibold transition-all {activeTab === 'requests' ? 'bg-maroon text-cream' : 'text-ink/60 hover:bg-saffron/10 hover:text-maroon'}"
+			onclick={() => selectTab('requests')}
+		>
+			All Requests
+			<span class="ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold {activeTab === 'requests' ? 'bg-white/20 text-cream' : 'bg-ink/10 text-ink/60'}">{allRequests?.length ?? dashboard?.stats.requests_pending ?? '…'}</span>
+		</button>
+		<button
+			class="flex-1 px-4 py-3 text-sm font-semibold transition-all {activeTab === 'users' ? 'bg-maroon text-cream' : 'text-ink/60 hover:bg-saffron/10 hover:text-maroon'}"
+			onclick={() => selectTab('users')}
+		>
+			All Users
+			<span class="ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold {activeTab === 'users' ? 'bg-white/20 text-cream' : 'bg-ink/10 text-ink/60'}">{allUsers?.length ?? dashboard?.stats.users ?? '…'}</span>
+		</button>
+	</div>
 	{#if activeTab === 'profiles'}
 		{#if allProfilesLoading}
 			<div class="flex items-center justify-center py-20">

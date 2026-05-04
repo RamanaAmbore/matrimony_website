@@ -174,7 +174,7 @@
 		switch (n) {
 			case 0: return !!first_name.trim() && !!surname_clan.trim() && !!dob;
 			case 1: return true; // height has a default
-			case 2: return !!gotra.trim() && !!nakshatram && !!rashi;
+			case 2: return true; // all astrology fields are optional
 			case 3: return !!education.trim() && !!occupation.trim();
 			case 4: return !!father_name.trim() && !!mother_name.trim();
 			case 5: return true; // diet has a default
@@ -317,12 +317,7 @@
 		}
 		if (!marital_status) e.marital_status = 'Required';
 		if (!surname_clan.trim()) e.surname_clan = 'Required';
-		// Astrology
-		if (!gotra.trim()) e.gotra = 'Required';
-		if (!kuldevata.trim()) e.kuldevata = 'Required';
-		if (!devak.trim()) e.devak = 'Required';
-		if (!nakshatram) e.nakshatram = 'Required';
-		if (!rashi) e.rashi = 'Required';
+		// Astrology — all fields optional, no validation required
 		// Education & Career
 		if (!education.trim()) e.education = 'Required';
 		if (!occupation.trim()) e.occupation = 'Required';
@@ -659,7 +654,7 @@
 						<div class="grid gap-4 sm:grid-cols-2">
 							<!-- Gotra -->
 							<div>
-								<BilingualLabel key="gotra" for="gotra" required />
+								<BilingualLabel key="gotra" for="gotra" />
 								<input id="gotra" type="text" class="input" class:border-vermilion={errors.gotra} bind:value={gotra} oninput={(e) => (gotra = asciiOnly(e.currentTarget.value))} />
 								<p class="mt-0.5 text-xs text-ink/45">Ancestral lineage name, e.g. Kashyap, Bharadwaj · గోత్రం పేరు</p>
 								<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
@@ -686,7 +681,7 @@
 
 							<!-- Nakshatram -->
 							<div>
-								<BilingualLabel key="nakshatram" for="nakshatram" required />
+								<BilingualLabel key="nakshatram" for="nakshatram" />
 								<select id="nakshatram" class="input" class:border-vermilion={errors.nakshatram} bind:value={nakshatram}>
 									<option value="">Select…</option>
 									{#each NAKSHATRAS as n}
@@ -698,7 +693,7 @@
 
 							<!-- Rashi -->
 							<div>
-								<BilingualLabel key="rashi" for="rashi" required />
+								<BilingualLabel key="rashi" for="rashi" />
 								<select id="rashi" class="input" class:border-vermilion={errors.rashi} bind:value={rashi}>
 									<option value="">Select…</option>
 									{#each RASHIS as r}
