@@ -437,29 +437,31 @@
 	}
 
 	function applyUserFilter(f: typeof userFilter) {
+		console.log('[admin] applyUserFilter', { from: userFilter, to: f, allUsersCount: allUsers?.length });
 		userFilter = f;
 		selectedUser = null;
-		// {#key userFilter} in template recreates grid with filtered data
 	}
 
 	function applyProfileFilter(f: typeof profileStatusFilter) {
+		console.log('[admin] applyProfileFilter', { from: profileStatusFilter, to: f, allProfilesCount: allProfiles?.length });
 		profileStatusFilter = f;
 		selectedProfile = null;
 		profileRejectOpen = false;
-		// {#key profileStatusFilter} in template recreates grid with filtered data
 	}
 
 	function applyRequestFilter(f: typeof requestStatusFilter) {
+		console.log('[admin] applyRequestFilter', { from: requestStatusFilter, to: f, allRequestsCount: allRequests?.length });
 		requestStatusFilter = f;
 		selectedRequest = null;
 		requestRejectOpen = false;
-		// {#key requestStatusFilter} in template recreates grid with filtered data
 	}
 
 	// ── Grid actions (use:action pattern) ────────────────────────────────────────
 
 	function usersGridAction(node: HTMLDivElement, data: User[]) {
+		console.log('[admin] usersGridAction MOUNT', { rowCount: data?.length, userFilter });
 		const makeGrid = (rows: User[]) => {
+			console.log('[admin] makeGrid users', { rowCount: rows?.length });
 			usersGridApi?.destroy();
 			const columnDefs = [
 				{ field: 'email', headerName: 'Email', flex: 2, filter: true, sortable: true, headerClass: 'mk-header' },
@@ -488,12 +490,14 @@
 		};
 		makeGrid(data);
 		return {
-			destroy: () => { usersGridApi?.destroy(); usersGridApi = undefined; }
+			destroy: () => { console.log('[admin] usersGridAction DESTROY'); usersGridApi?.destroy(); usersGridApi = undefined; }
 		};
 	}
 
 	function profilesGridAction(node: HTMLDivElement, data: Profile[]) {
+		console.log('[admin] profilesGridAction MOUNT', { rowCount: data?.length, profileStatusFilter });
 		const makeGrid = (rows: Profile[]) => {
+			console.log('[admin] makeGrid profiles', { rowCount: rows?.length });
 			profilesGridApi?.destroy();
 			const columnDefs = [
 				{ field: 'profile_number', headerName: 'ID', width: 130, sortable: true, filter: true, headerClass: 'mk-header',
@@ -524,12 +528,14 @@
 		};
 		makeGrid(data);
 		return {
-			destroy: () => { profilesGridApi?.destroy(); profilesGridApi = undefined; }
+			destroy: () => { console.log('[admin] profilesGridAction DESTROY'); profilesGridApi?.destroy(); profilesGridApi = undefined; }
 		};
 	}
 
 	function requestsGridAction(node: HTMLDivElement, data: DetailRequest[]) {
+		console.log('[admin] requestsGridAction MOUNT', { rowCount: data?.length, requestStatusFilter });
 		const makeGrid = (rows: DetailRequest[]) => {
+			console.log('[admin] makeGrid requests', { rowCount: rows?.length });
 			requestsGridApi?.destroy();
 			const columnDefs = [
 				{ field: 'id', headerName: 'Request ID', width: 130, filter: true, headerClass: 'mk-header',
@@ -560,7 +566,7 @@
 		};
 		makeGrid(data);
 		return {
-			destroy: () => { requestsGridApi?.destroy(); requestsGridApi = undefined; }
+			destroy: () => { console.log('[admin] requestsGridAction DESTROY'); requestsGridApi?.destroy(); requestsGridApi = undefined; }
 		};
 	}
 
