@@ -803,8 +803,8 @@
 
 				<!-- Selected-user action panel -->
 				{#if selectedUser}
-					<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
-						<div class="min-w-0 flex-1">
+					<div class="mt-4 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
+						<div class="min-w-0">
 							<p class="font-medium text-ink truncate">{selectedUser.email}</p>
 							<p class="text-xs text-ink/50">
 								{selectedUser.user_id}
@@ -813,7 +813,7 @@
 								{#if selectedUser.is_approved} · <span class="text-green-600">Approved</span>{:else} · <span class="text-marigold">Not approved</span>{/if}
 							</p>
 						</div>
-						<div class="flex flex-wrap gap-2 shrink-0">
+						<div class="mt-3 flex flex-wrap gap-2">
 							{#if !selectedUser.is_approved}
 								<button
 									class="btn-primary text-sm px-4 py-1.5 flex items-center gap-1.5"
