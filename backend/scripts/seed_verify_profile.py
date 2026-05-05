@@ -173,12 +173,14 @@ GROOM: dict[str, Any] = {
 
 
 def make_credentials(suffix: str, gender: str) -> dict[str, str]:
+    # Phone tail must be digits-only — suffix is hex, so derive a digit run.
+    digit_tail = f"{int(suffix, 16) % 10**6:06d}"
     return {
         "email": f"verify_{gender}_{suffix}@marathakalyanam.com",
         "user_id": f"verify_{gender}_{suffix}",
         "password": "Verify1234!",
-        # Stable, non-overlapping phones — bride uses +91 9000…, groom +91 9100…
-        "phone": f"+91{'9000' if gender == 'bride' else '9100'}{suffix.zfill(6)[:6]}",
+        # Bride uses +91 9000…, groom +91 9100…
+        "phone": f"+91{'9000' if gender == 'bride' else '9100'}{digit_tail}",
         "full_name": "Priya Patil" if gender == "bride" else "Aniket Deshmukh",
     }
 
