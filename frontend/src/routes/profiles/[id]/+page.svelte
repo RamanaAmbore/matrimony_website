@@ -21,6 +21,7 @@
 	let requestMessage = $state('');
 	let showRequestForm = $state(false);
 	let isOwner = $state(false);
+	let isAdmin = $state(false);
 
 	onMount(async () => {
 		try {
@@ -29,6 +30,7 @@
 			photos = result.photos;
 			// Determine ownership from layout user data
 			isOwner = data.user?.user_id === profile.owner_user_id;
+			isAdmin = data.user?.is_admin === true;
 		} catch (err) {
 			if (err instanceof ApiError) {
 				if (err.status === 404) {
@@ -54,6 +56,130 @@
 			age--;
 		}
 		return age;
+	}
+
+	function cmToFtIn(cm: number): string {
+		const totalInches = cm / 2.54;
+		const ft = Math.floor(totalInches / 12);
+		const inches = Math.round(totalInches % 12);
+		return `${ft}′${inches}″`;
+	}
+
+	// ── Enum → human-readable label ───────────────────────────────────────────
+
+	function fmtMaritalStatus(v: string | null | undefined): string | null {
+		if (!v) return null;
+		const map: Record<string, string> = {
+			never_married: 'Never Married',
+			divorced: 'Divorced',
+			widowed: 'Widowed',
+			awaiting_divorce: 'Awaiting Divorce'
+		};
+		return map[v] ?? cap(v);
+	}
+
+	function fmtDiet(v: string | null | undefined): string | null {
+		if (!v) return null;
+		const map: Record<string, string> = {
+			veg: 'Vegetarian',
+			'non-veg': 'Non-Vegetarian',
+			eggetarian: 'Eggetarian',
+			jain: 'Jain',
+			vegan: 'Vegan'
+		};
+		return map[v] ?? cap(v);
+	}
+
+	function fmtManglik(v: string | null | undefined): string | null {
+		if (!v) return null;
+		const map: Record<string, string> = {
+			yes: 'Yes',
+			no: 'No',
+			partial: 'Partial',
+			unknown: 'Unknown / Not checked'
+		};
+		return map[v] ?? cap(v);
+	}
+
+	function fmtBodyType(v: string | null | undefined): string | null {
+		if (!v) return null;
+		const map: Record<string, string> = {
+			slim: 'Slim',
+			average: 'Average',
+			athletic: 'Athletic',
+			heavy: 'Heavy'
+		};
+		return map[v] ?? cap(v);
+	}
+
+	function fmtComplexion(v: string | null | undefined): string | null {
+		if (!v) return null;
+		const map: Record<string, string> = {
+			very_fair: 'Very Fair',
+			fair: 'Fair',
+			wheatish: 'Wheatish',
+			dusky: 'Dusky',
+			dark: 'Dark'
+		};
+		return map[v] ?? cap(v);
+	}
+
+	function fmtFamilyType(v: string | null | undefined): string | null {
+		if (!v) return null;
+		const map: Record<string, string> = {
+			nuclear: 'Nuclear',
+			joint: 'Joint'
+		};
+		return map[v] ?? cap(v);
+	}
+
+	function fmtFamilyStatus(v: string | null | undefined): string | null {
+		if (!v) return null;
+		const map: Record<string, string> = {
+			middle_class: 'Middle Class',
+			upper_middle: 'Upper Middle Class',
+			affluent: 'Affluent',
+			rich: 'Rich'
+		};
+		return map[v] ?? cap(v);
+	}
+
+	function fmtFamilyValues(v: string | null | undefined): string | null {
+		if (!v) return null;
+		const map: Record<string, string> = {
+			orthodox: 'Orthodox',
+			traditional: 'Traditional',
+			moderate: 'Moderate',
+			liberal: 'Liberal'
+		};
+		return map[v] ?? cap(v);
+	}
+
+	function fmtSmokeDrink(v: string | null | undefined): string | null {
+		if (!v) return null;
+		const map: Record<string, string> = {
+			no: 'No',
+			occasionally: 'Occasionally',
+			yes: 'Yes'
+		};
+		return map[v] ?? cap(v);
+	}
+
+	function fmtIncome(v: number | null | undefined): string | null {
+		if (v == null) return null;
+		return `₹${v.toLocaleString('en-IN')}`;
+	}
+
+	/** Capitalise first letter, replace underscores with spaces. */
+	function cap(v: string): string {
+		return v.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
+	}
+
+	/** Return null if value is null/undefined/empty-string, else the value itself. */
+	function present<T>(v: T | null | undefined): T | null {
+		if (v === null || v === undefined) return null;
+		if (typeof v === 'string' && v.trim() === '') return null;
+		return v;
 	}
 
 	async function submitProfile() {
@@ -92,6 +218,9 @@
 	}
 
 	const primaryPhoto = $derived(photos.find((p) => p.is_primary) ?? photos[0] ?? null);
+
+	// Whether the viewer should see the full data (owner or admin)
+	const canSeeFull = $derived(isOwner || isAdmin);
 </script>
 
 <svelte:head>
@@ -191,16 +320,20 @@
 			</div>
 
 			<!-- Right: profile details -->
-			<div>
+			<div class="space-y-6">
+				<!-- Header -->
 				<div class="flex flex-wrap items-start justify-between gap-2">
 					<div>
 						<h1 class="font-serif text-3xl font-bold text-maroon">
 							{profile.first_name} {profile.last_name}
 						</h1>
 						<p class="mt-1 text-ink/60">
-							{calcAge(profile.dob)} years · {profile.height_cm} cm ·
+							{calcAge(profile.dob)} yrs · {profile.height_cm} cm ({cmToFtIn(profile.height_cm)}) ·
 							<span class="capitalize">{profile.gender}</span>
 						</p>
+						{#if profile.profile_number}
+							<p class="mt-0.5 font-mono text-xs text-ink/40">#{profile.profile_number}</p>
+						{/if}
 					</div>
 					<span
 						class="badge capitalize {profile.status === 'approved'
@@ -213,46 +346,165 @@
 					</span>
 				</div>
 
+				<!-- ── Basic Information ─────────────────────────────────────────── -->
+				<section>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Basic Information</h2>
+					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+						{#each [
+							{ label: 'Marital Status', value: fmtMaritalStatus(profile.marital_status) },
+							{ label: 'Mother Tongue', value: present(profile.mother_tongue) },
+							{ label: 'Surname / Clan', value: present(profile.surname_clan) },
+							{ label: 'Caste', value: present(profile.caste) },
+							{ label: 'Sub Caste', value: present(profile.sub_caste) },
+						].filter(item => item.value !== null) as item}
+							<div>
+								<dt class="font-medium text-ink/50">{item.label}</dt>
+								<dd class="mt-0.5 text-ink">{item.value}</dd>
+							</div>
+						{/each}
+					</dl>
+				</section>
 
-				<!-- Details grid -->
-				<dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 text-sm sm:grid-cols-3">
-					{#each [
-						{ label: 'Education', value: profile.education },
-						{ label: 'Occupation', value: profile.occupation },
-						{ label: 'City', value: profile.city },
-						{ label: 'State', value: profile.state },
-						{ label: 'Country', value: profile.country },
-						{ label: 'Nakshatram', value: profile.nakshatram },
-						{ label: 'Rashi', value: profile.rashi },
-						{ label: 'Gotra', value: profile.gotra },
-						{ label: 'Kuldevata', value: profile.kuldevata },
-						{ label: 'Devak', value: profile.devak },
-						{ label: 'Manglik', value: profile.manglik },
-						{ label: 'Diet', value: profile.diet },
-						{ label: 'Mother Tongue', value: profile.mother_tongue },
-						...(profile.annual_income_inr
-							? [{ label: 'Annual Income', value: `₹${profile.annual_income_inr.toLocaleString('en-IN')}` }]
-							: [])
-					] as item}
-						<div>
-							<dt class="font-medium text-ink/50">{item.label}</dt>
-							<dd class="mt-0.5 capitalize text-ink">{item.value ?? '—'}</dd>
-						</div>
-					{/each}
-				</dl>
+				<!-- ── Physical ────────────────────────────────────────────────────── -->
+				<section>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Physical</h2>
+					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+						{#each [
+							{ label: 'Height', value: profile.height_cm ? `${profile.height_cm} cm (${cmToFtIn(profile.height_cm)})` : null },
+							{ label: 'Weight', value: profile.weight_kg ? `${profile.weight_kg} kg` : null },
+							{ label: 'Complexion', value: fmtComplexion(profile.complexion) },
+							{ label: 'Body Type', value: fmtBodyType(profile.body_type) },
+							{ label: 'Blood Group', value: present(profile.blood_group) },
+						].filter(item => item.value !== null) as item}
+							<div>
+								<dt class="font-medium text-ink/50">{item.label}</dt>
+								<dd class="mt-0.5 text-ink">{item.value}</dd>
+							</div>
+						{/each}
+					</dl>
+				</section>
 
-				{#if profile.about}
-					<div class="mt-6">
-						<h3 class="font-serif text-lg font-semibold text-maroon">About</h3>
-						<p class="mt-2 leading-relaxed text-ink/80">{profile.about}</p>
-					</div>
+				<!-- ── Astrology ───────────────────────────────────────────────────── -->
+				<section>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Astrology</h2>
+					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+						{#each [
+							{ label: 'Gotra', value: present(profile.gotra) },
+							{ label: 'Kuldevata', value: present(profile.kuldevata) },
+							{ label: 'Devak', value: present(profile.devak) },
+							{ label: 'Nakshatram', value: present(profile.nakshatram) },
+							{ label: 'Rashi', value: present(profile.rashi) },
+							{ label: 'Manglik', value: fmtManglik(profile.manglik) },
+							{ label: 'Time of Birth', value: present(profile.time_of_birth) },
+							{ label: 'Place of Birth', value: present(profile.place_of_birth) },
+						].filter(item => item.value !== null) as item}
+							<div>
+								<dt class="font-medium text-ink/50">{item.label}</dt>
+								<dd class="mt-0.5 text-ink">{item.value}</dd>
+							</div>
+						{/each}
+					</dl>
+				</section>
+
+				<!-- ── Education & Career ──────────────────────────────────────────── -->
+				<section>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Education &amp; Career</h2>
+					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+						{#each [
+							{ label: 'Education', value: present(profile.education) },
+							{ label: 'College / University', value: present(profile.college_university) },
+							{ label: 'Occupation', value: present(profile.occupation) },
+							{ label: 'Employer', value: present(profile.employer) },
+							{ label: 'Work Location', value: present(profile.work_location) },
+							{ label: 'Annual Income', value: fmtIncome(profile.annual_income_inr) },
+						].filter(item => item.value !== null) as item}
+							<div>
+								<dt class="font-medium text-ink/50">{item.label}</dt>
+								<dd class="mt-0.5 text-ink tabular-nums">{item.value}</dd>
+							</div>
+						{/each}
+					</dl>
+				</section>
+
+				<!-- ── Location ────────────────────────────────────────────────────── -->
+				<section>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Location</h2>
+					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+						{#each [
+							{ label: 'City', value: present(profile.city) },
+							{ label: 'State', value: present(profile.state) },
+							{ label: 'Country', value: present(profile.country) },
+							{ label: 'PIN Code', value: present(profile.pin_code) },
+						].filter(item => item.value !== null) as item}
+							<div>
+								<dt class="font-medium text-ink/50">{item.label}</dt>
+								<dd class="mt-0.5 text-ink">{item.value}</dd>
+							</div>
+						{/each}
+					</dl>
+				</section>
+
+				<!-- ── Family ──────────────────────────────────────────────────────── -->
+				{#if canSeeFull}
+					<section>
+						<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Family</h2>
+						<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+							{#each [
+								{ label: "Father's Name", value: present(profile.father_name) },
+								{ label: "Father's Occupation", value: present(profile.father_occupation) },
+								{ label: "Mother's Name", value: present(profile.mother_name) },
+								{ label: "Mother's Occupation", value: present(profile.mother_occupation) },
+								{ label: 'Family Type', value: fmtFamilyType(profile.family_type) },
+								{ label: 'Family Status', value: fmtFamilyStatus(profile.family_status) },
+								{ label: 'Family Values', value: fmtFamilyValues(profile.family_values) },
+								{ label: 'Native Place', value: present(profile.native_place) },
+								{ label: 'No. of Family Members', value: profile.num_family_members != null ? String(profile.num_family_members) : null },
+								{ label: 'Brothers', value: profile.num_brothers != null ? String(profile.num_brothers) : null },
+								{ label: 'Brothers Married', value: profile.num_brothers_married != null ? String(profile.num_brothers_married) : null },
+								{ label: 'Sisters', value: profile.num_sisters != null ? String(profile.num_sisters) : null },
+								{ label: 'Sisters Married', value: profile.num_sisters_married != null ? String(profile.num_sisters_married) : null },
+							].filter(item => item.value !== null) as item}
+								<div>
+									<dt class="font-medium text-ink/50">{item.label}</dt>
+									<dd class="mt-0.5 text-ink">{item.value}</dd>
+								</div>
+							{/each}
+						</dl>
+					</section>
 				{/if}
 
+				<!-- ── Lifestyle ───────────────────────────────────────────────────── -->
+				<section>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Lifestyle</h2>
+					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+						{#each [
+							{ label: 'Diet', value: fmtDiet(profile.diet) },
+							{ label: 'Smokes', value: fmtSmokeDrink(profile.smokes) },
+							{ label: 'Drinks', value: fmtSmokeDrink(profile.drinks) },
+							{ label: 'Hobbies', value: present(profile.hobbies) },
+						].filter(item => item.value !== null) as item}
+							<div>
+								<dt class="font-medium text-ink/50">{item.label}</dt>
+								<dd class="mt-0.5 text-ink">{item.value}</dd>
+							</div>
+						{/each}
+					</dl>
+				</section>
+
+				<!-- ── About ───────────────────────────────────────────────────────── -->
+				{#if profile.about}
+					<section>
+						<h2 class="font-serif text-xl font-semibold text-maroon mb-2">About</h2>
+						<p class="leading-relaxed text-ink/80 text-sm">{profile.about}</p>
+					</section>
+				{/if}
+
+				<!-- ── Partner Expectations (owner-only) ──────────────────────────── -->
 				{#if isOwner && profile.partner_expectations}
-					<div class="mt-4">
-						<h3 class="font-serif text-lg font-semibold text-maroon">Partner Expectations</h3>
-						<p class="mt-2 leading-relaxed text-ink/80">{profile.partner_expectations}</p>
-					</div>
+					<section>
+						<h2 class="font-serif text-xl font-semibold text-maroon mb-2">Partner Expectations</h2>
+						<p class="leading-relaxed text-ink/80 text-sm">{profile.partner_expectations}</p>
+					</section>
 				{/if}
 			</div>
 		</div>

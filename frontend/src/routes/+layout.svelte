@@ -5,7 +5,7 @@
 	import { auth as authApi, type User } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
-	import { Menu, X } from 'lucide-svelte';
+	import { Menu, X, ChevronDown } from 'lucide-svelte';
 	import { T, tx } from '$lib/i18n';
 	import { langStore, LANGS } from '$lib/stores/lang.svelte';
 
@@ -14,6 +14,7 @@
 	let user = $derived<User | null>(data.user ?? null);
 	let siteInfo = $derived(data.siteInfo ?? { is_prod: true, site_url: '' });
 	let drawerOpen = $state(false);
+	let langOpen = $state(false);
 	let drawerEl = $state<HTMLElement | null>(null);
 
 	function openDrawer() {
@@ -370,23 +371,52 @@
 {/if}
 
 <!-- ── Language bar — sits directly below the navbar on every page ────────── -->
-<!-- A single combobox visible on desktop and mobile, aligned to the right of  -->
-<!-- the body, kept out of the navbar so the picker stays prominent and easy  -->
-<!-- to find regardless of menu state.                                        -->
-<div class="border-b border-gold/30 bg-cream/95 backdrop-blur supports-[backdrop-filter]:bg-cream/80">
+<!-- A custom combobox rendered with the same maroon/saffron palette as the   -->
+<!-- rest of the app — the native <select> picked up the OS chrome and didn't -->
+<!-- match. Visible on desktop and mobile, anchored to the right of the body. -->
+<div class="relative z-30 border-b border-gold/30 bg-cream/95 backdrop-blur supports-[backdrop-filter]:bg-cream/80">
 	<div class="mx-auto flex max-w-7xl items-center justify-end gap-2 px-4 py-1.5 sm:px-6 lg:px-8">
-		<label for="lang-pick" class="text-xs font-medium text-ink/60">Language:</label>
-		<select
-			id="lang-pick"
-			value={langStore.current}
-			onchange={(e) => langStore.set(e.currentTarget.value as import('$lib/stores/lang.svelte').Lang)}
-			class="rounded border border-gold/40 bg-white px-2 py-0.5 text-sm text-ink hover:border-saffron focus-visible:outline-2 focus-visible:outline-saffron cursor-pointer"
-			aria-label="Select language"
-		>
-			{#each LANGS as l}
-				<option value={l.code} selected={langStore.current === l.code}>{l.native}</option>
-			{/each}
-		</select>
+		<span class="text-xs font-medium text-ink/60">Language:</span>
+		<div class="relative">
+			<button
+				type="button"
+				onclick={() => (langOpen = !langOpen)}
+				class="flex items-center gap-1.5 rounded border border-maroon/30 bg-white px-2.5 py-0.5 text-sm font-medium text-maroon hover:border-saffron focus-visible:outline-2 focus-visible:outline-saffron cursor-pointer min-w-[110px] justify-between"
+				aria-label="Select language"
+				aria-haspopup="listbox"
+				aria-expanded={langOpen}
+			>
+				<span lang={langStore.current}>{LANGS.find((l) => l.code === langStore.current)?.native ?? 'తెలుగు'}</span>
+				<ChevronDown size={14} class="text-maroon/60 transition-transform duration-150 {langOpen ? 'rotate-180' : ''}" />
+			</button>
+			{#if langOpen}
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="fixed inset-0 z-40"
+					onclick={() => (langOpen = false)}
+					aria-hidden="true"
+				></div>
+				<ul
+					class="absolute right-0 z-50 mt-1 w-[140px] overflow-hidden rounded-md border border-gold shadow-lg"
+					role="listbox"
+					style="background: var(--color-cream);"
+				>
+					{#each LANGS as l}
+						<li>
+							<button
+								type="button"
+								role="option"
+								aria-selected={langStore.current === l.code}
+								onclick={() => { langStore.set(l.code); langOpen = false; }}
+								class="block w-full px-3 py-1.5 text-left text-sm transition-colors {langStore.current === l.code ? 'bg-maroon text-cream font-medium' : 'text-ink hover:bg-saffron hover:text-maroon'}"
+								lang={l.code}
+							>{l.native}</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
 	</div>
 </div>
 
