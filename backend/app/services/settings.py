@@ -19,7 +19,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "smtp_password": "",
     "smtp_from": "no-reply@marathakalyanam.com",
     "photo_max_kb": 500,
-    "photo_min_kb": 100,
+    "photo_min_kb": 25,
     "photo_passport_width": 413,
     "photo_passport_height": 531,
     "photo_blur_width": 600,

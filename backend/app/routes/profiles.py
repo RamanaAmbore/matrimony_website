@@ -662,6 +662,24 @@ class ProfileController(Controller):
                 detail={"code": "invalid_status", "message": "Approved profiles cannot be deleted; contact the admin"},
             )
 
+        # Clean up on-disk photo files. The DB cascade removes Photo rows, but
+        # the JPEG variants under MEDIA_ROOT are external state we need to
+        # delete explicitly — otherwise every deleted profile leaks files.
+        photos_result = await db.execute(select(Photo).where(Photo.profile_id == pid))
+        for photo in photos_result.scalars():
+            for path_rel in (photo.passport_path, photo.blurred_path, photo.thumb_path):
+                fpath = MEDIA_ROOT / path_rel
+                if fpath.exists():
+                    fpath.unlink()
+            # Remove the photo's directory if it's now empty.
+            photo_dir = MEDIA_ROOT / "profiles" / str(pid) / str(photo.id)
+            if photo_dir.exists() and not any(photo_dir.iterdir()):
+                photo_dir.rmdir()
+        # Remove the profile-level directory if it's now empty.
+        profile_dir = MEDIA_ROOT / "profiles" / str(pid)
+        if profile_dir.exists() and not any(profile_dir.iterdir()):
+            profile_dir.rmdir()
+
         await db.delete(profile)
         await db.commit()
 
