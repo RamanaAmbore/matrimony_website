@@ -282,8 +282,10 @@
 		<div class="grid gap-8 lg:grid-cols-[280px,1fr]">
 			<!-- Left: photo + quick actions -->
 			<div class="space-y-4">
-				<!-- Main photo viewer — scrollable container with zoom -->
-				<div class="relative aspect-[3/4] overflow-auto rounded-xl border border-gold/20 shadow-sm bg-cream">
+				<!-- Main photo viewer — scrollable container with zoom. Sits outside
+				     the section cards on the right; just the rounded image, no
+				     card chrome (border + shadow stripped per UX request). -->
+				<div class="relative aspect-[3/4] overflow-auto rounded-xl bg-cream">
 					{#if displayedPhoto}
 						<img
 							src={photoSrc(displayedPhoto)}
