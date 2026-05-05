@@ -1,11 +1,11 @@
 # marathakalyanam — user guide
 
-Welcome to Maratha Kalyanam, a matrimonial site for Telugu-Maratha people in Andhra Pradesh
-and Telangana.
+Welcome to Maratha Kalyanam, a matrimonial site for Maratha people living in Andhra Pradesh,
+Telangana and other states.
 
 ## What is Maratha Kalyanam?
 
-Maratha Kalyanam is a matchmaking platform built for the Telugu-Maratha community. We help you
+Maratha Kalyanam is a matchmaking platform built for the Maratha community. We help you
 find a life partner by connecting profiles of brides and grooms within the community. All
 profiles are reviewed by our team before being published, ensuring quality and safety.
 

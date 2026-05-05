@@ -1,6 +1,6 @@
 # marathakalyanam — engineering guide
 
-Matrimonial site for Telugu-Maratha people settled in Andhra Pradesh and Telangana.
+Matrimonial site for Maratha people living in Andhra Pradesh, Telangana and other states.
 Production domain: **marathakalyanam.com**.
 
 **Tech stack:** Python (Litestar/async) · SQLAlchemy 2.x · PostgreSQL 16 · SvelteKit (Svelte 5)
@@ -55,7 +55,7 @@ frontend/                      SvelteKit (Svelte 5) + Tailwind CSS
         toast.svelte           Toast notifications (Svelte 5 runes)
       components/
         DualRangeSlider.svelte Dual-handle age range slider (min/max on one track)
-        BilingualLabel.svelte  Bilingual English+Telugu form label component
+        BilingualLabel.svelte  Bilingual English + active indic-language form label
         (other components)     Reusable UI: buttons, modals, forms
   vite.config.ts               Proxy /api/* to localhost:8000
   tailwind.config.ts           Tailwind v4 with custom theme block

@@ -1030,7 +1030,7 @@
 					{/if}
 
 					<!-- Section footer: equal-width Cancel / Save / Submit row.
-					     English on top, Telugu underneath (no delimiter). -->
+					     English on top, active indic-language underneath (no delimiter). -->
 					<div class="mt-4 flex items-stretch gap-2 border-t border-gold/30 pt-4">
 						<a
 							href="/dashboard"

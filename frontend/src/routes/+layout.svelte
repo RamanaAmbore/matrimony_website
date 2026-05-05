@@ -92,7 +92,7 @@
 	<meta property="og:image" content="https://marathakalyanam.com/brand/og-image.png" />
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />
-	<meta property="og:image:alt" content="Maratha Kalyanam — Telugu Maratha Matrimony" />
+	<meta property="og:image:alt" content="Maratha Kalyanam — Maratha Matrimony" />
 	<meta property="og:locale" content="en_IN" />
 	<meta property="og:locale:alternate" content="te_IN" />
 
@@ -101,7 +101,7 @@
 	<meta name="twitter:title" content="Maratha Kalyanam · మరాఠా కళ్యాణం" />
 	<meta name="twitter:description" content="Trusted matrimonial platform for Maratha families. Admin-verified profiles. Privacy-first." />
 	<meta name="twitter:image" content="https://marathakalyanam.com/brand/og-image.png" />
-	<meta name="twitter:image:alt" content="Maratha Kalyanam — Telugu Maratha Matrimony" />
+	<meta name="twitter:image:alt" content="Maratha Kalyanam — Maratha Matrimony" />
 
 	<!-- PWA manifest + icons -->
 	<link rel="manifest" href="/manifest.webmanifest" />
@@ -120,7 +120,7 @@
 	<meta name="googlebot" content="index, follow" />
 	<meta name="author" content="Maratha Kalyanam" />
 	<meta name="publisher" content="Maratha Kalyanam" />
-	<meta name="keywords" content="Maratha matrimony, Maratha Kalyanam, Maratha Kalyanam, Telugu Maratha matrimony, Andhra Pradesh matrimony, Telangana matrimony, Maharashtra matrimony, gotra matching, nakshatram matching, Maratha wedding, kuldevata, devak, Indian matrimony" />
+	<meta name="keywords" content="Maratha matrimony, Maratha Kalyanam, Andhra Pradesh matrimony, Telangana matrimony, Maharashtra matrimony, Maratha community matrimony, gotra matching, nakshatram matching, Maratha wedding, kuldevata, devak, Indian matrimony" />
 
 	<!-- JSON-LD structured data: Organization + WebSite (with sitelink search action) -->
 	<script type="application/ld+json">

@@ -1,6 +1,6 @@
 # marathakalyanam
 
-Matrimonial site for Telugu-Maratha people settled in Andhra Pradesh and Telangana. Production domain: **marathakalyanam.com**.
+Matrimonial site for Maratha people living in Andhra Pradesh, Telangana and other states. Production domain: **marathakalyanam.com**.
 
 ## Stack
 
