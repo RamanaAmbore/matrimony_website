@@ -1,5 +1,18 @@
 <script lang="ts">
 	import { untrack, onMount } from 'svelte';
+	import { User, Ruler, Sparkles, GraduationCap, Users, Coffee, MapPin, MessageCircle, Camera, FileEdit, Clock, CheckCircle, XCircle } from 'lucide-svelte';
+
+	const SECTION_ICONS = [
+		User,          // 0 Basic Information
+		Ruler,         // 1 Physical
+		Sparkles,      // 2 Astrology
+		GraduationCap, // 3 Education & Career
+		Users,         // 4 Family
+		Coffee,        // 5 Lifestyle
+		MapPin,        // 6 Location
+		MessageCircle, // 7 About & Expectations
+		Camera         // 8 Photos
+	];
 	import type {
 		Profile,
 		ProfilePayload,
@@ -533,6 +546,7 @@
 		{@const locked = isSectionLocked(i)}
 		{@const done = completedSections.has(i)}
 		{@const open = activeSection === i && !locked}
+		{@const SectionIcon = SECTION_ICONS[i]}
 		<div id="wsec-{i}" class="rounded-lg border {done ? 'border-gold/60 bg-saffron/5' : locked ? 'border-ink/10 bg-ink/3 opacity-60' : 'border-gold/40 bg-white'} overflow-hidden">
 			<!-- Section header -->
 			<button
@@ -542,6 +556,7 @@
 				class="flex w-full items-center gap-3 px-4 py-3 text-left {locked ? 'cursor-not-allowed' : 'hover:bg-maroon/5'}"
 			>
 				<span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold {done ? 'bg-maroon text-cream' : locked ? 'bg-ink/15 text-ink/40' : 'bg-maroon/10 text-maroon'}">{i + 1}</span>
+				<SectionIcon size={20} class="shrink-0 {locked ? 'text-ink/30' : 'text-maroon/70'}" />
 				<span class="flex-1">
 					<span class="font-serif font-semibold {locked ? 'text-ink/40' : 'text-maroon'}">{sec.en}</span>
 					<span class="ml-2 text-xs text-ink/50" lang={langStore.current}>{tx(SECTION_KEYS[i], langStore.current)}</span>
@@ -1124,6 +1139,7 @@
 			<span
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>1</span>
+			<User size={20} class="shrink-0 text-maroon/70" />
 			Basic Information
 			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secBasicInfo', langStore.current)}</span>
 		</summary>
@@ -1246,6 +1262,7 @@
 			<span
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>2</span>
+			<Ruler size={20} class="shrink-0 text-maroon/70" />
 			Physical
 			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secPhysical', langStore.current)}</span>
 		</summary>
@@ -1312,6 +1329,7 @@
 			<span
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>3</span>
+			<Sparkles size={20} class="shrink-0 text-maroon/70" />
 			Astrology
 			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secAstrology', langStore.current)}</span>
 		</summary>
@@ -1477,6 +1495,7 @@
 			<span
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>4</span>
+			<GraduationCap size={20} class="shrink-0 text-maroon/70" />
 			Education &amp; Career
 			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secEducation', langStore.current)}</span>
 		</summary>
@@ -1588,6 +1607,7 @@
 			<span
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>5</span>
+			<Users size={20} class="shrink-0 text-maroon/70" />
 			Family
 			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secFamily', langStore.current)}</span>
 		</summary>
@@ -1780,6 +1800,7 @@
 			<span
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>6</span>
+			<Coffee size={20} class="shrink-0 text-maroon/70" />
 			Lifestyle
 			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secLifestyle', langStore.current)}</span>
 		</summary>
@@ -1829,6 +1850,7 @@
 			<span
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>7</span>
+			<MapPin size={20} class="shrink-0 text-maroon/70" />
 			Location
 			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secLocation', langStore.current)}</span>
 		</summary>
@@ -1893,6 +1915,7 @@
 			<span
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>8</span>
+			<MessageCircle size={20} class="shrink-0 text-maroon/70" />
 			About &amp; Expectations
 			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secAbout', langStore.current)}</span>
 		</summary>

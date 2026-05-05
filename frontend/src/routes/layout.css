@@ -83,11 +83,13 @@ option:hover { background: var(--color-maroon); color: var(--color-cream); }
 	.brand-wordmark[lang="ta"] { font-family: 'Tiro Tamil', 'Noto Sans Tamil', serif; }
 
 	/* Bilingual secondary line — applies to whichever Indic language the user
-	   has picked. Keep size + opacity identical across the six so the visual
-	   weight doesn't shift on language switch. */
+	   has picked. Indic glyphs have shorter caps + heavier strokes than Latin
+	   at the same point size so they read smaller; bump to 0.95em to match
+	   visual weight of the English line above. Keep size + opacity identical
+	   across the six so nothing shifts on language switch. */
 	:is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"], [lang="bgc"]) {
-		opacity: 0.82;
-		font-size: 0.85em !important;
+		opacity: 0.85;
+		font-size: 0.95em !important;
 		font-weight: inherit !important;
 		font-style: inherit !important;
 	}

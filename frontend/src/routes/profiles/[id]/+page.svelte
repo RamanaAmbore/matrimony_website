@@ -4,7 +4,25 @@
 	import { ApiError } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
-	import { Loader, Edit, Send, SendHorizonal, User, ZoomIn, ZoomOut, Maximize2, Eye, EyeOff } from 'lucide-svelte';
+	import { Loader, Edit, Send, SendHorizonal, User, ZoomIn, ZoomOut, Maximize2, Eye, EyeOff, Ruler, Sparkles, GraduationCap, Users, Coffee, MapPin, MessageCircle, FileEdit, Clock, CheckCircle, XCircle } from 'lucide-svelte';
+
+	const SECTION_ICONS = {
+		basicInfo:  User,
+		physical:   Ruler,
+		astrology:  Sparkles,
+		education:  GraduationCap,
+		family:     Users,
+		lifestyle:  Coffee,
+		location:   MapPin,
+		about:      MessageCircle
+	};
+
+	const STATUS_ICON = {
+		draft:    FileEdit,
+		pending:  Clock,
+		approved: CheckCircle,
+		rejected: XCircle
+	};
 	import Logo from '$lib/components/Logo.svelte';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
@@ -424,19 +442,30 @@
 						{/if}
 					</div>
 					<span
-						class="badge capitalize {profile.status === 'approved'
+						class="badge inline-flex items-center gap-1 capitalize {profile.status === 'approved'
 							? 'badge-approved'
 							: profile.status === 'pending'
 								? 'badge-pending'
-								: 'badge-draft'}"
+								: profile.status === 'rejected'
+									? 'badge-rejected'
+									: 'badge-draft'}"
 					>
+						{#if profile.status === 'draft'}
+							<FileEdit size={12} class="-mt-0.5 inline-block" />
+						{:else if profile.status === 'pending'}
+							<Clock size={12} class="-mt-0.5 inline-block" />
+						{:else if profile.status === 'approved'}
+							<CheckCircle size={12} class="-mt-0.5 inline-block" />
+						{:else if profile.status === 'rejected'}
+							<XCircle size={12} class="-mt-0.5 inline-block" />
+						{/if}
 						{profile.status}
 					</span>
 				</div>
 
 				<!-- ── Basic Information ─────────────────────────────────────────── -->
 				<section>
-					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Basic Information</h2>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.basicInfo size={18} />Basic Information</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'Marital Status', value: fmtMaritalStatus(profile.marital_status) },
@@ -455,7 +484,7 @@
 
 				<!-- ── Physical ────────────────────────────────────────────────────── -->
 				<section>
-					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Physical</h2>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.physical size={18} />Physical</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'Height', value: profile.height_cm ? `${profile.height_cm} cm (${cmToFtIn(profile.height_cm)})` : null },
@@ -474,7 +503,7 @@
 
 				<!-- ── Astrology ───────────────────────────────────────────────────── -->
 				<section>
-					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Astrology</h2>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.astrology size={18} />Astrology</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'Gotra', value: present(profile.gotra) },
@@ -496,7 +525,7 @@
 
 				<!-- ── Education & Career ──────────────────────────────────────────── -->
 				<section>
-					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Education &amp; Career</h2>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.education size={18} />Education &amp; Career</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'Education', value: present(profile.education) },
@@ -516,7 +545,7 @@
 
 				<!-- ── Location ────────────────────────────────────────────────────── -->
 				<section>
-					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Location</h2>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.location size={18} />Location</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'City', value: present(profile.city) },
@@ -535,7 +564,7 @@
 				<!-- ── Family ──────────────────────────────────────────────────────── -->
 				{#if canSeeFull}
 					<section>
-						<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Family</h2>
+						<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.family size={18} />Family</h2>
 						<dl class="space-y-2 text-sm">
 							{#each [
 								{ label: "Father's Name", value: present(profile.father_name) },
@@ -563,7 +592,7 @@
 
 				<!-- ── Lifestyle ───────────────────────────────────────────────────── -->
 				<section>
-					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Lifestyle</h2>
+					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.lifestyle size={18} />Lifestyle</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'Diet', value: fmtDiet(profile.diet) },
@@ -582,7 +611,7 @@
 				<!-- ── About ───────────────────────────────────────────────────────── -->
 				{#if profile.about}
 					<section>
-						<h2 class="font-serif text-xl font-semibold text-maroon mb-2">About</h2>
+						<h2 class="font-serif text-xl font-semibold text-maroon mb-2 flex items-center gap-2"><SECTION_ICONS.about size={18} />About</h2>
 						<p class="leading-relaxed text-ink/80 text-sm">{profile.about}</p>
 					</section>
 				{/if}
@@ -590,7 +619,7 @@
 				<!-- ── Partner Expectations (owner-only) ──────────────────────────── -->
 				{#if canSeeFull && profile.partner_expectations}
 					<section>
-						<h2 class="font-serif text-xl font-semibold text-maroon mb-2">Partner Expectations</h2>
+						<h2 class="font-serif text-xl font-semibold text-maroon mb-2 flex items-center gap-2"><SECTION_ICONS.about size={18} />Partner Expectations</h2>
 						<p class="leading-relaxed text-ink/80 text-sm">{profile.partner_expectations}</p>
 					</section>
 				{/if}

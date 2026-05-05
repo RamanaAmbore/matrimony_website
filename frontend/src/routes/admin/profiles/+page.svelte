@@ -4,7 +4,7 @@
 	import { ApiError } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
-	import { Loader, CheckCircle, XCircle, Eye } from 'lucide-svelte';
+	import { Loader, CheckCircle, XCircle, Eye, FileEdit, Clock } from 'lucide-svelte';
 	import { page } from '$app/stores';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
@@ -129,7 +129,12 @@
 								>
 									{profile.first_name} {profile.last_name}
 								</a>
-								<span class="badge badge-{profile.status === 'approved' ? 'approved' : profile.status === 'pending' ? 'pending' : profile.status === 'rejected' ? 'rejected' : 'draft'} capitalize">
+								<span class="badge badge-{profile.status === 'approved' ? 'approved' : profile.status === 'pending' ? 'pending' : profile.status === 'rejected' ? 'rejected' : 'draft'} inline-flex items-center gap-1 capitalize">
+									{#if profile.status === 'draft'}<FileEdit size={12} class="-mt-0.5 inline-block" />
+									{:else if profile.status === 'pending'}<Clock size={12} class="-mt-0.5 inline-block" />
+									{:else if profile.status === 'approved'}<CheckCircle size={12} class="-mt-0.5 inline-block" />
+									{:else if profile.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
+									{/if}
 									{profile.status}
 								</span>
 							</div>

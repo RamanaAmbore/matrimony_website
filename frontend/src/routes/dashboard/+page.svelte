@@ -3,7 +3,7 @@
 	import { profiles as profilesApi, type Profile } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { ApiError } from '$lib/api';
-	import { Plus, User, Edit, Loader, SendHorizonal } from 'lucide-svelte';
+	import { Plus, User, Edit, Loader, SendHorizonal, FileEdit, Clock, CheckCircle, XCircle } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
@@ -129,7 +129,7 @@
 
 	{#if loading}
 		<div class="flex items-center justify-center py-20">
-			<Loader size={36} class="animate-spin text-tangerine" />
+			<Loader size={36} class="animate-spin text-saffron" />
 		</div>
 	{:else if error}
 		<div class="rounded-lg border border-vermilion/30 bg-vermilion/5 p-4 text-vermilion">
@@ -175,13 +175,23 @@
 						{#if data.user?.is_admin}
 							<a
 								href="/admin/profiles?status={profile.status}"
-								class="{statusClass(profile.status)} hover:opacity-80 transition-opacity"
+								class="{statusClass(profile.status)} inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
 								title="View in admin"
 							>
+								{#if profile.status === 'draft'}<FileEdit size={12} class="-mt-0.5 inline-block" />
+								{:else if profile.status === 'pending'}<Clock size={12} class="-mt-0.5 inline-block" />
+								{:else if profile.status === 'approved'}<CheckCircle size={12} class="-mt-0.5 inline-block" />
+								{:else if profile.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
+								{/if}
 								{statusLabel(profile.status)}
 							</a>
 						{:else}
-							<span class={statusClass(profile.status)}>
+							<span class="{statusClass(profile.status)} inline-flex items-center gap-1">
+								{#if profile.status === 'draft'}<FileEdit size={12} class="-mt-0.5 inline-block" />
+								{:else if profile.status === 'pending'}<Clock size={12} class="-mt-0.5 inline-block" />
+								{:else if profile.status === 'approved'}<CheckCircle size={12} class="-mt-0.5 inline-block" />
+								{:else if profile.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
+								{/if}
 								{statusLabel(profile.status)}
 							</span>
 						{/if}

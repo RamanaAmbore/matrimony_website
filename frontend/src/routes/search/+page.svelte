@@ -7,7 +7,15 @@
 		type SearchParams
 	} from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
-	import { ChevronLeft, ChevronRight, User, Loader, Search } from 'lucide-svelte';
+	import { ChevronLeft, ChevronRight, User, Loader, Search, Ruler, Sparkles, MapPin, Coffee } from 'lucide-svelte';
+
+	const SECTION_ICONS = {
+		basic:     User,
+		physical:  Ruler,
+		astrology: Sparkles,
+		location:  MapPin,
+		lifestyle: Coffee
+	};
 	import DualRangeSlider from '$lib/components/DualRangeSlider.svelte';
 	import Combobox from '$lib/components/Combobox.svelte';
 	import { MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER, DIET_OPTIONS } from '$lib/profileOptions';
@@ -165,8 +173,8 @@
 				</h2>
 
 				<!-- ── Basic ──────────────────────────────────────────── -->
-				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1">
-					Basic · <span lang={langStore.current}>{tx('searchBasic', langStore.current)}</span>
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 flex items-center gap-1">
+					<SECTION_ICONS.basic size={14} />Basic · <span lang={langStore.current}>{tx('searchBasic', langStore.current)}</span>
 				</h3>
 
 				<!-- Gender -->
@@ -200,8 +208,8 @@
 				</div>
 
 				<!-- ── Physical ───────────────────────────────────────── -->
-				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
-					Physical · <span lang={langStore.current}>{tx('searchPhysical', langStore.current)}</span>
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1 flex items-center gap-1">
+					<SECTION_ICONS.physical size={14} />Physical · <span lang={langStore.current}>{tx('searchPhysical', langStore.current)}</span>
 				</h3>
 
 				<!-- Height range -->
@@ -226,8 +234,8 @@
 				</div>
 
 				<!-- ── Astrology ───────────────────────────────────────── -->
-				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
-					Astrology · <span lang={langStore.current}>{tx('searchAstrology', langStore.current)}</span>
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1 flex items-center gap-1">
+					<SECTION_ICONS.astrology size={14} />Astrology · <span lang={langStore.current}>{tx('searchAstrology', langStore.current)}</span>
 				</h3>
 
 				<!-- Gotra -->
@@ -262,8 +270,8 @@
 				</div>
 
 				<!-- ── Location ────────────────────────────────────────── -->
-				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
-					Location · <span lang={langStore.current}>{tx('searchLocation', langStore.current)}</span>
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1 flex items-center gap-1">
+					<SECTION_ICONS.location size={14} />Location · <span lang={langStore.current}>{tx('searchLocation', langStore.current)}</span>
 				</h3>
 
 				<!-- City -->
@@ -293,8 +301,8 @@
 				</div>
 
 				<!-- ── Lifestyle ───────────────────────────────────────── -->
-				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
-					Lifestyle · <span lang={langStore.current}>{tx('searchLifestyle', langStore.current)}</span>
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1 flex items-center gap-1">
+					<SECTION_ICONS.lifestyle size={14} />Lifestyle · <span lang={langStore.current}>{tx('searchLifestyle', langStore.current)}</span>
 				</h3>
 
 				<!-- Diet -->
@@ -350,7 +358,7 @@
 
 			{#if loading}
 				<div class="flex items-center justify-center py-24">
-					<Loader size={36} class="animate-spin text-tangerine" />
+					<Loader size={36} class="animate-spin text-saffron" />
 				</div>
 			{:else if results.length === 0}
 				<div class="py-20 text-center">

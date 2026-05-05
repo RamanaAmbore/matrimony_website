@@ -4,7 +4,7 @@
 	import { ApiError } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
-	import { Loader, CheckCircle, XCircle } from 'lucide-svelte';
+	import { Loader, CheckCircle, XCircle, Clock } from 'lucide-svelte';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
 
@@ -117,7 +117,11 @@
 								<a href="/profiles/{req.profile_id}" class="font-serif text-lg font-semibold text-maroon hover:underline">
 									Profile: {req.profile?.first_name ?? req.profile_id} {req.profile?.last_name ?? ''}
 								</a>
-								<span class="badge {req.status === 'approved' ? 'badge-approved' : req.status === 'rejected' ? 'badge-rejected' : 'badge-pending'} capitalize">
+								<span class="badge {req.status === 'approved' ? 'badge-approved' : req.status === 'rejected' ? 'badge-rejected' : 'badge-pending'} inline-flex items-center gap-1 capitalize">
+									{#if req.status === 'pending'}<Clock size={12} class="-mt-0.5 inline-block" />
+									{:else if req.status === 'approved'}<CheckCircle size={12} class="-mt-0.5 inline-block" />
+									{:else if req.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
+									{/if}
 									{req.status}
 								</span>
 							</div>

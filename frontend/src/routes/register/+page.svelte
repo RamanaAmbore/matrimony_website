@@ -6,6 +6,7 @@
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
 	import { asciiOnly } from '$lib/inputFilters';
+	import { User, AtSign, Mail, Phone, Lock } from 'lucide-svelte';
 
 	const USER_ID_RE = /^[A-Za-z][A-Za-z0-9_]{2,29}$/;
 	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -147,16 +148,19 @@
 				<span class="block">Full Name</span>
 				<span class="block leading-tight" lang={langStore.current}>{tx('fullName', langStore.current)}</span>
 			</label>
+			<div class="relative">
+			<User size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
 			<input
 				id="full_name"
 				type="text"
 				autocomplete="name"
-				class="input"
+				class="input pl-10"
 				class:border-vermilion={errors.full_name}
 				bind:value={full_name}
 				placeholder="e.g. Ramana Ambore"
 				maxlength="80"
 			/>
+		</div>
 			{#if errors.full_name}
 				<p class="mt-1 text-xs text-vermilion">{errors.full_name}</p>
 			{/if}
@@ -168,11 +172,13 @@
 				<span class="block">{T.userHandle.en}</span>
 				<span class="block leading-tight" lang={langStore.current}>{tx('userHandle', langStore.current)}</span>
 			</label>
+			<div class="relative">
+			<AtSign size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
 			<input
 				id="user_id"
 				type="text"
 				autocomplete="username"
-				class="input font-mono"
+				class="input font-mono pl-10"
 				class:border-vermilion={errors.user_id}
 				bind:value={user_id}
 				oninput={(ev) => { user_id = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
@@ -181,6 +187,7 @@
 				maxlength="30"
 				spellcheck="false"
 			/>
+		</div>
 			{#if errors.user_id}
 				<p class="mt-1 text-xs text-vermilion">{errors.user_id}</p>
 			{:else}
@@ -197,15 +204,18 @@
 				<span class="block">Email address</span>
 				<span class="block leading-tight" lang={langStore.current}>{tx('emailAddress', langStore.current)}</span>
 			</label>
+			<div class="relative">
+			<Mail size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
 			<input
 				id="email"
 				type="email"
 				autocomplete="email"
-				class="input"
+				class="input pl-10"
 				class:border-vermilion={errors.email}
 				bind:value={email}
 				placeholder="you@example.com"
 			/>
+		</div>
 			{#if errors.email}
 				<p class="mt-1 text-xs text-vermilion">{errors.email}</p>
 			{/if}
@@ -217,17 +227,20 @@
 				<span class="block">Phone number</span>
 				<span class="block leading-tight" lang={langStore.current}>{tx('phoneNumber', langStore.current)}</span>
 			</label>
+			<div class="relative">
+			<Phone size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
 			<input
 				id="phone_number"
 				type="tel"
 				autocomplete="tel"
 				inputmode="tel"
-				class="input"
+				class="input pl-10"
 				class:border-vermilion={errors.phone_number}
 				bind:value={phone_number}
 				placeholder="+91 9840770711  or  +1 2125551234"
 				spellcheck="false"
 			/>
+		</div>
 			{#if errors.phone_number}
 				<p class="mt-1 text-xs text-vermilion">{errors.phone_number}</p>
 			{:else}
@@ -243,15 +256,18 @@
 				<span class="block">Password</span>
 				<span class="block leading-tight" lang={langStore.current}>{tx('password', langStore.current)}</span>
 			</label>
+			<div class="relative">
+			<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
 			<input
 				id="password"
 				type="password"
 				autocomplete="new-password"
-				class="input"
+				class="input pl-10"
 				class:border-vermilion={errors.password}
 				bind:value={password}
 				placeholder="Min. 8 chars · letter + digit"
 			/>
+		</div>
 			{#if errors.password}
 				<p class="mt-1 text-xs text-vermilion">{errors.password}</p>
 			{:else}
@@ -267,15 +283,18 @@
 				<span class="block">Confirm password</span>
 				<span class="block leading-tight" lang={langStore.current}>{tx('confirmPassword', langStore.current)}</span>
 			</label>
+			<div class="relative">
+			<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
 			<input
 				id="confirm-password"
 				type="password"
 				autocomplete="new-password"
-				class="input"
+				class="input pl-10"
 				class:border-vermilion={errors.confirmPassword}
 				bind:value={confirmPassword}
 				placeholder="Re-enter password"
 			/>
+		</div>
 			{#if errors.confirmPassword}
 				<p class="mt-1 text-xs text-vermilion">{errors.confirmPassword}</p>
 			{/if}

@@ -7,6 +7,7 @@
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
 	import { asciiOnly } from '$lib/inputFilters';
+	import { Mail, Lock } from 'lucide-svelte';
 
 	let identifier = $state('');
 	let password = $state('');
@@ -72,17 +73,20 @@
 					<span class="block">{T.identifier.en}</span>
 					<span class="block leading-tight" lang={langStore.current}>{tx('identifier', langStore.current)}</span>
 				</label>
-				<input
-					id="identifier"
-					type="text"
-					autocomplete="username"
-					class="input"
-					class:border-vermilion={errors.identifier}
-					bind:value={identifier}
-					oninput={(ev) => { identifier = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
-					placeholder="ramana_ambore  or  you@example.com"
-					spellcheck="false"
-				/>
+				<div class="relative">
+					<Mail size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
+					<input
+						id="identifier"
+						type="text"
+						autocomplete="username"
+						class="input pl-10"
+						class:border-vermilion={errors.identifier}
+						bind:value={identifier}
+						oninput={(ev) => { identifier = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
+						placeholder="ramana_ambore  or  you@example.com"
+						spellcheck="false"
+					/>
+				</div>
 				{#if errors.identifier}
 					<p class="mt-1 text-xs text-vermilion">{errors.identifier}</p>
 				{/if}
@@ -94,14 +98,17 @@
 					<span class="block">Password</span>
 					<span class="block leading-tight" lang={langStore.current}>{tx('password', langStore.current)}</span>
 				</label>
-				<input
-					id="password"
-					type="password"
-					autocomplete="current-password"
-					class="input"
-					class:border-vermilion={errors.password}
-					bind:value={password}
-				/>
+				<div class="relative">
+					<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
+					<input
+						id="password"
+						type="password"
+						autocomplete="current-password"
+						class="input pl-10"
+						class:border-vermilion={errors.password}
+						bind:value={password}
+					/>
+				</div>
 				{#if errors.password}
 					<p class="mt-1 text-xs text-vermilion">{errors.password}</p>
 				{/if}

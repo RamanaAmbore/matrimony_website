@@ -3,7 +3,7 @@
 	import { requests as requestsApi, type DetailRequest } from '$lib/api';
 	import { ApiError } from '$lib/api';
 	import { goto } from '$app/navigation';
-	import { Loader, Inbox } from 'lucide-svelte';
+	import { Loader, Inbox, Clock, CheckCircle, XCircle } from 'lucide-svelte';
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
 
@@ -97,7 +97,13 @@
 							<p class="mt-1 text-sm text-vermilion">Note: {req.admin_notes}</p>
 						{/if}
 					</div>
-					<span class={statusClass(req.status)}>{statusLabel(req.status)}</span>
+					<span class="{statusClass(req.status)} inline-flex items-center gap-1">
+						{#if req.status === 'pending'}<Clock size={12} class="-mt-0.5 inline-block" />
+						{:else if req.status === 'approved'}<CheckCircle size={12} class="-mt-0.5 inline-block" />
+						{:else if req.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
+						{/if}
+						{statusLabel(req.status)}
+					</span>
 				</li>
 			{/each}
 		</ul>
