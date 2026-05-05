@@ -60,9 +60,31 @@ option:hover { background: var(--color-maroon); color: var(--color-cream); }
 }
 
 @layer utilities {
+	/* Per-script font selection. Browsers match the first family that has a
+	   glyph for the character, so the Indic-script lines pick up Noto Sans
+	   <Script> automatically while the Latin lines stay on Inter / Cormorant.
+	   Devanagari serves Marathi, Hindi, AND Haryanvi (bgc). */
+	[lang="te"] { font-family: 'Noto Sans Telugu', 'Inter', system-ui, sans-serif; }
+	[lang="mr"], [lang="hi"], [lang="bgc"] {
+		font-family: 'Noto Sans Devanagari', 'Inter', system-ui, sans-serif;
+	}
+	[lang="kn"] { font-family: 'Noto Sans Kannada', 'Inter', system-ui, sans-serif; }
+	[lang="ta"] { font-family: 'Noto Sans Tamil', 'Inter', system-ui, sans-serif; }
+
+	/* Brand wordmark line — keeps the literary Tiro look across all six langs.
+	   Header + footer brand markup carries class="brand-wordmark" so this
+	   override is targeted, not site-wide. */
+	.brand-wordmark[lang="te"] { font-family: 'Tiro Telugu', 'Noto Sans Telugu', serif; }
+	.brand-wordmark[lang="mr"] { font-family: 'Tiro Devanagari Marathi', 'Noto Sans Devanagari', serif; }
+	.brand-wordmark[lang="hi"], .brand-wordmark[lang="bgc"] {
+		font-family: 'Tiro Devanagari Hindi', 'Noto Sans Devanagari', serif;
+	}
+	.brand-wordmark[lang="kn"] { font-family: 'Tiro Kannada', 'Noto Sans Kannada', serif; }
+	.brand-wordmark[lang="ta"] { font-family: 'Tiro Tamil', 'Noto Sans Tamil', serif; }
+
 	/* Bilingual secondary line — applies to whichever Indic language the user
-	   has picked (Telugu, Marathi, Kannada, Tamil, Hindi). Keep these styles
-	   identical across the five so font/color/decoration don't shift on switch. */
+	   has picked. Keep size + opacity identical across the six so the visual
+	   weight doesn't shift on language switch. */
 	:is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"], [lang="bgc"]) {
 		opacity: 0.82;
 		font-size: 0.85em !important;
