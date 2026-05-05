@@ -63,7 +63,7 @@ option:hover { background: var(--color-maroon); color: var(--color-cream); }
 	/* Bilingual secondary line — applies to whichever Indic language the user
 	   has picked (Telugu, Marathi, Kannada, Tamil, Hindi). Keep these styles
 	   identical across the five so font/color/decoration don't shift on switch. */
-	:is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"]) {
+	:is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"], [lang="bgc"]) {
 		opacity: 0.82;
 		font-size: 0.85em !important;
 		font-weight: inherit !important;
@@ -81,8 +81,8 @@ option:hover { background: var(--color-maroon); color: var(--color-cream); }
 
 	/* Navbar & footer bilingual labels: darker orange.
 	   Buttons override this via inline style="color:inherit" so they are unaffected. */
-	header :is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"]),
-	footer :is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"]) {
+	header :is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"], [lang="bgc"]),
+	footer :is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"], [lang="bgc"]) {
 		opacity: 1;
 		color: var(--color-marigold);
 		-webkit-text-stroke: 0.65px var(--color-ink);
