@@ -11,7 +11,8 @@
 		FamilyValues,
 		SmokeDrink
 	} from '$lib/api';
-	import { T } from '$lib/i18n';
+	import { T, tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 	import { asciiOnly } from '$lib/inputFilters';
 	import BilingualLabel from '$lib/components/BilingualLabel.svelte';
 	import PhotoUpload from '$lib/components/PhotoUpload.svelte';
@@ -149,17 +150,12 @@
 	let errors = $state<Record<string, string>>({});
 
 	// ── Wizard state ─────────────────────────────────────────────────────────
-	const SECTIONS = [
-		{ label: 'Basic Information',    te: 'మూల సమాచారం' },
-		{ label: 'Physical',             te: 'శారీరక వివరాలు' },
-		{ label: 'Astrology',            te: 'జ్యోతిష్య వివరాలు' },
-		{ label: 'Education & Career',   te: 'విద్య & వృత్తి' },
-		{ label: 'Family',               te: 'కుటుంబ వివరాలు' },
-		{ label: 'Lifestyle',            te: 'జీవనశైలి' },
-		{ label: 'Location',             te: 'నివాస స్థానం' },
-		{ label: 'About & Expectations', te: 'పరిచయం' },
-		{ label: 'Photos',               te: 'ఫోటోలు' },
-	];
+	const SECTION_KEYS = [
+		'secBasicInfo', 'secPhysical', 'secAstrology', 'secEducation',
+		'secFamily', 'secLifestyle', 'secLocation', 'secAbout', 'secPhotos'
+	] as const;
+	// Keep a stable label for aria / locking logic
+	const SECTIONS = SECTION_KEYS.map((k) => T[k]);
 
 	// activeSection: which section is expanded. Starts at 0.
 	let activeSection = $state(0);
@@ -547,8 +543,8 @@
 			>
 				<span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold {done ? 'bg-maroon text-cream' : locked ? 'bg-ink/15 text-ink/40' : 'bg-maroon/10 text-maroon'}">{i + 1}</span>
 				<span class="flex-1">
-					<span class="font-serif font-semibold {locked ? 'text-ink/40' : 'text-maroon'}">{sec.label}</span>
-					<span class="ml-2 text-xs text-ink/50" lang="te">{sec.te}</span>
+					<span class="font-serif font-semibold {locked ? 'text-ink/40' : 'text-maroon'}">{sec.en}</span>
+					<span class="ml-2 text-xs text-ink/50" lang={langStore.current}>{tx(SECTION_KEYS[i], langStore.current)}</span>
 				</span>
 				{#if done}
 					<span class="text-xs font-medium text-maroon">✓ Saved</span>
@@ -571,14 +567,14 @@
 							<fieldset>
 								<legend class="label">
 									<span class="block">{T.gender.en} <span class="text-vermilion">*</span></span>
-									<span class="block text-xs leading-tight font-normal text-ink/60" lang="te">{T.gender.te}</span>
+									<span class="block text-xs leading-tight font-normal text-ink/60" lang={langStore.current}>{tx('gender', langStore.current)}</span>
 								</legend>
 								<div class="mt-1 flex gap-6">
 									{#each [{ value: 'bride', key: 'bride' as const }, { value: 'groom', key: 'groom' as const }] as opt}
 										<label class="flex cursor-pointer items-center gap-2">
 											<input type="radio" name="gender" value={opt.value} bind:group={gender} class="accent-maroon" />
 											<span>{T[opt.key].en}</span>
-											<span class="text-xs text-ink/60" lang="te">{T[opt.key].te}</span>
+											<span class="text-xs text-ink/60" lang={langStore.current}>{tx(opt.key, langStore.current)}</span>
 										</label>
 									{/each}
 								</div>
@@ -740,6 +736,24 @@
 								{#if errors.rashi}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.rashi}</p>{/if}
 							</div>
 
+							<!-- Manglik -->
+							<div class="sm:col-span-2">
+								<fieldset>
+									<legend class="label">
+										<span class="block">{T.manglik.en}</span>
+										<span class="block text-xs leading-tight font-normal text-ink/60" lang={langStore.current}>{tx('manglik', langStore.current)}</span>
+									</legend>
+									<div class="mt-1 flex flex-wrap gap-4">
+										{#each [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'partial', label: 'Partial' }, { value: 'unknown', label: "Unknown / Don't Know" }] as opt}
+											<label class="flex cursor-pointer items-center gap-2">
+												<input type="radio" name="manglik" value={opt.value} bind:group={manglik} class="accent-maroon" />
+												<span>{opt.label}</span>
+											</label>
+										{/each}
+									</div>
+								</fieldset>
+							</div>
+
 							<!-- Time of Birth (optional) -->
 							<div>
 								<BilingualLabel key="timeOfBirth" for="time_enabled" />
@@ -766,22 +780,6 @@
 								<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 							</div>
 						</div>
-
-						<!-- Manglik -->
-						<fieldset class="mt-4">
-							<legend class="label">
-								<span class="block">{T.manglik.en}</span>
-								<span class="block text-xs leading-tight font-normal text-ink/60" lang="te">{T.manglik.te}</span>
-							</legend>
-							<div class="mt-1 flex flex-wrap gap-4">
-								{#each [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'partial', label: 'Partial' }, { value: 'unknown', label: "Unknown / Don't Know" }] as opt}
-									<label class="flex cursor-pointer items-center gap-2">
-										<input type="radio" name="manglik" value={opt.value} bind:group={manglik} class="accent-maroon" />
-										<span>{opt.label}</span>
-									</label>
-								{/each}
-							</div>
-						</fieldset>
 
 					{:else if i === 3}
 						<!-- ── Section 3: Education & Career ───────────────────────── -->
@@ -862,6 +860,12 @@
 								<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 							</div>
 
+							<!-- Number of family members -->
+							<div>
+								<BilingualLabel key="numFamilyMembers" for="num_family_members" />
+								<input id="num_family_members" type="number" min="1" max="30" class="input" bind:value={num_family_members} placeholder="Total members in family" />
+							</div>
+
 							<!-- Number of Brothers -->
 							<div>
 								<BilingualLabel key="numBrothers" for="num_brothers" />
@@ -886,10 +890,11 @@
 								<input id="num_sisters_married" type="number" min="0" max="20" class="input" bind:value={num_sisters_married} placeholder="Optional" />
 							</div>
 
-							<!-- Number of family members -->
+							<!-- Family Type -->
 							<div>
-								<BilingualLabel key="numFamilyMembers" for="num_family_members" />
-								<input id="num_family_members" type="number" min="1" max="30" class="input" bind:value={num_family_members} placeholder="Total members in family" />
+								<BilingualLabel key="familyType" for="family_type_sel_w" />
+								<Combobox id="family_type_sel_w" bind:value={family_type} options={FAMILY_TYPES} placeholder="Not specified" />
+								{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.family_type}</p>{/if}
 							</div>
 
 							<!-- Family Status -->
@@ -912,13 +917,6 @@
 								<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 								{#if errors.native_place}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.native_place}</p>{/if}
 							</div>
-						</div>
-
-						<!-- Family Type -->
-						<div class="mt-4">
-							<BilingualLabel key="familyType" for="family_type_sel_w" />
-							<Combobox id="family_type_sel_w" bind:value={family_type} options={FAMILY_TYPES} placeholder="Not specified" />
-							{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.family_type}</p>{/if}
 						</div>
 
 					{:else if i === 5}
@@ -979,7 +977,7 @@
 							<div>
 								<label for="pin_code" class="label">
 									<span class="block">Pin Code <span class="text-xs font-normal text-ink/50">(optional)</span></span>
-									<span class="block text-xs leading-tight font-normal" lang="te">పిన్ కోడ్</span>
+									<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('pinCode', langStore.current)}</span>
 								</label>
 								<input id="pin_code" type="text" inputmode="numeric" maxlength="10" class="input" bind:value={pin_code} placeholder="e.g. 500001" />
 							</div>
@@ -1039,7 +1037,7 @@
 							class="btn-secondary flex flex-1 flex-col items-center justify-center text-center leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
 						>
 							<span class="text-xs sm:text-sm">{T.cancel.en}</span>
-							<span lang="te" class="text-[10px] sm:text-xs opacity-90">{T.cancel.te}</span>
+							<span lang={langStore.current} class="text-[10px] sm:text-xs opacity-90">{tx('cancel', langStore.current)}</span>
 						</a>
 						{#if i === 8}
 							<!-- Last step: Save Draft + Submit for Approval -->
@@ -1053,7 +1051,7 @@
 									<span class="text-xs sm:text-sm">Saving…</span>
 								{:else}
 									<span class="text-xs sm:text-sm">{T.save.en}</span>
-									<span lang="te" class="text-[10px] sm:text-xs opacity-90">{T.save.te}</span>
+									<span lang={langStore.current} class="text-[10px] sm:text-xs opacity-90">{tx('save', langStore.current)}</span>
 								{/if}
 							</button>
 							{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
@@ -1067,7 +1065,7 @@
 										<span class="text-xs sm:text-sm">Submitting…</span>
 									{:else}
 										<span class="text-xs sm:text-sm">Submit for Approval</span>
-										<span lang="te" class="text-[10px] sm:text-xs opacity-90">అనుమతి కోసం సమర్పించండి</span>
+										<span lang={langStore.current} class="text-[10px] sm:text-xs opacity-90">{tx('submitForApproval', langStore.current)}</span>
 									{/if}
 								</button>
 							{/if}
@@ -1126,7 +1124,7 @@
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>1</span>
 			Basic Information
-			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">మూల సమాచారం</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secBasicInfo', langStore.current)}</span>
 		</summary>
 
 		<div class="mt-4 space-y-4">
@@ -1134,8 +1132,8 @@
 			<fieldset>
 				<legend class="label">
 					<span class="block">{T.gender.en} <span class="text-vermilion">*</span></span>
-					<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
-						>{T.gender.te}</span
+					<span class="block text-xs leading-tight font-normal text-ink/60" lang={langStore.current}
+						>{tx('gender', langStore.current)}</span
 					>
 				</legend>
 				<div class="mt-1 flex gap-6">
@@ -1149,7 +1147,7 @@
 								class="accent-maroon"
 							/>
 							<span>{T[opt.key].en}</span>
-							<span class="text-xs text-ink/60" lang="te">{T[opt.key].te}</span>
+							<span class="text-xs text-ink/60" lang={langStore.current}>{tx(opt.key, langStore.current)}</span>
 						</label>
 					{/each}
 				</div>
@@ -1170,6 +1168,26 @@
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 					{#if errors.first_name}<p class="mt-1 text-xs text-vermilion" data-error="true">
 							{errors.first_name}
+						</p>{/if}
+				</div>
+
+				<!-- Surname / Clan -->
+				<div>
+					<BilingualLabel key="surnameClan" for="surname_clan" />
+					<input
+						id="surname_clan"
+						type="text"
+						class="input"
+						class:border-vermilion={errors.surname_clan}
+						bind:value={surname_clan}
+						oninput={(e) => (surname_clan = asciiOnly(e.currentTarget.value))}
+					/>
+					<p class="mt-0.5 text-xs text-ink/45">
+						Your family/clan surname, e.g. Desai, Patil, More · కుటుంబ పేరు
+					</p>
+					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
+					{#if errors.surname_clan}<p class="mt-1 text-xs text-vermilion" data-error="true">
+							{errors.surname_clan}
 						</p>{/if}
 				</div>
 
@@ -1204,26 +1222,6 @@
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 				</div>
 
-				<!-- Surname / Clan -->
-				<div>
-					<BilingualLabel key="surnameClan" for="surname_clan" />
-					<input
-						id="surname_clan"
-						type="text"
-						class="input"
-						class:border-vermilion={errors.surname_clan}
-						bind:value={surname_clan}
-						oninput={(e) => (surname_clan = asciiOnly(e.currentTarget.value))}
-					/>
-					<p class="mt-0.5 text-xs text-ink/45">
-						Your family/clan surname, e.g. Desai, Patil, More · కుటుంబ పేరు
-					</p>
-					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
-					{#if errors.surname_clan}<p class="mt-1 text-xs text-vermilion" data-error="true">
-							{errors.surname_clan}
-						</p>{/if}
-				</div>
-
 				<!-- Sub-caste (optional) -->
 				<div class="sm:col-span-2">
 					<BilingualLabel key="caste" for="caste_edit" />
@@ -1250,7 +1248,7 @@
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>2</span>
 			Physical
-			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">శారీరక వివరాలు</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secPhysical', langStore.current)}</span>
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -1316,7 +1314,7 @@
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>3</span>
 			Astrology
-			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">జ్యోతిష వివరాలు</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secAstrology', langStore.current)}</span>
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -1410,6 +1408,32 @@
 					</p>{/if}
 			</div>
 
+			<!-- Manglik -->
+			<div class="sm:col-span-2">
+				<fieldset>
+					<legend class="label">
+						<span class="block">{T.manglik.en}</span>
+						<span class="block text-xs leading-tight font-normal text-ink/60" lang={langStore.current}
+							>{tx('manglik', langStore.current)}</span
+						>
+					</legend>
+					<div class="mt-1 flex flex-wrap gap-4">
+						{#each [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'partial', label: 'Partial' }, { value: 'unknown', label: "Unknown / Don't Know" }] as opt}
+							<label class="flex cursor-pointer items-center gap-2">
+								<input
+									type="radio"
+									name="manglik"
+									value={opt.value}
+									bind:group={manglik}
+									class="accent-maroon"
+								/>
+								<span>{opt.label}</span>
+							</label>
+						{/each}
+					</div>
+				</fieldset>
+			</div>
+
 			<!-- Time of Birth (optional) -->
 			<div>
 				<BilingualLabel key="timeOfBirth" for="time_enabled_n" />
@@ -1443,30 +1467,6 @@
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 			</div>
 		</div>
-
-		<!-- Manglik -->
-		<fieldset class="mt-4">
-			<legend class="label">
-				<span class="block">{T.manglik.en}</span>
-				<span class="block text-xs leading-tight font-normal text-ink/60" lang="te"
-					>{T.manglik.te}</span
-				>
-			</legend>
-			<div class="mt-1 flex flex-wrap gap-4">
-				{#each [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'partial', label: 'Partial' }, { value: 'unknown', label: "Unknown / Don't Know" }] as opt}
-					<label class="flex cursor-pointer items-center gap-2">
-						<input
-							type="radio"
-							name="manglik"
-							value={opt.value}
-							bind:group={manglik}
-							class="accent-maroon"
-						/>
-						<span>{opt.label}</span>
-					</label>
-				{/each}
-			</div>
-		</fieldset>
 	</details>
 
 	<!-- ── Section: Education & Career ──────────────────────────────────────── -->
@@ -1479,7 +1479,7 @@
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>4</span>
 			Education &amp; Career
-			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">విద్య &amp; వృత్తి</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secEducation', langStore.current)}</span>
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -1590,7 +1590,7 @@
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>5</span>
 			Family
-			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">కుటుంబ వివరాలు</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secFamily', langStore.current)}</span>
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -1658,6 +1658,20 @@
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 			</div>
 
+			<!-- Number of family members -->
+			<div>
+				<BilingualLabel key="numFamilyMembers" for="num_family_members" />
+				<input
+					id="num_family_members"
+					type="number"
+					min="1"
+					max="30"
+					class="input"
+					bind:value={num_family_members}
+					placeholder="Total members in family"
+				/>
+			</div>
+
 			<!-- Number of Brothers -->
 			<div>
 				<BilingualLabel key="numBrothers" for="num_brothers" />
@@ -1714,18 +1728,13 @@
 				/>
 			</div>
 
-			<!-- Number of family members -->
+			<!-- Family Type -->
 			<div>
-				<BilingualLabel key="numFamilyMembers" for="num_family_members" />
-				<input
-					id="num_family_members"
-					type="number"
-					min="1"
-					max="30"
-					class="input"
-					bind:value={num_family_members}
-					placeholder="Total members in family"
-				/>
+				<BilingualLabel key="familyType" for="family_type_sel_n" />
+				<Combobox id="family_type_sel_n" bind:value={family_type} options={FAMILY_TYPES} placeholder="Not specified" />
+				{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">
+						{errors.family_type}
+					</p>{/if}
 			</div>
 
 			<!-- Family Status -->
@@ -1761,15 +1770,6 @@
 					</p>{/if}
 			</div>
 		</div>
-
-		<!-- Family Type -->
-		<div class="mt-4">
-			<BilingualLabel key="familyType" for="family_type_sel_n" />
-			<Combobox id="family_type_sel_n" bind:value={family_type} options={FAMILY_TYPES} placeholder="Not specified" />
-			{#if errors.family_type}<p class="mt-1 text-xs text-vermilion" data-error="true">
-					{errors.family_type}
-				</p>{/if}
-		</div>
 	</details>
 
 	<!-- ── Section: Lifestyle ────────────────────────────────────────────────── -->
@@ -1782,7 +1782,7 @@
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>6</span>
 			Lifestyle
-			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">జీవనశైలి</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secLifestyle', langStore.current)}</span>
 		</summary>
 
 		<div class="mt-4 space-y-4">
@@ -1831,7 +1831,7 @@
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>7</span>
 			Location
-			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">నివాస వివరాలు</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secLocation', langStore.current)}</span>
 		</summary>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -1870,7 +1870,7 @@
 					<span class="block"
 						>Pin Code <span class="text-xs font-normal text-ink/50">(optional)</span></span
 					>
-					<span class="block text-xs leading-tight font-normal" lang="te">పిన్ కోడ్</span>
+					<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('pinCode', langStore.current)}</span>
 				</label>
 				<input
 					id="pin_code"
@@ -1895,7 +1895,7 @@
 				class="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-maroon/10 text-sm font-bold text-maroon"
 			>8</span>
 			About &amp; Expectations
-			<span class="ml-1 text-sm font-normal text-ink/50" lang="te">మీ గురించి &amp; అపేక్షలు</span>
+			<span class="ml-1 text-sm font-normal text-ink/50" lang={langStore.current}>{tx('secAbout', langStore.current)}</span>
 		</summary>
 
 		<div class="mt-4 space-y-4">
@@ -1971,7 +1971,7 @@
 				class="btn-secondary flex flex-1 flex-col items-center justify-center text-center leading-tight px-2 py-2 min-h-[56px] whitespace-normal"
 			>
 				<span class="text-xs sm:text-sm">{T.cancel.en}</span>
-				<span lang="te" class="text-[10px] sm:text-xs opacity-90">{T.cancel.te}</span>
+				<span lang={langStore.current} class="text-[10px] sm:text-xs opacity-90">{tx('cancel', langStore.current)}</span>
 			</a>
 			<button
 				type="submit"
@@ -1982,7 +1982,7 @@
 					<span class="text-xs sm:text-sm">Saving…</span>
 				{:else}
 					<span class="text-xs sm:text-sm">{T.save.en}</span>
-					<span lang="te" class="text-[10px] sm:text-xs opacity-90">{T.save.te}</span>
+					<span lang={langStore.current} class="text-[10px] sm:text-xs opacity-90">{tx('save', langStore.current)}</span>
 				{/if}
 			</button>
 			{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
@@ -1996,7 +1996,7 @@
 						<span class="text-xs sm:text-sm">Submitting…</span>
 					{:else}
 						<span class="text-xs sm:text-sm">Submit for Approval</span>
-						<span lang="te" class="text-[10px] sm:text-xs opacity-90">అనుమతి కోసం సమర్పించండి</span>
+						<span lang={langStore.current} class="text-[10px] sm:text-xs opacity-90">{tx('submitForApproval', langStore.current)}</span>
 					{/if}
 				</button>
 			{/if}

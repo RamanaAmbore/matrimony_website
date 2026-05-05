@@ -3,7 +3,8 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
 	import { ApiError } from '$lib/api';
-	import { T } from '$lib/i18n';
+	import { T, tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 	import { asciiOnly } from '$lib/inputFilters';
 
 	const USER_ID_RE = /^[A-Za-z][A-Za-z0-9_]{2,29}$/;
@@ -133,7 +134,7 @@
 	<div class="text-center">
 		<h1 class="font-serif text-3xl font-bold text-maroon">
 			{T.register.en}
-			<span class="ml-2" lang="te">{T.register.te}</span>
+			<span class="ml-2" lang={langStore.current}>{tx('register', langStore.current)}</span>
 		</h1>
 		<p class="mt-1 text-sm text-ink/60">Join the Maratha Kalyanam community</p>
 	</div>
@@ -144,7 +145,7 @@
 		<div>
 			<label for="full_name" class="label block">
 				<span class="block">Full Name</span>
-				<span class="block leading-tight" lang="te">పూర్తి పేరు</span>
+				<span class="block leading-tight" lang={langStore.current}>{tx('fullName', langStore.current)}</span>
 			</label>
 			<input
 				id="full_name"
@@ -165,7 +166,7 @@
 		<div>
 			<label for="user_id" class="label block">
 				<span class="block">{T.userHandle.en}</span>
-				<span class="block leading-tight" lang="te">{T.userHandle.te}</span>
+				<span class="block leading-tight" lang={langStore.current}>{tx('userHandle', langStore.current)}</span>
 			</label>
 			<input
 				id="user_id"
@@ -185,7 +186,7 @@
 			{:else}
 				<p class="mt-1 text-xs text-ink/50 leading-snug">
 					3–30 characters · letters, digits, underscore · must start with a letter<br />
-					<span lang="te">3–30 అక్షరాలు · అక్షరాలు, అంకెలు, అండర్‌స్కోర్ · అక్షరంతో ప్రారంభం</span>
+					<span lang={langStore.current}>{tx('userIdHint', langStore.current)}</span>
 				</p>
 			{/if}
 		</div>
@@ -194,7 +195,7 @@
 		<div>
 			<label for="email" class="label block">
 				<span class="block">Email address</span>
-				<span class="block leading-tight" lang="te">ఇమెయిల్ చిరునామా</span>
+				<span class="block leading-tight" lang={langStore.current}>{tx('emailAddress', langStore.current)}</span>
 			</label>
 			<input
 				id="email"
@@ -214,7 +215,7 @@
 		<div>
 			<label for="phone_number" class="label block">
 				<span class="block">Phone number</span>
-				<span class="block leading-tight" lang="te">ఫోన్ నంబర్</span>
+				<span class="block leading-tight" lang={langStore.current}>{tx('phoneNumber', langStore.current)}</span>
 			</label>
 			<input
 				id="phone_number"
@@ -240,7 +241,7 @@
 		<div>
 			<label for="password" class="label block">
 				<span class="block">Password</span>
-				<span class="block leading-tight" lang="te">పాస్‌వర్డ్</span>
+				<span class="block leading-tight" lang={langStore.current}>{tx('password', langStore.current)}</span>
 			</label>
 			<input
 				id="password"
@@ -264,7 +265,7 @@
 		<div>
 			<label for="confirm-password" class="label block">
 				<span class="block">Confirm password</span>
-				<span class="block leading-tight" lang="te">పాస్‌వర్డ్ నిర్ధారించు</span>
+				<span class="block leading-tight" lang={langStore.current}>{tx('confirmPassword', langStore.current)}</span>
 			</label>
 			<input
 				id="confirm-password"
@@ -284,7 +285,7 @@
 			{#if loading}
 				Creating account…
 			{:else}
-				{T.register.en} · <span lang="te" style="color:inherit">{T.register.te}</span>
+				{T.register.en} · <span lang={langStore.current} style="color:inherit">{tx('register', langStore.current)}</span>
 			{/if}
 		</button>
 	</form>
@@ -292,7 +293,7 @@
 	<p class="mt-6 text-center text-sm text-ink/60">
 		Already have an account?
 		<a href="/login" class="font-medium text-saffron hover:underline">
-			{T.login.en} · <span lang="te">{T.login.te}</span>
+			{T.login.en} · <span lang={langStore.current}>{tx('login', langStore.current)}</span>
 		</a>
 	</p>
 	</div>

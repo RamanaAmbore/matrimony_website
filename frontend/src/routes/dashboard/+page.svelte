@@ -5,7 +5,8 @@
 	import { ApiError } from '$lib/api';
 	import { Plus, User, Edit, Loader, SendHorizonal } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
-	import { T } from '$lib/i18n';
+	import { T, tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	let { data } = $props();
 
@@ -83,7 +84,7 @@
 		<div>
 			<h1 class="font-serif text-3xl font-bold text-maroon">
 				{T.myProfiles.en}
-				<span class="ml-2" lang="te">{T.myProfiles.te}</span>
+				<span class="ml-2" lang={langStore.current}>{tx('myProfiles', langStore.current)}</span>
 			</h1>
 			<p class="mt-1 text-sm text-ink/60">Manage your matrimonial profiles</p>
 		</div>

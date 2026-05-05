@@ -4,7 +4,8 @@
 	import { goto } from '$app/navigation';
 	import { ApiError } from '$lib/api';
 	import { invalidateAll } from '$app/navigation';
-	import { T } from '$lib/i18n';
+	import { T, tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 	import { asciiOnly } from '$lib/inputFilters';
 
 	let identifier = $state('');
@@ -58,7 +59,7 @@
 		<div class="text-center">
 			<h1 class="font-serif text-3xl font-bold text-maroon">
 				{T.login.en}
-				<span class="ml-2" lang="te">{T.login.te}</span>
+				<span class="ml-2" lang={langStore.current}>{tx('login', langStore.current)}</span>
 			</h1>
 			<p class="mt-1 text-sm text-ink/60">Sign in to your Maratha Kalyanam account</p>
 		</div>
@@ -69,7 +70,7 @@
 			<div>
 				<label for="identifier" class="label block">
 					<span class="block">{T.identifier.en}</span>
-					<span class="block leading-tight" lang="te">{T.identifier.te}</span>
+					<span class="block leading-tight" lang={langStore.current}>{tx('identifier', langStore.current)}</span>
 				</label>
 				<input
 					id="identifier"
@@ -91,7 +92,7 @@
 			<div>
 				<label for="password" class="label block">
 					<span class="block">Password</span>
-					<span class="block leading-tight" lang="te">పాస్‌వర్డ్</span>
+					<span class="block leading-tight" lang={langStore.current}>{tx('password', langStore.current)}</span>
 				</label>
 				<input
 					id="password"
@@ -107,14 +108,14 @@
 			</div>
 
 			<button type="submit" class="btn-primary w-full py-3" disabled={loading}>
-				{loading ? 'Signing in…' : `${T.login.en} · `}<span lang="te" style="color:inherit">{loading ? '' : T.login.te}</span>
+				{loading ? 'Signing in…' : `${T.login.en} · `}<span lang={langStore.current} style="color:inherit">{loading ? '' : tx('login', langStore.current)}</span>
 			</button>
 		</form>
 
 		<p class="mt-6 text-center text-sm text-ink/60">
 			Don't have an account?
 			<a href="/register" class="font-medium text-saffron hover:underline">
-				{T.register.en} · <span lang="te">{T.register.te}</span>
+				{T.register.en} · <span lang={langStore.current}>{tx('register', langStore.current)}</span>
 			</a>
 		</p>
 	</div>

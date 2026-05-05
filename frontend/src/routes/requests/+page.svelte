@@ -4,7 +4,8 @@
 	import { ApiError } from '$lib/api';
 	import { goto } from '$app/navigation';
 	import { Loader, Inbox } from 'lucide-svelte';
-	import { T } from '$lib/i18n';
+	import { T, tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	let requestList = $state<DetailRequest[]>([]);
 	let loading = $state(true);
@@ -52,7 +53,7 @@
 <div class="mx-auto max-w-3xl px-4 py-10">
 	<h1 class="font-serif text-3xl font-bold text-maroon">
 		{T.requests.en}
-		<span class="ml-2" lang="te">{T.requests.te}</span>
+		<span class="ml-2" lang={langStore.current}>{tx('requests', langStore.current)}</span>
 	</h1>
 	<p class="mt-1 text-sm text-ink/60">Outbound detail requests you have sent</p>
 

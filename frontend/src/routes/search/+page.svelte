@@ -162,6 +162,11 @@
 					Filters · <span lang="te">వడపోత</span>
 				</h2>
 
+				<!-- ── Basic ──────────────────────────────────────────── -->
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1">
+					Basic · <span lang="te">మూల వివరాలు</span>
+				</h3>
+
 				<!-- Gender -->
 				<div>
 					<label for="f-gender" class="label">
@@ -185,6 +190,18 @@
 					<p class="mt-0.5 text-xs text-ink/45">Filters by date of birth on record · జన్మ తేదీ ఆధారంగా</p>
 				</div>
 
+				<!-- Language -->
+				<div>
+					<label for="f-lang" class="label">Language · <span lang="te">భాష</span></label>
+					<Combobox bind:value={mother_tongue_filter} options={MOTHER_TONGUES} placeholder="Any language" />
+					<p class="mt-0.5 text-xs text-ink/45">e.g. Telugu, Hindi, Marathi · భాష పేరు</p>
+				</div>
+
+				<!-- ── Physical ───────────────────────────────────────── -->
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
+					Physical · <span lang="te">శారీరక వివరాలు</span>
+				</h3>
+
 				<!-- Height range -->
 				<div>
 					<p class="label">
@@ -206,6 +223,11 @@
 					</div>
 				</div>
 
+				<!-- ── Astrology ───────────────────────────────────────── -->
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
+					Astrology · <span lang="te">జ్యోతిష్య వివరాలు</span>
+				</h3>
+
 				<!-- Gotra -->
 				<div>
 					<label for="f-gotra" class="label">Gotra · <span lang="te">గోత్రం</span></label>
@@ -224,6 +246,23 @@
 					<label for="f-rashi" class="label">Rashi · <span lang="te">రాశి</span></label>
 					<Combobox id="f-rashi" bind:value={rashi} options={['', ...RASHIS]} placeholder="Any" />
 				</div>
+
+				<!-- Manglik -->
+				<div>
+					<label for="f-manglik" class="label">Manglik · <span lang="te">మాంగళిక్</span></label>
+					<Combobox id="f-manglik" bind:value={manglik} options={[
+						{ value: '', label: 'Any' },
+						{ value: 'yes', label: 'Yes' },
+						{ value: 'no', label: 'No' },
+						{ value: 'partial', label: 'Partial' },
+						{ value: 'unknown', label: 'Unknown' }
+					]} placeholder="Any" />
+				</div>
+
+				<!-- ── Location ────────────────────────────────────────── -->
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
+					Location · <span lang="te">నివాస స్థానం</span>
+				</h3>
 
 				<!-- City -->
 				<div>
@@ -251,24 +290,10 @@
 					<p class="mt-0.5 text-xs text-ink/45">Matches profiles starting with this pin · పిన్ తో మొదలయ్యే</p>
 				</div>
 
-				<!-- Language -->
-				<div>
-					<label for="f-lang" class="label">Language · <span lang="te">భాష</span></label>
-					<Combobox bind:value={mother_tongue_filter} options={MOTHER_TONGUES} placeholder="Any language" />
-					<p class="mt-0.5 text-xs text-ink/45">e.g. Telugu, Hindi, Marathi · భాష పేరు</p>
-				</div>
-
-				<!-- Manglik -->
-				<div>
-					<label for="f-manglik" class="label">Manglik · <span lang="te">మాంగళిక్</span></label>
-					<Combobox id="f-manglik" bind:value={manglik} options={[
-						{ value: '', label: 'Any' },
-						{ value: 'yes', label: 'Yes' },
-						{ value: 'no', label: 'No' },
-						{ value: 'partial', label: 'Partial' },
-						{ value: 'unknown', label: 'Unknown' }
-					]} placeholder="Any" />
-				</div>
+				<!-- ── Lifestyle ───────────────────────────────────────── -->
+				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
+					Lifestyle · <span lang="te">జీవనశైలి</span>
+				</h3>
 
 				<!-- Diet -->
 				<div>

@@ -6,7 +6,8 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import { Menu, X } from 'lucide-svelte';
-	import { T } from '$lib/i18n';
+	import { T, tx } from '$lib/i18n';
+	import { langStore, LANGS } from '$lib/stores/lang.svelte';
 
 	let { data, children } = $props();
 
@@ -170,31 +171,31 @@
 		<!-- Desktop nav — nowrap prevents each item from breaking across lines -->
 		<nav class="ml-8 hidden items-center gap-4 md:flex" aria-label="Main navigation">
 			<a href="/" class="whitespace-nowrap text-sm {navLinkClass('/')}" aria-current={isActive('/') ? 'page' : undefined}>
-				{T.home.en} <span lang="te">{T.home.te}</span>
+				{T.home.en} <span lang={langStore.current}>{tx('home', langStore.current)}</span>
 			</a>
 			<a href="/search" class="whitespace-nowrap text-sm {navLinkClass('/search')}" aria-current={isActive('/search') ? 'page' : undefined}>
-				{T.search.en} <span lang="te">{T.search.te}</span>
+				{T.search.en} <span lang={langStore.current}>{tx('search', langStore.current)}</span>
 			</a>
 			<a href="/about" class="whitespace-nowrap text-sm {navLinkClass('/about')}" aria-current={isActive('/about') ? 'page' : undefined}>
-				{T.aboutPage.en} <span lang="te">{T.aboutPage.te}</span>
+				{T.aboutPage.en} <span lang={langStore.current}>{tx('aboutPage', langStore.current)}</span>
 			</a>
 
 			{#if user}
 				<a href="/dashboard" class="whitespace-nowrap text-sm {navLinkClass('/dashboard')}" aria-current={isActive('/dashboard') ? 'page' : undefined}>
-					{T.myProfiles.en} <span lang="te">{T.myProfiles.te}</span>
+					{T.myProfiles.en} <span lang={langStore.current}>{tx('myProfiles', langStore.current)}</span>
 				</a>
 				<a href="/requests" class="whitespace-nowrap text-sm {navLinkClass('/requests')}" aria-current={isActive('/requests') ? 'page' : undefined}>
-					{T.requests.en} <span lang="te">{T.requests.te}</span>
+					{T.requests.en} <span lang={langStore.current}>{tx('requests', langStore.current)}</span>
 				</a>
 				{#if user.is_admin}
 					<a href="/admin" class="whitespace-nowrap text-sm {navLinkClass('/admin', true)}" aria-current={isActive('/admin', true) ? 'page' : undefined}>
-						{T.dashboard.en} <span lang="te">{T.dashboard.te}</span>
+						{T.dashboard.en} <span lang={langStore.current}>{tx('dashboard', langStore.current)}</span>
 					</a>
 					<a href="/admin/settings" class="whitespace-nowrap text-sm {navLinkClass('/admin/settings')}" aria-current={isActive('/admin/settings') ? 'page' : undefined}>
-						{T.settings.en} <span lang="te">{T.settings.te}</span>
+						{T.settings.en} <span lang={langStore.current}>{tx('settings', langStore.current)}</span>
 					</a>
 					<a href="/admin/broadcast" class="whitespace-nowrap text-sm {navLinkClass('/admin/broadcast')}" aria-current={isActive('/admin/broadcast') ? 'page' : undefined}>
-						{T.broadcast.en} <span lang="te">{T.broadcast.te}</span>
+						{T.broadcast.en} <span lang={langStore.current}>{tx('broadcast', langStore.current)}</span>
 					</a>
 				{/if}
 				<span class="hidden xl:inline" title={user.email}>
@@ -216,16 +217,29 @@
 					onclick={logout}
 					class="whitespace-nowrap rounded border border-cream/50 px-3 py-0.5 text-sm text-cream/80 hover:border-cream hover:text-cream focus-visible:outline-2 focus-visible:outline-cream"
 				>
-					{T.logout.en} <span lang="te">{T.logout.te}</span>
+					{T.logout.en} <span lang={langStore.current}>{tx('logout', langStore.current)}</span>
 				</button>
 			{:else}
 				<a href="/login" class="whitespace-nowrap rounded border border-cream px-3 py-0.5 text-sm font-medium text-cream transition-all duration-200 hover:bg-cream/15 focus-visible:outline-2 focus-visible:outline-cream">
-					{T.login.en} <span lang="te" style="color:inherit">{T.login.te}</span>
+					{T.login.en} <span lang={langStore.current} style="color:inherit">{tx('login', langStore.current)}</span>
 				</a>
 				<a href="/register" class="whitespace-nowrap rounded px-3 py-0.5 text-sm font-medium text-maroon transition-all duration-200 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-cream" style="background:#fde8b0;">
-					{T.register.en} <span lang="te" style="color:inherit">{T.register.te}</span>
+					{T.register.en} <span lang={langStore.current} style="color:inherit">{tx('register', langStore.current)}</span>
 				</a>
 			{/if}
+
+			<!-- Language switcher (desktop) -->
+			<select
+				value={langStore.current}
+				onchange={(e) => langStore.set(e.currentTarget.value as import('$lib/stores/lang.svelte').Lang)}
+				class="ml-1 rounded border border-cream/30 bg-maroon/50 px-1.5 py-0.5 text-xs text-cream/90 hover:border-cream/60 focus-visible:outline-2 focus-visible:outline-cream cursor-pointer"
+				aria-label="Select language"
+				title="Language / భాష"
+			>
+				{#each LANGS as l}
+					<option value={l.code} selected={langStore.current === l.code}>{l.native}</option>
+				{/each}
+			</select>
 		</nav>
 
 		<!-- Mobile-only chips (User/Admin/Super + Test). Always visible on the
@@ -305,36 +319,36 @@
 		<!-- Drawer nav links -->
 		<nav class="flex flex-col gap-1 p-4" aria-label="Mobile navigation">
 			<a href="/" class={drawerLinkClass('/')} aria-current={isActive('/') ? 'page' : undefined} onclick={closeDrawer}>
-				{T.home.en} <span lang="te">{T.home.te}</span>
+				{T.home.en} <span lang={langStore.current}>{tx('home', langStore.current)}</span>
 			</a>
 			<a href="/search" class={drawerLinkClass('/search')} aria-current={isActive('/search') ? 'page' : undefined} onclick={closeDrawer}>
-				{T.search.en} <span lang="te">{T.search.te}</span>
+				{T.search.en} <span lang={langStore.current}>{tx('search', langStore.current)}</span>
 			</a>
 			<a href="/about" class={drawerLinkClass('/about')} aria-current={isActive('/about') ? 'page' : undefined} onclick={closeDrawer}>
-				{T.aboutPage.en} <span lang="te">{T.aboutPage.te}</span>
+				{T.aboutPage.en} <span lang={langStore.current}>{tx('aboutPage', langStore.current)}</span>
 			</a>
 
 			{#if user}
 				<div class="my-2 h-px bg-gold/20"></div>
 				<a href="/dashboard" class={drawerLinkClass('/dashboard')} aria-current={isActive('/dashboard') ? 'page' : undefined} onclick={closeDrawer}>
-					{T.myProfiles.en} <span lang="te">{T.myProfiles.te}</span>
+					{T.myProfiles.en} <span lang={langStore.current}>{tx('myProfiles', langStore.current)}</span>
 				</a>
 				<a href="/requests" class={drawerLinkClass('/requests')} aria-current={isActive('/requests') ? 'page' : undefined} onclick={closeDrawer}>
-					{T.requests.en} <span lang="te">{T.requests.te}</span>
+					{T.requests.en} <span lang={langStore.current}>{tx('requests', langStore.current)}</span>
 				</a>
 				{#if user.is_admin}
 					<div class="my-2 h-px bg-gold/20"></div>
 					<p class="px-3 text-xs font-semibold tracking-wider text-ink/40 uppercase">
-						{T.admin.en} <span lang="te" class="normal-case">{T.admin.te}</span>
+						{T.admin.en} <span lang={langStore.current} class="normal-case">{tx('admin', langStore.current)}</span>
 					</p>
 					<a href="/admin" class={drawerLinkClass('/admin', true)} aria-current={isActive('/admin', true) ? 'page' : undefined} onclick={closeDrawer}>
-						{T.dashboard.en} <span lang="te">{T.dashboard.te}</span>
+						{T.dashboard.en} <span lang={langStore.current}>{tx('dashboard', langStore.current)}</span>
 					</a>
 					<a href="/admin/settings" class={drawerLinkClass('/admin/settings')} aria-current={isActive('/admin/settings') ? 'page' : undefined} onclick={closeDrawer}>
-						{T.settings.en} <span lang="te">{T.settings.te}</span>
+						{T.settings.en} <span lang={langStore.current}>{tx('settings', langStore.current)}</span>
 					</a>
 					<a href="/admin/broadcast" class={drawerLinkClass('/admin/broadcast')} aria-current={isActive('/admin/broadcast') ? 'page' : undefined} onclick={closeDrawer}>
-						{T.broadcast.en} <span lang="te">{T.broadcast.te}</span>
+						{T.broadcast.en} <span lang={langStore.current}>{tx('broadcast', langStore.current)}</span>
 					</a>
 				{/if}
 				<div class="my-2 h-px bg-gold/20"></div>
@@ -347,21 +361,37 @@
 					onclick={logout}
 					class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-vermilion hover:bg-vermilion/10 focus-visible:outline-2 focus-visible:outline-tangerine"
 				>
-					{T.logout.en} <span lang="te">{T.logout.te}</span>
+					{T.logout.en} <span lang={langStore.current}>{tx('logout', langStore.current)}</span>
 				</button>
 			{:else}
 				<div class="my-2 h-px bg-gold/20"></div>
 				<a href="/login" class={drawerLinkClass('/login')} aria-current={isActive('/login') ? 'page' : undefined} onclick={closeDrawer}>
-					{T.login.en} <span lang="te">{T.login.te}</span>
+					{T.login.en} <span lang={langStore.current}>{tx('login', langStore.current)}</span>
 				</a>
 				<a
 					href="/register"
 					class="flex items-center gap-2 rounded-lg bg-tangerine px-3 py-2.5 text-cream hover:bg-marigold hover:text-ink"
 					onclick={closeDrawer}
 				>
-					{T.register.en} <span lang="te" style="color:inherit">{T.register.te}</span>
+					{T.register.en} <span lang={langStore.current} style="color:inherit">{tx('register', langStore.current)}</span>
 				</a>
 			{/if}
+
+			<!-- Language switcher (mobile drawer) -->
+			<div class="my-2 h-px bg-gold/20"></div>
+			<div class="px-3 py-2">
+				<p class="mb-1.5 text-xs font-semibold tracking-wider text-ink/40 uppercase">Language / భాష</p>
+				<div class="flex flex-wrap gap-1.5">
+					{#each LANGS as l}
+						<button
+							type="button"
+							onclick={() => langStore.set(l.code)}
+							class="rounded px-2.5 py-1 text-sm font-medium transition-colors duration-150 {langStore.current === l.code ? 'bg-maroon text-cream' : 'bg-ink/8 text-ink hover:bg-amber/20 hover:text-terracotta'}"
+							lang={l.code}
+						>{l.native}</button>
+					{/each}
+				</div>
+			</div>
 		</nav>
 	</div>
 {/if}
