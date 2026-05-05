@@ -119,16 +119,18 @@
 	);
 
 	let mounted = $state(false);
+	// Don't fetch profiles until the user explicitly clicks Search. Once they
+	// have, filter changes auto-rerun (debounced).
+	let hasSearched = $state(false);
 
 	onMount(() => {
 		mounted = true;
-		doSearch();
 	});
 
 	$effect(() => {
 		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		filterKey; // read to subscribe
-		if (!mounted) return;
+		if (!mounted || !hasSearched) return;
 		scheduleSearch();
 	});
 
@@ -317,7 +319,7 @@
 				<div class="flex flex-col gap-2 pt-2 border-t border-gold/30">
 					<button
 						type="button"
-						onclick={() => { page = 1; doSearch(); }}
+						onclick={() => { hasSearched = true; page = 1; doSearch(); }}
 						disabled={loading}
 						class="btn-primary flex flex-col items-center justify-center text-center leading-tight w-full text-sm py-2 min-h-[48px] whitespace-normal disabled:opacity-50"
 					>
@@ -342,21 +344,32 @@
 
 		<!-- ── Results ────────────────────────────────────────────────────── -->
 		<div class="flex-1">
-			<!-- Results count -->
-			<div class="mb-4 flex items-center justify-between text-sm text-ink/60">
-				<p>
-					{#if loading}
-						Searching…
-					{:else}
-						{total} profile{total !== 1 ? 's' : ''} found
+			<!-- Results count (only after first search) -->
+			{#if hasSearched}
+				<div class="mb-4 flex items-center justify-between text-sm text-ink/60">
+					<p>
+						{#if loading}
+							Searching…
+						{:else}
+							{total} profile{total !== 1 ? 's' : ''} found
+						{/if}
+					</p>
+					{#if total > 0}
+						<p>Page {page} of {totalPages}</p>
 					{/if}
-				</p>
-				{#if total > 0}
-					<p>Page {page} of {totalPages}</p>
-				{/if}
-			</div>
+				</div>
+			{/if}
 
-			{#if loading}
+			{#if !hasSearched}
+				<!-- Empty state — user hasn't pressed Search yet. No photos shown. -->
+				<div class="py-20 text-center">
+					<div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-cream/60 border-2 border-gold/30">
+						<Search size={36} class="text-saffron/70" />
+					</div>
+					<h2 class="mt-2 font-serif text-xl font-semibold text-maroon">Set your filters and press Search</h2>
+					<p class="mt-2 text-ink/60">Profiles will appear here after you click the <span class="font-semibold text-maroon">Search</span> button on the left.</p>
+				</div>
+			{:else if loading}
 				<div class="flex items-center justify-center py-24">
 					<Loader size={36} class="animate-spin text-saffron" />
 				</div>
