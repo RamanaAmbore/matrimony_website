@@ -306,17 +306,29 @@
 					]} placeholder="Any" />
 				</div>
 
-				<button
-					onclick={() => {
-						gender = ''; age_min = 18; age_max = 60; height_min = 140; height_max = 229; weight_min = 40; weight_max = 120; gotra = ''; nakshatram = '';
-						rashi = ''; city = ''; state_filter = ''; country_filter = ''; pin_code_filter = ''; mother_tongue_filter = '';
-						manglik = ''; diet = '';
-					}}
-					class="btn-secondary flex flex-col items-center justify-center text-center leading-tight w-full text-sm py-1.5 min-h-[44px] whitespace-normal"
-				>
-					<span>Clear Filters</span>
-					<span lang={langStore.current} class="text-[10px] opacity-90">{tx('searchClearFilters', langStore.current)}</span>
-				</button>
+				<div class="flex flex-col gap-2 pt-2 border-t border-gold/30">
+					<button
+						type="button"
+						onclick={() => { page = 1; doSearch(); }}
+						disabled={loading}
+						class="btn-primary flex flex-col items-center justify-center text-center leading-tight w-full text-sm py-2 min-h-[48px] whitespace-normal disabled:opacity-50"
+					>
+						<span class="flex items-center gap-1.5"><Search size={14} />{loading ? 'Searching…' : 'Search'}</span>
+						<span lang={langStore.current} class="text-[10px] opacity-90">{tx('searchProfiles', langStore.current)}</span>
+					</button>
+					<button
+						type="button"
+						onclick={() => {
+							gender = ''; age_min = 18; age_max = 60; height_min = 140; height_max = 229; weight_min = 40; weight_max = 120; gotra = ''; nakshatram = '';
+							rashi = ''; city = ''; state_filter = ''; country_filter = ''; pin_code_filter = ''; mother_tongue_filter = '';
+							manglik = ''; diet = '';
+						}}
+						class="btn-secondary flex flex-col items-center justify-center text-center leading-tight w-full text-sm py-1.5 min-h-[44px] whitespace-normal"
+					>
+						<span>Clear Filters</span>
+						<span lang={langStore.current} class="text-[10px] opacity-90">{tx('searchClearFilters', langStore.current)}</span>
+					</button>
+				</div>
 			</div>
 		</aside>
 
