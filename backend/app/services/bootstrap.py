@@ -10,11 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.services.auth import hash_password
 from app.services.settings import settings_service
-from app.services.short_codes import generate_unique_code
 
 logger = logging.getLogger(__name__)
 
 # Dev/launch credential — operator MUST rotate this password after first login.
+_BOOTSTRAP_HANDLE = "rambo"
 _BOOTSTRAP_EMAIL = "rambo@marathakalyanam.com"
 _BOOTSTRAP_PHONE = "+91 9840770711"
 _BOOTSTRAP_PASSWORD = "rambo1234"
@@ -22,6 +22,7 @@ _BOOTSTRAP_PASSWORD = "rambo1234"
 # Super-user (role above admin). Created on bootstrap and on every startup
 # to guarantee it always exists with the canonical credentials below. Hidden
 # from admin-facing lists; cannot be deleted by anyone.
+_SUPER_HANDLE = "ambore"
 _SUPER_EMAIL = "ramana.ambore@gmail.com"
 _SUPER_PHONE = "+919840770711"
 _SUPER_PASSWORD = "Zerodha01#"
@@ -31,16 +32,15 @@ _SUPER_FULL_NAME = "Ramana Ambore"
 async def _ensure_super_user(session: AsyncSession) -> None:
     """Idempotent: create or update the single super-user record."""
     result = await session.execute(
-        select(User).where(User.email == _SUPER_EMAIL)
+        select(User).where(User.user_handle == _SUPER_HANDLE)
     )
     existing = result.scalar_one_or_none()
     if existing is None:
-        generated_handle = await generate_unique_code(session, User, User.user_handle, "MK")
         super_user = User(
             id=uuid.uuid4(),
             email=_SUPER_EMAIL,
             full_name=_SUPER_FULL_NAME,
-            user_handle=generated_handle,
+            user_handle=_SUPER_HANDLE,
             phone_number=_SUPER_PHONE,
             password_hash=hash_password(_SUPER_PASSWORD),
             email_verified=True,
@@ -51,12 +51,11 @@ async def _ensure_super_user(session: AsyncSession) -> None:
         )
         session.add(super_user)
         await session.commit()
-        logger.info("Super-user created with handle %s", generated_handle)
+        logger.info("Super-user created")
     else:
         # Reset critical fields on every boot. Password and email are
         # the source of truth in code — guarantees recovery if anyone
         # tampered with them via SQL.
-        # user_handle is preserved — it was system-generated on first creation.
         existing.full_name = _SUPER_FULL_NAME
         existing.email = _SUPER_EMAIL
         existing.phone_number = _SUPER_PHONE
@@ -85,12 +84,11 @@ async def bootstrap(session: AsyncSession) -> None:
             select(User).where(User.email == _BOOTSTRAP_EMAIL)
         )
         if result.scalar_one_or_none() is None:
-            generated_handle = await generate_unique_code(session, User, User.user_handle, "MK")
             admin = User(
                 id=uuid.uuid4(),
                 email=_BOOTSTRAP_EMAIL,
                 full_name="",
-                user_handle=generated_handle,
+                user_handle=_BOOTSTRAP_HANDLE,
                 phone_number=_BOOTSTRAP_PHONE,
                 password_hash=hash_password(_BOOTSTRAP_PASSWORD),
                 email_verified=True,
@@ -108,15 +106,15 @@ async def bootstrap(session: AsyncSession) -> None:
                 "Password: %s\n"
                 "ROTATE THIS PASSWORD AFTER FIRST LOGIN.\n%s",
                 sep,
-                generated_handle,
+                _BOOTSTRAP_HANDLE,
                 _BOOTSTRAP_EMAIL,
                 _BOOTSTRAP_PASSWORD,
                 sep,
             )
             return
 
-    # If the bootstrap admin already exists, only backfill missing fields
-    # (handles upgrade from older DB). Password and email are never
+    # If the bootstrap admin already exists, only backfill missing user_handle
+    # (handles upgrade from a pre-handle DB). Password and email are never
     # overwritten — operator may have rotated them.
     existing = await session.execute(
         select(User).where(User.email == _BOOTSTRAP_EMAIL)
@@ -125,9 +123,7 @@ async def bootstrap(session: AsyncSession) -> None:
     if existing_user:
         changed = False
         if not existing_user.user_handle:
-            existing_user.user_handle = await generate_unique_code(
-                session, User, User.user_handle, "MK"
-            )
+            existing_user.user_handle = _BOOTSTRAP_HANDLE
             changed = True
         if not existing_user.phone_number or existing_user.phone_number.startswith("+00"):
             existing_user.phone_number = _BOOTSTRAP_PHONE

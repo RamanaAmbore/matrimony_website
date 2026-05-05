@@ -24,10 +24,13 @@ from app.services import auth as auth_svc
 from app.services import email as email_svc
 from app.services.jwt_auth import mint_jwt
 from app.services.settings import settings_service
-from app.services.short_codes import generate_unique_code
 
 _JWT_COOKIE = "mk_jwt"
 _COOKIE_MAX_AGE = 86400 * 7  # 7 days — must match jwt_auth._EXPIRY_SECONDS
+
+# ^[A-Za-z][A-Za-z0-9_]{2,29}$  →  starts with a letter, then 2–29 alphanumeric/underscore
+# total length: 3–30 characters
+_HANDLE_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]{2,29}$")
 
 # Email: local@domain.tld — same shape as the frontend regex so client and
 # server agree on what is accepted.
@@ -105,11 +108,34 @@ class AuthController(Controller):
                 },
             )
 
+        # Validate user_id (handle) format
+        if not _HANDLE_RE.match(data.user_id):
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_handle",
+                    "message": (
+                        "User ID must be 3–30 characters, start with a letter, "
+                        "and contain only letters, digits, or underscores."
+                    ),
+                },
+            )
+
         _validate_email(data.email)
         _validate_phone(data.phone_number)
         _validate_password(data.password)
 
         normalized_phone = _normalize_phone(data.phone_number)
+
+        # Check user_id uniqueness (case-insensitive — DB column is user_handle)
+        handle_result = await db.execute(
+            select(User).where(func.lower(User.user_handle) == data.user_id.lower())
+        )
+        if handle_result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "handle_taken", "message": "That user ID is already taken"},
+            )
 
         # Check email/phone uniqueness — always enforced in prod, skipped in test mode
         is_prod = settings_service.get_bool("is_prod", False)
@@ -132,15 +158,12 @@ class AuthController(Controller):
                     detail={"code": "phone_taken", "message": "Phone number is already registered."},
                 )
 
-        # Generate system MK-XXXXXX handle — no longer supplied by the user
-        generated_handle = await generate_unique_code(db, User, User.user_handle, "MK")
-
         token = auth_svc.generate_token()
         user = User(
             id=uuid.uuid4(),
             email=data.email.lower(),
             full_name=full_name,
-            user_handle=generated_handle,
+            user_handle=data.user_id,
             phone_number=normalized_phone,
             password_hash=auth_svc.hash_password(data.password),
             email_verified=False,
@@ -170,7 +193,7 @@ class AuthController(Controller):
             full_name=full_name,
             email=data.email,
             phone=normalized_phone,
-            user_handle=generated_handle,
+            user_handle=data.user_id,
         ))
 
         return {"uuid": str(user.id)}

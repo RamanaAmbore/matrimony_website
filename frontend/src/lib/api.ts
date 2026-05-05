@@ -369,11 +369,12 @@ export const auth = {
 		full_name: string,
 		email: string,
 		password: string,
+		user_id: string,
 		phone_number: string
-	): Promise<{ uuid: string; user_id: string }> {
+	): Promise<{ uuid: string }> {
 		return request('/api/auth/register', {
 			method: 'POST',
-			body: JSON.stringify({ email, password, phone_number, full_name })
+			body: JSON.stringify({ email, password, user_id, phone_number, full_name })
 		});
 	},
 
