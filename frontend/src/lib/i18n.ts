@@ -16,7 +16,7 @@ export type I18nEntry = {
 
 export const T: Record<string, I18nEntry> = {
   // Nav
-  home:        { en: 'Home',        te: 'హోమ్',            mr: 'होम',          kn: 'ಮನೆ',         ta: 'முகப்பு',      hi: 'होम' },
+  home:        { en: 'Home',        te: 'హోమ్',            mr: 'होम',          kn: 'ಮುಖಪುಟ',      ta: 'முகப்பு',      hi: 'होम' },
   search:      { en: 'Search',      te: 'వెతకండి',          mr: 'शोधा',         kn: 'ಹುಡುಕಿ',      ta: 'தேடு',         hi: 'खोजें' },
   aboutPage:   { en: 'About',       te: 'మా గురించి',       mr: 'आमच्याबद्दल',  kn: 'ನಮ್ಮ ಬಗ್ಗೆ',   ta: 'எங்களை பற்றி', hi: 'हमारे बारे में' },
   login:       { en: 'Login',       te: 'లాగిన్',           mr: 'लॉग इन',       kn: 'ಲಾಗಿನ್',      ta: 'உள்நுழை',      hi: 'लॉग इन' },
@@ -169,7 +169,7 @@ export const T: Record<string, I18nEntry> = {
     te: 'సమాజ కేంద్రంగా',
     mr: 'समाज-केंद्रित',
     kn: 'ಸಮುದಾಯ-ಕೇಂದ್ರಿತ',
-    ta: 'சமுதாய-கేंद்ரமான',
+    ta: 'சமுதாய மையமான',
     hi: 'समाज-केंद्रित'
   },
   homeFeatureCommunityDesc: {
@@ -335,7 +335,7 @@ export const T: Record<string, I18nEntry> = {
   searchLookingFor: {
     en: 'Looking for',
     te: 'వెతుకుతున్నది',
-    mr: 'शोधत आहोत',
+    mr: 'शोधत आहात',
     kn: 'ಹುಡುಕುತ್ತಿರುವುದು',
     ta: 'தேடுவது',
     hi: 'खोज रहे हैं'
@@ -605,9 +605,9 @@ export const T: Record<string, I18nEntry> = {
   makeAdmin:       { en: 'Make Admin',        te: 'నిర్వాహకుని చేయి',  mr: 'प्रशासक बनवा',      kn: 'ನಿರ್ವಾಹಕ ಮಾಡಿ',    ta: 'நிர்வாகி ஆக்கு',    hi: 'एडमिन बनाएं' },
   demoteToUser:    { en: 'Demote to User',    te: 'వినియోగదారుగా తగ్గించు', mr: 'वापरकर्त्यास खाली करा', kn: 'ಬಳಕೆದಾರರಿಗೆ ಹಿಂತಿರುಗಿಸಿ', ta: 'பயனராக தரமிறக்கு', hi: 'यूज़र में डिमोट करें' },
   deleteUser:      { en: 'Delete User',       te: 'వినియోగదారుని తొలగించు', mr: 'वापरकर्ता हटवा',   kn: 'ಬಳಕೆದಾರ ಅಳಿಸಿ',    ta: 'பயனரை நீக்கு',      hi: 'उपयोगकर्ता हटाएं' },
-  confirmReject:   { en: 'Confirm Reject',    te: 'తిరస్కరించు',       mr: 'नकार द्या',         kn: 'ತಿರಸ್ಕರಿಸಿ ದೃಢೀಕರಿಸಿ', ta: 'நிராகரிப்பை உறுதிசெய்', hi: 'अस्वीकार पुष्टि करें' },
+  confirmReject:   { en: 'Confirm Reject',    te: 'తిరస్కరణను నిర్ధారించు', mr: 'नकाराची पुष्टी करा', kn: 'ತಿರಸ್ಕಾರವನ್ನು ದೃಢೀಕರಿಸಿ', ta: 'நிராகரிப்பை உறுதிசெய்', hi: 'अस्वीकृति की पुष्टि करें' },
   promoteToAdmin:  { en: 'Promote to Admin',  te: 'నిర్వాహకుడిగా పదోన్నతి', mr: 'प्रशासक म्हणून पदोन्नती करा', kn: 'ನಿರ್ವಾಹಕರಿಗೆ ಬಡ್ತಿ ನೀಡಿ', ta: 'நிர்வாகியாக உயர்த்து', hi: 'एडमिन के रूप में पदोन्नत करें' },
-  dashboardBack:   { en: '← Dashboard',       te: 'డాష్‌బోర్డ్',        mr: 'डॅशबोर्ड',          kn: 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',    ta: 'டாஷ்போர்டு',       hi: 'डैशबोर्ड' },
+  dashboardBack:   { en: '← Dashboard',       te: '← డాష్‌బోర్డ్',      mr: '← डॅशबोर्ड',        kn: '← ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',  ta: '← டாஷ்போர்டு',     hi: '← डैशबोर्ड' },
 };
 
 export type BilingualKey = keyof typeof T;
