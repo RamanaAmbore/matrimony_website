@@ -16,7 +16,10 @@ from app.config import MEDIA_ROOT
 @get("/media/{file_path:path}", media_type="application/octet-stream")
 async def serve_media(file_path: str, request: Request) -> Response:
     """Serve media files. Passport photos require auth as owner or admin."""
-    # Normalize path to prevent directory traversal
+    # Normalize path to prevent directory traversal. Litestar's {file_path:path}
+    # captures with a leading "/", which makes Path() treat it as absolute and
+    # ignore the MEDIA_ROOT prefix. Strip leading slashes before joining.
+    file_path = file_path.lstrip("/")
     try:
         resolved = (MEDIA_ROOT / file_path).resolve()
         resolved.relative_to(MEDIA_ROOT.resolve())
