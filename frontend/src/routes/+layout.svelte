@@ -486,7 +486,7 @@
 >
 	<div class="mx-auto max-w-7xl px-4 py-1.5 text-center text-[11px] sm:px-6 sm:text-xs lg:px-8">
 		<p>
-			<span class="hidden md:inline"><span class="font-semibold text-marigold">©</span> 2026 Maratha Kalyanam · marathakalyanam.com · </span>Designed &amp; developed by <span class="font-semibold text-marigold">Ambore Software</span>
+			<span class="hidden md:inline">© 2026 Maratha Kalyanam · marathakalyanam.com · </span>Designed &amp; developed by <span class="font-semibold text-marigold">Ambore Software</span>
 		</p>
 	</div>
 </div>
