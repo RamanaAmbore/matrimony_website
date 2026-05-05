@@ -47,11 +47,16 @@
 		if (query !== expected) query = expected;
 	});
 
-	const filtered = $derived(
-		query.trim()
-			? options.filter(o => optLabel(o).toLowerCase().includes(query.toLowerCase().trim()))
-			: options
-	);
+	// Filter options by what's typed — but if the query exactly matches one of
+	// the options' labels, treat it as a selected value (not a search) and
+	// show the full list, so the user can see siblings to switch to.
+	const filtered = $derived.by(() => {
+		const q = query.trim().toLowerCase();
+		if (!q) return options;
+		const isExactMatch = options.some(o => optLabel(o).toLowerCase() === q);
+		if (isExactMatch) return options;
+		return options.filter(o => optLabel(o).toLowerCase().includes(q));
+	});
 
 	function select(opt: Option) {
 		value = optValue(opt);
