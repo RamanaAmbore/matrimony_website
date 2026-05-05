@@ -4,33 +4,19 @@
 	import { goto } from '$app/navigation';
 	import { ApiError } from '$lib/api';
 	import { T } from '$lib/i18n';
-	import { asciiOnly } from '$lib/inputFilters';
 
-	const HANDLE_RE = /^[A-Za-z][A-Za-z0-9_]{2,29}$/;
 	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	const PHONE_DIGITS_RE = /^\+\d{7,17}$/;
 	const PASSWORD_LETTER_RE = /[A-Za-z]/;
 	const PASSWORD_DIGIT_RE = /\d/;
 
 	let full_name = $state('');
-	let user_id = $state('');
 	let email = $state('');
 	let phone_number = $state('+91 ');
 	let password = $state('');
 	let confirmPassword = $state('');
 	let loading = $state(false);
 	let errors = $state<Record<string, string>>({});
-
-	function validateHandle(value: string): string {
-		if (!value.trim()) return 'User ID is required';
-		if (!HANDLE_RE.test(value)) {
-			if (value.length < 3) return 'Must be at least 3 characters';
-			if (value.length > 30) return 'Must be 30 characters or fewer';
-			if (!/^[A-Za-z]/.test(value)) return 'Must start with a letter';
-			return 'Only letters, digits and underscore allowed';
-		}
-		return '';
-	}
 
 	function normalizePhone(value: string): string {
 		return value.replace(/[\s\-.]/g, '').trim();
@@ -52,23 +38,11 @@
 		return '';
 	}
 
-	function handleBlur() {
-		const msg = validateHandle(user_id);
-		if (msg) {
-			errors = { ...errors, user_id: msg };
-		} else {
-			const { user_id: _, ...rest } = errors;
-			errors = rest;
-		}
-	}
-
 	function validate(): boolean {
 		const e: Record<string, string> = {};
 		if (!full_name.trim()) e.full_name = 'Full name is required';
 		else if (full_name.trim().length < 2) e.full_name = 'Must be at least 2 characters';
 		else if (full_name.trim().length > 80) e.full_name = 'Must be 80 characters or fewer';
-		const handleMsg = validateHandle(user_id);
-		if (handleMsg) e.user_id = handleMsg;
 		if (!email.trim()) e.email = 'Email is required';
 		else if (!EMAIL_RE.test(email)) e.email = 'Enter a valid email';
 		const phoneMsg = validatePhone(phone_number);
@@ -86,31 +60,26 @@
 
 		loading = true;
 		try {
-			await auth.register(
+			const res = await auth.register(
 				full_name.trim(),
 				email.trim(),
 				password,
-				user_id.trim(),
 				phone_number.trim()
 			);
-			toastStore.success('Account created! Please check your email to verify.');
+			toastStore.success(`Account created! Your User ID is ${res.user_id}. Please check your email to verify.`);
 			goto('/login');
 		} catch (err) {
 			if (err instanceof ApiError) {
 				if (err.status === 409) {
-					if (err.code === 'handle_taken') {
-						errors = { user_id: 'This user ID is already taken — pick another' };
-					} else if (err.code === 'phone_taken') {
+					if (err.code === 'phone_taken') {
 						errors = { phone_number: 'This phone number is already registered' };
 					} else {
-						// email_taken or generic 409
 						errors = { email: 'An account with this email already exists — login or use a different email' };
 					}
 				} else if (err.status === 422) {
 					if (err.code === 'invalid_email') errors = { email: err.message };
 					else if (err.code === 'invalid_phone') errors = { phone_number: err.message };
 					else if (err.code === 'weak_password') errors = { password: err.message };
-					else if (err.code === 'invalid_handle') errors = { user_id: err.message };
 					else toastStore.error(err.message.slice(0, 80));
 				} else {
 					toastStore.error(err.message.slice(0, 60));
@@ -136,6 +105,9 @@
 			<span class="ml-2" lang="te">{T.register.te}</span>
 		</h1>
 		<p class="mt-1 text-sm text-ink/60">Join the Maratha Kalyanam community</p>
+		<p class="mt-2 text-xs text-ink/50">
+			A unique <span class="font-mono">MK-XXXXXX</span> User ID will be generated for you on registration.
+		</p>
 	</div>
 
 
@@ -158,35 +130,6 @@
 			/>
 			{#if errors.full_name}
 				<p class="mt-1 text-xs text-vermilion">{errors.full_name}</p>
-			{/if}
-		</div>
-
-		<!-- User ID -->
-		<div>
-			<label for="user_id" class="label block">
-				<span class="block">{T.userHandle.en}</span>
-				<span class="block leading-tight" lang="te">{T.userHandle.te}</span>
-			</label>
-			<input
-				id="user_id"
-				type="text"
-				autocomplete="username"
-				class="input font-mono"
-				class:border-vermilion={errors.user_id}
-				bind:value={user_id}
-				oninput={(ev) => { user_id = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
-				onblur={handleBlur}
-				placeholder="ramana_ambore"
-				maxlength="30"
-				spellcheck="false"
-			/>
-			{#if errors.user_id}
-				<p class="mt-1 text-xs text-vermilion">{errors.user_id}</p>
-			{:else}
-				<p class="mt-1 text-xs text-ink/50 leading-snug">
-					3–30 characters · letters, digits, underscore · must start with a letter<br />
-					<span lang="te">3–30 అక్షరాలు · అక్షరాలు, అంకెలు, అండర్‌స్కోర్ · అక్షరంతో ప్రారంభం</span>
-				</p>
 			{/if}
 		</div>
 

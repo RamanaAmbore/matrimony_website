@@ -9,7 +9,6 @@ import msgspec
 class RegisterRequest(msgspec.Struct):
     email: str
     password: str
-    user_id: str  # the public handle/alias the user picks at registration
     phone_number: str
     full_name: str
 

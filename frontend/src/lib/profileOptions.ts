@@ -1,5 +1,9 @@
+export const CASTE_OPTIONS = [
+	'Maratha'
+];
+
 export const MARATHA_SUB_CASTES = [
-	'Maratha', 'Are Marathi', 'Are Kshatriya', 'Maratha Non-Brahmin'
+	'Maratha', 'Are Marathi', 'Arya Kshatriya', 'Maratha Non-Brahmin'
 ];
 
 export const MOTHER_TONGUES = [

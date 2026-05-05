@@ -78,13 +78,13 @@
 </script>
 
 <svelte:head>
-	<title>Maratha Kalyanam — మరాఠా కల్యాణం</title>
-	<meta name="description" content="Maratha Kalyanam — మరాఠా కల్యాణం. The trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states. Admin-verified profiles, gotra/nakshatram matching, privacy-first photo sharing." />
+	<title>Maratha Kalyanam — మరాఠా కళ్యాణం</title>
+	<meta name="description" content="Maratha Kalyanam — మరాఠా కళ్యాణం. The trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states. Admin-verified profiles, gotra/nakshatram matching, privacy-first photo sharing." />
 
 	<!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="Maratha Kalyanam" />
-	<meta property="og:title" content="Maratha Kalyanam · మరాఠా కల్యాణం" />
+	<meta property="og:title" content="Maratha Kalyanam · మరాఠా కళ్యాణం" />
 	<meta property="og:description" content="Trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states. Admin-verified profiles. Gotra, nakshatram and kuldevata matching. Privacy-first." />
 	<meta property="og:url" content="https://marathakalyanam.com/" />
 	<meta property="og:image" content="https://marathakalyanam.com/brand/og-image.png" />
@@ -96,7 +96,7 @@
 
 	<!-- Twitter / X -->
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content="Maratha Kalyanam · మరాఠా కల్యాణం" />
+	<meta name="twitter:title" content="Maratha Kalyanam · మరాఠా కళ్యాణం" />
 	<meta name="twitter:description" content="Trusted matrimonial platform for Maratha families. Admin-verified profiles. Privacy-first." />
 	<meta name="twitter:image" content="https://marathakalyanam.com/brand/og-image.png" />
 	<meta name="twitter:image:alt" content="Maratha Kalyanam — Telugu Maratha Matrimony" />
@@ -126,7 +126,7 @@
 			"@context": "https://schema.org",
 			"@type": "Organization",
 			"name": "Maratha Kalyanam",
-			"alternateName": "మరాఠా కల్యాణం",
+			"alternateName": "మరాఠా కళ్యాణం",
 			"url": "https://marathakalyanam.com",
 			"logo": "https://marathakalyanam.com/brand/logo.png",
 			"description": "Trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states.",
@@ -163,7 +163,7 @@
 			<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto" loading="eager" decoding="async" /></div>
 			<span class="whitespace-nowrap font-serif text-base font-semibold leading-tight">
 				<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-				<span class="block leading-tight" lang="te">మరాఠా కల్యాణం</span>
+				<span class="block leading-tight" lang="te">మరాఠా కళ్యాణం</span>
 			</span>
 		</a>
 
@@ -290,7 +290,7 @@
 				<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-9 w-auto" loading="lazy" decoding="async" /></div>
 				<span class="whitespace-nowrap font-serif text-base font-semibold leading-tight">
 					<span class="block leading-none" style="color:#fff8e7; text-shadow: 0 0 10px rgba(201,162,39,0.9), 0 0 24px rgba(201,162,39,0.45), 1px 1px 2px rgba(0,0,0,0.95);">Maratha Kalyanam</span>
-					<span class="block font-normal leading-tight" lang="te" style="color:#ffb627; -webkit-text-stroke: 0.65px #2b0a0e; paint-order: stroke fill; text-shadow: 0 1px 1px rgba(0,0,0,0.4); opacity: 1;">మరాఠా కల్యాణం</span>
+					<span class="block font-normal leading-tight" lang="te" style="color:#ffb627; -webkit-text-stroke: 0.65px #2b0a0e; paint-order: stroke fill; text-shadow: 0 1px 1px rgba(0,0,0,0.4); opacity: 1;">మరాఠా కళ్యాణం</span>
 				</span>
 			</div>
 			<button
@@ -396,7 +396,7 @@
 					<div class="logo-ring"><img src="/brand/logo.png" alt="Maratha Kalyanam" class="h-14 w-auto" loading="lazy" decoding="async" /></div>
 					<div class="leading-tight">
 						<p class="font-serif text-xl font-semibold text-cream leading-none">Maratha Kalyanam</p>
-						<p class="leading-snug" lang="te">మరాఠా కల్యాణం</p>
+						<p class="leading-snug" lang="te">మరాఠా కళ్యాణం</p>
 					</div>
 				</div>
 			</div>

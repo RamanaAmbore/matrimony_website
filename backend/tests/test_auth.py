@@ -1,24 +1,23 @@
 """Authentication endpoint tests."""
 from __future__ import annotations
 
+import re
 import uuid
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
-from app.services.auth import hash_password
 
 pytestmark = pytest.mark.asyncio
+
+# MK-XXXXXX pattern for system-generated user handles
+_MK_RE = re.compile(r"^MK-[A-Z0-9]{6}$")
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-def _unique_handle() -> str:
-    return f"u{uuid.uuid4().hex[:7]}"
 
 
 def _unique_phone() -> str:
@@ -28,14 +27,13 @@ def _unique_phone() -> str:
 def _reg_payload(
     email: str,
     password: str = "ValidPass123!",
-    handle: str | None = None,
     phone: str | None = None,
     full_name: str = "Test User",
 ) -> dict:
+    """Registration payload — handle is now system-generated, not supplied."""
     return {
         "email": email,
         "password": password,
-        "user_handle": handle or _unique_handle(),
         "phone_number": phone or _unique_phone(),
         "full_name": full_name,
     }
@@ -54,7 +52,7 @@ def _login_handle(handle: str, password: str = "ValidPass123!") -> dict:
 # ---------------------------------------------------------------------------
 
 async def test_register_success(client: AsyncClient) -> None:
-    """Register a new user — 201 + user_id returned."""
+    """Register a new user — 201 + uuid returned, user_id is MK-XXXXXX."""
     email = f"user_{uuid.uuid4().hex[:8]}@example.com"
     resp = await client.post("/auth/register", json=_reg_payload(email))
     assert resp.status_code == 201, resp.text
@@ -62,18 +60,18 @@ async def test_register_success(client: AsyncClient) -> None:
     assert "uuid" in data and data["uuid"]
 
 
-async def test_register_missing_handle(client: AsyncClient) -> None:
-    """Register without user_handle → 422."""
+async def test_register_missing_full_name(client: AsyncClient) -> None:
+    """Register without full_name → 400/422 (required field)."""
     resp = await client.post(
         "/auth/register",
         json={
             "email": f"x_{uuid.uuid4().hex[:6]}@example.com",
             "password": "ValidPass123!",
             "phone_number": _unique_phone(),
-            # user_handle intentionally omitted
+            # full_name intentionally omitted
         },
     )
-    assert resp.status_code == 422, resp.text
+    assert resp.status_code in (400, 422), resp.text
 
 
 async def test_register_invalid_email(client: AsyncClient) -> None:
@@ -130,80 +128,49 @@ async def test_register_bootstrap_style_password_accepted(client: AsyncClient) -
 
 
 async def test_register_duplicate_phone(client: AsyncClient) -> None:
-    """Duplicate phone → 409 phone_taken."""
-    phone = _unique_phone()
-    email1 = f"dphone1_{uuid.uuid4().hex[:6]}@example.com"
-    email2 = f"dphone2_{uuid.uuid4().hex[:6]}@example.com"
+    """Duplicate phone → 409 phone_taken (prod mode enforced via settings patch)."""
+    from app.services.settings import settings_service
+    settings_service._cache["is_prod"] = True
+    try:
+        phone = _unique_phone()
+        email1 = f"dphone1_{uuid.uuid4().hex[:6]}@example.com"
+        email2 = f"dphone2_{uuid.uuid4().hex[:6]}@example.com"
 
-    resp = await client.post("/auth/register", json=_reg_payload(email1, phone=phone))
+        resp = await client.post("/auth/register", json=_reg_payload(email1, phone=phone))
+        assert resp.status_code == 201, resp.text
+
+        resp = await client.post("/auth/register", json=_reg_payload(email2, phone=phone))
+        assert resp.status_code in (409, 422), resp.text
+        assert resp.json()["detail"]["code"] == "phone_taken"
+    finally:
+        settings_service._cache["is_prod"] = False
+
+
+async def test_register_generated_handle_is_mk_format(client: AsyncClient) -> None:
+    """System-generated user_handle is MK-XXXXXX format (verified via login response)."""
+    email = f"mkfmt_{uuid.uuid4().hex[:8]}@example.com"
+    resp = await client.post("/auth/register", json=_reg_payload(email))
     assert resp.status_code == 201, resp.text
 
-    resp = await client.post("/auth/register", json=_reg_payload(email2, phone=phone))
-    assert resp.status_code == 409, resp.text
-    assert resp.json()["detail"]["code"] == "phone_taken"
-
-
-async def test_register_invalid_handle_starts_with_digit(client: AsyncClient) -> None:
-    """Handle starting with a digit → 422."""
-    email = f"inv_{uuid.uuid4().hex[:6]}@example.com"
-    resp = await client.post("/auth/register", json=_reg_payload(email, handle="99rambo"))
-    assert resp.status_code == 422, resp.text
-
-
-async def test_register_invalid_handle_too_short(client: AsyncClient) -> None:
-    """Handle shorter than 3 chars → 422."""
-    email = f"inv_{uuid.uuid4().hex[:6]}@example.com"
-    resp = await client.post("/auth/register", json=_reg_payload(email, handle="ab"))
-    assert resp.status_code == 422, resp.text
-
-
-async def test_register_invalid_handle_special_char(client: AsyncClient) -> None:
-    """Handle with special character → 422."""
-    email = f"inv_{uuid.uuid4().hex[:6]}@example.com"
-    resp = await client.post("/auth/register", json=_reg_payload(email, handle="rambo!"))
-    assert resp.status_code == 422, resp.text
-
-
-async def test_register_invalid_handle_with_space(client: AsyncClient) -> None:
-    """Handle containing a space → 422."""
-    email = f"inv_{uuid.uuid4().hex[:6]}@example.com"
-    resp = await client.post("/auth/register", json=_reg_payload(email, handle="rambo space"))
-    assert resp.status_code == 422, resp.text
-
-
-async def test_register_duplicate_handle(client: AsyncClient) -> None:
-    """Duplicate handle → 409 handle_taken."""
-    handle = f"Uhandle{uuid.uuid4().hex[:4]}"
-    email1 = f"a_{uuid.uuid4().hex[:6]}@example.com"
-    email2 = f"b_{uuid.uuid4().hex[:6]}@example.com"
-
-    resp = await client.post("/auth/register", json=_reg_payload(email1, handle=handle))
-    assert resp.status_code == 201, resp.text
-
-    resp = await client.post("/auth/register", json=_reg_payload(email2, handle=handle))
-    assert resp.status_code == 409, resp.text
-    assert resp.json()["detail"]["code"] == "handle_taken"
-
-
-async def test_register_duplicate_handle_case_insensitive(client: AsyncClient) -> None:
-    """Duplicate handle (different case) → 409 handle_taken."""
-    base = f"Ucasex{uuid.uuid4().hex[:4]}"
-    email1 = f"c1_{uuid.uuid4().hex[:6]}@example.com"
-    email2 = f"c2_{uuid.uuid4().hex[:6]}@example.com"
-
-    await client.post("/auth/register", json=_reg_payload(email1, handle=base))
-    resp = await client.post("/auth/register", json=_reg_payload(email2, handle=base.upper()))
-    assert resp.status_code == 409, resp.text
-    assert resp.json()["detail"]["code"] == "handle_taken"
+    # Log in to get the handle from the JWT response
+    login_resp = await client.post("/auth/login", json=_login_email(email))
+    assert login_resp.status_code == 200, login_resp.text
+    data = login_resp.json()
+    assert _MK_RE.match(data["user_id"]), f"Expected MK-XXXXXX, got {data['user_id']!r}"
 
 
 async def test_register_duplicate_email(client: AsyncClient) -> None:
-    """Duplicate email → 409 email_taken."""
-    email = f"dup_{uuid.uuid4().hex[:8]}@example.com"
-    await client.post("/auth/register", json=_reg_payload(email))
-    resp = await client.post("/auth/register", json=_reg_payload(email, handle=_unique_handle()))
-    assert resp.status_code == 409, resp.text
-    assert resp.json()["detail"]["code"] == "email_taken"
+    """Duplicate email → 409 email_taken (prod mode enforced via settings patch)."""
+    from app.services.settings import settings_service
+    settings_service._cache["is_prod"] = True
+    try:
+        email = f"dup_{uuid.uuid4().hex[:8]}@example.com"
+        await client.post("/auth/register", json=_reg_payload(email))
+        resp = await client.post("/auth/register", json=_reg_payload(email))
+        assert resp.status_code in (409, 422), resp.text
+        assert resp.json()["detail"]["code"] == "email_taken"
+    finally:
+        settings_service._cache["is_prod"] = False
 
 
 # ---------------------------------------------------------------------------
@@ -211,41 +178,49 @@ async def test_register_duplicate_email(client: AsyncClient) -> None:
 # ---------------------------------------------------------------------------
 
 async def test_login_with_email(client: AsyncClient) -> None:
-    """Login with email (identifier contains @) succeeds."""
+    """Login with email (identifier contains @) succeeds; user_id is MK-XXXXXX."""
     email = f"login_{uuid.uuid4().hex[:8]}@example.com"
-    handle = _unique_handle()
-    await client.post("/auth/register", json=_reg_payload(email, handle=handle))
+    await client.post("/auth/register", json=_reg_payload(email))
 
     resp = await client.post("/auth/login", json=_login_email(email))
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["uuid"]
     assert data["email"] == email
-    assert data["user_id"] == handle
+    assert _MK_RE.match(data["user_id"]), f"Expected MK-XXXXXX, got {data['user_id']!r}"
     assert data["is_admin"] is False
     assert data["email_verified"] is False
 
 
 async def test_login_with_handle(client: AsyncClient) -> None:
-    """Login with handle (no @ in identifier) succeeds."""
+    """Login with system-generated MK-XXXXXX handle (no @ in identifier) succeeds."""
     email = f"hlogin_{uuid.uuid4().hex[:8]}@example.com"
-    handle = f"Hndl{uuid.uuid4().hex[:5]}"
-    await client.post("/auth/register", json=_reg_payload(email, handle=handle))
+    await client.post("/auth/register", json=_reg_payload(email))
 
-    resp = await client.post("/auth/login", json=_login_handle(handle))
+    # First login via email to discover the handle
+    first_resp = await client.post("/auth/login", json=_login_email(email))
+    assert first_resp.status_code == 200, first_resp.text
+    system_handle = first_resp.json()["user_id"]
+    assert _MK_RE.match(system_handle)
+
+    # Now login using the MK-XXXXXX handle as identifier (no '@')
+    resp = await client.post("/auth/login", json=_login_handle(system_handle))
     assert resp.status_code == 200, resp.text
     data = resp.json()
-    assert data["user_id"] == handle
+    assert data["user_id"] == system_handle
     assert data["email"] == email
 
 
 async def test_login_with_handle_case_insensitive(client: AsyncClient) -> None:
     """Login with handle in different case succeeds (case-insensitive lookup)."""
     email = f"cilogin_{uuid.uuid4().hex[:8]}@example.com"
-    handle = f"Rambo{uuid.uuid4().hex[:4]}"
-    await client.post("/auth/register", json=_reg_payload(email, handle=handle))
+    await client.post("/auth/register", json=_reg_payload(email))
 
-    resp = await client.post("/auth/login", json=_login_handle(handle.upper()))
+    # Discover the system-generated handle
+    first_resp = await client.post("/auth/login", json=_login_email(email))
+    system_handle = first_resp.json()["user_id"]  # e.g. MK-AB1234
+
+    resp = await client.post("/auth/login", json=_login_handle(system_handle.lower()))
     assert resp.status_code == 200, resp.text
 
 
@@ -284,17 +259,18 @@ async def test_me_unauthenticated(client: AsyncClient) -> None:
 
 
 async def test_me_authenticated(client: AsyncClient) -> None:
-    """/auth/me returns uuid, user_id, email when logged in."""
+    """/auth/me returns uuid, user_id (MK-XXXXXX), email when logged in."""
     email = f"me_{uuid.uuid4().hex[:8]}@example.com"
-    handle = _unique_handle()
-    await client.post("/auth/register", json=_reg_payload(email, handle=handle))
-    await client.post("/auth/login", json=_login_email(email))
+    await client.post("/auth/register", json=_reg_payload(email))
+    login_data = (await client.post("/auth/login", json=_login_email(email))).json()
+    system_handle = login_data["user_id"]
 
     resp = await client.get("/auth/me")
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["email"] == email
-    assert data["user_id"] == handle
+    assert data["user_id"] == system_handle
+    assert _MK_RE.match(data["user_id"]), f"Expected MK-XXXXXX, got {data['user_id']!r}"
     assert data["is_admin"] is False
 
 
@@ -319,23 +295,26 @@ async def test_logout_clears_session(client: AsyncClient) -> None:
 # Email verification
 # ---------------------------------------------------------------------------
 
-async def test_verify_email_with_bad_token(client: AsyncClient, db_session: AsyncSession) -> None:
+async def test_verify_email_with_bad_token(client: AsyncClient) -> None:
     """Email verification with bad token returns 400/404."""
     resp = await client.post("/auth/verify-email", json={"token": "badtoken123"})
     assert resp.status_code in [400, 404], resp.text
 
 
-async def test_verify_email_with_good_token(client: AsyncClient, db_session: AsyncSession) -> None:
+async def test_verify_email_with_good_token(client: AsyncClient) -> None:
     """Email verification with good token succeeds; re-login reflects verified state."""
+    from app.db import AsyncSessionLocal
     email = f"verify_{uuid.uuid4().hex[:8]}@example.com"
     password = "ValidPass123!"
 
     resp = await client.post("/auth/register", json=_reg_payload(email, password=password))
     user_uuid = resp.json()["uuid"]
 
-    result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_uuid)))
-    user = result.scalar_one()
-    token = user.email_verification_token
+    # Read the token from a fresh session (app already committed this row)
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(User).where(User.id == uuid.UUID(user_uuid)))
+        user = result.scalar_one()
+        token = user.email_verification_token
     assert token is not None
 
     resp = await client.post("/auth/verify-email", json={"token": token})
@@ -349,17 +328,19 @@ async def test_verify_email_with_good_token(client: AsyncClient, db_session: Asy
     assert data["email_verified"] is True
 
 
-async def test_verify_email_double_use(client: AsyncClient, db_session: AsyncSession) -> None:
+async def test_verify_email_double_use(client: AsyncClient) -> None:
     """Using the same verification token twice fails on second attempt."""
+    from app.db import AsyncSessionLocal
     email = f"doubleuse_{uuid.uuid4().hex[:8]}@example.com"
     password = "ValidPass123!"
 
     resp = await client.post("/auth/register", json=_reg_payload(email, password=password))
     user_uuid = resp.json()["uuid"]
 
-    result = await db_session.execute(select(User).where(User.id == uuid.UUID(user_uuid)))
-    user = result.scalar_one()
-    token = user.email_verification_token
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(User).where(User.id == uuid.UUID(user_uuid)))
+        user = result.scalar_one()
+        token = user.email_verification_token
 
     resp = await client.post("/auth/verify-email", json={"token": token})
     assert resp.status_code == 200

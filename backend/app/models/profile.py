@@ -159,6 +159,7 @@ class Profile(Base):
         default=MaritalStatusEnum.never_married,
         server_default="never_married",
     )
+    caste: Mapped[str | None] = mapped_column(String(100), nullable=True)
     sub_caste: Mapped[str | None] = mapped_column(String(100), nullable=True)
     weight_kg: Mapped[int | None] = mapped_column(Integer, nullable=True)
     body_type: Mapped[BodyTypeEnum | None] = mapped_column(

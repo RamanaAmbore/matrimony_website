@@ -1,5 +1,5 @@
 // src/lib/i18n.ts
-// Translations are static — Maratha Kalyanam (మరాఠా కల్యాణం) is English-only data with bilingual UI labels.
+// Translations are static — Maratha Kalyanam (మరాఠా కళ్యాణం) is English-only data with bilingual UI labels.
 export const T = {
   // Nav
   home: { en: 'Home', te: 'హోమ్' },
@@ -50,9 +50,10 @@ export const T = {
   country: { en: 'Country', te: 'దేశం' },
   nativePlace: { en: 'Native Place', te: 'స్వస్థలం' },
   gotra: { en: 'Gotra', te: 'గోత్రం' },
-  kuldevata: { en: 'Kuldevata', te: 'కులదేవత' },
+  kuldevata: { en: 'Kuldevata', te: 'కుల దేవత' },
   devak: { en: 'Devak', te: 'దేవక' },
-  surnameClan: { en: 'Surname / Clan', te: 'ఇంటిపేరు / వంశం' },
+  surnameClan: { en: 'Surname / Last name', te: 'ఇంటిపేరు / చివరి పేరు' },
+  caste: { en: 'Caste', te: 'కులం' },
   subCaste: { en: 'Sub-caste', te: 'ఉపకులం' },
   nakshatram: { en: 'Nakshatram', te: 'నక్షత్రం' },
   rashi: { en: 'Rashi', te: 'రాశి' },

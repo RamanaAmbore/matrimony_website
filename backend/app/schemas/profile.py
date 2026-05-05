@@ -53,6 +53,7 @@ class ProfileCreateRequest(msgspec.Struct, kw_only=True):
 
     # --- New fields ---
     marital_status: str = "never_married"
+    caste: str | None = None
     sub_caste: str | None = None
     weight_kg: int | None = None
     body_type: str | None = None
@@ -109,6 +110,7 @@ class ProfilePatchRequest(msgspec.Struct, kw_only=True):
 
     # --- New fields ---
     marital_status: str | None = None
+    caste: str | None = None
     sub_caste: str | None = None
     weight_kg: int | None = None
     body_type: str | None = None
@@ -185,6 +187,7 @@ class FullProfileResponse(msgspec.Struct):
 
     # --- New fields ---
     marital_status: str
+    caste: str | None
     sub_caste: str | None
     weight_kg: int | None
     body_type: str | None

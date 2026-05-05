@@ -1,7 +1,6 @@
 """Profile CRUD routes."""
 
 import asyncio
-import random
 import uuid
 from datetime import date, datetime, time
 from typing import Any
@@ -33,6 +32,7 @@ from app.models.profile import (
 from app.schemas.profile import ProfileCreateRequest, ProfilePatchRequest
 from app.services.keywords import extract_keywords
 from app.services.settings import settings_service
+from app.services.short_codes import generate_unique_code
 from app.services.validation import validate_ascii
 
 
@@ -113,6 +113,7 @@ def _serialize_full_profile(profile: Profile, request: Request) -> dict[str, Any
         "admin_notes": profile.admin_notes,
         # New fields
         "marital_status": profile.marital_status.value if profile.marital_status else None,
+        "caste": profile.caste,
         "sub_caste": profile.sub_caste,
         "weight_kg": profile.weight_kg,
         "body_type": profile.body_type.value if profile.body_type else None,
@@ -222,6 +223,7 @@ def _validate_free_text_fields(data: ProfileCreateRequest | ProfilePatchRequest)
         ("nakshatram", getattr(data, "nakshatram", None)),
         ("rashi", getattr(data, "rashi", None)),
         ("mother_tongue", getattr(data, "mother_tongue", None)),
+        ("caste", getattr(data, "caste", None)),
         ("sub_caste", getattr(data, "sub_caste", None)),
         ("place_of_birth", getattr(data, "place_of_birth", None)),
         ("father_occupation", getattr(data, "father_occupation", None)),
@@ -238,13 +240,8 @@ def _validate_free_text_fields(data: ProfileCreateRequest | ProfilePatchRequest)
 
 
 async def _generate_profile_number(db: AsyncSession) -> str:
-    """Generate unique PR-###### profile number (9 chars total)."""
-    for _ in range(10):  # retry up to 10 times on collision
-        num = f"PR-{random.randint(0, 999999):06d}"
-        result = await db.execute(select(Profile).where(Profile.profile_number == num))
-        if result.scalar_one_or_none() is None:
-            return num
-    raise RuntimeError("Could not generate unique profile number after 10 attempts")
+    """Generate unique PR-XXXXXX profile number (9 chars total)."""
+    return await generate_unique_code(db, Profile, Profile.profile_number, "PR")
 
 
 # ---------------------------------------------------------------------------
@@ -341,6 +338,7 @@ class ProfileController(Controller):
             status=ProfileStatusEnum.draft,
             # New fields
             marital_status=_parse_enum(MaritalStatusEnum, data.marital_status, "marital_status") if data.marital_status else MaritalStatusEnum.never_married,
+            caste=data.caste or None,
             sub_caste=data.sub_caste or None,
             weight_kg=data.weight_kg,
             body_type=_parse_enum(BodyTypeEnum, data.body_type, "body_type") if data.body_type else None,
@@ -539,6 +537,9 @@ class ProfileController(Controller):
         # --- New fields ---
         if data.marital_status is not None:
             profile.marital_status = _parse_enum(MaritalStatusEnum, data.marital_status, "marital_status")
+            changed = True
+        if data.caste is not None:
+            profile.caste = data.caste
             changed = True
         if data.sub_caste is not None:
             profile.sub_caste = data.sub_caste

@@ -8,7 +8,7 @@
 	<title>Maratha Kalyanam — Find Your Partner</title>
 	<meta
 		name="description"
-		content="Maratha Kalyanam — మరాఠా కల్యాణం. The trusted matrimonial platform for Maratha families in Andhra, Telangana, Maharashtra and other states. Find your perfect life partner."
+		content="Maratha Kalyanam — మరాఠా కళ్యాణం. The trusted matrimonial platform for Maratha families in Andhra, Telangana, Maharashtra and other states. Find your perfect life partner."
 	/>
 </svelte:head>
 
@@ -128,7 +128,7 @@
 
 		<h2 class="mt-6 mb-12 text-center font-serif text-3xl font-semibold text-maroon md:text-4xl">
 			Why Maratha Kalyanam?
-			<span class="block" lang="te">మరాఠా కల్యాణం ఎందుకు?</span>
+			<span class="block" lang="te">మరాఠా కళ్యాణం ఎందుకు?</span>
 		</h2>
 
 		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -145,7 +145,7 @@
 				<p class="text-sm text-ink/80">
 					Built for Maratha families with deep respect for gotra, nakshatram,
 					kuldevata, and devak traditions.
-					<span class="block mt-1" lang="te">గోత్రం, నక్షత్రం, కుల్‍దేవత మరియు దేవక్ సంప్రదాయాలను గౌరవించే మరాఠా కుటుంబాల కోసం నిర్మించబడింది.</span>
+					<span class="block mt-1" lang="te">గోత్రం, నక్షత్రం, కుల దేవత మరియు దేవక్ సంప్రదాయాలను గౌరవించే మరాఠా కుటుంబాల కోసం నిర్మించబడింది.</span>
 				</p>
 			</div>
 

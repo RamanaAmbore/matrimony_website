@@ -25,12 +25,14 @@ async def test_health(client: AsyncClient) -> None:
 
 
 async def test_register_and_login(client: AsyncClient) -> None:
+    import re
+    _MK_RE = re.compile(r"^MK-[A-Z0-9]{6}$")
+
     email = f"test_{uuid.uuid4().hex[:8]}@example.com"
-    handle = _unique_handle()
     password = "TestPass123!"
 
     # Register
-    resp = await client.post("/auth/register", json={"email": email, "password": password, "user_handle": handle, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
+    resp = await client.post("/auth/register", json={"email": email, "password": password, "phone_number": f"+1{uuid.uuid4().int % 10**10:010d}", "full_name": "Test User"})
     assert resp.status_code == 201, resp.text
     data = resp.json()
     assert "uuid" in data
@@ -42,7 +44,7 @@ async def test_register_and_login(client: AsyncClient) -> None:
     data = resp.json()
     assert data["uuid"] == user_uuid
     assert data["email"] == email
-    assert data["user_id"] == handle
+    assert _MK_RE.match(data["user_id"]), f"Expected MK-XXXXXX, got {data['user_id']!r}"
     assert not data["is_admin"]
     assert not data["email_verified"]
 

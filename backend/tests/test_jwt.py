@@ -164,18 +164,22 @@ async def test_logout_clears_jwt_cookie(client: AsyncClient) -> None:
 
 async def test_me_returns_payload_from_jwt_cookie(client: AsyncClient) -> None:
     """/auth/me reads user info from the JWT cookie, not the session."""
+    import re
+    _MK_RE = re.compile(r"^MK-[A-Z0-9]{6}$")
+
     email = f"mejwt_{uuid.uuid4().hex[:8]}@example.com"
-    handle = _unique_handle()
     password = "ValidPass123!"
 
-    await client.post("/auth/register", json=_reg(email, handle, password))
-    await client.post("/auth/login", json=_login(email, password))
+    await client.post("/auth/register", json=_reg(email, "", password))
+    login_data = (await client.post("/auth/login", json=_login(email, password))).json()
+    system_handle = login_data["user_id"]
 
     resp = await client.get("/auth/me")
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert "uuid" in data
-    assert data["user_id"] == handle
+    assert data["user_id"] == system_handle
+    assert _MK_RE.match(data["user_id"]), f"Expected MK-XXXXXX, got {data['user_id']!r}"
     assert data["email"] == email
     assert data["is_admin"] is False
     assert data["email_verified"] is False

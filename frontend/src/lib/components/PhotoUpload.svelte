@@ -49,14 +49,13 @@
 			toastStore.success('Photo uploaded!');
 		} catch (err) {
 			if (err instanceof ApiError) {
-				if (err.code === 'photo_validation_failed') {
-					uploadError = err.message;
-				} else {
-					uploadError = err.message;
-				}
+				uploadError = err.message || `Upload failed (HTTP ${err.status}).`;
+			} else if (err instanceof Error) {
+				uploadError = `Upload failed: ${err.message}`;
 			} else {
 				uploadError = 'Upload failed. Please try again.';
 			}
+			console.error('Photo upload error:', err);
 		} finally {
 			uploading = false;
 			if (fileInputEl) fileInputEl.value = '';

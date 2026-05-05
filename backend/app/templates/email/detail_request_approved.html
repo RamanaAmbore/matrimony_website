@@ -14,7 +14,7 @@
   <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#6b0f1a;border-radius:8px 8px 0 0;">
   <tr><td style="padding:24px 32px;text-align:center;">
     <div style="color:#fff8e7;font-size:22px;font-weight:bold;font-family:Georgia,serif;letter-spacing:0.5px;">Maratha Kalyanam</div>
-    <div style="color:#ffb627;font-size:13px;margin-top:4px;letter-spacing:0.3px;">మరాఠా కల్యాణం &nbsp;·&nbsp; Connecting Maratha Families Across Telugu States</div>
+    <div style="color:#ffb627;font-size:13px;margin-top:4px;letter-spacing:0.3px;">మరాఠా కళ్యాణం &nbsp;·&nbsp; Connecting Maratha Families Across Telugu States</div>
   </td></tr>
   </table>
 
@@ -44,7 +44,7 @@
       <tr><td colspan="2" style="padding:10px 12px 6px;background:#6b0f1a;color:#fff8e7;font-size:12px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">Personal</td></tr>
       <tr style="background:#ffffff;">
         <td style="padding:8px 12px;font-weight:bold;color:#555;width:45%;font-size:14px;border-bottom:1px solid #f0e8d8;">Date of Birth</td>
-        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.dob }}</td>
+        <td style="padding:8px 12px;color:#1a1a1a;font-size:14px;border-bottom:1px solid #f0e8d8;">{{ profile.dob.strftime('%d-%m-%Y') if profile.dob else '' }}</td>
       </tr>
       {% if profile.height_cm %}
       <tr style="background:#fdf8f0;">

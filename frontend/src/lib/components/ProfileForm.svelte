@@ -16,7 +16,8 @@
 	import BilingualLabel from '$lib/components/BilingualLabel.svelte';
 	import PhotoUpload from '$lib/components/PhotoUpload.svelte';
 	import Combobox from '$lib/components/Combobox.svelte';
-	import { MARATHA_SUB_CASTES, MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER, DIET_OPTIONS } from '$lib/profileOptions';
+	import DobInput from '$lib/components/DobInput.svelte';
+	import { CASTE_OPTIONS, MARATHA_SUB_CASTES, MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER, DIET_OPTIONS } from '$lib/profileOptions';
 
 	const COUNTRIES = [...COUNTRIES_PRIORITY, ...COUNTRIES_OTHER];
 
@@ -42,7 +43,7 @@
 		isProd = true
 	}: {
 		initialData?: Partial<Profile>;
-		onSubmit: (data: Partial<ProfilePayload>) => void;
+		onSubmit: (data: Partial<ProfilePayload>) => void | Promise<void>;
 		submitting?: boolean;
 		serverErrors?: Record<string, string>;
 		onSubmitForApproval?: (() => void) | undefined;
@@ -63,6 +64,7 @@
 	let dob = $state(untrack(() => initialData.dob ?? ''));
 	let marital_status = $state(untrack(() => initialData.marital_status ?? ''));
 	let mother_tongue = $state(untrack(() => initialData.mother_tongue ?? 'Telugu'));
+	let caste = $state(untrack(() => initialData.caste ?? 'Maratha'));
 	let sub_caste = $state(untrack(() => initialData.sub_caste ?? 'Maratha'));
 	let surname_clan = $state(untrack(() => initialData.surname_clan ?? ''));
 
@@ -136,7 +138,7 @@
 
 	// Location
 	let city = $state(untrack(() => initialData.city ?? ''));
-	let state_field = $state(untrack(() => initialData.state ?? 'Telangana'));
+	let state_field = $state(untrack(() => initialData.state ?? ''));
 	let country = $state(untrack(() => initialData.country ?? 'India'));
 	let pin_code = $state(untrack(() => initialData.pin_code ?? ''));
 
@@ -374,7 +376,7 @@
 		return Object.keys(e).length === 0;
 	}
 
-	function handleSubmitForApproval() {
+	async function handleSubmitForApproval() {
 		if (!validateSubmit()) {
 			// Scroll to first error field
 			setTimeout(() => {
@@ -383,6 +385,10 @@
 			}, 50);
 			return;
 		}
+		// Persist current form state before transitioning to pending — otherwise
+		// fields the user typed but never explicitly saved (e.g., wizard sections
+		// they scrolled past without clicking Save & Continue) would be discarded.
+		await onSubmit(buildData());
 		onSubmitForApproval?.();
 	}
 
@@ -394,6 +400,7 @@
 			dob,
 			marital_status: (marital_status || null) as MaritalStatus | null,
 			mother_tongue: mother_tongue.trim(),
+			caste: caste.trim() || null,
 			sub_caste: sub_caste.trim() || null,
 			surname_clan: surname_clan.trim(),
 
@@ -474,7 +481,7 @@
 	const formFingerprint = $derived(
 		[
 			gender, first_name, last_name, dob, marital_status, mother_tongue,
-			sub_caste, surname_clan, height_cm, weight_kg, complexion, body_type,
+			caste, sub_caste, surname_clan, height_cm, weight_kg, complexion, body_type,
 			blood_group, gotra, kuldevata, devak, nakshatram, rashi, manglik,
 			time_hour, time_minute, time_ampm, timeEnabled, place_of_birth,
 			education, college_university, occupation,
@@ -600,7 +607,7 @@
 								<!-- Date of Birth -->
 								<div>
 									<BilingualLabel key="dob" for="dob" required />
-									<input id="dob" type="date" class="input" class:border-vermilion={errors.dob} bind:value={dob} max={new Date().toISOString().split('T')[0]} />
+									<DobInput id="dob" bind:value={dob} error={!!errors.dob} />
 									{#if errors.dob}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.dob}</p>{/if}
 								</div>
 
@@ -626,6 +633,11 @@
 
 								<!-- Sub-caste (optional) -->
 								<div class="sm:col-span-2">
+									<BilingualLabel key="caste" for="caste" />
+									<Combobox id="caste" bind:value={caste} options={CASTE_OPTIONS} allowCustom={true} placeholder="Select or type caste" />
+								</div>
+
+								<div>
 									<BilingualLabel key="subCaste" for="sub_caste" />
 									<Combobox id="sub_caste" bind:value={sub_caste} options={MARATHA_SUB_CASTES} allowCustom={true} placeholder="Select or type sub-caste" />
 								</div>
@@ -1161,15 +1173,8 @@
 
 				<!-- Date of Birth -->
 				<div>
-					<BilingualLabel key="dob" for="dob" required />
-					<input
-						id="dob"
-						type="date"
-						class="input"
-						class:border-vermilion={errors.dob}
-						bind:value={dob}
-						max={new Date().toISOString().split('T')[0]}
-					/>
+					<BilingualLabel key="dob" for="dob_edit" required />
+					<DobInput id="dob_edit" bind:value={dob} error={!!errors.dob} />
 					{#if errors.dob}<p class="mt-1 text-xs text-vermilion" data-error="true">
 							{errors.dob}
 						</p>{/if}
@@ -1219,6 +1224,11 @@
 
 				<!-- Sub-caste (optional) -->
 				<div class="sm:col-span-2">
+					<BilingualLabel key="caste" for="caste_edit" />
+					<Combobox id="caste_edit" bind:value={caste} options={CASTE_OPTIONS} allowCustom={true} placeholder="Select or type caste" />
+				</div>
+
+				<div>
 					<BilingualLabel key="subCaste" for="sub_caste_edit" />
 					<Combobox id="sub_caste_edit" bind:value={sub_caste} options={MARATHA_SUB_CASTES} allowCustom={true} placeholder="Select or type sub-caste" />
 				</div>
