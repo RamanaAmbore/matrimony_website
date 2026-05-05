@@ -143,36 +143,36 @@ async def test_register_duplicate_phone(client: AsyncClient) -> None:
     assert resp.json()["detail"]["code"] == "phone_taken"
 
 
-async def test_register_invalid_handle_starts_with_digit(client: AsyncClient) -> None:
+async def test_register_invalid_user_id_starts_with_digit(client: AsyncClient) -> None:
     """Handle starting with a digit → 422."""
     email = f"inv_{uuid.uuid4().hex[:6]}@example.com"
     resp = await client.post("/auth/register", json=_reg_payload(email, handle="99rambo"))
     assert resp.status_code == 422, resp.text
 
 
-async def test_register_invalid_handle_too_short(client: AsyncClient) -> None:
+async def test_register_invalid_user_id_too_short(client: AsyncClient) -> None:
     """Handle shorter than 3 chars → 422."""
     email = f"inv_{uuid.uuid4().hex[:6]}@example.com"
     resp = await client.post("/auth/register", json=_reg_payload(email, handle="ab"))
     assert resp.status_code == 422, resp.text
 
 
-async def test_register_invalid_handle_special_char(client: AsyncClient) -> None:
+async def test_register_invalid_user_id_special_char(client: AsyncClient) -> None:
     """Handle with special character → 422."""
     email = f"inv_{uuid.uuid4().hex[:6]}@example.com"
     resp = await client.post("/auth/register", json=_reg_payload(email, handle="rambo!"))
     assert resp.status_code == 422, resp.text
 
 
-async def test_register_invalid_handle_with_space(client: AsyncClient) -> None:
+async def test_register_invalid_user_id_with_space(client: AsyncClient) -> None:
     """Handle containing a space → 422."""
     email = f"inv_{uuid.uuid4().hex[:6]}@example.com"
     resp = await client.post("/auth/register", json=_reg_payload(email, handle="rambo space"))
     assert resp.status_code == 422, resp.text
 
 
-async def test_register_duplicate_handle(client: AsyncClient) -> None:
-    """Duplicate handle → 409 handle_taken."""
+async def test_register_duplicate_user_id(client: AsyncClient) -> None:
+    """Duplicate handle → 409 user_id_taken."""
     handle = f"Uhandle{uuid.uuid4().hex[:4]}"
     email1 = f"a_{uuid.uuid4().hex[:6]}@example.com"
     email2 = f"b_{uuid.uuid4().hex[:6]}@example.com"
@@ -182,11 +182,11 @@ async def test_register_duplicate_handle(client: AsyncClient) -> None:
 
     resp = await client.post("/auth/register", json=_reg_payload(email2, handle=handle))
     assert resp.status_code == 409, resp.text
-    assert resp.json()["detail"]["code"] == "handle_taken"
+    assert resp.json()["detail"]["code"] == "user_id_taken"
 
 
-async def test_register_duplicate_handle_case_insensitive(client: AsyncClient) -> None:
-    """Duplicate handle (different case) → 409 handle_taken."""
+async def test_register_duplicate_user_id_case_insensitive(client: AsyncClient) -> None:
+    """Duplicate handle (different case) → 409 user_id_taken."""
     base = f"Ucasex{uuid.uuid4().hex[:4]}"
     email1 = f"c1_{uuid.uuid4().hex[:6]}@example.com"
     email2 = f"c2_{uuid.uuid4().hex[:6]}@example.com"
@@ -194,7 +194,7 @@ async def test_register_duplicate_handle_case_insensitive(client: AsyncClient) -
     await client.post("/auth/register", json=_reg_payload(email1, handle=base))
     resp = await client.post("/auth/register", json=_reg_payload(email2, handle=base.upper()))
     assert resp.status_code == 409, resp.text
-    assert resp.json()["detail"]["code"] == "handle_taken"
+    assert resp.json()["detail"]["code"] == "user_id_taken"
 
 
 async def test_register_duplicate_email(client: AsyncClient) -> None:

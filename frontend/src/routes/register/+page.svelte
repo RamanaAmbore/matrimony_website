@@ -6,7 +6,7 @@
 	import { T } from '$lib/i18n';
 	import { asciiOnly } from '$lib/inputFilters';
 
-	const HANDLE_RE = /^[A-Za-z][A-Za-z0-9_]{2,29}$/;
+	const USER_ID_RE = /^[A-Za-z][A-Za-z0-9_]{2,29}$/;
 	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	const PHONE_DIGITS_RE = /^\+\d{7,17}$/;
 	const PASSWORD_LETTER_RE = /[A-Za-z]/;
@@ -21,9 +21,9 @@
 	let loading = $state(false);
 	let errors = $state<Record<string, string>>({});
 
-	function validateHandle(value: string): string {
+	function validateUserId(value: string): string {
 		if (!value.trim()) return 'User ID is required';
-		if (!HANDLE_RE.test(value)) {
+		if (!USER_ID_RE.test(value)) {
 			if (value.length < 3) return 'Must be at least 3 characters';
 			if (value.length > 30) return 'Must be 30 characters or fewer';
 			if (!/^[A-Za-z]/.test(value)) return 'Must start with a letter';
@@ -52,8 +52,8 @@
 		return '';
 	}
 
-	function handleBlur() {
-		const msg = validateHandle(user_id);
+	function userIdBlur() {
+		const msg = validateUserId(user_id);
 		if (msg) {
 			errors = { ...errors, user_id: msg };
 		} else {
@@ -67,8 +67,8 @@
 		if (!full_name.trim()) e.full_name = 'Full name is required';
 		else if (full_name.trim().length < 2) e.full_name = 'Must be at least 2 characters';
 		else if (full_name.trim().length > 80) e.full_name = 'Must be 80 characters or fewer';
-		const handleMsg = validateHandle(user_id);
-		if (handleMsg) e.user_id = handleMsg;
+		const userIdMsg = validateUserId(user_id);
+		if (userIdMsg) e.user_id = userIdMsg;
 		if (!email.trim()) e.email = 'Email is required';
 		else if (!EMAIL_RE.test(email)) e.email = 'Enter a valid email';
 		const phoneMsg = validatePhone(phone_number);
@@ -98,7 +98,7 @@
 		} catch (err) {
 			if (err instanceof ApiError) {
 				if (err.status === 409) {
-					if (err.code === 'handle_taken') {
+					if (err.code === 'user_id_taken') {
 						errors = { user_id: 'This user ID is already taken — pick another' };
 					} else if (err.code === 'phone_taken') {
 						errors = { phone_number: 'This phone number is already registered' };
@@ -110,7 +110,7 @@
 					if (err.code === 'invalid_email') errors = { email: err.message };
 					else if (err.code === 'invalid_phone') errors = { phone_number: err.message };
 					else if (err.code === 'weak_password') errors = { password: err.message };
-					else if (err.code === 'invalid_handle') errors = { user_id: err.message };
+					else if (err.code === 'invalid_user_id') errors = { user_id: err.message };
 					else toastStore.error(err.message.slice(0, 80));
 				} else {
 					toastStore.error(err.message.slice(0, 60));
@@ -175,7 +175,7 @@
 				class:border-vermilion={errors.user_id}
 				bind:value={user_id}
 				oninput={(ev) => { user_id = asciiOnly((ev.currentTarget as HTMLInputElement).value); }}
-				onblur={handleBlur}
+				onblur={userIdBlur}
 				placeholder="ramana_ambore"
 				maxlength="30"
 				spellcheck="false"
