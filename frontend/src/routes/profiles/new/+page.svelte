@@ -5,6 +5,8 @@
 	import { ApiError } from '$lib/api';
 	import { goto } from '$app/navigation';
 	import ProfileForm from '$lib/components/ProfileForm.svelte';
+	import { tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	let { data } = $props();
 
@@ -75,7 +77,10 @@
 </svelte:head>
 
 <div class="mx-auto max-w-5xl px-4 py-10">
-	<h1 class="font-serif text-3xl font-bold text-maroon">New Profile</h1>
+	<h1 class="font-serif text-3xl font-bold text-maroon">
+		New Profile
+		<span class="block sm:inline sm:ml-2" lang={langStore.current}>{tx('newProfile', langStore.current)}</span>
+	</h1>
 
 	<!-- Profile code — appears after first save -->
 	{#if savedProfile}
