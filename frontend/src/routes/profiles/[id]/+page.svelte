@@ -4,7 +4,7 @@
 	import { ApiError } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
-	import { Loader, Edit, Send, SendHorizonal, User } from 'lucide-svelte';
+	import { Loader, Edit, Send, SendHorizonal, User, ZoomIn, ZoomOut, Maximize2 } from 'lucide-svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
@@ -22,6 +22,16 @@
 	let showRequestForm = $state(false);
 	let isOwner = $state(false);
 	let isAdmin = $state(false);
+
+	// Bug 2: local state for the currently-displayed photo
+	let displayedPhoto = $state<Photo | null>(null);
+	let zoom = $state(1);
+	const ZOOM_MIN = 1;
+	const ZOOM_MAX = 4;
+	const ZOOM_STEP = 0.5;
+	function zoomIn() { zoom = Math.min(ZOOM_MAX, +(zoom + ZOOM_STEP).toFixed(2)); }
+	function zoomOut() { zoom = Math.max(ZOOM_MIN, +(zoom - ZOOM_STEP).toFixed(2)); }
+	function zoomReset() { zoom = 1; }
 
 	onMount(async () => {
 		try {
@@ -221,6 +231,17 @@
 
 	// Whether the viewer should see the full data (owner or admin)
 	const canSeeFull = $derived(isOwner || isAdmin);
+
+	// Bug 2: keep displayedPhoto in sync with primaryPhoto on first load;
+	// user clicks on a thumbnail to override it.
+	$effect(() => {
+		displayedPhoto = primaryPhoto;
+	});
+
+	/** URL to show for a given photo depending on viewer permissions. */
+	function photoSrc(p: Photo): string {
+		return canSeeFull && p.passport_url ? p.passport_url : p.blurred_url;
+	}
 </script>
 
 <svelte:head>
@@ -236,13 +257,14 @@
 		<div class="grid gap-8 lg:grid-cols-[280px,1fr]">
 			<!-- Left: photo + quick actions -->
 			<div class="space-y-4">
-				<!-- Photo -->
-				<div class="aspect-[3/4] overflow-hidden rounded-xl border border-gold/20 shadow-sm bg-cream">
-					{#if primaryPhoto}
+				<!-- Main photo viewer — scrollable container with zoom -->
+				<div class="relative aspect-[3/4] overflow-auto rounded-xl border border-gold/20 shadow-sm bg-cream">
+					{#if displayedPhoto}
 						<img
-							src={isOwner && primaryPhoto.passport_url ? primaryPhoto.passport_url : primaryPhoto.blurred_url}
+							src={photoSrc(displayedPhoto)}
 							alt="{profile.first_name}'s photo"
-							class="h-full w-full object-cover {!isOwner ? 'blur-sm' : ''}"
+							class="h-full w-full object-cover {!canSeeFull ? 'blur-sm' : ''}"
+							style="transform: scale({zoom}); transform-origin: top left; min-width: 100%; min-height: 100%;"
 							loading="lazy"
 							decoding="async"
 						/>
@@ -252,6 +274,50 @@
 						</div>
 					{/if}
 				</div>
+
+				<!-- Zoom controls — only when a photo is loaded -->
+				{#if displayedPhoto}
+					<div class="flex items-center justify-center gap-1.5">
+						<button type="button" onclick={zoomOut} disabled={zoom <= ZOOM_MIN}
+							class="rounded border border-gold/40 bg-white p-1.5 text-maroon hover:border-saffron disabled:opacity-40 disabled:cursor-not-allowed"
+							aria-label="Zoom out">
+							<ZoomOut size={14} />
+						</button>
+						<button type="button" onclick={zoomReset}
+							class="rounded border border-gold/40 bg-white px-2 py-1 text-xs font-mono text-maroon hover:border-saffron min-w-[52px]"
+							aria-label="Reset zoom">{Math.round(zoom * 100)}%</button>
+						<button type="button" onclick={zoomIn} disabled={zoom >= ZOOM_MAX}
+							class="rounded border border-gold/40 bg-white p-1.5 text-maroon hover:border-saffron disabled:opacity-40 disabled:cursor-not-allowed"
+							aria-label="Zoom in">
+							<ZoomIn size={14} />
+						</button>
+					</div>
+				{/if}
+
+				<!-- Thumbnail strip — only when there are multiple photos -->
+				{#if photos.length > 1}
+					<div class="flex gap-1.5 mt-2 overflow-x-auto pb-1">
+						{#each photos as p (p.id)}
+							<button
+								type="button"
+								onclick={() => (displayedPhoto = p)}
+								class="shrink-0 h-14 w-11 overflow-hidden rounded border-2 transition-all
+									{displayedPhoto?.id === p.id
+										? 'border-saffron'
+										: 'border-gold/20 hover:border-gold/50'}"
+								aria-label="View photo"
+							>
+								<img
+									src={p.thumb_url ?? photoSrc(p)}
+									alt=""
+									class="h-full w-full object-cover {!canSeeFull ? 'blur-sm' : ''}"
+									loading="lazy"
+									decoding="async"
+								/>
+							</button>
+						{/each}
+					</div>
+				{/if}
 
 				<!-- Actions -->
 				{#if isOwner}
@@ -311,8 +377,8 @@
 					{/if}
 				{/if}
 
-				<!-- Non-owner blur notice -->
-				{#if !isOwner}
+				<!-- Non-owner, non-admin blur notice -->
+				{#if !canSeeFull}
 					<p class="mt-1 text-center text-xs text-ink/50">
 						Photo is blurred for privacy. Full details shared via email after admin approval.
 					</p>
@@ -349,7 +415,7 @@
 				<!-- ── Basic Information ─────────────────────────────────────────── -->
 				<section>
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Basic Information</h2>
-					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'Marital Status', value: fmtMaritalStatus(profile.marital_status) },
 							{ label: 'Mother Tongue', value: present(profile.mother_tongue) },
@@ -357,9 +423,9 @@
 							{ label: 'Caste', value: present(profile.caste) },
 							{ label: 'Sub Caste', value: present(profile.sub_caste) },
 						].filter(item => item.value !== null) as item}
-							<div>
-								<dt class="font-medium text-ink/50">{item.label}</dt>
-								<dd class="mt-0.5 text-ink">{item.value}</dd>
+							<div class="flex items-baseline gap-3 border-b border-gold/10 pb-1.5">
+								<dt class="w-40 shrink-0 font-medium text-ink/50">{item.label}</dt>
+								<dd class="flex-1 text-ink">{item.value}</dd>
 							</div>
 						{/each}
 					</dl>
@@ -368,7 +434,7 @@
 				<!-- ── Physical ────────────────────────────────────────────────────── -->
 				<section>
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Physical</h2>
-					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'Height', value: profile.height_cm ? `${profile.height_cm} cm (${cmToFtIn(profile.height_cm)})` : null },
 							{ label: 'Weight', value: profile.weight_kg ? `${profile.weight_kg} kg` : null },
@@ -376,9 +442,9 @@
 							{ label: 'Body Type', value: fmtBodyType(profile.body_type) },
 							{ label: 'Blood Group', value: present(profile.blood_group) },
 						].filter(item => item.value !== null) as item}
-							<div>
-								<dt class="font-medium text-ink/50">{item.label}</dt>
-								<dd class="mt-0.5 text-ink">{item.value}</dd>
+							<div class="flex items-baseline gap-3 border-b border-gold/10 pb-1.5">
+								<dt class="w-40 shrink-0 font-medium text-ink/50">{item.label}</dt>
+								<dd class="flex-1 text-ink">{item.value}</dd>
 							</div>
 						{/each}
 					</dl>
@@ -387,7 +453,7 @@
 				<!-- ── Astrology ───────────────────────────────────────────────────── -->
 				<section>
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Astrology</h2>
-					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'Gotra', value: present(profile.gotra) },
 							{ label: 'Kuldevata', value: present(profile.kuldevata) },
@@ -398,9 +464,9 @@
 							{ label: 'Time of Birth', value: present(profile.time_of_birth) },
 							{ label: 'Place of Birth', value: present(profile.place_of_birth) },
 						].filter(item => item.value !== null) as item}
-							<div>
-								<dt class="font-medium text-ink/50">{item.label}</dt>
-								<dd class="mt-0.5 text-ink">{item.value}</dd>
+							<div class="flex items-baseline gap-3 border-b border-gold/10 pb-1.5">
+								<dt class="w-40 shrink-0 font-medium text-ink/50">{item.label}</dt>
+								<dd class="flex-1 text-ink">{item.value}</dd>
 							</div>
 						{/each}
 					</dl>
@@ -409,7 +475,7 @@
 				<!-- ── Education & Career ──────────────────────────────────────────── -->
 				<section>
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Education &amp; Career</h2>
-					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'Education', value: present(profile.education) },
 							{ label: 'College / University', value: present(profile.college_university) },
@@ -418,9 +484,9 @@
 							{ label: 'Work Location', value: present(profile.work_location) },
 							{ label: 'Annual Income', value: fmtIncome(profile.annual_income_inr) },
 						].filter(item => item.value !== null) as item}
-							<div>
-								<dt class="font-medium text-ink/50">{item.label}</dt>
-								<dd class="mt-0.5 text-ink tabular-nums">{item.value}</dd>
+							<div class="flex items-baseline gap-3 border-b border-gold/10 pb-1.5">
+								<dt class="w-40 shrink-0 font-medium text-ink/50">{item.label}</dt>
+								<dd class="flex-1 text-ink tabular-nums">{item.value}</dd>
 							</div>
 						{/each}
 					</dl>
@@ -429,16 +495,16 @@
 				<!-- ── Location ────────────────────────────────────────────────────── -->
 				<section>
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Location</h2>
-					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'City', value: present(profile.city) },
 							{ label: 'State', value: present(profile.state) },
 							{ label: 'Country', value: present(profile.country) },
 							{ label: 'PIN Code', value: present(profile.pin_code) },
 						].filter(item => item.value !== null) as item}
-							<div>
-								<dt class="font-medium text-ink/50">{item.label}</dt>
-								<dd class="mt-0.5 text-ink">{item.value}</dd>
+							<div class="flex items-baseline gap-3 border-b border-gold/10 pb-1.5">
+								<dt class="w-40 shrink-0 font-medium text-ink/50">{item.label}</dt>
+								<dd class="flex-1 text-ink">{item.value}</dd>
 							</div>
 						{/each}
 					</dl>
@@ -448,7 +514,7 @@
 				{#if canSeeFull}
 					<section>
 						<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Family</h2>
-						<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+						<dl class="space-y-2 text-sm">
 							{#each [
 								{ label: "Father's Name", value: present(profile.father_name) },
 								{ label: "Father's Occupation", value: present(profile.father_occupation) },
@@ -464,9 +530,9 @@
 								{ label: 'Sisters', value: profile.num_sisters != null ? String(profile.num_sisters) : null },
 								{ label: 'Sisters Married', value: profile.num_sisters_married != null ? String(profile.num_sisters_married) : null },
 							].filter(item => item.value !== null) as item}
-								<div>
-									<dt class="font-medium text-ink/50">{item.label}</dt>
-									<dd class="mt-0.5 text-ink">{item.value}</dd>
+								<div class="flex items-baseline gap-3 border-b border-gold/10 pb-1.5">
+									<dt class="w-40 shrink-0 font-medium text-ink/50">{item.label}</dt>
+									<dd class="flex-1 text-ink">{item.value}</dd>
 								</div>
 							{/each}
 						</dl>
@@ -476,16 +542,16 @@
 				<!-- ── Lifestyle ───────────────────────────────────────────────────── -->
 				<section>
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3">Lifestyle</h2>
-					<dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+					<dl class="space-y-2 text-sm">
 						{#each [
 							{ label: 'Diet', value: fmtDiet(profile.diet) },
 							{ label: 'Smokes', value: fmtSmokeDrink(profile.smokes) },
 							{ label: 'Drinks', value: fmtSmokeDrink(profile.drinks) },
 							{ label: 'Hobbies', value: present(profile.hobbies) },
 						].filter(item => item.value !== null) as item}
-							<div>
-								<dt class="font-medium text-ink/50">{item.label}</dt>
-								<dd class="mt-0.5 text-ink">{item.value}</dd>
+							<div class="flex items-baseline gap-3 border-b border-gold/10 pb-1.5">
+								<dt class="w-40 shrink-0 font-medium text-ink/50">{item.label}</dt>
+								<dd class="flex-1 text-ink">{item.value}</dd>
 							</div>
 						{/each}
 					</dl>
