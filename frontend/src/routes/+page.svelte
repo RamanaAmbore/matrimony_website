@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Search, UserPlus } from 'lucide-svelte';
 	import PaisleyAccent from '$lib/components/PaisleyAccent.svelte';
+	import { tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 	let { data } = $props();
 </script>
 
@@ -64,9 +66,9 @@
 			</p>
 			<p
 				class="hero-te mb-8 max-w-lg text-base md:text-lg"
-				lang="te"
+				lang={langStore.current}
 			>
-				ఆంధ్రప్రదేశ్, తెలంగాణ, మహారాష్ట్రలలో నివసించే మరాఠా కుటుంబాలకు విశ్వసనీయమైన వివాహ వేదిక. నిర్వాహకులు ధృవీకరించిన ప్రొఫైళ్లు. గోప్యత అగ్రగామి.
+				{tx('homeHeroTagline', langStore.current)}
 			</p>
 
 			<div class="flex flex-col items-stretch justify-center gap-3 sm:flex-row">
@@ -75,7 +77,7 @@
 					class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-maroon px-6 font-semibold text-cream shadow-lg transition-all duration-200 hover:bg-saffron hover:text-ink hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 				>
 					<Search size={18} />
-					<span class="leading-tight">Find Your Partner<span class="block" lang="te" style="color:inherit">జీవిత భాగస్వామిని కనుగొనండి</span></span>
+					<span class="leading-tight">Find Your Partner<span class="block" lang={langStore.current} style="color:inherit">{tx('homeHeroFindPartner', langStore.current)}</span></span>
 				</a>
 
 				{#if !data.user}
@@ -84,14 +86,14 @@
 						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-marigold/55 px-6 font-semibold text-ink shadow-lg transition-all duration-200 hover:bg-marigold hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
 						<UserPlus size={18} />
-						<span class="leading-tight">Create Profile<span class="block" lang="te" style="color:inherit">ప్రొఫైల్ సృష్టించండి</span></span>
+						<span class="leading-tight">Create Profile<span class="block" lang={langStore.current} style="color:inherit">{tx('homeHeroCreateProfile', langStore.current)}</span></span>
 					</a>
 				{:else}
 					<a
 						href="/dashboard"
 						class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-marigold/55 px-6 font-semibold text-ink shadow-lg transition-all duration-200 hover:bg-marigold hover:shadow-xl focus-visible:outline-2 focus-visible:outline-cream sm:w-64"
 					>
-						<span class="leading-tight">My Profiles<span class="block" lang="te" style="color:inherit">నా ప్రొఫైళ్లు</span></span>
+						<span class="leading-tight">My Profiles<span class="block" lang={langStore.current} style="color:inherit">{tx('homeHeroMyProfiles', langStore.current)}</span></span>
 					</a>
 				{/if}
 			</div>
@@ -128,7 +130,7 @@
 
 		<h2 class="mt-6 mb-12 text-center font-serif text-3xl font-semibold text-maroon md:text-4xl">
 			Why Maratha Kalyanam?
-			<span class="block" lang="te">మరాఠా కళ్యాణం ఎందుకు?</span>
+			<span class="block" lang={langStore.current}>{tx('homeWhyHeading', langStore.current)}</span>
 		</h2>
 
 		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -140,12 +142,12 @@
 				>🪔</div>
 				<h3 class="mb-3 font-serif text-xl font-semibold text-maroon">
 					Community-Focused
-					<span class="block" lang="te">సమాజ కేంద్రంగా</span>
+					<span class="block" lang={langStore.current}>{tx('homeFeatureCommunity', langStore.current)}</span>
 				</h3>
 				<p class="text-sm text-ink/80">
 					Built for Maratha families with deep respect for gotra, nakshatram,
 					kuldevata, and devak traditions.
-					<span class="block mt-1" lang="te">గోత్రం, నక్షత్రం, కుల దేవత మరియు దేవక్ సంప్రదాయాలను గౌరవించే మరాఠా కుటుంబాల కోసం నిర్మించబడింది.</span>
+					<span class="block mt-1" lang={langStore.current}>{tx('homeFeatureCommunityDesc', langStore.current)}</span>
 				</p>
 			</div>
 
@@ -157,12 +159,12 @@
 				>🛕</div>
 				<h3 class="mb-3 font-serif text-xl font-semibold text-maroon">
 					Admin-Verified
-					<span class="block" lang="te">నిర్వాహక ధృవీకరణ</span>
+					<span class="block" lang={langStore.current}>{tx('homeFeatureVerified', langStore.current)}</span>
 				</h3>
 				<p class="text-sm text-ink/80">
 					Every profile is reviewed and approved by our team before going live.
 					Contact details shared only after mutual interest.
-					<span class="block mt-1" lang="te">ప్రతి ప్రొఫైల్ మా బృందం ధృవీకరించిన తర్వాతే ప్రచురితమవుతుంది. పరస్పర ఆసక్తి తర్వాతే సంప్రదింపు వివరాలు అందుతాయి.</span>
+					<span class="block mt-1" lang={langStore.current}>{tx('homeFeatureVerifiedDesc', langStore.current)}</span>
 				</p>
 			</div>
 
@@ -174,12 +176,12 @@
 				>🪷</div>
 				<h3 class="mb-3 font-serif text-xl font-semibold text-maroon">
 					Privacy First
-					<span class="block" lang="te">గోప్యత అగ్రగామి</span>
+					<span class="block" lang={langStore.current}>{tx('homeFeaturePrivacy', langStore.current)}</span>
 				</h3>
 				<p class="text-sm text-ink/80">
 					Photos are blurred in search results. Full details are shared only after
 					admin approval of a request.
-					<span class="block mt-1" lang="te">శోధన ఫలితాలలో ఫోటోలు బ్లర్ చేయబడతాయి. నిర్వాహకుని అనుమతి తర్వాతే పూర్తి వివరాలు అందుతాయి.</span>
+					<span class="block mt-1" lang={langStore.current}>{tx('homeFeaturePrivacyDesc', langStore.current)}</span>
 				</p>
 			</div>
 		</div>

@@ -116,7 +116,7 @@
 	{#if data.user}
 		<div class="mt-4 rounded-lg border border-gold/30 bg-white px-5 py-4 text-sm">
 			<p class="font-medium text-maroon font-serif text-base mb-2">Account Details
-				<span class="ml-1" lang="te">ఖాతా వివరాలు</span>
+				<span class="ml-1" lang={langStore.current}>{tx('dashAccountDetails', langStore.current)}</span>
 			</p>
 			<div class="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4 text-ink/70">
 				<div><span class="text-xs text-ink/50 block">Name</span>{data.user.full_name || '—'}</div>

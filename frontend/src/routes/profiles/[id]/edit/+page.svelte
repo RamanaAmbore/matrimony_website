@@ -7,6 +7,8 @@
 	import ProfileForm from '$lib/components/ProfileForm.svelte';
 	import PhotoUpload from '$lib/components/PhotoUpload.svelte';
 	import { Loader } from 'lucide-svelte';
+	import { tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	let { data } = $props();
 	// id is fixed for the lifetime of this page — route params don't change without navigation
@@ -105,7 +107,7 @@
 
 		<p class="mt-4 mb-2 text-sm text-ink/60">
 			Upload at least one photo before submitting for approval. Photos are blurred in public search results — clear version shared only after admin approves a contact request.
-			<span class="block mt-0.5 text-xs" lang="te">అనుమతి తర్వాతే స్పష్టమైన ఫోటో అందుతుంది.</span>
+			<span class="block mt-0.5 text-xs" lang={langStore.current}>{tx('editPhotoPrivacyNote', langStore.current)}</span>
 		</p>
 
 		<div class="mt-6">

@@ -167,7 +167,7 @@ def process_upload(
     passport_w = settings_service.get_int("photo_passport_width", 413)
     passport_h = settings_service.get_int("photo_passport_height", 531)
     photo_max_kb = settings_service.get_int("photo_max_kb", 500)
-    photo_min_kb = settings_service.get_int("photo_min_kb", 100)
+    photo_min_kb = settings_service.get_int("photo_min_kb", 25)
     blur_width = settings_service.get_int("photo_blur_width", 600)
     blur_radius = settings_service.get_int("photo_blur_radius", 14)
     thumb_size = settings_service.get_int("photo_thumb_size", 150)

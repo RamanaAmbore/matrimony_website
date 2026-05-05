@@ -11,6 +11,8 @@
 	import DualRangeSlider from '$lib/components/DualRangeSlider.svelte';
 	import Combobox from '$lib/components/Combobox.svelte';
 	import { MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER, DIET_OPTIONS } from '$lib/profileOptions';
+	import { tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	const COUNTRIES = [...COUNTRIES_PRIORITY, ...COUNTRIES_OTHER];
 
@@ -148,8 +150,8 @@
 	<div class="mb-6">
 		<h1 class="font-serif text-3xl font-bold text-maroon">
 			Find Your Partner
-			<span class="block sm:inline sm:ml-2" lang="te">
-				 జీవిత భాగస్వామిని కనుగొనండి
+			<span class="block sm:inline sm:ml-2" lang={langStore.current}>
+				{tx('searchFindPartner', langStore.current)}
 			</span>
 		</h1>
 	</div>
@@ -159,18 +161,18 @@
 		<aside class="w-full shrink-0 md:w-64">
 			<div class="card space-y-4 sticky top-4">
 				<h2 class="font-serif text-lg font-semibold text-maroon">
-					Filters · <span lang="te">వడపోత</span>
+					Filters · <span lang={langStore.current}>{tx('searchFilters', langStore.current)}</span>
 				</h2>
 
 				<!-- ── Basic ──────────────────────────────────────────── -->
 				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1">
-					Basic · <span lang="te">మూల వివరాలు</span>
+					Basic · <span lang={langStore.current}>{tx('searchBasic', langStore.current)}</span>
 				</h3>
 
 				<!-- Gender -->
 				<div>
 					<label for="f-gender" class="label">
-						Looking for · <span lang="te">వెతుకుతున్నది</span>
+						Looking for · <span lang={langStore.current}>{tx('searchLookingFor', langStore.current)}</span>
 					</label>
 					<Combobox id="f-gender" bind:value={gender} options={[
 						{ value: '', label: 'Any' },
@@ -182,7 +184,7 @@
 				<!-- Age range — dual-handle slider 18–60 -->
 				<div>
 					<p class="label">
-						Age {age_min}–{age_max} yrs · <span lang="te">వయసు</span>
+						Age {age_min}–{age_max} yrs · <span lang={langStore.current}>{tx('searchAge', langStore.current)}</span>
 					</p>
 					<div class="mt-2">
 						<DualRangeSlider min={18} max={60} bind:valueMin={age_min} bind:valueMax={age_max} />
@@ -192,20 +194,20 @@
 
 				<!-- Language -->
 				<div>
-					<label for="f-lang" class="label">Language · <span lang="te">భాష</span></label>
+					<label for="f-lang" class="label">Language · <span lang={langStore.current}>{tx('searchLanguage', langStore.current)}</span></label>
 					<Combobox bind:value={mother_tongue_filter} options={MOTHER_TONGUES} placeholder="Any language" />
 					<p class="mt-0.5 text-xs text-ink/45">e.g. Telugu, Hindi, Marathi · భాష పేరు</p>
 				</div>
 
 				<!-- ── Physical ───────────────────────────────────────── -->
 				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
-					Physical · <span lang="te">శారీరక వివరాలు</span>
+					Physical · <span lang={langStore.current}>{tx('searchPhysical', langStore.current)}</span>
 				</h3>
 
 				<!-- Height range -->
 				<div>
 					<p class="label">
-						Height {cmToFtIn(height_min)}–{cmToFtIn(height_max)} · <span lang="te">ఎత్తు</span>
+						Height {cmToFtIn(height_min)}–{cmToFtIn(height_max)} · <span lang={langStore.current}>{tx('searchHeight', langStore.current)}</span>
 					</p>
 					<div class="mt-2">
 						<DualRangeSlider min={140} max={210} bind:valueMin={height_min} bind:valueMax={height_max} />
@@ -216,7 +218,7 @@
 				<!-- Weight range -->
 				<div>
 					<p class="label">
-						Weight {weight_min}–{weight_max} kg · <span lang="te">బరువు</span>
+						Weight {weight_min}–{weight_max} kg · <span lang={langStore.current}>{tx('searchWeight', langStore.current)}</span>
 					</p>
 					<div class="mt-2">
 						<DualRangeSlider min={40} max={120} bind:valueMin={weight_min} bind:valueMax={weight_max} />
@@ -225,31 +227,31 @@
 
 				<!-- ── Astrology ───────────────────────────────────────── -->
 				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
-					Astrology · <span lang="te">జ్యోతిష్య వివరాలు</span>
+					Astrology · <span lang={langStore.current}>{tx('searchAstrology', langStore.current)}</span>
 				</h3>
 
 				<!-- Gotra -->
 				<div>
-					<label for="f-gotra" class="label">Gotra · <span lang="te">గోత్రం</span></label>
+					<label for="f-gotra" class="label">Gotra · <span lang={langStore.current}>{tx('gotra', langStore.current)}</span></label>
 					<input id="f-gotra" type="text" class="input text-sm" bind:value={gotra} placeholder="Any gotra" />
 					<p class="mt-0.5 text-xs text-ink/45">Exact or partial gotra name · గోత్రం</p>
 				</div>
 
 				<!-- Nakshatram -->
 				<div>
-					<label for="f-naksh" class="label">Nakshatram · <span lang="te">నక్షత్రం</span></label>
+					<label for="f-naksh" class="label">Nakshatram · <span lang={langStore.current}>{tx('nakshatram', langStore.current)}</span></label>
 					<Combobox id="f-naksh" bind:value={nakshatram} options={['', ...NAKSHATRAS]} placeholder="Any" />
 				</div>
 
 				<!-- Rashi -->
 				<div>
-					<label for="f-rashi" class="label">Rashi · <span lang="te">రాశి</span></label>
+					<label for="f-rashi" class="label">Rashi · <span lang={langStore.current}>{tx('rashi', langStore.current)}</span></label>
 					<Combobox id="f-rashi" bind:value={rashi} options={['', ...RASHIS]} placeholder="Any" />
 				</div>
 
 				<!-- Manglik -->
 				<div>
-					<label for="f-manglik" class="label">Manglik · <span lang="te">మాంగళిక్</span></label>
+					<label for="f-manglik" class="label">Manglik · <span lang={langStore.current}>{tx('manglik', langStore.current)}</span></label>
 					<Combobox id="f-manglik" bind:value={manglik} options={[
 						{ value: '', label: 'Any' },
 						{ value: 'yes', label: 'Yes' },
@@ -261,43 +263,43 @@
 
 				<!-- ── Location ────────────────────────────────────────── -->
 				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
-					Location · <span lang="te">నివాస స్థానం</span>
+					Location · <span lang={langStore.current}>{tx('searchLocation', langStore.current)}</span>
 				</h3>
 
 				<!-- City -->
 				<div>
-					<label for="f-city" class="label">City · <span lang="te">నగరం</span></label>
+					<label for="f-city" class="label">City · <span lang={langStore.current}>{tx('city', langStore.current)}</span></label>
 					<input id="f-city" type="text" class="input text-sm" bind:value={city} placeholder="Any city" />
 					<p class="mt-0.5 text-xs text-ink/45">Partial match — 'Hyder' matches Hyderabad · నగరం పేరు</p>
 				</div>
 
 				<!-- State -->
 				<div>
-					<label for="f-state" class="label">State · <span lang="te">రాష్ట్రం</span></label>
+					<label for="f-state" class="label">State · <span lang={langStore.current}>{tx('state', langStore.current)}</span></label>
 					<Combobox bind:value={state_filter} options={INDIA_STATES} allowCustom={true} placeholder="Any state" />
 				</div>
 
 				<!-- Country -->
 				<div>
-					<label for="f-country" class="label">Country · <span lang="te">దేశం</span></label>
+					<label for="f-country" class="label">Country · <span lang={langStore.current}>{tx('country', langStore.current)}</span></label>
 					<Combobox bind:value={country_filter} options={COUNTRIES} placeholder="Any country" />
 				</div>
 
 				<!-- Pin Code -->
 				<div>
-					<label for="f-pin" class="label">Pin Code · <span lang="te">పిన్ కోడ్</span></label>
+					<label for="f-pin" class="label">Pin Code · <span lang={langStore.current}>{tx('pinCode', langStore.current)}</span></label>
 					<input id="f-pin" type="text" inputmode="numeric" maxlength="10" class="input text-sm" bind:value={pin_code_filter} placeholder="e.g. 500001" />
 					<p class="mt-0.5 text-xs text-ink/45">Matches profiles starting with this pin · పిన్ తో మొదలయ్యే</p>
 				</div>
 
 				<!-- ── Lifestyle ───────────────────────────────────────── -->
 				<h3 class="text-xs font-semibold uppercase tracking-wide text-saffron border-b border-saffron/30 pb-1 pt-1">
-					Lifestyle · <span lang="te">జీవనశైలి</span>
+					Lifestyle · <span lang={langStore.current}>{tx('searchLifestyle', langStore.current)}</span>
 				</h3>
 
 				<!-- Diet -->
 				<div>
-					<label for="f-diet" class="label">Diet · <span lang="te">ఆహారం</span></label>
+					<label for="f-diet" class="label">Diet · <span lang={langStore.current}>{tx('diet', langStore.current)}</span></label>
 					<Combobox id="f-diet" bind:value={diet} options={[
 						{ value: '', label: 'Any' },
 						...DIET_OPTIONS.map((d) => ({ value: d.value, label: d.label }))
@@ -312,7 +314,7 @@
 					}}
 					class="btn-secondary w-full text-sm py-2"
 				>
-					Clear Filters · <span lang="te">వడపోతలు తీసివేయి</span>
+					Clear Filters · <span lang={langStore.current}>{tx('searchClearFilters', langStore.current)}</span>
 				</button>
 			</div>
 		</aside>
@@ -351,9 +353,6 @@
 					<div class="mb-6 rounded-lg border border-saffron/40 bg-saffron/10 p-4">
 						<p class="font-serif text-lg font-semibold text-maroon">
 							Showing {results.length} of {total} matching profile{total === 1 ? '' : 's'}
-							<span class="text-ink/70" lang="te">
-								· {total} ప్రొఫైళ్లలో {results.length} చూపబడుతున్నవి
-							</span>
 						</p>
 						<p class="mt-1 text-sm text-ink/80">
 							Register for free to see all matches, full profile details, photos and contact your potential match.
@@ -362,7 +361,7 @@
 							href="/register"
 							class="btn-primary mt-3 inline-flex items-center gap-2 text-sm px-3 py-1.5"
 						>
-							Register Free · <span lang="te">ఉచిత నమోదు</span>
+							Register Free · <span lang={langStore.current}>{tx('searchRegisterFree', langStore.current)}</span>
 						</a>
 					</div>
 				{/if}

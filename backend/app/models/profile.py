@@ -116,7 +116,7 @@ class Profile(Base):
         index=True,
     )
     gender: Mapped[GenderEnum] = mapped_column(
-        Enum(GenderEnum, name="gender_enum"), nullable=False
+        Enum(GenderEnum, values_callable=lambda x: [e.value for e in x], name="gender_enum"), nullable=False
     )
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -137,16 +137,16 @@ class Profile(Base):
     nakshatram: Mapped[str | None] = mapped_column(String(100), nullable=True)
     rashi: Mapped[str | None] = mapped_column(String(100), nullable=True)
     manglik: Mapped[ManglikEnum] = mapped_column(
-        Enum(ManglikEnum, name="manglik_enum"), nullable=False, default=ManglikEnum.unknown
+        Enum(ManglikEnum, values_callable=lambda x: [e.value for e in x], name="manglik_enum"), nullable=False, default=ManglikEnum.unknown
     )
     mother_tongue: Mapped[str] = mapped_column(String(50), nullable=False, default="Telugu")
     diet: Mapped[DietEnum | None] = mapped_column(
-        Enum(DietEnum, name="diet_enum"), nullable=True
+        Enum(DietEnum, values_callable=lambda x: [e.value for e in x], name="diet_enum"), nullable=True
     )
     about: Mapped[str] = mapped_column(Text, nullable=False, default="")
     partner_expectations: Mapped[str] = mapped_column(Text, nullable=False, default="")
     status: Mapped[ProfileStatusEnum] = mapped_column(
-        Enum(ProfileStatusEnum, name="profile_status_enum"),
+        Enum(ProfileStatusEnum, values_callable=lambda x: [e.value for e in x], name="profile_status_enum"),
         nullable=False,
         default=ProfileStatusEnum.draft,
     )
@@ -154,7 +154,7 @@ class Profile(Base):
 
     # --- New columns ---
     marital_status: Mapped[MaritalStatusEnum] = mapped_column(
-        Enum(MaritalStatusEnum, name="marital_status_enum"),
+        Enum(MaritalStatusEnum, values_callable=lambda x: [e.value for e in x], name="marital_status_enum"),
         nullable=False,
         default=MaritalStatusEnum.never_married,
         server_default="never_married",
@@ -163,10 +163,10 @@ class Profile(Base):
     sub_caste: Mapped[str | None] = mapped_column(String(100), nullable=True)
     weight_kg: Mapped[int | None] = mapped_column(Integer, nullable=True)
     body_type: Mapped[BodyTypeEnum | None] = mapped_column(
-        Enum(BodyTypeEnum, name="body_type_enum"), nullable=True
+        Enum(BodyTypeEnum, values_callable=lambda x: [e.value for e in x], name="body_type_enum"), nullable=True
     )
     blood_group: Mapped[BloodGroupEnum | None] = mapped_column(
-        Enum(BloodGroupEnum, name="blood_group_enum"), nullable=True
+        Enum(BloodGroupEnum, values_callable=lambda x: [e.value for e in x], name="blood_group_enum"), nullable=True
     )
     time_of_birth: Mapped[time | None] = mapped_column(Time, nullable=True)
     place_of_birth: Mapped[str | None] = mapped_column(String(150), nullable=True)
@@ -180,25 +180,25 @@ class Profile(Base):
     num_brothers_married: Mapped[int | None] = mapped_column(Integer, nullable=True)
     num_sisters_married: Mapped[int | None] = mapped_column(Integer, nullable=True)
     family_type: Mapped[FamilyTypeEnum | None] = mapped_column(
-        Enum(FamilyTypeEnum, name="family_type_enum"), nullable=True
+        Enum(FamilyTypeEnum, values_callable=lambda x: [e.value for e in x], name="family_type_enum"), nullable=True
     )
     family_status: Mapped[FamilyStatusEnum | None] = mapped_column(
-        Enum(FamilyStatusEnum, name="family_status_enum"), nullable=True
+        Enum(FamilyStatusEnum, values_callable=lambda x: [e.value for e in x], name="family_status_enum"), nullable=True
     )
     family_values: Mapped[FamilyValuesEnum | None] = mapped_column(
-        Enum(FamilyValuesEnum, name="family_values_enum"), nullable=True
+        Enum(FamilyValuesEnum, values_callable=lambda x: [e.value for e in x], name="family_values_enum"), nullable=True
     )
     native_place: Mapped[str | None] = mapped_column(String(150), nullable=True)
     college_university: Mapped[str | None] = mapped_column(String(200), nullable=True)
     employer: Mapped[str | None] = mapped_column(String(200), nullable=True)
     work_location: Mapped[str | None] = mapped_column(String(150), nullable=True)
     smokes: Mapped[TobaccoAlcoholEnum | None] = mapped_column(
-        Enum(TobaccoAlcoholEnum, name="tobacco_alcohol_enum"), nullable=True
+        Enum(TobaccoAlcoholEnum, values_callable=lambda x: [e.value for e in x], name="tobacco_alcohol_enum"), nullable=True
     )
     drinks: Mapped[TobaccoAlcoholEnum | None] = mapped_column(
         # Reuse same enum type — pass create_constraint=False so SQLAlchemy doesn't
         # try to create a second type named tobacco_alcohol_enum for this column.
-        Enum(TobaccoAlcoholEnum, name="tobacco_alcohol_enum", create_constraint=False),
+        Enum(TobaccoAlcoholEnum, values_callable=lambda x: [e.value for e in x], name="tobacco_alcohol_enum", create_constraint=False),
         nullable=True,
     )
     hobbies: Mapped[str | None] = mapped_column(Text, nullable=True)
