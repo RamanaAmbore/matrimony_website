@@ -113,7 +113,7 @@ class AuthController(Controller):
             raise HTTPException(
                 status_code=422,
                 detail={
-                    "code": "invalid_handle",
+                    "code": "invalid_user_id",
                     "message": (
                         "User ID must be 3–30 characters, start with a letter, "
                         "and contain only letters, digits, or underscores."
@@ -134,7 +134,7 @@ class AuthController(Controller):
         if handle_result.scalar_one_or_none():
             raise HTTPException(
                 status_code=409,
-                detail={"code": "handle_taken", "message": "That user ID is already taken"},
+                detail={"code": "user_id_taken", "message": "That user ID is already taken"},
             )
 
         # Check email/phone uniqueness — always enforced in prod, skipped in test mode
