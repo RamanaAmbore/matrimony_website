@@ -285,7 +285,7 @@
 				<!-- Main photo viewer — scrollable container with zoom. Sits outside
 				     the section cards on the right; just the rounded image, no
 				     card chrome (border + shadow stripped per UX request). -->
-				<div class="relative aspect-[3/4] overflow-auto rounded-xl bg-cream">
+				<div class="relative aspect-[3/4] overflow-auto rounded-xl border border-gold/40 bg-cream">
 					{#if displayedPhoto}
 						<img
 							src={photoSrc(displayedPhoto)}
