@@ -61,9 +61,19 @@ async def serve_media(file_path: str, request: Request) -> Response:
     if not content_type:
         content_type = "image/jpeg"
 
+    # passport.jpg is auth-gated — must NOT be cached by any intermediary
+    # (Cloudflare, browser shared cache, etc.) because they don't vary by
+    # cookie. A previous unauth hit getting cached as 404 would otherwise
+    # block even authenticated reads. Public variants (blurred/thumb) can
+    # stay cacheable.
+    cache_control = (
+        "private, no-store, max-age=0"
+        if resolved.name == "passport.jpg"
+        else "public, max-age=3600"
+    )
     file_bytes = resolved.read_bytes()
     return Response(
         content=file_bytes,
         media_type=content_type,
-        headers={"Cache-Control": "public, max-age=3600"},
+        headers={"Cache-Control": cache_control},
     )

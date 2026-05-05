@@ -8,6 +8,7 @@ export const MARATHA_SUB_CASTES = [
 
 export const MOTHER_TONGUES = [
 	'Telugu', 'Marathi', 'Kannada', 'Tamil', 'Hindi',
+	'Haryanvi',
 	'Malayalam', 'Gujarati', 'Bengali', 'Punjabi', 'Odia', 'Urdu'
 ];
 

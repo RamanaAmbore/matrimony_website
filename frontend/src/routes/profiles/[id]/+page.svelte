@@ -588,7 +588,7 @@
 				{/if}
 
 				<!-- ── Partner Expectations (owner-only) ──────────────────────────── -->
-				{#if isOwner && profile.partner_expectations}
+				{#if canSeeFull && profile.partner_expectations}
 					<section>
 						<h2 class="font-serif text-xl font-semibold text-maroon mb-2">Partner Expectations</h2>
 						<p class="leading-relaxed text-ink/80 text-sm">{profile.partner_expectations}</p>
