@@ -436,7 +436,7 @@
 	</div>
 {/if}
 
-<main class="relative z-0 min-h-[calc(100vh-64px-80px)]">
+<main class="relative z-0 min-h-[calc(100vh-64px-80px)] pb-10">
 	{@render children()}
 </main>
 
@@ -472,18 +472,26 @@
 			</div>
 		</div>
 
-		<!-- Bottom bar -->
-		<div class="mt-8 flex flex-col items-center justify-between gap-3 border-t border-gold/30 pt-6 text-xs text-cream/70 md:flex-row">
-			<p>
-				© 2026 Maratha Kalyanam · marathakalyanam.com
-			</p>
-			<p>
-				Designed &amp; developed by
-				<span class="font-semibold text-marigold">Ambore Software</span>
-			</p>
-		</div>
 	</div>
 </footer>
+
+<!-- ── Persistent credit bar — fixed at viewport bottom on every page ────────
+     Mobile: shows only the "Designed & developed by Ambore Software" credit.
+     Desktop (md+): also shows the copyright/domain on the left.
+     Uses safe-area-inset-bottom padding so iOS home-indicator doesn't sit
+     on top of the text. main has pb-12 to keep content above this bar. ─── -->
+<div
+	class="fixed bottom-0 left-0 right-0 z-30 border-t border-gold/30 bg-maroon/95 text-cream/80 backdrop-blur supports-[backdrop-filter]:bg-maroon/85"
+	style="padding-bottom: env(safe-area-inset-bottom);"
+>
+	<div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-1.5 text-[11px] sm:px-6 sm:text-xs lg:px-8">
+		<p class="hidden md:block">© 2026 Maratha Kalyanam · marathakalyanam.com</p>
+		<p class="md:ml-auto">
+			Designed &amp; developed by
+			<span class="font-semibold text-marigold">Ambore Software</span>
+		</p>
+	</div>
+</div>
 
 <!-- ── Toast notifications ────────────────────────────────────────────────── -->
 <ToastContainer />
