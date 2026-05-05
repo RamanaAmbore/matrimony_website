@@ -228,18 +228,6 @@
 				</a>
 			{/if}
 
-			<!-- Language switcher (desktop) -->
-			<select
-				value={langStore.current}
-				onchange={(e) => langStore.set(e.currentTarget.value as import('$lib/stores/lang.svelte').Lang)}
-				class="ml-1 rounded border border-cream/30 bg-maroon/50 px-1.5 py-0.5 text-xs text-cream/90 hover:border-cream/60 focus-visible:outline-2 focus-visible:outline-cream cursor-pointer"
-				aria-label="Select language"
-				title="Language / భాష"
-			>
-				{#each LANGS as l}
-					<option value={l.code} selected={langStore.current === l.code}>{l.native}</option>
-				{/each}
-			</select>
 		</nav>
 
 		<!-- Mobile-only chips (User/Admin/Super + Test). Always visible on the
@@ -377,24 +365,30 @@
 				</a>
 			{/if}
 
-			<!-- Language switcher (mobile drawer) -->
-			<div class="my-2 h-px bg-gold/20"></div>
-			<div class="px-3 py-2">
-				<p class="mb-1.5 text-xs font-semibold tracking-wider text-ink/40 uppercase">Language / భాష</p>
-				<div class="flex flex-wrap gap-1.5">
-					{#each LANGS as l}
-						<button
-							type="button"
-							onclick={() => langStore.set(l.code)}
-							class="rounded px-2.5 py-1 text-sm font-medium transition-colors duration-150 {langStore.current === l.code ? 'bg-maroon text-cream' : 'bg-ink/8 text-ink hover:bg-amber/20 hover:text-terracotta'}"
-							lang={l.code}
-						>{l.native}</button>
-					{/each}
-				</div>
-			</div>
 		</nav>
 	</div>
 {/if}
+
+<!-- ── Language bar — sits directly below the navbar on every page ────────── -->
+<!-- A single combobox visible on desktop and mobile, aligned to the right of  -->
+<!-- the body, kept out of the navbar so the picker stays prominent and easy  -->
+<!-- to find regardless of menu state.                                        -->
+<div class="border-b border-gold/30 bg-cream/95 backdrop-blur supports-[backdrop-filter]:bg-cream/80">
+	<div class="mx-auto flex max-w-7xl items-center justify-end gap-2 px-4 py-1.5 sm:px-6 lg:px-8">
+		<label for="lang-pick" class="text-xs font-medium text-ink/60">Language:</label>
+		<select
+			id="lang-pick"
+			value={langStore.current}
+			onchange={(e) => langStore.set(e.currentTarget.value as import('$lib/stores/lang.svelte').Lang)}
+			class="rounded border border-gold/40 bg-white px-2 py-0.5 text-sm text-ink hover:border-saffron focus-visible:outline-2 focus-visible:outline-saffron cursor-pointer"
+			aria-label="Select language"
+		>
+			{#each LANGS as l}
+				<option value={l.code} selected={langStore.current === l.code}>{l.native}</option>
+			{/each}
+		</select>
+	</div>
+</div>
 
 <!-- ── Main content ──────────────────────────────────────────────────────── -->
 <!-- Subtle wedding-photo background on inner pages (home has its own full-bleed hero) -->

@@ -649,9 +649,9 @@
 							<div class="sm:col-span-2">
 								<BilingualLabel key="height" for="height_cm" />
 								<p class="mb-1 text-sm text-ink/60">{cmToFtIn(height_cm)}</p>
-								<input id="height_cm" type="range" min="120" max="220" step="1" bind:value={height_cm} class="w-full accent-maroon" />
+								<input id="height_cm" type="range" min="120" max="229" step="1" bind:value={height_cm} class="w-full accent-maroon" />
 								<div class="mt-1 flex justify-between text-xs text-ink/40">
-									<span>3'11"</span><span>7'3"</span>
+									<span>3'11"</span><span>7'6"</span>
 								</div>
 							</div>
 
@@ -1260,13 +1260,13 @@
 					id="height_cm"
 					type="range"
 					min="120"
-					max="220"
+					max="229"
 					step="1"
 					bind:value={height_cm}
 					class="w-full accent-maroon"
 				/>
 				<div class="mt-1 flex justify-between text-xs text-ink/40">
-					<span>3'11"</span><span>7'3"</span>
+					<span>3'11"</span><span>7'6"</span>
 				</div>
 			</div>
 

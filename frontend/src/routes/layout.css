@@ -60,14 +60,17 @@ option:hover { background: var(--color-maroon); color: var(--color-cream); }
 }
 
 @layer utilities {
-	[lang="te"] {
+	/* Bilingual secondary line — applies to whichever Indic language the user
+	   has picked (Telugu, Marathi, Kannada, Tamil, Hindi). Keep these styles
+	   identical across the five so font/color/decoration don't shift on switch. */
+	:is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"]) {
 		opacity: 0.82;
 		font-size: 0.85em !important;
 		font-weight: inherit !important;
 		font-style: inherit !important;
 	}
 
-	/* Hero section Telugu paragraph — literal hex to bypass any var() resolution issues */
+	/* Hero section bilingual paragraph — literal hex to bypass any var() resolution issues */
 	p.hero-te {
 		opacity: 1 !important;
 		color: #f4a300 !important;
@@ -76,10 +79,10 @@ option:hover { background: var(--color-maroon); color: var(--color-cream); }
 		text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.7);
 	}
 
-	/* Navbar & footer Telugu: darker orange.
+	/* Navbar & footer bilingual labels: darker orange.
 	   Buttons override this via inline style="color:inherit" so they are unaffected. */
-	header [lang="te"],
-	footer [lang="te"] {
+	header :is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"]),
+	footer :is([lang="te"], [lang="mr"], [lang="kn"], [lang="ta"], [lang="hi"]) {
 		opacity: 1;
 		color: var(--color-marigold);
 		-webkit-text-stroke: 0.65px var(--color-ink);

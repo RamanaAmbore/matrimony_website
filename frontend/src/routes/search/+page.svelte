@@ -34,7 +34,7 @@
 	let age_min = $state(18);
 	let age_max = $state(60);
 	let height_min = $state(140);
-	let height_max = $state(210);
+	let height_max = $state(229);
 	let weight_min = $state(40);
 	let weight_max = $state(120);
 	let gotra = $state('');
@@ -66,7 +66,7 @@
 				age_min: age_min !== 18 ? age_min : undefined,
 				age_max: age_max !== 60 ? age_max : undefined,
 				height_min: height_min !== 140 ? height_min : undefined,
-				height_max: height_max !== 210 ? height_max : undefined,
+				height_max: height_max !== 229 ? height_max : undefined,
 				weight_min: weight_min !== 40 ? weight_min : undefined,
 				weight_max: weight_max !== 120 ? weight_max : undefined,
 				gotra: gotra || undefined,
@@ -210,7 +210,7 @@
 						Height {cmToFtIn(height_min)}–{cmToFtIn(height_max)} · <span lang={langStore.current}>{tx('searchHeight', langStore.current)}</span>
 					</p>
 					<div class="mt-2">
-						<DualRangeSlider min={140} max={210} bind:valueMin={height_min} bind:valueMax={height_max} />
+						<DualRangeSlider min={140} max={229} bind:valueMin={height_min} bind:valueMax={height_max} />
 					</div>
 					<p class="mt-0.5 text-xs text-ink/45">Stored in cm, shown in ft/in · సెంటీమీటర్లలో నమోదు</p>
 				</div>
@@ -308,7 +308,7 @@
 
 				<button
 					onclick={() => {
-						gender = ''; age_min = 18; age_max = 60; height_min = 140; height_max = 210; weight_min = 40; weight_max = 120; gotra = ''; nakshatram = '';
+						gender = ''; age_min = 18; age_max = 60; height_min = 140; height_max = 229; weight_min = 40; weight_max = 120; gotra = ''; nakshatram = '';
 						rashi = ''; city = ''; state_filter = ''; country_filter = ''; pin_code_filter = ''; mother_tongue_filter = '';
 						manglik = ''; diet = '';
 					}}
