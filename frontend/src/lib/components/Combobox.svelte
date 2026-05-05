@@ -71,8 +71,12 @@
 		if (allowCustom) value = v;
 	}
 
-	function handleFocus() {
+	function handleFocus(e: FocusEvent) {
 		open = true;
+		// Select all text so typing immediately overwrites any pre-filled value.
+		// Otherwise users default-filled "Maratha" think they have to clear it
+		// before typing a different caste.
+		(e.currentTarget as HTMLInputElement).select();
 	}
 
 	function handleBlur() {

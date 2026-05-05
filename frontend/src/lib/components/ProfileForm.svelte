@@ -635,11 +635,13 @@
 								<div class="sm:col-span-2">
 									<BilingualLabel key="caste" for="caste" />
 									<Combobox id="caste" bind:value={caste} options={CASTE_OPTIONS} allowCustom={true} placeholder="Select or type caste" />
+									<p class="mt-0.5 text-xs text-ink/45">Pick from the list, or type your own if different · జాబితా నుండి ఎంచుకోండి లేదా టైప్ చేయండి</p>
 								</div>
 
 								<div>
 									<BilingualLabel key="subCaste" for="sub_caste" />
 									<Combobox id="sub_caste" bind:value={sub_caste} options={MARATHA_SUB_CASTES} allowCustom={true} placeholder="Select or type sub-caste" />
+									<p class="mt-0.5 text-xs text-ink/45">Pick from the list, or type your own if different · జాబితా నుండి ఎంచుకోండి లేదా టైప్ చేయండి</p>
 								</div>
 							</div>
 						</div>
@@ -1226,11 +1228,13 @@
 				<div class="sm:col-span-2">
 					<BilingualLabel key="caste" for="caste_edit" />
 					<Combobox id="caste_edit" bind:value={caste} options={CASTE_OPTIONS} allowCustom={true} placeholder="Select or type caste" />
+					<p class="mt-0.5 text-xs text-ink/45">Pick from the list, or type your own if different · జాబితా నుండి ఎంచుకోండి లేదా టైప్ చేయండి</p>
 				</div>
 
 				<div>
 					<BilingualLabel key="subCaste" for="sub_caste_edit" />
 					<Combobox id="sub_caste_edit" bind:value={sub_caste} options={MARATHA_SUB_CASTES} allowCustom={true} placeholder="Select or type sub-caste" />
+					<p class="mt-0.5 text-xs text-ink/45">Pick from the list, or type your own if different · జాబితా నుండి ఎంచుకోండి లేదా టైప్ చేయండి</p>
 				</div>
 			</div>
 		</div>
