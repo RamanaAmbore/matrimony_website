@@ -464,7 +464,7 @@
 				</div>
 
 				<!-- ── Basic Information ─────────────────────────────────────────── -->
-				<section>
+				<section class="rounded-xl border border-gold/30 bg-white p-5 shadow-sm">
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.basicInfo size={18} />Basic Information</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
@@ -483,7 +483,7 @@
 				</section>
 
 				<!-- ── Physical ────────────────────────────────────────────────────── -->
-				<section>
+				<section class="rounded-xl border border-gold/30 bg-white p-5 shadow-sm">
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.physical size={18} />Physical</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
@@ -502,7 +502,7 @@
 				</section>
 
 				<!-- ── Astrology ───────────────────────────────────────────────────── -->
-				<section>
+				<section class="rounded-xl border border-gold/30 bg-white p-5 shadow-sm">
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.astrology size={18} />Astrology</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
@@ -524,7 +524,7 @@
 				</section>
 
 				<!-- ── Education & Career ──────────────────────────────────────────── -->
-				<section>
+				<section class="rounded-xl border border-gold/30 bg-white p-5 shadow-sm">
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.education size={18} />Education &amp; Career</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
@@ -544,7 +544,7 @@
 				</section>
 
 				<!-- ── Location ────────────────────────────────────────────────────── -->
-				<section>
+				<section class="rounded-xl border border-gold/30 bg-white p-5 shadow-sm">
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.location size={18} />Location</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
@@ -563,7 +563,7 @@
 
 				<!-- ── Family ──────────────────────────────────────────────────────── -->
 				{#if canSeeFull}
-					<section>
+					<section class="rounded-xl border border-gold/30 bg-white p-5 shadow-sm">
 						<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.family size={18} />Family</h2>
 						<dl class="space-y-2 text-sm">
 							{#each [
@@ -591,7 +591,7 @@
 				{/if}
 
 				<!-- ── Lifestyle ───────────────────────────────────────────────────── -->
-				<section>
+				<section class="rounded-xl border border-gold/30 bg-white p-5 shadow-sm">
 					<h2 class="font-serif text-xl font-semibold text-maroon mb-3 flex items-center gap-2"><SECTION_ICONS.lifestyle size={18} />Lifestyle</h2>
 					<dl class="space-y-2 text-sm">
 						{#each [
@@ -610,7 +610,7 @@
 
 				<!-- ── About ───────────────────────────────────────────────────────── -->
 				{#if profile.about}
-					<section>
+					<section class="rounded-xl border border-gold/30 bg-white p-5 shadow-sm">
 						<h2 class="font-serif text-xl font-semibold text-maroon mb-2 flex items-center gap-2"><SECTION_ICONS.about size={18} />About</h2>
 						<p class="leading-relaxed text-ink/80 text-sm">{profile.about}</p>
 					</section>
@@ -618,7 +618,7 @@
 
 				<!-- ── Partner Expectations (owner-only) ──────────────────────────── -->
 				{#if canSeeFull && profile.partner_expectations}
-					<section>
+					<section class="rounded-xl border border-gold/30 bg-white p-5 shadow-sm">
 						<h2 class="font-serif text-xl font-semibold text-maroon mb-2 flex items-center gap-2"><SECTION_ICONS.about size={18} />Partner Expectations</h2>
 						<p class="leading-relaxed text-ink/80 text-sm">{profile.partner_expectations}</p>
 					</section>
