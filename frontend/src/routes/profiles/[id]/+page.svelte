@@ -4,7 +4,7 @@
 	import { ApiError } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
-	import { Loader, Edit, Send, SendHorizonal, User, ZoomIn, ZoomOut, Maximize2 } from 'lucide-svelte';
+	import { Loader, Edit, Send, SendHorizonal, User, ZoomIn, ZoomOut, Maximize2, Eye, EyeOff } from 'lucide-svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
@@ -25,6 +25,9 @@
 
 	// Bug 2: local state for the currently-displayed photo
 	let displayedPhoto = $state<Photo | null>(null);
+	// Admins can toggle between blurred (public-view) and clear (admin/owner)
+	// to verify the privacy-blur looks right and the photo is appropriate.
+	let adminPreviewBlurred = $state(false);
 	let zoom = $state(1);
 	const ZOOM_MIN = 1;
 	const ZOOM_MAX = 4;
@@ -238,9 +241,13 @@
 		displayedPhoto = primaryPhoto;
 	});
 
+	// Effective "should we show the clear version" — admin can choose to
+	// preview the blurred version even though they're allowed the clear one.
+	const showClear = $derived(canSeeFull && !(isAdmin && adminPreviewBlurred));
+
 	/** URL to show for a given photo depending on viewer permissions. */
 	function photoSrc(p: Photo): string {
-		return canSeeFull && p.passport_url ? p.passport_url : p.blurred_url;
+		return showClear && p.passport_url ? p.passport_url : p.blurred_url;
 	}
 </script>
 
@@ -263,7 +270,7 @@
 						<img
 							src={photoSrc(displayedPhoto)}
 							alt="{profile.first_name}'s photo"
-							class="h-full w-full object-cover {!canSeeFull ? 'blur-sm' : ''}"
+							class="h-full w-full object-cover {!showClear ? 'blur-sm' : ''}"
 							style="transform: scale({zoom}); transform-origin: top left; min-width: 100%; min-height: 100%;"
 							loading="lazy"
 							decoding="async"
@@ -275,7 +282,7 @@
 					{/if}
 				</div>
 
-				<!-- Zoom controls — only when a photo is loaded -->
+				<!-- Zoom + (admin-only) blur-preview controls -->
 				{#if displayedPhoto}
 					<div class="flex items-center justify-center gap-1.5">
 						<button type="button" onclick={zoomOut} disabled={zoom <= ZOOM_MIN}
@@ -291,7 +298,22 @@
 							aria-label="Zoom in">
 							<ZoomIn size={14} />
 						</button>
+						{#if isAdmin && !isOwner}
+							<button type="button" onclick={() => (adminPreviewBlurred = !adminPreviewBlurred)}
+								class="ml-1 rounded border border-gold/40 bg-white p-1.5 text-maroon hover:border-saffron"
+								aria-label={adminPreviewBlurred ? 'Show clear photo' : 'Preview blurred (public) view'}
+								title={adminPreviewBlurred ? 'Showing public blurred view — click for clear' : 'Showing clear photo — click to preview public blurred view'}>
+								{#if adminPreviewBlurred}
+									<EyeOff size={14} />
+								{:else}
+									<Eye size={14} />
+								{/if}
+							</button>
+						{/if}
 					</div>
+					{#if isAdmin && adminPreviewBlurred}
+						<p class="text-center text-xs text-saffron font-medium">Public (blurred) preview</p>
+					{/if}
 				{/if}
 
 				<!-- Thumbnail strip — only when there are multiple photos -->
@@ -310,7 +332,7 @@
 								<img
 									src={p.thumb_url ?? photoSrc(p)}
 									alt=""
-									class="h-full w-full object-cover {!canSeeFull ? 'blur-sm' : ''}"
+									class="h-full w-full object-cover {!showClear ? 'blur-sm' : ''}"
 									loading="lazy"
 									decoding="async"
 								/>
