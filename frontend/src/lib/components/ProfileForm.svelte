@@ -1319,7 +1319,7 @@
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
 			<!-- Gotra -->
 			<div>
-				<BilingualLabel key="gotra" for="gotra" required />
+				<BilingualLabel key="gotra" for="gotra" />
 				<input
 					id="gotra"
 					type="text"
@@ -1379,7 +1379,7 @@
 
 			<!-- Nakshatram -->
 			<div>
-				<BilingualLabel key="nakshatram" for="nakshatram" required />
+				<BilingualLabel key="nakshatram" for="nakshatram" />
 				<Combobox
 					id="nakshatram"
 					bind:value={nakshatram}
@@ -1394,7 +1394,7 @@
 
 			<!-- Rashi -->
 			<div>
-				<BilingualLabel key="rashi" for="rashi" required />
+				<BilingualLabel key="rashi" for="rashi" />
 				<Combobox
 					id="rashi"
 					bind:value={rashi}
