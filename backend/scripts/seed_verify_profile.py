@@ -162,7 +162,7 @@ GROOM: dict[str, Any] = {
     "partner_expectations": (
         "Seeking a well-educated, family-oriented partner with a sense of "
         "humour and shared interest in travel, books, or sports. Open to "
-        "any location — would relocate for the right person."
+        "any location - would relocate for the right person."
     ),
 }
 
