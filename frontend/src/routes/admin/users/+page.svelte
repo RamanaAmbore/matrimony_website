@@ -5,6 +5,8 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
 	import { Loader, ShieldCheck, UserCheck } from 'lucide-svelte';
+	import { tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	let userList = $state<User[]>([]);
 	let loading = $state(true);
@@ -58,7 +60,10 @@
 <div class="mx-auto max-w-5xl px-4 py-10">
 	<div class="flex flex-wrap items-center justify-between gap-3 mb-2">
 		<h1 class="font-serif text-3xl font-bold text-maroon">Users</h1>
-		<a href="/admin" class="btn-secondary text-sm">← Dashboard</a>
+		<a href="/admin" class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal">
+			<span>← Dashboard</span>
+			<span lang={langStore.current} class="text-[10px] opacity-90">{tx('dashboardBack', langStore.current)}</span>
+		</a>
 	</div>
 
 
@@ -117,9 +122,10 @@
 									<button
 										onclick={() => promote(user.uuid)}
 										disabled={promotingId === user.uuid}
-										class="text-xs font-medium text-saffron hover:underline disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-saffron"
+										class="flex flex-col items-center justify-center text-center leading-tight text-xs font-medium text-saffron hover:underline disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-saffron min-h-[36px] whitespace-normal"
 									>
-										{promotingId === user.uuid ? 'Promoting…' : 'Promote to Admin'}
+										<span>{promotingId === user.uuid ? 'Promoting…' : 'Promote to Admin'}</span>
+										<span lang={langStore.current} class="text-[10px] opacity-80">{tx('promoteToAdmin', langStore.current)}</span>
 									</button>
 								{/if}
 							</td>

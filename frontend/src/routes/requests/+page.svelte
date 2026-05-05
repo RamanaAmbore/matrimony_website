@@ -73,8 +73,9 @@
 			<p class="mt-2 text-ink/60">
 				Browse profiles and click "Request Full Details" to send a request.
 			</p>
-			<a href="/search" class="btn-primary mt-6 inline-flex items-center gap-2">
-				Search Profiles
+			<a href="/search" class="btn-primary mt-6 inline-flex flex-col items-center justify-center text-center leading-tight px-4 py-2 min-h-[52px] whitespace-normal">
+				<span>Search Profiles</span>
+				<span lang={langStore.current} class="text-[10px] opacity-90">{tx('searchProfiles', langStore.current)}</span>
 			</a>
 		</div>
 	{:else}

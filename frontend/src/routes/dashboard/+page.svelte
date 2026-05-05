@@ -89,14 +89,14 @@
 			<p class="mt-1 text-sm text-ink/60">Manage your matrimonial profiles</p>
 		</div>
 		{#if !data.user || data.user.is_approved}
-			<a href="/profiles/new" class="btn-primary flex items-center gap-2">
-				<Plus size={18} />
-				New Profile
+			<a href="/profiles/new" class="btn-primary flex flex-col items-center justify-center text-center leading-tight px-3 py-2 min-h-[52px] whitespace-normal">
+				<span class="flex items-center gap-1.5 text-sm"><Plus size={16} />New Profile</span>
+				<span lang={langStore.current} class="text-[10px] opacity-90">{tx('newProfile', langStore.current)}</span>
 			</a>
 		{:else}
-			<button class="btn-primary flex items-center gap-2 opacity-50 cursor-not-allowed" disabled title="Account pending admin approval">
-				<Plus size={18} />
-				New Profile
+			<button class="btn-primary flex flex-col items-center justify-center text-center leading-tight px-3 py-2 min-h-[52px] whitespace-normal opacity-50 cursor-not-allowed" disabled title="Account pending admin approval">
+				<span class="flex items-center gap-1.5 text-sm"><Plus size={16} />New Profile</span>
+				<span lang={langStore.current} class="text-[10px] opacity-90">{tx('newProfile', langStore.current)}</span>
 			</button>
 		{/if}
 	</div>
@@ -144,9 +144,9 @@
 			<h2 class="mt-2 font-serif text-xl font-semibold text-maroon">No profiles yet</h2>
 			<p class="mt-2 text-ink/60">Create your first profile to start appearing in search results.</p>
 			{#if !data.user || data.user.is_approved}
-				<a href="/profiles/new" class="btn-primary mt-6 inline-flex items-center gap-2">
-					<Plus size={18} />
-					New Profile
+				<a href="/profiles/new" class="btn-primary mt-6 inline-flex flex-col items-center justify-center text-center leading-tight px-3 py-2 min-h-[52px] whitespace-normal">
+					<span class="flex items-center gap-1.5 text-sm"><Plus size={16} />New Profile</span>
+					<span lang={langStore.current} class="text-[10px] opacity-90">{tx('newProfile', langStore.current)}</span>
 				</a>
 			{:else}
 				<p class="mt-4 text-sm text-saffron font-medium">Your account is pending admin approval before you can create profiles.</p>
@@ -205,21 +205,22 @@
 					</p>
 
 					<div class="flex flex-wrap gap-2 mt-auto pt-2 border-t border-gold/20">
-						<a href="/profiles/{profile.id}" class="btn-secondary flex-1 text-center text-sm py-1.5">
-							View
+						<a href="/profiles/{profile.id}" class="btn-secondary flex flex-col items-center justify-center flex-1 text-center leading-tight text-sm py-1 min-h-[44px] whitespace-normal">
+							<span>View</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('view', langStore.current)}</span>
 						</a>
-						<a href="/profiles/{profile.id}/edit" class="btn-primary flex items-center justify-center gap-1 flex-1 text-sm py-1.5">
-							<Edit size={14} />
-							Edit
+						<a href="/profiles/{profile.id}/edit" class="btn-primary flex flex-col items-center justify-center flex-1 text-center leading-tight text-sm py-1 min-h-[44px] whitespace-normal">
+							<span class="flex items-center gap-1"><Edit size={13} />Edit</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('edit', langStore.current)}</span>
 						</a>
 						{#if profile.status === 'draft'}
 							<button
 								onclick={() => submitProfile(profile.id)}
 								disabled={submitting[profile.id]}
-								class="btn-secondary flex w-full items-center justify-center gap-1 text-sm py-1.5 border-saffron text-saffron hover:bg-saffron/10 disabled:opacity-50"
+								class="btn-secondary flex flex-col w-full items-center justify-center leading-tight text-sm py-1 min-h-[44px] whitespace-normal border-saffron text-saffron hover:bg-saffron/10 disabled:opacity-50"
 							>
-								<SendHorizonal size={14} />
-								{submitting[profile.id] ? 'Submitting…' : 'Submit'}
+								<span class="flex items-center gap-1"><SendHorizonal size={13} />{submitting[profile.id] ? 'Submitting…' : 'Submit'}</span>
+								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('submitProfile', langStore.current)}</span>
 							</button>
 						{/if}
 					</div>

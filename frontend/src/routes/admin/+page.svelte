@@ -27,6 +27,8 @@
 		ShieldCheck,
 		Trash2
 	} from 'lucide-svelte';
+	import { tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	let { data } = $props();
 	let loggedInUser = $derived<User | null>(data.user ?? null);
@@ -816,59 +818,63 @@
 						<div class="mt-3 flex flex-wrap gap-2">
 							{#if !selectedUser.is_approved}
 								<button
-									class="btn-primary text-sm px-4 py-1.5 flex items-center gap-1.5"
+									class="btn-primary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
 									disabled={userActionLoading}
 									onclick={() => approveUser(selectedUser!)}
 								>
 									{#if userActionLoading}<Loader size={13} class="animate-spin" />{/if}
-									Approve User
+									<span class="text-xs">Approve User</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approveUser', langStore.current)}</span>
 								</button>
 							{:else if !selectedUser.is_admin || loggedInUser?.is_super}
 								<!-- Revoking approval from an admin is super-only -->
 								<button
-									class="btn-secondary text-sm px-4 py-1.5"
+									class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
 									disabled={userActionLoading}
 									onclick={() => unapproveUser(selectedUser!)}
 								>
-									Revoke Approval
+									<span class="text-xs">Revoke Approval</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('revokeApproval', langStore.current)}</span>
 								</button>
 							{/if}
 							{#if !selectedUser.email_verified}
 								<button
-									class="btn-secondary text-sm px-4 py-1.5 flex items-center gap-1.5"
+									class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
 									disabled={userActionLoading}
 									onclick={() => verifyEmailFromGrid(selectedUser!)}
 								>
-									<ShieldCheck size={14} />
-									Verify Email
+									<span class="text-xs flex items-center gap-1"><ShieldCheck size={13} />Verify Email</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('verifyEmail', langStore.current)}</span>
 								</button>
 							{/if}
 							{#if !selectedUser.is_admin}
 								<button
-									class="btn-secondary text-sm px-4 py-1.5"
+									class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
 									disabled={userActionLoading}
 									onclick={() => promoteUserFromGrid(selectedUser!)}
 								>
-									Make Admin
+									<span class="text-xs">Make Admin</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('makeAdmin', langStore.current)}</span>
 								</button>
 							{/if}
 							{#if loggedInUser?.is_super && selectedUser.is_admin}
 								<button
-									class="text-sm px-4 py-1.5 rounded border border-vermilion/40 bg-white text-vermilion hover:bg-vermilion/5 disabled:opacity-50 flex items-center gap-1.5"
+									class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded border border-vermilion/40 bg-white text-vermilion hover:bg-vermilion/5 disabled:opacity-50"
 									disabled={userActionLoading}
 									onclick={() => demoteUserFromGrid(selectedUser!)}
 								>
-									Demote to User
+									<span class="text-xs">Demote to User</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('demoteToUser', langStore.current)}</span>
 								</button>
 							{/if}
 							{#if loggedInUser?.is_super || (loggedInUser?.is_admin && !selectedUser.is_admin)}
 								<button
-									class="text-sm px-4 py-1.5 rounded bg-vermilion text-cream hover:bg-vermilion/80 disabled:opacity-50 flex items-center gap-1.5"
+									class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded bg-vermilion text-cream hover:bg-vermilion/80 disabled:opacity-50"
 									disabled={userActionLoading}
 									onclick={() => deleteUserFromGrid(selectedUser!)}
 								>
-									<Trash2 size={13} />
-									Delete User
+									<span class="text-xs flex items-center gap-1"><Trash2 size={13} />Delete User</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('deleteUser', langStore.current)}</span>
 								</button>
 							{/if}
 						</div>
@@ -924,32 +930,38 @@
 						</p>
 					</div>
 					<div class="flex shrink-0 flex-wrap gap-2">
-						<a href="/profiles/{selectedProfile.id}" class="btn-secondary text-xs px-4 py-2">View →</a>
+						<a href="/profiles/{selectedProfile.id}" class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal">
+							<span>View →</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('view', langStore.current)}</span>
+						</a>
 						{#if selectedProfile.status === 'pending'}
 							<button
-								class="btn-primary text-xs px-4 py-2"
+								class="btn-primary flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
 								disabled={profileActionLoading}
 								onclick={doApproveProfile}
 							>
 								{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-								✓ Approve
+								<span>✓ Approve</span>
+								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approve', langStore.current)}</span>
 							</button>
 							<button
-								class="btn-danger text-xs px-4 py-2"
+								class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
 								disabled={profileActionLoading}
 								onclick={() => { profileRejectOpen = !profileRejectOpen; profileRejectNote = ''; }}
 							>
-								✕ Reject
+								<span>✕ Reject</span>
+								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
 							</button>
 						{/if}
 						<!-- Delete is always available on any profile status -->
 						<button
-							class="text-xs px-4 py-2 rounded bg-vermilion text-cream hover:bg-vermilion/90 disabled:opacity-50"
+							class="flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal rounded bg-vermilion text-cream hover:bg-vermilion/90 disabled:opacity-50"
 							disabled={profileActionLoading}
 							onclick={doDeleteProfile}
 						>
 							{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-							🗑 Delete
+							<span>🗑 Delete</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('delete', langStore.current)}</span>
 						</button>
 					</div>
 				</div>
@@ -962,12 +974,13 @@
 							bind:value={profileRejectNote}
 						/>
 						<button
-							class="btn-danger text-sm px-4"
+							class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-sm px-4 py-1.5 min-h-[44px] whitespace-normal"
 							disabled={profileActionLoading}
 							onclick={doRejectProfile}
 						>
 							{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-							Confirm
+							<span class="text-xs">Confirm</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('confirmReject', langStore.current)}</span>
 						</button>
 					</div>
 				{/if}
@@ -1026,29 +1039,32 @@
 					<div class="flex shrink-0 flex-wrap gap-2">
 						{#if selectedRequest.status === 'pending'}
 							<button
-								class="btn-primary text-xs px-4 py-2"
+								class="btn-primary flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
 								disabled={requestActionLoading}
 								onclick={doApproveRequest}
 							>
 								{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-								✓ Approve
+								<span>✓ Approve</span>
+								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approve', langStore.current)}</span>
 							</button>
 							<button
-								class="btn-danger text-xs px-4 py-2"
+								class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
 								disabled={requestActionLoading}
 								onclick={() => { requestRejectOpen = !requestRejectOpen; requestRejectNote = ''; }}
 							>
-								✕ Reject
+								<span>✕ Reject</span>
+								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
 							</button>
 						{/if}
 						<!-- Delete is always available on any request status -->
 						<button
-							class="text-xs px-4 py-2 rounded bg-vermilion text-cream hover:bg-vermilion/90 disabled:opacity-50"
+							class="flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal rounded bg-vermilion text-cream hover:bg-vermilion/90 disabled:opacity-50"
 							disabled={requestActionLoading}
 							onclick={doDeleteRequest}
 						>
 							{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-							🗑 Delete
+							<span>🗑 Delete</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('delete', langStore.current)}</span>
 						</button>
 					</div>
 				</div>
@@ -1061,12 +1077,13 @@
 							bind:value={requestRejectNote}
 						/>
 						<button
-							class="btn-danger text-sm px-4"
+							class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-sm px-4 py-1.5 min-h-[44px] whitespace-normal"
 							disabled={requestActionLoading}
 							onclick={doRejectRequest}
 						>
 							{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-							Confirm
+							<span class="text-xs">Confirm</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('confirmReject', langStore.current)}</span>
 						</button>
 					</div>
 				{/if}

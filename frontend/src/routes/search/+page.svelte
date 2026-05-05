@@ -312,9 +312,10 @@
 						rashi = ''; city = ''; state_filter = ''; country_filter = ''; pin_code_filter = ''; mother_tongue_filter = '';
 						manglik = ''; diet = '';
 					}}
-					class="btn-secondary w-full text-sm py-2"
+					class="btn-secondary flex flex-col items-center justify-center text-center leading-tight w-full text-sm py-1.5 min-h-[44px] whitespace-normal"
 				>
-					Clear Filters · <span lang={langStore.current}>{tx('searchClearFilters', langStore.current)}</span>
+					<span>Clear Filters</span>
+					<span lang={langStore.current} class="text-[10px] opacity-90">{tx('searchClearFilters', langStore.current)}</span>
 				</button>
 			</div>
 		</aside>
@@ -359,9 +360,10 @@
 						</p>
 						<a
 							href="/register"
-							class="btn-primary mt-3 inline-flex items-center gap-2 text-sm px-3 py-1.5"
+							class="btn-primary mt-3 inline-flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal"
 						>
-							Register Free · <span lang={langStore.current}>{tx('searchRegisterFree', langStore.current)}</span>
+							<span>Register Free</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('searchRegisterFree', langStore.current)}</span>
 						</a>
 					</div>
 				{/if}

@@ -107,8 +107,9 @@
 				{/if}
 			</div>
 
-			<button type="submit" class="btn-primary w-full py-3" disabled={loading}>
-				{loading ? 'Signing in…' : `${T.login.en} · `}<span lang={langStore.current} style="color:inherit">{loading ? '' : tx('login', langStore.current)}</span>
+			<button type="submit" class="btn-primary w-full flex flex-col items-center justify-center text-center leading-tight py-2 min-h-[52px] whitespace-normal" disabled={loading}>
+				<span class="text-sm">{loading ? 'Signing in…' : T.login.en}</span>
+				{#if !loading}<span lang={langStore.current} class="text-[10px] opacity-90" style="color:inherit">{tx('login', langStore.current)}</span>{/if}
 			</button>
 		</form>
 

@@ -6,6 +6,8 @@
 	import { goto } from '$app/navigation';
 	import { Loader, Edit, Send, SendHorizonal, User } from 'lucide-svelte';
 	import Logo from '$lib/components/Logo.svelte';
+	import { tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	let { data } = $props();
 	// id is fixed for the lifetime of this page — route params don't change without navigation
@@ -124,18 +126,18 @@
 
 				<!-- Actions -->
 				{#if isOwner}
-					<a href="/profiles/{profileId}/edit" class="btn-primary flex w-full items-center justify-center gap-2">
-						<Edit size={16} />
-						Edit Profile
+					<a href="/profiles/{profileId}/edit" class="btn-primary flex flex-col w-full items-center justify-center text-center leading-tight py-2 min-h-[52px] whitespace-normal">
+						<span class="flex items-center gap-1.5 text-sm"><Edit size={15} />Edit Profile</span>
+						<span lang={langStore.current} class="text-[10px] opacity-90">{tx('editProfile', langStore.current)}</span>
 					</a>
 					{#if profile.status === 'draft'}
 						<button
 							onclick={submitProfile}
 							disabled={submitting}
-							class="btn-secondary flex w-full items-center justify-center gap-2 disabled:opacity-50"
+							class="btn-secondary flex flex-col w-full items-center justify-center text-center leading-tight py-2 min-h-[52px] whitespace-normal disabled:opacity-50"
 						>
-							<SendHorizonal size={16} />
-							{submitting ? 'Submitting…' : 'Submit for Approval'}
+							<span class="flex items-center gap-1.5 text-sm"><SendHorizonal size={15} />{submitting ? 'Submitting…' : 'Submit for Approval'}</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('submitForApproval', langStore.current)}</span>
 						</button>
 					{:else if profile.status === 'pending'}
 						<p class="text-center text-sm text-saffron font-medium">Under admin review</p>
@@ -144,10 +146,10 @@
 					{#if !showRequestForm}
 						<button
 							onclick={() => (showRequestForm = true)}
-							class="btn-primary flex w-full items-center justify-center gap-2"
+							class="btn-primary flex flex-col w-full items-center justify-center text-center leading-tight py-2 min-h-[52px] whitespace-normal"
 						>
-							<Logo size="sm" />
-							Request Full Details
+							<span class="flex items-center gap-1.5 text-sm"><Logo size="sm" />Request Full Details</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('requestDetails', langStore.current)}</span>
 						</button>
 					{:else}
 						<div class="card space-y-3">
@@ -162,17 +164,18 @@
 							<div class="flex gap-2">
 								<button
 									onclick={() => (showRequestForm = false)}
-									class="btn-secondary flex-1 py-2 text-sm"
+									class="btn-secondary flex flex-col flex-1 items-center justify-center text-center leading-tight py-2 min-h-[44px] whitespace-normal"
 								>
-									Cancel
+									<span class="text-sm">Cancel</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('cancel', langStore.current)}</span>
 								</button>
 								<button
 									onclick={sendRequest}
 									disabled={requesting}
-									class="btn-primary flex flex-1 items-center justify-center gap-1 py-2 text-sm"
+									class="btn-primary flex flex-col flex-1 items-center justify-center text-center leading-tight py-2 min-h-[44px] whitespace-normal"
 								>
-									<Send size={14} />
-									{requesting ? 'Sending…' : 'Send'}
+									<span class="flex items-center gap-1 text-sm"><Send size={13} />{requesting ? 'Sending…' : 'Send'}</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('send', langStore.current)}</span>
 								</button>
 							</div>
 						</div>

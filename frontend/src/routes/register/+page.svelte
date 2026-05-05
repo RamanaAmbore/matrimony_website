@@ -281,11 +281,12 @@
 			{/if}
 		</div>
 
-		<button type="submit" class="btn-primary w-full py-3" disabled={loading}>
+		<button type="submit" class="btn-primary w-full flex flex-col items-center justify-center text-center leading-tight py-2 min-h-[52px] whitespace-normal" disabled={loading}>
 			{#if loading}
-				Creating account…
+				<span class="text-sm">Creating account…</span>
 			{:else}
-				{T.register.en} · <span lang={langStore.current} style="color:inherit">{tx('register', langStore.current)}</span>
+				<span class="text-sm">{T.register.en}</span>
+				<span lang={langStore.current} class="text-[10px] opacity-90" style="color:inherit">{tx('register', langStore.current)}</span>
 			{/if}
 		</button>
 	</form>

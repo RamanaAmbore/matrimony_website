@@ -2,6 +2,8 @@
 	import { admin as adminApi, ApiError } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { Loader } from 'lucide-svelte';
+	import { tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	let broadcastSubject = $state('');
 	let broadcastBody = $state('');
@@ -74,7 +76,10 @@
 <div class="mx-auto max-w-2xl px-4 py-10">
 	<div class="mb-2 flex flex-wrap items-center justify-between gap-3">
 		<h1 class="font-serif text-3xl font-bold text-maroon">Broadcast Email</h1>
-		<a href="/admin" class="btn-secondary text-sm">← Dashboard</a>
+		<a href="/admin" class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal">
+			<span>← Dashboard</span>
+			<span lang={langStore.current} class="text-[10px] opacity-90">{tx('dashboardBack', langStore.current)}</span>
+		</a>
 	</div>
 	<p class="mb-8 text-sm text-ink/60">Send an HTML email to a filtered subset of registered users.</p>
 
@@ -167,16 +172,20 @@
 			</div>
 
 			<div class="flex flex-wrap items-center justify-end gap-2 border-t border-gold/30 pt-4">
-				<a href="/admin" class="btn-secondary text-sm px-4 py-2">Cancel</a>
+				<a href="/admin" class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-sm px-4 py-1.5 min-h-[44px] whitespace-normal">
+					<span>Cancel</span>
+					<span lang={langStore.current} class="text-[10px] opacity-90">{tx('cancel', langStore.current)}</span>
+				</a>
 				<button
-					class="btn-primary text-sm px-6 py-2"
+					class="btn-primary flex flex-col items-center justify-center text-center leading-tight text-sm px-6 py-1.5 min-h-[44px] whitespace-normal"
 					disabled={broadcastSending}
 					onclick={sendBroadcast}
 				>
 					{#if broadcastSending}
-						<Loader size={14} class="mr-1 inline animate-spin" />Sending…
+						<span class="flex items-center gap-1"><Loader size={13} class="animate-spin" />Sending…</span>
 					{:else}
-						Send Broadcast
+						<span>Send Broadcast</span>
+						<span lang={langStore.current} class="text-[10px] opacity-90">{tx('sendBroadcast', langStore.current)}</span>
 					{/if}
 				</button>
 			</div>

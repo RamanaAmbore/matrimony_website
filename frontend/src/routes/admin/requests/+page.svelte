@@ -5,6 +5,8 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
 	import { Loader, CheckCircle, XCircle } from 'lucide-svelte';
+	import { tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	let statusFilter = $state('pending');
 	let requestList = $state<DetailRequest[]>([]);
@@ -79,7 +81,10 @@
 <div class="mx-auto max-w-5xl px-4 py-10">
 	<div class="flex flex-wrap items-center justify-between gap-3 mb-2">
 		<h1 class="font-serif text-3xl font-bold text-maroon">Detail Requests</h1>
-		<a href="/admin" class="btn-secondary text-sm">← Dashboard</a>
+		<a href="/admin" class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal">
+			<span>← Dashboard</span>
+			<span lang={langStore.current} class="text-[10px] opacity-90">{tx('dashboardBack', langStore.current)}</span>
+		</a>
 	</div>
 
 	<!-- Status filter tabs -->
@@ -127,18 +132,18 @@
 								<button
 									onclick={() => approve(req.id)}
 									disabled={processingId === req.id}
-									class="inline-flex items-center gap-1 rounded bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 focus-visible:outline-2 focus-visible:outline-saffron disabled:opacity-60"
+									class="flex flex-col items-center justify-center text-center leading-tight rounded bg-green-600 px-3 py-1.5 min-h-[44px] text-sm text-white hover:bg-green-700 focus-visible:outline-2 focus-visible:outline-saffron disabled:opacity-60 whitespace-normal"
 								>
-									<CheckCircle size={14} />
-									Approve
+									<span class="flex items-center gap-1"><CheckCircle size={13} />Approve</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approve', langStore.current)}</span>
 								</button>
 								<button
 									onclick={() => (showRejectForm = { ...showRejectForm, [req.id]: !showRejectForm[req.id] })}
 									disabled={processingId === req.id}
-									class="inline-flex items-center gap-1 rounded bg-vermilion px-3 py-1.5 text-sm text-white hover:bg-vermilion/80 focus-visible:outline-2 focus-visible:outline-saffron disabled:opacity-60"
+									class="flex flex-col items-center justify-center text-center leading-tight rounded bg-vermilion px-3 py-1.5 min-h-[44px] text-sm text-white hover:bg-vermilion/80 focus-visible:outline-2 focus-visible:outline-saffron disabled:opacity-60 whitespace-normal"
 								>
-									<XCircle size={14} />
-									Reject
+									<span class="flex items-center gap-1"><XCircle size={13} />Reject</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
 								</button>
 							</div>
 						{/if}
@@ -157,16 +162,18 @@
 							<div class="flex gap-2">
 								<button
 									onclick={() => (showRejectForm = { ...showRejectForm, [req.id]: false })}
-									class="btn-secondary text-sm py-1.5 px-3"
+									class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-sm py-1.5 px-3 min-h-[44px] whitespace-normal"
 								>
-									Cancel
+									<span class="text-xs">Cancel</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('cancel', langStore.current)}</span>
 								</button>
 								<button
 									onclick={() => reject(req.id)}
 									disabled={processingId === req.id}
-									class="btn-danger text-sm py-1.5 px-3"
+									class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-sm py-1.5 px-3 min-h-[44px] whitespace-normal"
 								>
-									{processingId === req.id ? 'Rejecting…' : 'Confirm Reject'}
+									<span class="text-xs">{processingId === req.id ? 'Rejecting…' : 'Confirm Reject'}</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('confirmReject', langStore.current)}</span>
 								</button>
 							</div>
 						</div>

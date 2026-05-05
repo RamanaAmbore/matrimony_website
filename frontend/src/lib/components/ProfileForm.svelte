@@ -1100,10 +1100,11 @@
 			<button
 				type="button"
 				onclick={() => onSubmitForApproval?.()}
-				class="btn-primary px-10 py-3 text-base"
+				class="btn-primary flex flex-col items-center justify-center text-center leading-tight px-10 py-2 min-h-[56px] whitespace-normal"
 				disabled={submittingForApproval}
 			>
-				{submittingForApproval ? 'Submitting…' : 'Submit for Approval'}
+				<span class="text-base">{submittingForApproval ? 'Submitting…' : 'Submit for Approval'}</span>
+				{#if !submittingForApproval}<span lang={langStore.current} class="text-xs opacity-90">{tx('submitForApproval', langStore.current)}</span>{/if}
 			</button>
 		</div>
 	{/if}

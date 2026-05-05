@@ -5,6 +5,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { CheckCircle, XCircle, Loader } from 'lucide-svelte';
+	import { tx } from '$lib/i18n';
+	import { langStore } from '$lib/stores/lang.svelte';
 
 	type Step = 'loading' | 'success' | 'error';
 	let step = $state<Step>('loading');
@@ -44,11 +46,17 @@
 		<CheckCircle size={56} class="text-green-600" />
 		<h1 class="mt-4 font-serif text-2xl font-semibold text-maroon">Email Verified!</h1>
 		<p class="mt-2 text-ink/60">Your email has been verified. Redirecting to login…</p>
-		<a href="/login" class="btn-primary mt-6">Go to Login</a>
+		<a href="/login" class="btn-primary mt-6 flex flex-col items-center justify-center text-center leading-tight px-6 py-2 min-h-[52px] whitespace-normal">
+			<span>Go to Login</span>
+			<span lang={langStore.current} class="text-[10px] opacity-90">{tx('goToLogin', langStore.current)}</span>
+		</a>
 	{:else}
 		<XCircle size={56} class="text-vermilion" />
 		<h1 class="mt-4 font-serif text-2xl font-semibold text-maroon">Verification Failed</h1>
 		<p class="mt-2 max-w-sm text-center text-ink/60">{errorMessage}</p>
-		<a href="/register" class="btn-secondary mt-6">Back to Register</a>
+		<a href="/register" class="btn-secondary mt-6 flex flex-col items-center justify-center text-center leading-tight px-6 py-2 min-h-[52px] whitespace-normal">
+			<span>Back to Register</span>
+			<span lang={langStore.current} class="text-[10px] opacity-90">{tx('backToRegister', langStore.current)}</span>
+		</a>
 	{/if}
 </div>
