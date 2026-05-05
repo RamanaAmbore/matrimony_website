@@ -484,11 +484,9 @@
 	class="fixed bottom-0 left-0 right-0 z-30 border-t border-gold/30 bg-maroon/95 text-cream/80 backdrop-blur supports-[backdrop-filter]:bg-maroon/85"
 	style="padding-bottom: env(safe-area-inset-bottom);"
 >
-	<div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-1.5 text-[11px] sm:px-6 sm:text-xs lg:px-8">
-		<p class="hidden md:block">© 2026 Maratha Kalyanam · marathakalyanam.com</p>
-		<p class="md:ml-auto">
-			Designed &amp; developed by
-			<span class="font-semibold text-marigold">Ambore Software</span>
+	<div class="mx-auto max-w-7xl px-4 py-1.5 text-center text-[11px] sm:px-6 sm:text-xs lg:px-8">
+		<p>
+			<span class="hidden md:inline">© 2026 Maratha Kalyanam · marathakalyanam.com · </span>Designed &amp; developed by <span class="font-semibold text-marigold">Ambore Software</span>
 		</p>
 	</div>
 </div>
