@@ -75,7 +75,7 @@ log "Fetching $BRANCH"
 git fetch --quiet origin "$BRANCH"
 # Fix ownership of any root-created files so git reset and the build can overwrite them.
 # Don't suppress errors — if chown fails the rest will fail anyway, fail loud.
-sudo /usr/local/sbin/mk-chown-repo
+sudo /usr/local/sbin/mk-chown-repo || log "mk-chown-repo had non-fatal errors (likely vanished files mid-traversal)"
 git reset --hard "origin/$BRANCH"
 HEAD_SHA="$(git rev-parse --short HEAD)"
 log "Now at $HEAD_SHA"
@@ -90,7 +90,7 @@ rm -rf \
     "$FRONTEND_DIR/.svelte-kit" \
     "$FRONTEND_DIR/build" 2>/dev/null || true
 # Run chown again post-cleanup so any newly-created parent dirs are www-data-owned
-sudo /usr/local/sbin/mk-chown-repo
+sudo /usr/local/sbin/mk-chown-repo || log "mk-chown-repo had non-fatal errors (likely vanished files mid-traversal)"
 
 # --- backend ---
 CURRENT_STAGE="backend deps"
