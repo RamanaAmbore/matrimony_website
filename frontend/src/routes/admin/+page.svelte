@@ -258,6 +258,18 @@
 		}
 	}
 
+	async function resendVerificationFromGrid(u: User) {
+		userActionLoading = true;
+		try {
+			await adminApi.users.resendVerification(u.uuid);
+			toastStore.success('Verification email re-sent');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 50) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
 	async function demoteUserFromGrid(u: User) {
 		userActionLoading = true;
 		try {
@@ -584,15 +596,12 @@
 	function computeProfilesRows(f: typeof profileStatusFilter): Profile[] {
 		if (!f || !allProfiles) return [];
 		if (f === 'all') return allProfiles;
-		// 'revoked' also catches legacy 'rejected' records
-		if (f === 'revoked') return allProfiles.filter(p => p.status === 'revoked' || p.status === 'rejected');
 		return allProfiles.filter(p => p.status === f);
 	}
 
 	function computeRequestsRows(f: typeof requestStatusFilter): DetailRequest[] {
 		if (!f || !allRequests) return [];
 		if (f === 'all') return allRequests;
-		if (f === 'revoked') return allRequests.filter(r => r.status === 'revoked' || r.status === 'rejected');
 		return allRequests.filter(r => r.status === f);
 	}
 
@@ -663,8 +672,8 @@
 				  valueFormatter: (p: { value: string }) => p.value.charAt(0).toUpperCase() + p.value.slice(1) },
 				{ field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true, headerClass: 'mk-header',
 				  cellRenderer: (p: { value: string }) => {
-					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', rejected: 'background:#fee2e2;color:#dc2626', revoked: 'background:#fee2e2;color:#dc2626', draft: 'background:#f3f4f6;color:#6b7280' };
-					const label = (p.value === 'rejected' || p.value === 'revoked') ? 'Revoked' : p.value.charAt(0).toUpperCase() + p.value.slice(1);
+					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', revoked: 'background:#fee2e2;color:#dc2626', draft: 'background:#f3f4f6;color:#6b7280' };
+					const label = p.value.charAt(0).toUpperCase() + p.value.slice(1);
 					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${label}</span>`;
 				  }},
 				{ headerName: 'Location', width: 200, filter: true, headerClass: 'mk-header',
@@ -704,8 +713,8 @@
 				{ field: 'requester_email', headerName: 'Requester', width: 240, sortable: true, filter: true, headerClass: 'mk-header' },
 				{ field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true, headerClass: 'mk-header',
 				  cellRenderer: (p: { value: string }) => {
-					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', rejected: 'background:#fee2e2;color:#dc2626', revoked: 'background:#fee2e2;color:#dc2626' };
-					const label = (p.value === 'rejected' || p.value === 'revoked') ? 'Revoked' : p.value.charAt(0).toUpperCase() + p.value.slice(1);
+					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', revoked: 'background:#fee2e2;color:#dc2626' };
+					const label = p.value.charAt(0).toUpperCase() + p.value.slice(1);
 					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${label}</span>`;
 				  }},
 				{ field: 'created_at', headerName: 'Date', width: 130, sortable: true, headerClass: 'mk-header',
@@ -798,6 +807,16 @@
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'revoked' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
 							onclick={() => { selectTab('users'); applyUserFilter('revoked'); }}
 						>Revoked · {usersRevoked}</button>
+					{/if}
+					{#if dashboard?.stats?.users_admins}
+						<span class="rounded-full border border-saffron/40 bg-saffron/10 px-3 py-1 text-xs font-semibold text-maroon" title="Number of admin users (excluded from the user list unless 'Include admins' is on)">
+							Admins · {dashboard.stats.users_admins}
+						</span>
+					{/if}
+					{#if loggedInUser?.is_super && dashboard?.stats?.users_super}
+						<span class="rounded-full border border-maroon/40 bg-maroon/10 px-3 py-1 text-xs font-semibold text-maroon" title="Number of super-users (always hidden from the user list)">
+							Super · {dashboard.stats.users_super}
+						</span>
 					{/if}
 					<label class="ml-auto inline-flex cursor-pointer items-center gap-1.5 text-xs text-ink/60">
 						<input
@@ -970,14 +989,24 @@
 										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('revokeApproval', langStore.current)}</span>
 									</button>
 								{/if}
-								<!-- Verifying email of an admin is super-only (mirrors approve gate) -->
+								<!-- Verifying email of an admin is super-only (mirrors approve gate).
+								     Resend Verification preserves the verify-then-approve flow; Verify
+								     Email is the override that skips it. -->
 								{#if !selectedUser.email_verified && (!selectedUser.is_admin || loggedInUser?.is_super)}
+									<button
+										class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
+										disabled={userActionLoading}
+										onclick={() => resendVerificationFromGrid(selectedUser!)}
+									>
+										<span class="text-xs">Resend Verification</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('verifyEmail', langStore.current)}</span>
+									</button>
 									<button
 										class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
 										disabled={userActionLoading}
 										onclick={() => verifyEmailFromGrid(selectedUser!)}
 									>
-										<span class="text-xs flex items-center gap-1"><ShieldCheck size={13} />Verify Email</span>
+										<span class="text-xs flex items-center gap-1"><ShieldCheck size={13} />Verify (override)</span>
 										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('verifyEmail', langStore.current)}</span>
 									</button>
 								{/if}
@@ -1087,17 +1116,17 @@
 						</p>
 						<p class="text-sm text-ink/60 capitalize flex flex-wrap items-center gap-1.5">
 							{selectedProfile.gender} ·
-							<span class="badge inline-flex items-center gap-1 {selectedProfile.status === 'approved' ? 'badge-approved' : selectedProfile.status === 'pending' ? 'badge-pending' : (selectedProfile.status === 'revoked' || selectedProfile.status === 'rejected') ? 'badge-revoked' : 'badge-draft'}">
+							<span class="badge inline-flex items-center gap-1 {selectedProfile.status === 'approved' ? 'badge-approved' : selectedProfile.status === 'pending' ? 'badge-pending' : selectedProfile.status === 'revoked' ? 'badge-revoked' : 'badge-draft'}">
 								{#if selectedProfile.status === 'draft'}
 									<FileEdit size={11} class="-mt-0.5 inline-block" />
 								{:else if selectedProfile.status === 'pending'}
 									<Clock size={11} class="-mt-0.5 inline-block" />
 								{:else if selectedProfile.status === 'approved'}
 									<CheckCircle size={11} class="-mt-0.5 inline-block" />
-								{:else if selectedProfile.status === 'revoked' || selectedProfile.status === 'rejected'}
+								{:else if selectedProfile.status === 'revoked'}
 									<XCircle size={11} class="-mt-0.5 inline-block" />
 								{/if}
-								{selectedProfile.status === 'rejected' ? 'Revoked' : selectedProfile.status}
+								{selectedProfile.status}
 							</span>
 							· {selectedProfile.city}{selectedProfile.state ? `, ${selectedProfile.state}` : ''}
 						</p>
@@ -1127,7 +1156,7 @@
 								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
 							</button>
 						{/if}
-						{#if selectedProfile.status === 'revoked' || selectedProfile.status === 'rejected'}
+						{#if selectedProfile.status === 'revoked'}
 							<button
 								class="flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal rounded border border-green-600 bg-white text-green-700 hover:bg-green-50 disabled:opacity-50"
 								disabled={profileActionLoading}
@@ -1198,7 +1227,7 @@
 					<div class="min-w-0 flex-1">
 						<p class="font-semibold text-ink font-mono text-sm">{selectedRequest.id.slice(0, 8)}…</p>
 						<p class="text-sm text-ink/60">
-							Status: <span class="{selectedRequest.status === 'approved' ? 'text-green-600' : (selectedRequest.status === 'revoked' || selectedRequest.status === 'rejected') ? 'text-vermilion' : 'text-saffron'} font-medium capitalize">{selectedRequest.status === 'rejected' ? 'Revoked' : selectedRequest.status}</span>
+							Status: <span class="{selectedRequest.status === 'approved' ? 'text-green-600' : selectedRequest.status === 'revoked' ? 'text-vermilion' : 'text-saffron'} font-medium capitalize">{selectedRequest.status}</span>
 							{#if selectedRequest.message} · "{selectedRequest.message}"{/if}
 						</p>
 					</div>
@@ -1223,7 +1252,7 @@
 								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
 							</button>
 						{/if}
-						{#if selectedRequest.status === 'revoked' || selectedRequest.status === 'rejected'}
+						{#if selectedRequest.status === 'revoked'}
 							<button
 								class="flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal rounded border border-green-600 bg-white text-green-700 hover:bg-green-50 disabled:opacity-50"
 								disabled={requestActionLoading}

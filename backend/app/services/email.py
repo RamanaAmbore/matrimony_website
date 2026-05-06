@@ -120,6 +120,49 @@ async def send_account_approved(to: str, full_name: str) -> None:
     await _send(to, f"Your account is approved — Maratha Kalyanam · {ts['ist_time']}", html)
 
 
+async def send_account_revoked(to: str, full_name: str) -> None:
+    ts = _timestamps()
+    html = _render("account_revoked.html", full_name=full_name)
+    await _send(
+        to,
+        f"Your Maratha Kalyanam account access has been revoked · {ts['ist_time']}",
+        html,
+    )
+
+
+async def send_account_reinstated(to: str, full_name: str, approved: bool) -> None:
+    """Sent when an admin un-revokes an account. `approved` reflects whether
+    the user is fully approved (email_verified was true at reinstate time)
+    or still needs to verify before regaining full access."""
+    ts = _timestamps()
+    html = _render("account_reinstated.html", full_name=full_name, approved=approved)
+    await _send(
+        to,
+        f"Your Maratha Kalyanam account is reinstated · {ts['ist_time']}",
+        html,
+    )
+
+
+async def send_admin_promoted(to: str, full_name: str) -> None:
+    ts = _timestamps()
+    html = _render("admin_promoted.html", full_name=full_name)
+    await _send(
+        to,
+        f"You are now a Maratha Kalyanam admin · {ts['ist_time']}",
+        html,
+    )
+
+
+async def send_admin_demoted(to: str, full_name: str) -> None:
+    ts = _timestamps()
+    html = _render("admin_demoted.html", full_name=full_name)
+    await _send(
+        to,
+        f"Your Maratha Kalyanam admin access has been removed · {ts['ist_time']}",
+        html,
+    )
+
+
 async def send_profile_approved(
     to: str,
     profile_first_name: str,

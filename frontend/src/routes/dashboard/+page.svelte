@@ -108,7 +108,7 @@
 			revoked:  'background:#fee2e2;color:#dc2626',  // badge-revoked
 			draft:    'background:#f3f4f6;color:#6b7280'   // badge-draft
 		};
-		const label = status === 'pending' ? 'Under Review' : (status === 'rejected' || status === 'revoked') ? 'Revoked' : status.charAt(0).toUpperCase() + status.slice(1);
+		const label = status === 'pending' ? 'Under Review' : status === 'revoked' ? 'Revoked' : status.charAt(0).toUpperCase() + status.slice(1);
 		return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[status] ?? ''}">${label}</span>`;
 	}
 

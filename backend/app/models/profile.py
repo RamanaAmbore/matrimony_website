@@ -215,6 +215,11 @@ class Profile(Base):
         onupdate=func.now(),
         nullable=False,
     )
+    # G6: timestamp of the last admin reject. submit_profile compares this
+    # against updated_at — owner must actually edit before re-submitting.
+    rejected_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # relationships
     owner: Mapped["User"] = relationship("User", back_populates="profiles")  # type: ignore[name-defined]

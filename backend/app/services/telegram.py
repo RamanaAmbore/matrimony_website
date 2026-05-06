@@ -104,6 +104,48 @@ async def notify_request_rejected(requester: str, profile_name: str) -> None:
     )
 
 
+async def notify_profile_edited_after_approve(name: str, profile_id: str) -> None:
+    """G5: alert ops when an owner edits an already-approved profile —
+    the profile auto-drops to pending and needs re-review. Without this
+    alert, admin queue mixes edited-after-approval profiles with newly
+    submitted ones indistinguishably."""
+    await _send(
+        f"✏️ <b>Profile re-pending (post-approval edit)</b>\n{name}\nID: {profile_id[:8]}\n{_now_times()}"
+    )
+
+
+async def notify_user_revoked(name: str, email: str) -> None:
+    await _send(
+        f"🚫 <b>User Revoked</b>\n{name}\n{email}\n{_now_times()}"
+    )
+
+
+async def notify_user_reinstated(name: str, email: str) -> None:
+    await _send(
+        f"♻️ <b>User Reinstated</b>\n{name}\n{email}\n{_now_times()}"
+    )
+
+
+async def notify_user_promoted(name: str, email: str) -> None:
+    await _send(
+        f"⬆️ <b>User → Admin</b>\n{name}\n{email}\n{_now_times()}"
+    )
+
+
+async def notify_user_demoted(name: str, email: str) -> None:
+    await _send(
+        f"⬇️ <b>Admin → User</b>\n{name}\n{email}\n{_now_times()}"
+    )
+
+
+async def notify_user_email_changed(name: str, old_email: str, new_email: str) -> None:
+    """G10: ops alert when a user changes their email — they re-enter the
+    pending queue (email_verified+is_approved both reset)."""
+    await _send(
+        f"📧 <b>User Email Changed</b>\n{name}\n{old_email} → {new_email}\nRe-entered pending queue.\n{_now_times()}"
+    )
+
+
 async def register_webhook() -> None:
     """Register the bot webhook with Telegram on startup."""
     from app.config import IS_PROD

@@ -623,12 +623,23 @@ class ProfileController(Controller):
         # drops it into pending status so an admin re-reviews the updated
         # content. Approved profiles in particular leave search the moment
         # the owner saves an edit, and only re-appear after a fresh approval.
+        was_approved_before_edit = profile.status == ProfileStatusEnum.approved
         if changed and profile.status != ProfileStatusEnum.pending:
             profile.status = ProfileStatusEnum.pending
 
         await db.commit()
         await db.refresh(profile)
         await db.refresh(profile, ["photos"])
+
+        # G5: ops alert when an approved profile is edited and drops back to
+        # pending — distinguishes these from genuinely-new submissions.
+        if changed and was_approved_before_edit:
+            from app.services.telegram import notify_profile_edited_after_approve
+            asyncio.create_task(notify_profile_edited_after_approve(
+                name=f"{profile.first_name} {profile.last_name or ''}".strip(),
+                profile_id=str(profile.id),
+            ))
+
         return _serialize_full_profile(profile, request)
 
     @delete("/{profile_id:str}", status_code=204)
@@ -718,6 +729,22 @@ class ProfileController(Controller):
             raise HTTPException(
                 status_code=409,
                 detail={"code": "invalid_status", "message": f"Profile is already in '{profile.status.value}' status"},
+            )
+
+        # G6: a re-submit after rejection requires the owner to have actually
+        # edited the profile (updated_at must advance past rejected_at).
+        # Otherwise the same rejected content can be resubmitted forever.
+        if (
+            profile.status == ProfileStatusEnum.revoked
+            and profile.rejected_at is not None
+            and profile.updated_at <= profile.rejected_at
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "no_changes",
+                    "message": "Please edit your profile based on the admin notes before resubmitting.",
+                },
             )
 
         require_approval = settings_service.get_bool("require_admin_approval_for_profiles", True)

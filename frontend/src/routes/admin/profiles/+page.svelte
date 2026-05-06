@@ -129,7 +129,7 @@
 	function badgeClass(status: string): string {
 		if (status === 'approved') return 'badge-approved';
 		if (status === 'pending') return 'badge-pending';
-		if (status === 'revoked' || status === 'rejected') return 'badge-revoked';
+		if (status === 'revoked') return 'badge-revoked';
 		return 'badge-draft';
 	}
 </script>
@@ -191,9 +191,9 @@
 									{#if profile.status === 'draft'}<FileEdit size={12} class="-mt-0.5 inline-block" />
 									{:else if profile.status === 'pending'}<Clock size={12} class="-mt-0.5 inline-block" />
 									{:else if profile.status === 'approved'}<CheckCircle size={12} class="-mt-0.5 inline-block" />
-									{:else if profile.status === 'revoked' || profile.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
+									{:else if profile.status === 'revoked'}<XCircle size={12} class="-mt-0.5 inline-block" />
 									{/if}
-									{profile.status === 'rejected' ? 'Revoked' : profile.status}
+									{profile.status}
 								</span>
 							</div>
 							<p class="mt-1 text-sm text-ink/60 capitalize">
@@ -233,7 +233,7 @@
 								</button>
 							{/if}
 
-							{#if profile.status === 'revoked' || profile.status === 'rejected'}
+							{#if profile.status === 'revoked'}
 								<button
 									onclick={() => reinstate(profile.id)}
 									disabled={processingId === profile.id}

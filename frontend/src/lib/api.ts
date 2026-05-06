@@ -27,7 +27,7 @@ export interface User {
 	email_verified: boolean;
 }
 
-export type ProfileStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'revoked';
+export type ProfileStatus = 'draft' | 'pending' | 'approved' | 'revoked';
 export type Gender = 'bride' | 'groom';
 export type Manglik = 'yes' | 'no' | 'partial' | 'unknown';
 export type Diet = 'veg' | 'non-veg' | 'eggetarian' | 'jain' | 'vegan';
@@ -133,7 +133,7 @@ export interface ProfileWithPhotos {
 	is_full_access?: boolean;
 }
 
-export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'revoked';
+export type RequestStatus = 'pending' | 'approved' | 'revoked';
 
 export interface DetailRequest {
 	id: string;
@@ -273,6 +273,7 @@ export interface AdminDashboard {
 	stats: {
 		users: number;
 		users_admins: number;
+		users_super: number;
 		profiles_total: number;
 		profiles_pending: number;
 		profiles_approved: number;
@@ -438,6 +439,13 @@ export const auth = {
 
 	async updatePassword(current_password: string, new_password: string): Promise<{ message: string }> {
 		return request('/api/auth/me/password', { method: 'POST', body: JSON.stringify({ current_password, new_password }) });
+	},
+
+	async deleteAccount(current_password: string, confirmation: string): Promise<{ deleted: boolean; email: string }> {
+		return request('/api/auth/me/delete', {
+			method: 'POST',
+			body: JSON.stringify({ current_password, confirmation })
+		});
 	}
 };
 
@@ -610,6 +618,9 @@ export const admin = {
 		},
 		async verifyEmail(userId: string): Promise<void> {
 			return request(`/api/admin/users/${userId}/verify_email`, { method: 'POST' });
+		},
+		async resendVerification(userId: string): Promise<User> {
+			return request(`/api/admin/users/${userId}/resend_verification`, { method: 'POST' });
 		},
 		async demote(id: string): Promise<User> {
 			return request(`/api/admin/users/${id}/demote`, { method: 'POST' });

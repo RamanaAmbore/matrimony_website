@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import IS_PROD
 from app.models.user import User
 from app.schemas.auth import (
+    DeleteAccountRequest,
     LoginRequest,
     RegisterRequest,
     RegisterResponse,
@@ -333,6 +334,7 @@ class AuthController(Controller):
         if existing.scalar_one_or_none():
             raise HTTPException(status_code=409, detail={"code": "email_taken", "message": "That email is already registered"})
 
+        old_email = user.email
         token = auth_svc.generate_token()
         user.email = new_email
         user.email_verified = False
@@ -345,6 +347,18 @@ class AuthController(Controller):
         except Exception as exc:
             import logging
             logging.getLogger(__name__).warning("Failed to send verification email after update: %s", exc)
+
+        # G10: notify ops the user re-entered the pending queue. They were
+        # approved before, but email change resets email_verified+is_approved
+        # so admin needs to re-approve after the user verifies the new address.
+        try:
+            from app.services.telegram import notify_user_email_changed
+            asyncio.create_task(notify_user_email_changed(
+                name=user.full_name, old_email=old_email, new_email=new_email,
+            ))
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("Failed to schedule email-change ops notification: %s", exc)
 
         return {
             "message": "Email updated. Please verify the new address from the link we just sent. Account approval will need re-confirmation by an admin.",
@@ -410,6 +424,102 @@ class AuthController(Controller):
         user.password_hash = auth_svc.hash_password(data.new_password)
         await db.commit()
         return {"message": "Password updated"}
+
+    @post("/me/delete", status_code=200)
+    async def delete_account(
+        self,
+        data: DeleteAccountRequest,
+        db: AsyncSession,
+        request: Request,
+    ) -> Response[dict[str, Any]]:
+        """G9: self-service account deletion.
+
+        Requires the user's current password AND a literal 'DELETE'
+        confirmation string. Cascades the user record (profiles, photos,
+        detail requests) and clears the JWT cookie. Super-users cannot
+        delete themselves through this path — they are bootstrap-pinned.
+        """
+        payload = request.scope.get("user_payload")
+        if not payload:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        if data.confirmation.strip() != "DELETE":
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "confirmation_mismatch", "message": "Type DELETE to confirm account deletion"},
+            )
+
+        result = await db.execute(select(User).where(User.id == uuid.UUID(payload["sub"])))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        if not auth_svc.verify_password(data.current_password, user.password_hash):
+            raise HTTPException(status_code=403, detail={"code": "wrong_password", "message": "Current password is incorrect"})
+
+        if user.is_super:
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Super-users cannot self-delete; edit bootstrap.py"},
+            )
+
+        # Unlink owned photo files before cascade-deleting the user — same
+        # pattern as the admin delete-user path so we don't leak JPEGs.
+        from app.config import MEDIA_ROOT
+        from app.models.photo import Photo
+        from app.models.profile import Profile
+
+        photos_to_unlink = await db.execute(
+            select(Photo)
+            .join(Profile, Profile.id == Photo.profile_id)
+            .where(Profile.owner_user_id == user.id)
+        )
+        for photo in photos_to_unlink.scalars():
+            for path_rel in (photo.passport_path, photo.blurred_path, photo.thumb_path):
+                fpath = MEDIA_ROOT / path_rel
+                if fpath.exists():
+                    try:
+                        fpath.unlink()
+                    except OSError:
+                        pass
+
+        owned_profile_ids = await db.execute(select(Profile.id).where(Profile.owner_user_id == user.id))
+        for (pid,) in owned_profile_ids.all():
+            for sub in (MEDIA_ROOT / "profiles" / str(pid)).rglob("*"):
+                pass
+            profile_dir = MEDIA_ROOT / "profiles" / str(pid)
+            if profile_dir.exists():
+                for child in profile_dir.iterdir():
+                    if child.is_dir() and not any(child.iterdir()):
+                        try:
+                            child.rmdir()
+                        except OSError:
+                            pass
+                if not any(profile_dir.iterdir()):
+                    try:
+                        profile_dir.rmdir()
+                    except OSError:
+                        pass
+
+        deleted_email = user.email
+        deleted_name = user.full_name
+        await db.delete(user)
+        await db.commit()
+
+        # Clear cookie and return 200.
+        response: Response[dict[str, Any]] = Response(content={"deleted": True, "email": deleted_email})
+        response.delete_cookie(key=_JWT_COOKIE, path="/")
+
+        # Notify ops asynchronously.
+        try:
+            from app.services.telegram import _send as _tg_send
+            asyncio.create_task(_tg_send(
+                f"🗑️ <b>User self-deleted</b>\n{deleted_name}\n{deleted_email}"
+            ))
+        except Exception:
+            pass
+
+        return response
 
     @get("/me")
     async def me(self, request: Request) -> dict[str, Any]:

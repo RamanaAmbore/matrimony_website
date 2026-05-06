@@ -119,7 +119,7 @@
 
 	function badgeClass(status: string): string {
 		if (status === 'approved') return 'badge-approved';
-		if (status === 'revoked' || status === 'rejected') return 'badge-revoked';
+		if (status === 'revoked') return 'badge-revoked';
 		return 'badge-pending';
 	}
 </script>
@@ -177,9 +177,9 @@
 								<span class="badge {badgeClass(req.status)} inline-flex items-center gap-1 capitalize">
 									{#if req.status === 'pending'}<Clock size={12} class="-mt-0.5 inline-block" />
 									{:else if req.status === 'approved'}<CheckCircle size={12} class="-mt-0.5 inline-block" />
-									{:else if req.status === 'revoked' || req.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
+									{:else if req.status === 'revoked'}<XCircle size={12} class="-mt-0.5 inline-block" />
 									{/if}
-									{req.status === 'rejected' ? 'Revoked' : req.status}
+									{req.status}
 								</span>
 							</div>
 							<p class="mt-0.5 text-sm text-ink/60">Sent {formatDate(req.created_at)}</p>
@@ -208,7 +208,7 @@
 								</button>
 							{/if}
 
-							{#if req.status === 'revoked' || req.status === 'rejected'}
+							{#if req.status === 'revoked'}
 								<button
 									onclick={() => reinstate(req.id)}
 									disabled={processingId === req.id}

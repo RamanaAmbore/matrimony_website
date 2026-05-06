@@ -458,7 +458,7 @@
 							? 'badge-approved'
 							: profile.status === 'pending'
 								? 'badge-pending'
-								: (profile.status === 'rejected' || profile.status === 'revoked')
+								: profile.status === 'revoked'
 									? 'badge-revoked'
 									: 'badge-draft'}"
 					>
@@ -468,10 +468,10 @@
 							<Clock size={12} class="-mt-0.5 inline-block" />
 						{:else if profile.status === 'approved'}
 							<CheckCircle size={12} class="-mt-0.5 inline-block" />
-						{:else if profile.status === 'rejected' || profile.status === 'revoked'}
+						{:else if profile.status === 'revoked'}
 							<XCircle size={12} class="-mt-0.5 inline-block" />
 						{/if}
-						{profile.status === 'rejected' ? 'Revoked' : profile.status}
+						{profile.status}
 					</span>
 				</div>
 

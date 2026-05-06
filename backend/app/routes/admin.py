@@ -10,10 +10,11 @@ import msgspec
 from litestar import Controller, get, post, put
 from litestar.connection import Request
 from litestar.exceptions import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import MEDIA_ROOT
 from app.models.photo import Photo
 from app.models.profile import Profile, ProfileStatusEnum
 from app.models.request import DetailRequest, RequestStatusEnum
@@ -24,6 +25,7 @@ from app.schemas.admin import (
     AdminRejectProfile,
     AdminRejectRequest,
 )
+from app.services import auth as auth_svc
 from app.services import email as email_svc
 from app.services.settings import settings_service, SENSITIVE_KEYS
 
@@ -174,6 +176,11 @@ class AdminController(Controller):
                 )
             )
         ).scalar_one()
+        users_super = (
+            await db.execute(
+                select(func.count()).select_from(User).where(User.is_super == True)  # noqa: E712
+            )
+        ).scalar_one()
         profiles_total = (await db.execute(select(func.count()).select_from(Profile))).scalar_one()
         profiles_pending = (
             await db.execute(
@@ -219,6 +226,7 @@ class AdminController(Controller):
         stats = {
             "users": users_count,
             "users_admins": users_admins,
+            "users_super": users_super,
             "profiles_total": profiles_total,
             "profiles_pending": profiles_pending,
             "profiles_approved": profiles_approved,
@@ -409,6 +417,21 @@ class AdminController(Controller):
 
         profile.status = ProfileStatusEnum.revoked
         profile.admin_notes = data.admin_notes
+        # G6: stamp the time of rejection. submit_profile uses this to refuse
+        # re-submission unless the owner has actually edited (updated_at >
+        # rejected_at).
+        profile.rejected_at = datetime.now(timezone.utc)
+        # G2: cascade-revoke any pending requests targeting this profile.
+        # Otherwise requesters sit waiting for a response on a profile that
+        # is no longer visible.
+        await db.execute(
+            update(DetailRequest)
+            .where(
+                DetailRequest.profile_id == pid,
+                DetailRequest.status == RequestStatusEnum.pending,
+            )
+            .values(status=RequestStatusEnum.revoked, responded_at=datetime.now(timezone.utc))
+        )
         await db.commit()
 
         try:
@@ -817,6 +840,68 @@ class AdminController(Controller):
         user.is_admin = True
         await db.commit()
         await db.refresh(user)
+
+        # G7: notify the new admin + telegram ops alert
+        try:
+            asyncio.create_task(email_svc.send_admin_promoted(user.email, user.full_name))
+            from app.services.telegram import notify_user_promoted
+            asyncio.create_task(notify_user_promoted(name=user.full_name, email=user.email))
+        except Exception as exc:
+            logger.warning("Failed to schedule promote notifications: %s", exc)
+
+        return _serialize_user(user)
+
+    @post("/users/{user_id:str}/resend_verification")
+    async def resend_verification(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """G8: regenerate the email verification token and re-send the
+        verification email. Useful when a user's original token has expired
+        or they never got the email — preferable to admin-overriding
+        verify_email since this preserves the actual verification step.
+
+        Permission rules mirror verify_user_email:
+          - cannot target super (super is always verified)
+          - admin-target requires super
+          - cannot target an already-verified user (409)
+        """
+        payload = _require_admin(request)
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_super:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot modify a super-user"})
+        if user.is_admin and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Only super-user can act on an admin account"},
+            )
+        if user.email_verified:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "already_verified", "message": "User email is already verified"},
+            )
+
+        token = auth_svc.generate_token()
+        user.email_verification_token = token
+        await db.commit()
+        await db.refresh(user)
+
+        try:
+            await email_svc.send_verification_email(user.email, token, full_name=user.full_name)
+        except Exception as exc:
+            logger.warning("Failed to send verification email: %s", exc)
+
         return _serialize_user(user)
 
     @post("/users/{user_id:str}/verify_email")
@@ -981,6 +1066,15 @@ class AdminController(Controller):
         user.is_admin = False
         await db.commit()
         await db.refresh(user)
+
+        # G7: notify the demoted admin + telegram ops alert
+        try:
+            asyncio.create_task(email_svc.send_admin_demoted(user.email, user.full_name))
+            from app.services.telegram import notify_user_demoted
+            asyncio.create_task(notify_user_demoted(name=user.full_name, email=user.email))
+        except Exception as exc:
+            logger.warning("Failed to schedule demote notifications: %s", exc)
+
         return _serialize_user(user)
 
     @post("/users/{user_id:str}/revoke", status_code=200)
@@ -1024,8 +1118,29 @@ class AdminController(Controller):
 
         user.is_revoked = True
         user.is_approved = False
+        # G1: cascade-revoke any pending detail requests this user has
+        # in flight. They were placed by an account that's now banned, so
+        # leaving them in the admin queue would be a leak — admin could
+        # otherwise still approve them and email a full profile to a banned
+        # requester.
+        await db.execute(
+            update(DetailRequest)
+            .where(
+                DetailRequest.requester_user_id == uid,
+                DetailRequest.status == RequestStatusEnum.pending,
+            )
+            .values(status=RequestStatusEnum.revoked, responded_at=datetime.now(timezone.utc))
+        )
         await db.commit()
         await db.refresh(user)
+
+        # G7: notify the user they've been revoked + telegram ops alert
+        try:
+            asyncio.create_task(email_svc.send_account_revoked(user.email, user.full_name))
+            from app.services.telegram import notify_user_revoked
+            asyncio.create_task(notify_user_revoked(name=user.full_name, email=user.email))
+        except Exception as exc:
+            logger.warning("Failed to schedule revoke notifications: %s", exc)
         return _serialize_user(user)
 
     @post("/users/{user_id:str}/reinstate", status_code=200)
@@ -1082,6 +1197,17 @@ class AdminController(Controller):
             user.is_approved = True
         await db.commit()
         await db.refresh(user)
+
+        # G7: notify the user they can return + telegram ops alert
+        try:
+            asyncio.create_task(email_svc.send_account_reinstated(
+                user.email, user.full_name, approved=user.is_approved,
+            ))
+            from app.services.telegram import notify_user_reinstated
+            asyncio.create_task(notify_user_reinstated(name=user.full_name, email=user.email))
+        except Exception as exc:
+            logger.warning("Failed to schedule reinstate notifications: %s", exc)
+
         return _serialize_user(user)
 
     @post("/users/{user_id:str}/delete", status_code=200)
@@ -1129,6 +1255,41 @@ class AdminController(Controller):
                 status_code=409,
                 detail={"code": "not_revoked", "message": "Revoke before deleting"},
             )
+
+        # G3: unlink photo files on disk before cascade-deleting the user.
+        # The DB cascade removes Photo rows, but the JPEG variants under
+        # MEDIA_ROOT are external state — the cascade can't touch them, so
+        # without this every admin user-delete leaks files.
+        photos_to_unlink = await db.execute(
+            select(Photo)
+            .join(Profile, Profile.id == Photo.profile_id)
+            .where(Profile.owner_user_id == uid)
+        )
+        for photo in photos_to_unlink.scalars():
+            for path_rel in (photo.passport_path, photo.blurred_path, photo.thumb_path):
+                fpath = MEDIA_ROOT / path_rel
+                if fpath.exists():
+                    try:
+                        fpath.unlink()
+                    except OSError as exc:
+                        logger.warning("Failed to unlink %s: %s", fpath, exc)
+            photo_dir = MEDIA_ROOT / "profiles" / str(photo.profile_id) / str(photo.id)
+            if photo_dir.exists() and not any(photo_dir.iterdir()):
+                try:
+                    photo_dir.rmdir()
+                except OSError:
+                    pass
+        # Best-effort cleanup of profile-level dirs after the photo dirs are gone.
+        owned_profiles = await db.execute(
+            select(Profile.id).where(Profile.owner_user_id == uid)
+        )
+        for (pid,) in owned_profiles.all():
+            profile_dir = MEDIA_ROOT / "profiles" / str(pid)
+            if profile_dir.exists() and not any(profile_dir.iterdir()):
+                try:
+                    profile_dir.rmdir()
+                except OSError:
+                    pass
 
         deleted = {
             "uuid": str(user.id),

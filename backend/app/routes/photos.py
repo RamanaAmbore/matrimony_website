@@ -15,9 +15,23 @@ from sqlalchemy.orm import selectinload
 
 from app.config import MEDIA_ROOT
 from app.models.photo import Photo
-from app.models.profile import Profile
+from app.models.profile import Profile, ProfileStatusEnum
 from app.services.images import PhotoValidationError, process_upload
 from app.services.settings import settings_service
+
+
+def _reset_to_pending_if_approved(profile: Profile) -> bool:
+    """G4: photo CRUD on an approved profile drops it back to pending so an
+    admin re-reviews the visual content. Without this, an owner could swap
+    the verified photo out post-approval (bait-and-switch). Mirrors the
+    same auto-pending behaviour used by `update_profile`.
+
+    Returns True if the status was reset.
+    """
+    if profile.status == ProfileStatusEnum.approved:
+        profile.status = ProfileStatusEnum.pending
+        return True
+    return False
 
 
 def _photo_to_dict(photo: Photo, request: Request) -> dict[str, Any]:
@@ -124,6 +138,7 @@ class PhotoController(Controller):
             is_primary=is_primary,
         )
         db.add(photo)
+        _reset_to_pending_if_approved(profile)
         await db.commit()
         await db.refresh(photo)
 
@@ -180,6 +195,7 @@ class PhotoController(Controller):
 
         was_primary = photo.is_primary
         await db.delete(photo)
+        _reset_to_pending_if_approved(profile)
         await db.commit()
 
         if was_primary:
@@ -239,6 +255,7 @@ class PhotoController(Controller):
                 status_code=404, detail={"code": "not_found", "message": "Photo not found"}
             )
 
+        _reset_to_pending_if_approved(profile)
         await db.commit()
         await db.refresh(target)
         return _photo_to_dict(target, request)

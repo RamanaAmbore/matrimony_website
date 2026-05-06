@@ -5,7 +5,7 @@
 	import { invalidateAll, goto } from '$app/navigation';
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
-	import { User, Mail, Phone, Lock, Loader } from 'lucide-svelte';
+	import { User, Mail, Phone, Lock, Loader, Trash2 } from 'lucide-svelte';
 
 	let { data } = $props();
 
@@ -180,6 +180,49 @@
 		pwNew = '';
 		pwConfirm = '';
 		pwErrors = {};
+	}
+
+	// ── Delete account section state (G9) ────────────────────────────────────
+	let deleteOpen = $state(false);
+	let deleteCurrentPw = $state('');
+	let deleteConfirmation = $state('');
+	let deleteErrors = $state<Record<string, string>>({});
+	let deleteLoading = $state(false);
+
+	async function handleDeleteAccount(ev: Event) {
+		ev.preventDefault();
+		const e: Record<string, string> = {};
+		if (!deleteCurrentPw) e.current_password = 'Current password is required';
+		if (deleteConfirmation.trim() !== 'DELETE') e.confirmation = 'Type DELETE exactly to confirm';
+		deleteErrors = e;
+		if (Object.keys(e).length > 0) return;
+
+		deleteLoading = true;
+		try {
+			await authApi.deleteAccount(deleteCurrentPw, deleteConfirmation.trim());
+			toastStore.success('Account deleted. Goodbye.');
+			await invalidateAll();
+			goto('/');
+		} catch (err) {
+			if (err instanceof ApiError) {
+				if (err.status === 403 || err.code === 'wrong_password') {
+					deleteErrors = { current_password: 'Current password is incorrect' };
+				} else {
+					toastStore.error(err.message.slice(0, 80));
+				}
+			} else {
+				toastStore.error('Account deletion failed. Try again.');
+			}
+		} finally {
+			deleteLoading = false;
+		}
+	}
+
+	function cancelDelete() {
+		deleteOpen = false;
+		deleteCurrentPw = '';
+		deleteConfirmation = '';
+		deleteErrors = {};
 	}
 
 	// Redirect unauthenticated users — consistent with other protected pages
@@ -503,5 +546,86 @@
 				</button>
 			</div>
 		</form>
+	</div>
+
+	<!-- ── Danger zone: delete account (G9) ─────────────────────────────────── -->
+	<div class="card mt-6 border-vermilion/30">
+		<div class="flex items-center gap-2 mb-1">
+			<Trash2 size={18} class="text-vermilion" />
+			<h2 class="font-serif text-lg font-semibold text-vermilion">Delete Account</h2>
+		</div>
+		<p class="text-sm text-ink/60 mb-4">
+			Permanently remove your account, all profiles, photos and detail requests.
+			This cannot be undone.
+		</p>
+
+		{#if !deleteOpen}
+			<button
+				type="button"
+				onclick={() => (deleteOpen = true)}
+				class="flex items-center gap-2 rounded border border-vermilion/40 bg-white px-4 py-2 text-sm text-vermilion hover:bg-vermilion/5"
+			>
+				<Trash2 size={14} />
+				<span>I want to delete my account</span>
+			</button>
+		{:else}
+			<form onsubmit={handleDeleteAccount} class="space-y-3 rounded border border-vermilion/30 bg-vermilion/5 p-4">
+				<p class="text-sm text-ink">
+					Confirm by entering your current password and typing
+					<span class="font-mono font-bold text-vermilion">DELETE</span> below.
+				</p>
+
+				<div>
+					<label class="block text-xs font-medium text-ink/70 mb-1" for="del-pw">Current password</label>
+					<input
+						id="del-pw"
+						type="password"
+						class="input w-full {deleteErrors.current_password ? 'border-vermilion' : ''}"
+						bind:value={deleteCurrentPw}
+						autocomplete="current-password"
+					/>
+					{#if deleteErrors.current_password}
+						<p class="mt-1 text-xs text-vermilion">{deleteErrors.current_password}</p>
+					{/if}
+				</div>
+
+				<div>
+					<label class="block text-xs font-medium text-ink/70 mb-1" for="del-confirm">Type DELETE to confirm</label>
+					<input
+						id="del-confirm"
+						type="text"
+						class="input w-full font-mono {deleteErrors.confirmation ? 'border-vermilion' : ''}"
+						bind:value={deleteConfirmation}
+						placeholder="DELETE"
+						autocomplete="off"
+					/>
+					{#if deleteErrors.confirmation}
+						<p class="mt-1 text-xs text-vermilion">{deleteErrors.confirmation}</p>
+					{/if}
+				</div>
+
+				<div class="flex gap-3 pt-1">
+					<button
+						type="submit"
+						class="flex items-center gap-2 rounded bg-vermilion px-4 py-2 text-sm text-cream hover:bg-vermilion/85 disabled:opacity-50"
+						disabled={deleteLoading}
+					>
+						{#if deleteLoading}
+							<Loader size={14} class="animate-spin" />
+						{:else}
+							<Trash2 size={14} />
+						{/if}
+						<span>Delete my account permanently</span>
+					</button>
+					<button
+						type="button"
+						onclick={cancelDelete}
+						class="btn-secondary px-4 py-2 text-sm"
+					>
+						Cancel
+					</button>
+				</div>
+			</form>
+		{/if}
 	</div>
 </div>

@@ -52,6 +52,14 @@ class UpdatePasswordRequest(msgspec.Struct):
     new_password: str
 
 
+class DeleteAccountRequest(msgspec.Struct):
+    """Self-service account deletion. Requires the user's current password
+    AND a typed confirmation phrase ('DELETE') so it cannot be triggered
+    by accident or by a CSRF-style replay."""
+    current_password: str
+    confirmation: str
+
+
 class ErrorDetail(msgspec.Struct):
     code: str
     message: str
