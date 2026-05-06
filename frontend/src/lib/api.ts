@@ -314,9 +314,11 @@ export interface SearchParams {
 
 // ─── Core fetch wrapper ───────────────────────────────────────────────────────
 
+type FetchLike = typeof fetch;
+
 async function request<T>(
 	path: string,
-	options: RequestInit = {}
+	options: RequestInit & { fetch?: FetchLike } = {}
 ): Promise<T> {
 	const headers: Record<string, string> = {
 		...(options.body && !(options.body instanceof FormData)
@@ -325,8 +327,16 @@ async function request<T>(
 		...(options.headers as Record<string, string>)
 	};
 
-	const res = await fetch(path, {
-		...options,
+	// Use the caller-supplied fetch (SvelteKit's `event.fetch` during SSR
+	// load, browser fetch otherwise) so the same client works in both
+	// contexts. SvelteKit's fetch resolves relative paths, forwards cookies
+	// for same-origin, and inlines responses for prerendered pages.
+	const f = options.fetch ?? fetch;
+	const { fetch: _fetch, ...fetchOpts } = options;
+	void _fetch;
+
+	const res = await f(path, {
+		...fetchOpts,
 		credentials: 'include',
 		headers
 	});
@@ -375,8 +385,8 @@ function buildQuery(params: Record<string, unknown>): string {
 // ─── Site ─────────────────────────────────────────────────────────────────────
 
 export const site = {
-	async info(): Promise<SiteInfo> {
-		return request('/api/site/info');
+	async info(fetch?: FetchLike): Promise<SiteInfo> {
+		return request('/api/site/info', { fetch });
 	}
 };
 
@@ -414,8 +424,8 @@ export const auth = {
 		});
 	},
 
-	async me(): Promise<User> {
-		return request('/api/auth/me');
+	async me(fetch?: FetchLike): Promise<User> {
+		return request('/api/auth/me', { fetch });
 	},
 
 	async updateEmail(new_email: string, current_password: string): Promise<{ message: string; email: string }> {
