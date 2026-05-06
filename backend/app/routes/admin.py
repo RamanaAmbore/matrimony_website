@@ -75,6 +75,7 @@ def _serialize_user(u: User) -> dict[str, Any]:
         "is_super": u.is_super,
         "email_verified": u.email_verified,
         "is_approved": u.is_approved,
+        "is_revoked": u.is_revoked,
         "created_at": u.created_at.isoformat(),
     }
 
@@ -185,7 +186,7 @@ class AdminController(Controller):
         ).scalar_one()
         profiles_rejected = (
             await db.execute(
-                select(func.count()).select_from(Profile).where(Profile.status == ProfileStatusEnum.rejected)
+                select(func.count()).select_from(Profile).where(Profile.status == ProfileStatusEnum.revoked)
             )
         ).scalar_one()
         profiles_draft = (
@@ -205,7 +206,7 @@ class AdminController(Controller):
         ).scalar_one()
         requests_rejected = (
             await db.execute(
-                select(func.count()).select_from(DetailRequest).where(DetailRequest.status == RequestStatusEnum.rejected)
+                select(func.count()).select_from(DetailRequest).where(DetailRequest.status == RequestStatusEnum.revoked)
             )
         ).scalar_one()
         requests_total = (
@@ -405,7 +406,7 @@ class AdminController(Controller):
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
-        profile.status = ProfileStatusEnum.rejected
+        profile.status = ProfileStatusEnum.revoked
         profile.admin_notes = data.admin_notes
         await db.commit()
 
@@ -427,6 +428,42 @@ class AdminController(Controller):
         await db.refresh(profile)
         return _serialize_profile(profile, request)
 
+    @post("/profiles/{profile_id:str}/reinstate")
+    async def reinstate_profile(
+        self,
+        profile_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Reinstate a revoked profile by setting its status back to approved.
+
+        Returns 409 if the profile is not currently revoked.
+        """
+        _require_admin(request)
+
+        try:
+            pid = uuid.UUID(profile_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
+
+        result = await db.execute(
+            select(Profile).where(Profile.id == pid).options(selectinload(Profile.photos))
+        )
+        profile = result.scalar_one_or_none()
+        if not profile:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
+
+        if profile.status != ProfileStatusEnum.revoked:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "not_revoked", "message": f"Profile is '{profile.status.value}', not revoked — cannot reinstate"},
+            )
+
+        profile.status = ProfileStatusEnum.approved
+        await db.commit()
+        await db.refresh(profile)
+        return _serialize_profile(profile, request)
+
     @post("/profiles/{profile_id:str}/delete", status_code=200)
     async def delete_profile(
         self,
@@ -436,9 +473,10 @@ class AdminController(Controller):
     ) -> dict[str, Any]:
         """Hard-delete a profile (cascades photos and detail requests).
 
-        Any admin or super may delete any profile.
+        Canonical flow: revoke first, then delete. Super-users may bypass the
+        revoke-first guard and delete directly.
         """
-        _require_admin(request)
+        payload = _require_admin(request)
 
         try:
             pid = uuid.UUID(profile_id)
@@ -449,6 +487,12 @@ class AdminController(Controller):
         profile = result.scalar_one_or_none()
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
+
+        if profile.status != ProfileStatusEnum.revoked and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "not_revoked", "message": "Revoke before deleting"},
+            )
 
         deleted = {
             "id": str(profile.id),
@@ -584,7 +628,7 @@ class AdminController(Controller):
         if not req:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Request not found"})
 
-        req.status = RequestStatusEnum.rejected
+        req.status = RequestStatusEnum.revoked
         req.admin_notes = data.admin_notes
         req.responded_at = datetime.now(timezone.utc)
         await db.commit()
@@ -628,6 +672,55 @@ class AdminController(Controller):
         )
         return _serialize_request(enriched.scalar_one())
 
+    @post("/requests/{request_id:str}/reinstate")
+    async def reinstate_request(
+        self,
+        request_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Reinstate a revoked detail request by setting status back to approved.
+
+        Returns 409 if the request is not currently revoked.
+        """
+        _require_admin(request)
+
+        try:
+            rid = uuid.UUID(request_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Request not found"})
+
+        result = await db.execute(
+            select(DetailRequest)
+            .where(DetailRequest.id == rid)
+            .options(
+                selectinload(DetailRequest.requester),
+                selectinload(DetailRequest.profile),
+            )
+        )
+        req = result.scalar_one_or_none()
+        if not req:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Request not found"})
+
+        if req.status != RequestStatusEnum.revoked:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "not_revoked", "message": f"Request is '{req.status.value}', not revoked — cannot reinstate"},
+            )
+
+        req.status = RequestStatusEnum.approved
+        await db.commit()
+        await db.refresh(req)
+        enriched = await db.execute(
+            select(DetailRequest)
+            .where(DetailRequest.id == req.id)
+            .options(
+                selectinload(DetailRequest.requester),
+                selectinload(DetailRequest.profile),
+            )
+        )
+        return _serialize_request(enriched.scalar_one())
+
     @post("/requests/{request_id:str}/delete", status_code=200)
     async def delete_request(
         self,
@@ -635,8 +728,12 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        """Hard-delete a detail request. Admin or super."""
-        _require_admin(request)
+        """Hard-delete a detail request.
+
+        Canonical flow: revoke first, then delete. Super-users may bypass the
+        revoke-first guard and delete directly.
+        """
+        payload = _require_admin(request)
 
         try:
             rid = uuid.UUID(request_id)
@@ -647,6 +744,12 @@ class AdminController(Controller):
         req = result.scalar_one_or_none()
         if not req:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Request not found"})
+
+        if req.status != RequestStatusEnum.revoked and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "not_revoked", "message": "Revoke before deleting"},
+            )
 
         deleted = {
             "id": str(req.id),
@@ -680,7 +783,9 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        _require_admin(request)
+        """Promote a regular user to admin. Super-only — a plain admin cannot
+        create more admins."""
+        _require_super(request)
 
         try:
             uid = uuid.UUID(user_id)
@@ -761,7 +866,11 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        """Revoke approval from a user.
+        """Pull live access from a user by clearing is_approved (does NOT set is_revoked).
+
+        This is a lighter action than revoke: the user can still log in but
+        cannot create profiles. Use /admin/users/{id}/revoke for a stronger
+        action that also blocks login entirely.
 
         Permission rules:
           - admin → can unapprove only non-admin users
@@ -819,6 +928,94 @@ class AdminController(Controller):
         await db.refresh(user)
         return _serialize_user(user)
 
+    @post("/users/{user_id:str}/revoke", status_code=200)
+    async def revoke_user(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Soft-revoke a user account: sets is_revoked=True and is_approved=False.
+
+        Revoked users cannot log in. Use reinstate to undo.
+
+        Permission rules:
+          - super-users can never be revoked
+          - revoking an admin requires the caller to be super
+          - plain admins can revoke non-admin users
+          - cannot revoke self
+        """
+        payload = _require_admin(request)
+        caller_uid = uuid.UUID(payload["sub"])
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if uid == caller_uid:
+            raise HTTPException(status_code=400, detail={"code": "self_action", "message": "Cannot revoke your own account"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_super:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot revoke a super-user"})
+        if user.is_admin and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Only super-user can revoke an admin account"},
+            )
+
+        user.is_revoked = True
+        user.is_approved = False
+        await db.commit()
+        await db.refresh(user)
+        return _serialize_user(user)
+
+    @post("/users/{user_id:str}/reinstate", status_code=200)
+    async def reinstate_user(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Reinstate a revoked user: sets is_revoked=False and is_approved=True.
+
+        Permission rules mirror revoke:
+          - super-users cannot be targeted (they are never revoked)
+          - reinstating an admin requires caller to be super
+          - plain admins can reinstate non-admin users
+          - cannot reinstate self
+        """
+        payload = _require_admin(request)
+        caller_uid = uuid.UUID(payload["sub"])
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if uid == caller_uid:
+            raise HTTPException(status_code=400, detail={"code": "self_action", "message": "Cannot reinstate your own account"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_super:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot reinstate a super-user"})
+        if user.is_admin and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Only super-user can reinstate an admin account"},
+            )
+
+        user.is_revoked = False
+        user.is_approved = True
+        await db.commit()
+        await db.refresh(user)
+        return _serialize_user(user)
+
     @post("/users/{user_id:str}/delete", status_code=200)
     async def delete_user(
         self,
@@ -828,9 +1025,12 @@ class AdminController(Controller):
     ) -> dict[str, Any]:
         """Delete a user (cascades profiles, photos, requests).
 
+        Canonical flow: revoke first, then delete. Super-users may bypass the
+        revoke-first guard and delete directly.
+
         Permission rules:
-          - super         → can delete any non-super user
-          - admin         → can delete only NON-admin users
+          - super         → can delete any non-super user (bypasses revoke-first)
+          - admin         → can delete only NON-admin, already-revoked users
           - everyone else → forbidden
           - cannot delete self
           - never delete a super-user
@@ -855,6 +1055,11 @@ class AdminController(Controller):
             raise HTTPException(
                 status_code=403,
                 detail={"code": "forbidden", "message": "Only super-user can delete admin accounts"},
+            )
+        if not user.is_revoked and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "not_revoked", "message": "Revoke before deleting"},
             )
 
         deleted = {

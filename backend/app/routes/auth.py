@@ -225,6 +225,15 @@ class AuthController(Controller):
                 detail={"code": "invalid_credentials", "message": "Invalid identifier or password"},
             )
 
+        if user.is_revoked:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "user_revoked",
+                    "message": "Your account has been revoked. Contact admin to reinstate or to permanently delete it.",
+                },
+            )
+
         token = mint_jwt(
             user_id=str(user.id),
             handle=user.user_handle,

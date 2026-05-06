@@ -706,7 +706,7 @@ class ProfileController(Controller):
         if str(profile.owner_user_id) != user["sub"]:
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
 
-        if profile.status not in (ProfileStatusEnum.draft, ProfileStatusEnum.rejected):
+        if profile.status not in (ProfileStatusEnum.draft, ProfileStatusEnum.revoked):
             raise HTTPException(
                 status_code=409,
                 detail={"code": "invalid_status", "message": f"Profile is already in '{profile.status.value}' status"},

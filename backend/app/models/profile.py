@@ -48,7 +48,7 @@ class ProfileStatusEnum(str, enum.Enum):
     draft = "draft"
     pending = "pending"
     approved = "approved"
-    rejected = "rejected"
+    revoked = "revoked"
 
 
 class MaritalStatusEnum(str, enum.Enum):

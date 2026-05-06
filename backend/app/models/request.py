@@ -23,7 +23,7 @@ from app.models.base import Base
 class RequestStatusEnum(str, enum.Enum):
     pending = "pending"
     approved = "approved"
-    rejected = "rejected"
+    revoked = "revoked"
 
 
 class DetailRequest(Base):

@@ -36,6 +36,10 @@ class User(Base):
     # can delete/demote admin users. There is exactly one super user
     # (seeded in bootstrap), and they cannot be deleted.
     is_super: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Soft-revoke: admin has revoked this account. Blocks login and implies
+    # is_approved=False. Reinstatement sets both is_revoked=False and
+    # is_approved=True. Distinct from unapprove which only clears is_approved.
+    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
