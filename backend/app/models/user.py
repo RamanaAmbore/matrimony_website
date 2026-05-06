@@ -36,10 +36,17 @@ class User(Base):
     # can delete/demote admin users. There is exactly one super user
     # (seeded in bootstrap), and they cannot be deleted.
     is_super: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    # Soft-revoke: admin has revoked this account. Blocks login and implies
-    # is_approved=False. Reinstatement sets both is_revoked=False and
-    # is_approved=True. Distinct from unapprove which only clears is_approved.
+    # Soft-revoke: admin ban. Blocks login. Distinct from is_approved
+    # (which only governs new-profile creation).
     is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Vacation mode — user-controlled toggle. Paused users CAN still log in
+    # (they get a banner) but their profiles drop out of search and they
+    # can't create new profiles. The user themselves can flip this on/off.
+    is_paused: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Admin enforcement hold — admin-controlled. Same search/creation
+    # consequences as is_paused, but only admin can clear it. Useful when
+    # admin needs to investigate without escalating to a full ban.
+    is_suspended: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

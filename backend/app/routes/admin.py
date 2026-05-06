@@ -79,6 +79,8 @@ def _serialize_user(u: User) -> dict[str, Any]:
         "email_verified": u.email_verified,
         "is_approved": u.is_approved,
         "is_revoked": u.is_revoked,
+        "is_paused": u.is_paused,
+        "is_suspended": u.is_suspended,
         "created_at": u.created_at.isoformat(),
     }
 
@@ -1306,6 +1308,98 @@ class AdminController(Controller):
         except Exception as exc:
             logger.warning("Failed to schedule reinstate notifications: %s", exc)
 
+        return _serialize_user(user)
+
+    @post("/users/{user_id:str}/suspend", status_code=200)
+    async def suspend_user(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Admin enforcement hold. Sets is_suspended=True. The user can
+        still log in (they get a banner) but their profiles drop from
+        search and they can't create new ones until an admin lifts it.
+
+        Distinct from is_revoked (which blocks login entirely) and from
+        is_paused (which is the user's own vacation toggle).
+
+        Permission rules mirror revoke:
+          - super-users cannot be targeted
+          - admin-target requires super
+          - cannot suspend self
+          - cannot suspend an already-revoked user (revoke is stronger)
+        """
+        payload = _require_admin(request)
+        caller_uid = uuid.UUID(payload["sub"])
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if uid == caller_uid:
+            raise HTTPException(status_code=400, detail={"code": "self_action", "message": "Cannot suspend your own account"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_super:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot suspend a super-user"})
+        if user.is_admin and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Only super-user can suspend an admin account"},
+            )
+        if user.is_revoked:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "user_revoked", "message": "User is already revoked (stronger than suspend)"},
+            )
+
+        user.is_suspended = True
+        await db.commit()
+        await db.refresh(user)
+        return _serialize_user(user)
+
+    @post("/users/{user_id:str}/unsuspend", status_code=200)
+    async def unsuspend_user(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Lift admin enforcement hold. Does NOT clear is_paused (which
+        is the user's own toggle — only the user can lift their own
+        vacation mode)."""
+        payload = _require_admin(request)
+        caller_uid = uuid.UUID(payload["sub"])
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if uid == caller_uid:
+            raise HTTPException(status_code=400, detail={"code": "self_action", "message": "Cannot unsuspend your own account"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_admin and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Only super-user can act on an admin account"},
+            )
+        if not user.is_suspended:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "not_suspended", "message": "User is not currently suspended"},
+            )
+
+        user.is_suspended = False
+        await db.commit()
+        await db.refresh(user)
         return _serialize_user(user)
 
     @post("/users/{user_id:str}/delete", status_code=200)

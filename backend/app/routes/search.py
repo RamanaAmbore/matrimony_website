@@ -105,22 +105,24 @@ def _build_base_query(
     mother_tongue: Optional[str],
     pin_code: Optional[str],
 ) -> Any:
-    """Build a filtered SQLAlchemy query for approved profiles (no order/limit).
+    """Build a filtered SQLAlchemy query for visible-in-search profiles.
 
-    Excludes profiles whose owner is currently revoked OR unapproved.
-    - revoked: owner can't log in; profile must vanish until reinstate
-    - unapproved: owner re-entered the pending queue (most common path is
-      after they changed their email, which resets is_approved=False).
-      Their existing approved profiles must drop out of search until an
-      admin re-approves the owner.
+    A profile is visible only if ALL of the following hold:
+      * profile.status == approved
+      * owner.is_revoked  == False  (banned)
+      * owner.is_approved == True   (admin OK)
+      * owner.is_paused   == False  (user-set vacation mode)
+      * owner.is_suspended == False (admin enforcement hold)
     """
     query = (
         select(Profile)
         .join(User, User.id == Profile.owner_user_id)
         .where(
             Profile.status == ProfileStatusEnum.approved,
-            User.is_revoked == False,  # noqa: E712
-            User.is_approved == True,  # noqa: E712
+            User.is_revoked == False,    # noqa: E712
+            User.is_approved == True,    # noqa: E712
+            User.is_paused == False,     # noqa: E712
+            User.is_suspended == False,  # noqa: E712
         )
         .options(selectinload(Profile.photos))
     )

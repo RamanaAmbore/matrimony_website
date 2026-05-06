@@ -234,6 +234,9 @@ class AuthController(Controller):
                     "message": "Your account has been revoked. Contact admin to reinstate or to permanently delete it.",
                 },
             )
+        # Suspended users CAN log in — that's the whole point of suspend
+        # vs revoke. The frontend shows a banner and the search filter
+        # hides their profiles until they unsuspend.
 
         token = mint_jwt(
             user_id=str(user.id),
@@ -244,6 +247,8 @@ class AuthController(Controller):
             email_verified=user.email_verified,
             is_approved=user.is_approved,
             is_super=user.is_super,
+            is_paused=user.is_paused,
+            is_suspended=user.is_suspended,
         )
 
         body: dict[str, Any] = {
@@ -255,6 +260,8 @@ class AuthController(Controller):
             "is_super": user.is_super,
             "email_verified": user.email_verified,
             "is_approved": user.is_approved,
+            "is_paused": user.is_paused,
+            "is_suspended": user.is_suspended,
         }
 
         response: Response[dict[str, Any]] = Response(content=body)
@@ -559,6 +566,56 @@ class AuthController(Controller):
 
         return response
 
+    @post("/me/pause", status_code=200)
+    async def pause_account(
+        self,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Self-service vacation mode. Sets is_paused=True. The user can
+        still log in (banner shown) but their profiles drop from search
+        and they can't create new ones until they unpause.
+
+        Idempotent — calling on an already-paused account returns 200.
+        """
+        payload = request.scope.get("user_payload")
+        if not payload:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+        result = await db.execute(select(User).where(User.id == uuid.UUID(payload["sub"])))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+        if user.is_revoked:
+            raise HTTPException(status_code=403, detail={"code": "user_revoked", "message": "Account is revoked"})
+        user.is_paused = True
+        await db.commit()
+        return {"is_paused": True, "message": "Your account is now paused. Profiles hidden from search."}
+
+    @post("/me/unpause", status_code=200)
+    async def unpause_account(
+        self,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Clear self-set vacation mode. is_suspended (admin-set) is NOT
+        cleared by this — only an admin can lift a suspension."""
+        payload = request.scope.get("user_payload")
+        if not payload:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+        result = await db.execute(select(User).where(User.id == uuid.UUID(payload["sub"])))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+        user.is_paused = False
+        await db.commit()
+        msg = "Your account is active again."
+        if user.is_suspended:
+            msg = (
+                "Vacation mode cleared, but your account is still under an admin "
+                "suspension. Contact support to lift the suspension."
+            )
+        return {"is_paused": False, "is_suspended": user.is_suspended, "message": msg}
+
     @get("/me")
     async def me(self, request: Request, db: AsyncSession) -> dict[str, Any]:
         """Return the current user, re-queried from the DB on each call so
@@ -600,4 +657,6 @@ class AuthController(Controller):
             "is_super": user.is_super,
             "email_verified": user.email_verified,
             "is_approved": user.is_approved,
+            "is_paused": user.is_paused,
+            "is_suspended": user.is_suspended,
         }

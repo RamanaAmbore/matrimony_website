@@ -72,9 +72,9 @@ class RequestController(Controller):
                 status_code=409,
                 detail={"code": "profile_not_approved", "message": "Can only request details for approved profiles"},
             )
-        if profile.owner and profile.owner.is_revoked:
-            # Owner is revoked — profile is effectively offline; mirror the
-            # search behaviour and surface as not-found.
+        if profile.owner and (profile.owner.is_revoked or profile.owner.is_paused or profile.owner.is_suspended):
+            # Owner is revoked / paused (vacation) / suspended (admin hold)
+            # — profile is effectively offline. Mirror search behaviour.
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
         requester_id = uuid.UUID(user["sub"])

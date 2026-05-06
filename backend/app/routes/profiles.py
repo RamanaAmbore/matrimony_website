@@ -290,6 +290,19 @@ class ProfileController(Controller):
                 status_code=403,
                 detail={"code": "not_approved", "message": "Your account is pending admin approval before you can create profiles."},
             )
+        # Paused (vacation) or suspended (admin hold) blocks new-profile
+        # creation. Existing profiles are already hidden from search via
+        # the search filter — this is the matching write-side guard.
+        if user.get("is_paused"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "account_paused", "message": "Your account is paused. Unpause from My Account before creating new profiles."},
+            )
+        if user.get("is_suspended"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "account_suspended", "message": "Your account is suspended by an admin. Contact support before creating new profiles."},
+            )
 
         # ASCII validation
         _validate_free_text_fields(data)
@@ -403,10 +416,12 @@ class ProfileController(Controller):
             photos_data = full.pop("photos", [])
             return {"profile": full, "photos": photos_data, "is_full_access": True}
 
-        # Non-owner: only approved profiles whose owner is NOT revoked are visible.
+        # Non-owner: only approved profiles whose owner is fully active are
+        # visible. Paused (vacation mode), suspended (admin hold), or
+        # revoked (ban) all hide the profile.
         if profile.status != ProfileStatusEnum.approved:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
-        if profile.owner and profile.owner.is_revoked:
+        if profile.owner and (profile.owner.is_revoked or profile.owner.is_paused or profile.owner.is_suspended):
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
         # Check if the current user has an approved detail request for this profile

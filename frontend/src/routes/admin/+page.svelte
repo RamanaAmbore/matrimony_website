@@ -339,6 +339,38 @@
 		}
 	}
 
+	async function suspendUser(u: User) {
+		userActionLoading = true;
+		try {
+			const updated = await adminApi.users.suspend(u.uuid);
+			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
+			selectedUser = updated;
+			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			refreshDashboardStats();
+			toastStore.success('User suspended');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 50) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
+	async function unsuspendUser(u: User) {
+		userActionLoading = true;
+		try {
+			const updated = await adminApi.users.unsuspend(u.uuid);
+			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
+			selectedUser = updated;
+			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			refreshDashboardStats();
+			toastStore.success('User unsuspended');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 50) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
 	async function reinstateUser(u: User) {
 		userActionLoading = true;
 		try {
@@ -1028,6 +1060,8 @@
 								{#if !selectedUser.is_revoked}
 									{#if selectedUser.is_approved} · <span class="text-green-600">Approved</span>{:else} · <span class="text-marigold">Not approved</span>{/if}
 								{/if}
+								{#if selectedUser.is_suspended} · <span class="font-semibold" style="color:#92400e">⏸ Suspended</span>{/if}
+								{#if selectedUser.is_paused} · <span class="font-semibold" style="color:#a16207">⏸ Paused (vacation)</span>{/if}
 							</p>
 						</div>
 						<div class="mt-3 flex flex-wrap gap-2">
@@ -1093,6 +1127,29 @@
 									>
 										<span class="text-xs">Demote to User</span>
 										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('demoteToUser', langStore.current)}</span>
+									</button>
+								{/if}
+								<!-- Suspend (admin enforcement hold) — softer than revoke. Login
+								     still works; profiles drop from search; only admin can lift. -->
+								{#if (!selectedUser.is_admin || loggedInUser?.is_super) && !selectedUser.is_suspended}
+									<button
+										class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded border border-saffron/50 bg-white text-saffron-700 hover:bg-saffron/10 disabled:opacity-50"
+										style="color: #92400e"
+										disabled={userActionLoading}
+										onclick={() => suspendUser(selectedUser!)}
+									>
+										<span class="text-xs">⏸ Suspend</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">Suspend</span>
+									</button>
+								{/if}
+								{#if selectedUser.is_suspended && (!selectedUser.is_admin || loggedInUser?.is_super)}
+									<button
+										class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded border border-green-600 bg-white text-green-700 hover:bg-green-50 disabled:opacity-50"
+										disabled={userActionLoading}
+										onclick={() => unsuspendUser(selectedUser!)}
+									>
+										<span class="text-xs flex items-center gap-1"><RotateCcw size={13} />Unsuspend</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">Unsuspend</span>
 									</button>
 								{/if}
 								<!-- Revoke: super-only when target is admin, otherwise any admin -->

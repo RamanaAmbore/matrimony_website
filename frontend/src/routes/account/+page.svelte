@@ -197,6 +197,31 @@
 		}
 	}
 
+	// ── Vacation mode (pause/unpause) ────────────────────────────────────────
+	let pauseLoading = $state(false);
+
+	async function handleTogglePause() {
+		if (!data.user) return;
+		pauseLoading = true;
+		try {
+			if (data.user.is_paused) {
+				const res = await authApi.unpauseAccount();
+				toastStore.success(res.message);
+			} else {
+				if (!confirm('Pause your account? Your profiles will be hidden from search until you unpause.')) {
+					return;
+				}
+				const res = await authApi.pauseAccount();
+				toastStore.success(res.message);
+			}
+			await invalidateAll();
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 80) : 'Could not change pause state');
+		} finally {
+			pauseLoading = false;
+		}
+	}
+
 	// ── Delete account section state (G9) ────────────────────────────────────
 	let deleteOpen = $state(false);
 	let deleteCurrentPw = $state('');
@@ -285,6 +310,49 @@
 					{/if}
 					<span>Resend verification email</span>
 					<span lang={langStore.current} class="opacity-80">· {tx('resendVerification', langStore.current)}</span>
+				</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- ── Admin-suspended banner (read-only — only an admin can lift) ──────── -->
+	{#if user && user.is_suspended}
+		<div class="flex items-start gap-3 rounded-lg border border-vermilion/40 bg-vermilion/5 px-5 py-4">
+			<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0 text-vermilion" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+			<div class="text-sm text-ink/80 flex-1">
+				<p class="font-semibold text-vermilion">Account suspended by an admin.</p>
+				<p>Your profiles are hidden from search and you can't create new ones until an admin lifts the suspension. Please contact <a class="underline" href="mailto:admin.marathakalyanam@gmail.com">admin.marathakalyanam@gmail.com</a> if you believe this is in error.</p>
+			</div>
+		</div>
+	{/if}
+
+	<!-- ── Vacation mode (self-pause) ──────────────────────────────────────── -->
+	{#if user && !user.is_revoked}
+		<div class="rounded-xl border {user.is_paused ? 'border-saffron bg-saffron/5' : 'border-gold/30 bg-white'} p-5 shadow-sm">
+			<div class="flex items-start justify-between gap-3">
+				<div class="flex-1">
+					<h2 class="font-serif text-lg font-semibold {user.is_paused ? 'text-saffron' : 'text-maroon'}">
+						{user.is_paused ? 'Account is paused' : 'Vacation mode'}
+					</h2>
+					<p class="mt-1 text-sm text-ink/70">
+						{#if user.is_paused}
+							Your profiles are currently <strong>hidden from search</strong> and you can't create new ones. Click "Unpause" to make them visible again.
+						{:else}
+							Going on vacation, taking a break, or found someone? Pausing your account hides your profiles from search and stops new matches without deleting anything. Reverse it anytime.
+						{/if}
+					</p>
+				</div>
+				<button
+					type="button"
+					onclick={handleTogglePause}
+					disabled={pauseLoading}
+					class="shrink-0 rounded px-4 py-2 text-sm font-semibold disabled:opacity-50 {user.is_paused ? 'bg-saffron text-maroon hover:bg-marigold' : 'border border-maroon/40 text-maroon hover:bg-maroon/5'}"
+				>
+					{#if pauseLoading}
+						<Loader size={14} class="inline animate-spin" />
+					{:else}
+						<span>{user.is_paused ? 'Unpause' : 'Pause'}</span>
+					{/if}
 				</button>
 			</div>
 		</div>

@@ -24,6 +24,8 @@ export interface User {
 	is_super: boolean;
 	is_approved: boolean;
 	is_revoked: boolean;
+	is_paused?: boolean;     // user-set vacation mode
+	is_suspended?: boolean;  // admin-set enforcement hold
 	email_verified: boolean;
 }
 
@@ -456,6 +458,17 @@ export const auth = {
 
 	async resendMyVerification(): Promise<{ message: string }> {
 		return request('/api/auth/me/resend-verification', { method: 'POST' });
+	},
+
+	// Self-service vacation mode (pause = hide my profiles + block new
+	// profile creation; unpause = restore). Distinct from admin-set
+	// suspend, which only an admin can lift.
+	async pauseAccount(): Promise<{ is_paused: boolean; message: string }> {
+		return request('/api/auth/me/pause', { method: 'POST' });
+	},
+
+	async unpauseAccount(): Promise<{ is_paused: boolean; is_suspended: boolean; message: string }> {
+		return request('/api/auth/me/unpause', { method: 'POST' });
 	}
 };
 
@@ -640,6 +653,12 @@ export const admin = {
 		},
 		async reinstate(id: string): Promise<User> {
 			return request(`/api/admin/users/${id}/reinstate`, { method: 'POST' });
+		},
+		async suspend(id: string): Promise<User> {
+			return request(`/api/admin/users/${id}/suspend`, { method: 'POST' });
+		},
+		async unsuspend(id: string): Promise<User> {
+			return request(`/api/admin/users/${id}/unsuspend`, { method: 'POST' });
 		},
 		async delete(id: string): Promise<{ deleted: { uuid: string; user_id: string; email: string; is_admin: boolean } }> {
 			return request(`/api/admin/users/${id}/delete`, { method: 'POST' });

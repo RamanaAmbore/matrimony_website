@@ -24,6 +24,8 @@ def mint_jwt(
     email_verified: bool,
     is_approved: bool = False,
     is_super: bool = False,
+    is_paused: bool = False,
+    is_suspended: bool = False,
 ) -> str:
     """Create a signed JWT for the given user."""
     now = datetime.now(timezone.utc)
@@ -36,6 +38,8 @@ def mint_jwt(
         "is_super": is_super,
         "email_verified": email_verified,
         "is_approved": is_approved,
+        "is_paused": is_paused,
+        "is_suspended": is_suspended,
         "iat": now,
         "exp": now + timedelta(seconds=_EXPIRY_SECONDS),
     }
