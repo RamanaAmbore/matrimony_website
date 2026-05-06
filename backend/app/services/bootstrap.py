@@ -1,14 +1,16 @@
 """Bootstrap: seed canonical admin users and settings on every startup.
 
-Two canonical users live in code, not in tenant DB state:
-  - "ambore" (Ramana Ambore) — super-user (is_super=True)
-  - "rambo"  (Ramana Ambore) — regular admin (is_super=False, is_admin=True)
+Four canonical users live in code, not in tenant DB state:
+  - "ambore" (Ramana Ambore)        — super-user (primary)
+  - "venkat" (Venkat Somajigiri)    — super-user (secondary)
+  - "rambo"  (Ramana Ambore)        — regular admin (operational)
+  - "admin"  (Ramana Ambore)        — regular admin (day-to-day mod)
 
-Both are reset on every boot from the constants below — full_name, email,
-phone, password, and the is_super / is_admin / is_approved / email_verified
-flags. This guarantees recovery if anyone has tampered with them via SQL,
-and lets the operator rotate the source-of-truth password by editing this
-file rather than touching the DB.
+All four are reset on every boot from the constants below — full_name,
+email, phone, password, and the is_super / is_admin / is_approved /
+email_verified flags. This guarantees recovery if anyone has tampered
+with them via SQL, and lets the operator rotate the source-of-truth
+password by editing this file rather than touching the DB.
 """
 from __future__ import annotations
 
@@ -27,15 +29,27 @@ logger = logging.getLogger(__name__)
 # Shared canonical password for both super-users.
 _CANONICAL_PASSWORD = "Zerodha01#"
 
+# Two super-users -------------------------------------------------------
 _SUPER_HANDLE = "ambore"
 _SUPER_EMAIL = "ramana.ambore@gmail.com"
 _SUPER_PHONE = "+919840770711"
 _SUPER_FULL_NAME = "Ramana Ambore"
 
-_BOOTSTRAP_HANDLE = "rambo"
-_BOOTSTRAP_EMAIL = "admin.marathakalyanam@gmail.com"
-_BOOTSTRAP_PHONE = "+15155254636"
-_BOOTSTRAP_FULL_NAME = "Ramana Ambore"
+_SUPER2_HANDLE = "venkat"
+_SUPER2_EMAIL = "marathakalyanam@gmail.com"
+_SUPER2_PHONE = "+919505250025"
+_SUPER2_FULL_NAME = "Venkat Somajigiri"
+
+# Two regular admins ----------------------------------------------------
+_ADMIN1_HANDLE = "rambo"
+_ADMIN1_EMAIL = "ramboquant@gmail.com"
+_ADMIN1_PHONE = "+15155254636"
+_ADMIN1_FULL_NAME = "Ramana Ambore"
+
+_ADMIN2_HANDLE = "admin"
+_ADMIN2_EMAIL = "admin.marathakalyanam@gmail.com"
+_ADMIN2_PHONE = "+15155254636"
+_ADMIN2_FULL_NAME = "Ramana Ambore"
 
 
 async def _ensure_canonical_user(
@@ -91,21 +105,21 @@ async def _ensure_canonical_user(
 async def bootstrap(session: AsyncSession) -> None:
     """Run on every startup: seed setting defaults + ensure canonical users."""
     await settings_service.seed_defaults(session)
-    await _ensure_canonical_user(
-        session,
-        handle=_SUPER_HANDLE,
-        email=_SUPER_EMAIL,
-        phone=_SUPER_PHONE,
-        password=_CANONICAL_PASSWORD,
-        full_name=_SUPER_FULL_NAME,
-        is_super=True,
-    )
-    await _ensure_canonical_user(
-        session,
-        handle=_BOOTSTRAP_HANDLE,
-        email=_BOOTSTRAP_EMAIL,
-        phone=_BOOTSTRAP_PHONE,
-        password=_CANONICAL_PASSWORD,
-        full_name=_BOOTSTRAP_FULL_NAME,
-        is_super=False,
-    )
+    # Supers
+    for h, e, p, n in [
+        (_SUPER_HANDLE, _SUPER_EMAIL, _SUPER_PHONE, _SUPER_FULL_NAME),
+        (_SUPER2_HANDLE, _SUPER2_EMAIL, _SUPER2_PHONE, _SUPER2_FULL_NAME),
+    ]:
+        await _ensure_canonical_user(
+            session, handle=h, email=e, phone=p, password=_CANONICAL_PASSWORD,
+            full_name=n, is_super=True,
+        )
+    # Regular admins
+    for h, e, p, n in [
+        (_ADMIN1_HANDLE, _ADMIN1_EMAIL, _ADMIN1_PHONE, _ADMIN1_FULL_NAME),
+        (_ADMIN2_HANDLE, _ADMIN2_EMAIL, _ADMIN2_PHONE, _ADMIN2_FULL_NAME),
+    ]:
+        await _ensure_canonical_user(
+            session, handle=h, email=e, phone=p, password=_CANONICAL_PASSWORD,
+            full_name=n, is_super=False,
+        )
