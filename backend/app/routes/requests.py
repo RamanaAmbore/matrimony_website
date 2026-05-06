@@ -60,7 +60,9 @@ class RequestController(Controller):
         except ValueError:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
-        result = await db.execute(select(Profile).where(Profile.id == pid))
+        result = await db.execute(
+            select(Profile).where(Profile.id == pid).options(selectinload(Profile.owner))
+        )
         profile = result.scalar_one_or_none()
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
@@ -70,6 +72,10 @@ class RequestController(Controller):
                 status_code=409,
                 detail={"code": "profile_not_approved", "message": "Can only request details for approved profiles"},
             )
+        if profile.owner and profile.owner.is_revoked:
+            # Owner is revoked — profile is effectively offline; mirror the
+            # search behaviour and surface as not-found.
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
         requester_id = uuid.UUID(user["sub"])
         if profile.owner_user_id == requester_id:

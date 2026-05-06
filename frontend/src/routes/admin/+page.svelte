@@ -946,15 +946,19 @@
 						<div class="mt-3 flex flex-wrap gap-2">
 							{#if !selectedUser.is_revoked}
 								{#if !selectedUser.is_approved}
-									<button
-										class="btn-primary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
-										disabled={userActionLoading}
-										onclick={() => approveUser(selectedUser!)}
-									>
-										{#if userActionLoading}<Loader size={13} class="animate-spin" />{/if}
-										<span class="text-xs">Approve User</span>
-										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approveUser', langStore.current)}</span>
-									</button>
+									<!-- Approving an admin is super-only; approving a regular user
+									     additionally requires their email to be verified first. -->
+									{#if (!selectedUser.is_admin || loggedInUser?.is_super) && selectedUser.email_verified}
+										<button
+											class="btn-primary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
+											disabled={userActionLoading}
+											onclick={() => approveUser(selectedUser!)}
+										>
+											{#if userActionLoading}<Loader size={13} class="animate-spin" />{/if}
+											<span class="text-xs">Approve User</span>
+											<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approveUser', langStore.current)}</span>
+										</button>
+									{/if}
 								{:else if !selectedUser.is_admin || loggedInUser?.is_super}
 									<!-- Revoking approval from an admin is super-only -->
 									<button
@@ -966,7 +970,8 @@
 										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('revokeApproval', langStore.current)}</span>
 									</button>
 								{/if}
-								{#if !selectedUser.email_verified}
+								<!-- Verifying email of an admin is super-only (mirrors approve gate) -->
+								{#if !selectedUser.email_verified && (!selectedUser.is_admin || loggedInUser?.is_super)}
 									<button
 										class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
 										disabled={userActionLoading}

@@ -9,6 +9,9 @@
 	import { langStore } from '$lib/stores/lang.svelte';
 	import { userStatus } from '$lib/userStatus';
 
+	let { data } = $props();
+	let loggedInUser = $derived(data.user);
+
 	let userList = $state<User[]>([]);
 	let loading = $state(true);
 	let promotingId = $state<string | null>(null);
@@ -122,7 +125,7 @@
 								{/if}
 							</td>
 							<td class="px-4 py-3 text-right">
-								{#if !user.is_admin}
+								{#if !user.is_admin && loggedInUser?.is_super}
 									<button
 										onclick={() => promote(user.uuid)}
 										disabled={promotingId === user.uuid}

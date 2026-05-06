@@ -19,6 +19,7 @@ from app.models.profile import (
     ProfileStatusEnum,
     TobaccoAlcoholEnum,
 )
+from app.models.user import User
 
 # Anonymous preview constants
 _PREVIEW_PAGE = 1
@@ -104,10 +105,18 @@ def _build_base_query(
     mother_tongue: Optional[str],
     pin_code: Optional[str],
 ) -> Any:
-    """Build a filtered SQLAlchemy query for approved profiles (no order/limit)."""
+    """Build a filtered SQLAlchemy query for approved profiles (no order/limit).
+
+    Excludes profiles whose owner is revoked — a revoked owner can't log in,
+    and their profiles must drop out of search until the owner is reinstated.
+    """
     query = (
         select(Profile)
-        .where(Profile.status == ProfileStatusEnum.approved)
+        .join(User, User.id == Profile.owner_user_id)
+        .where(
+            Profile.status == ProfileStatusEnum.approved,
+            User.is_revoked == False,  # noqa: E712
+        )
         .options(selectinload(Profile.photos))
     )
 

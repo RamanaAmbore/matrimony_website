@@ -47,10 +47,11 @@ class BroadcastEmailBody(msgspec.Struct):
 
 
 def _require_admin(request: Request) -> dict[str, Any]:
+    """Admin-or-super gate. Super implies admin even if the flag has drifted."""
     payload = request.scope.get("user_payload")
     if not payload:
         raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
-    if not payload.get("is_admin"):
+    if not (payload.get("is_admin") or payload.get("is_super")):
         raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Admin access required"})
     return payload
 
@@ -784,7 +785,13 @@ class AdminController(Controller):
         db: AsyncSession,
     ) -> dict[str, Any]:
         """Promote a regular user to admin. Super-only — a plain admin cannot
-        create more admins."""
+        create more admins.
+
+        Guards:
+          - target must not already be admin or super
+          - target must not be revoked (revoked users are banned)
+          - target must have verified email AND be approved (no half-baked admins)
+        """
         _require_super(request)
 
         try:
@@ -796,6 +803,16 @@ class AdminController(Controller):
         user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_super:
+            raise HTTPException(status_code=409, detail={"code": "already_super", "message": "User is already a super-user"})
+        if user.is_admin:
+            raise HTTPException(status_code=409, detail={"code": "already_admin", "message": "User is already an admin"})
+        if user.is_revoked:
+            raise HTTPException(status_code=409, detail={"code": "user_revoked", "message": "Reinstate the user before promoting"})
+        if not user.email_verified:
+            raise HTTPException(status_code=409, detail={"code": "email_not_verified", "message": "User email must be verified before promotion"})
+        if not user.is_approved:
+            raise HTTPException(status_code=409, detail={"code": "not_approved", "message": "User must be approved before promotion"})
 
         user.is_admin = True
         await db.commit()
@@ -809,8 +826,13 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        """Admin override: mark a user's email as verified."""
-        _require_admin(request)
+        """Admin override: mark a user's email as verified.
+
+        Permission rules:
+          - cannot target super-user (super is always verified)
+          - admin-target → super-only (mirrors revoke/reinstate/delete on admins)
+        """
+        payload = _require_admin(request)
 
         try:
             uid = uuid.UUID(user_id)
@@ -821,6 +843,13 @@ class AdminController(Controller):
         user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_super:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot modify a super-user"})
+        if user.is_admin and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Only super-user can act on an admin account"},
+            )
 
         user.email_verified = True
         user.email_verification_token = None
@@ -835,8 +864,15 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        """Admin: mark a user as approved so they can create profiles."""
-        _require_admin(request)
+        """Admin: mark a user as approved so they can create profiles.
+
+        Guards:
+          - cannot target super (super is always approved by bootstrap)
+          - admin-target → super-only (mirrors revoke/reinstate/delete on admins)
+          - cannot approve a revoked user (must reinstate first)
+          - cannot approve before email is verified
+        """
+        payload = _require_admin(request)
 
         try:
             uid = uuid.UUID(user_id)
@@ -847,6 +883,23 @@ class AdminController(Controller):
         user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        if user.is_super:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot approve a super-user"})
+        if user.is_admin and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Only super-user can act on an admin account"},
+            )
+        if user.is_revoked:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "user_revoked", "message": "User is revoked — reinstate them instead of approving"},
+            )
+        if not user.email_verified:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "email_not_verified", "message": "User email must be verified before approval"},
+            )
 
         user.is_approved = True
         await db.commit()
@@ -922,6 +975,8 @@ class AdminController(Controller):
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
         if user.is_super:
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot demote a super-user"})
+        if not user.is_admin:
+            raise HTTPException(status_code=409, detail={"code": "not_admin", "message": "User is not an admin"})
 
         user.is_admin = False
         await db.commit()
@@ -980,13 +1035,18 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        """Reinstate a revoked user: sets is_revoked=False and is_approved=True.
+        """Reinstate a revoked user: clears is_revoked.
+
+        Approval is restored only if the email is already verified — preserves
+        the verify-then-approve gate so a user revoked while unverified does
+        not return as a fully-approved account.
 
         Permission rules mirror revoke:
           - super-users cannot be targeted (they are never revoked)
           - reinstating an admin requires caller to be super
           - plain admins can reinstate non-admin users
           - cannot reinstate self
+          - target must currently be revoked (409 otherwise)
         """
         payload = _require_admin(request)
         caller_uid = uuid.UUID(payload["sub"])
@@ -1009,9 +1069,17 @@ class AdminController(Controller):
                 status_code=403,
                 detail={"code": "forbidden", "message": "Only super-user can reinstate an admin account"},
             )
+        if not user.is_revoked:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "not_revoked", "message": "User is not revoked"},
+            )
 
         user.is_revoked = False
-        user.is_approved = True
+        # Only restore approval if the email is verified. Otherwise the user
+        # must still go through verify → admin approve.
+        if user.email_verified:
+            user.is_approved = True
         await db.commit()
         await db.refresh(user)
         return _serialize_user(user)

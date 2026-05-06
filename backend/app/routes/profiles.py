@@ -389,22 +389,24 @@ class ProfileController(Controller):
         result = await db.execute(
             select(Profile)
             .where(Profile.id == pid)
-            .options(selectinload(Profile.photos))
+            .options(selectinload(Profile.photos), selectinload(Profile.owner))
         )
         profile = result.scalar_one_or_none()
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
         is_owner = user and user["sub"] == str(profile.owner_user_id)
-        is_admin = user and user.get("is_admin")
+        is_admin = user and (user.get("is_admin") or user.get("is_super"))
 
         if is_owner or is_admin:
             full = _serialize_full_profile(profile, request)
             photos_data = full.pop("photos", [])
             return {"profile": full, "photos": photos_data, "is_full_access": True}
 
-        # Non-owner: only approved profiles are visible at all
+        # Non-owner: only approved profiles whose owner is NOT revoked are visible.
         if profile.status != ProfileStatusEnum.approved:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
+        if profile.owner and profile.owner.is_revoked:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
         # Check if the current user has an approved detail request for this profile
@@ -651,13 +653,19 @@ class ProfileController(Controller):
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
         is_owner = str(profile.owner_user_id) == user["sub"]
-        is_admin = bool(user.get("is_admin"))
+        is_admin = bool(user.get("is_admin")) or bool(user.get("is_super"))
+        is_super = bool(user.get("is_super"))
 
         if not is_owner and not is_admin:
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
 
-        # The owner may delete their own profile regardless of status — even an
-        # approved one. Admin can also delete any profile.
+        # Owner may delete their own profile in any status. Admins must follow
+        # the canonical "revoke first, then delete" flow; super bypasses.
+        if not is_owner and not is_super and profile.status != ProfileStatusEnum.revoked:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "not_revoked", "message": "Revoke before deleting"},
+            )
 
         # Clean up on-disk photo files. The DB cascade removes Photo rows, but
         # the JPEG variants under MEDIA_ROOT are external state we need to
