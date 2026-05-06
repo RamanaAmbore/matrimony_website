@@ -291,18 +291,32 @@ class ProfileController(Controller):
                 detail={"code": "not_approved", "message": "Your account is pending admin approval before you can create profiles."},
             )
         # Paused (vacation) or suspended (admin hold) blocks new-profile
-        # creation. Existing profiles are already hidden from search via
-        # the search filter — this is the matching write-side guard.
-        if user.get("is_paused"):
-            raise HTTPException(
-                status_code=403,
-                detail={"code": "account_paused", "message": "Your account is paused. Unpause from My Account before creating new profiles."},
+        # creation. JWT payload is minted at login time so it can be
+        # stale — re-query the DB for these mutable flags.
+        from app.models.user import User as _User
+        owner_check = await db.execute(
+            select(_User.is_paused, _User.is_suspended, _User.is_revoked).where(
+                _User.id == uuid.UUID(user["sub"])
             )
-        if user.get("is_suspended"):
-            raise HTTPException(
-                status_code=403,
-                detail={"code": "account_suspended", "message": "Your account is suspended by an admin. Contact support before creating new profiles."},
-            )
+        )
+        row = owner_check.first()
+        if row:
+            paused, suspended, revoked = row
+            if revoked:
+                raise HTTPException(
+                    status_code=403,
+                    detail={"code": "user_revoked", "message": "Your account has been revoked."},
+                )
+            if paused:
+                raise HTTPException(
+                    status_code=403,
+                    detail={"code": "account_paused", "message": "Your account is paused. Unpause from My Account before creating new profiles."},
+                )
+            if suspended:
+                raise HTTPException(
+                    status_code=403,
+                    detail={"code": "account_suspended", "message": "Your account is suspended by an admin. Contact support before creating new profiles."},
+                )
 
         # ASCII validation
         _validate_free_text_fields(data)

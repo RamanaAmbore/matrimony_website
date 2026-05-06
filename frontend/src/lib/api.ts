@@ -279,7 +279,9 @@ export interface AdminDashboard {
 	stats: {
 		users: number;
 		users_admins: number;
-		users_super: number;
+		// Only present when the caller is a super-user — regular admins
+		// don't get visibility into the super tier.
+		users_super?: number;
 		photos_count?: number;
 		photos_total_bytes?: number;
 		profiles_total: number;

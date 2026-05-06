@@ -167,7 +167,8 @@ class AdminController(Controller):
         db: AsyncSession,
     ) -> dict[str, Any]:
         """Single-call admin home: stats + pending items for inline review."""
-        _require_admin(request)
+        payload = _require_admin(request)
+        is_super_caller = bool(payload.get("is_super"))
 
         # ── Stats ────────────────────────────────────────────────────────────
         # Exclude super-users from every users-derived count.
@@ -183,6 +184,9 @@ class AdminController(Controller):
                 )
             )
         ).scalar_one()
+        # Super count is only computed for super callers — regular admins
+        # don't get visibility into how many supers exist (privileged role
+        # remains invisible from below).
         users_super = (
             await db.execute(
                 select(func.count()).select_from(User).where(User.is_super == True)  # noqa: E712
@@ -238,10 +242,9 @@ class AdminController(Controller):
         ).scalar_one() or 0
         photos_count = (await db.execute(select(func.count()).select_from(Photo))).scalar_one()
 
-        stats = {
+        stats: dict[str, Any] = {
             "users": users_count,
             "users_admins": users_admins,
-            "users_super": users_super,
             "profiles_total": profiles_total,
             "profiles_pending": profiles_pending,
             "profiles_approved": profiles_approved,
@@ -254,6 +257,10 @@ class AdminController(Controller):
             "photos_count": photos_count,
             "photos_total_bytes": int(photos_total_bytes),
         }
+        # Conditionally surface super-only stats. Regular admins should
+        # not even see that there's a super-tier.
+        if is_super_caller:
+            stats["users_super"] = users_super
 
         # ── Pending profiles (up to 25) with owner email ────────────────────
         pending_profiles_result = await db.execute(
