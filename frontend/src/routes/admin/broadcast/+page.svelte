@@ -179,18 +179,21 @@
 
 				<!-- Profile-side filters: restrict audience to users whose profile
 				     matches all selected criteria. Empty = no restriction. -->
-				<div class="mt-4 grid grid-cols-1 gap-3 border-t border-gold/20 pt-3 sm:grid-cols-3">
-					<div>
-						<label for="bc-tongue" class="label text-xs">Mother tongue</label>
-						<Combobox id="bc-tongue" bind:value={filterMotherTongue} options={['', ...MOTHER_TONGUES]} placeholder="Any" />
-					</div>
-					<div>
-						<label for="bc-state" class="label text-xs">State</label>
-						<Combobox id="bc-state" bind:value={filterState} options={['', ...INDIA_STATES]} allowCustom={true} placeholder="Any" />
-					</div>
-					<div>
-						<label for="bc-country" class="label text-xs">Country</label>
-						<Combobox id="bc-country" bind:value={filterCountry} options={['', ...COUNTRIES]} allowCustom={true} placeholder="Any" />
+				<div class="mt-4 border-t border-gold/20 pt-3">
+					<p class="mb-3 text-xs font-semibold uppercase tracking-wider text-ink/50">Recipient</p>
+					<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+						<div>
+							<label for="bc-tongue" class="label text-xs">Mother tongue</label>
+							<Combobox id="bc-tongue" bind:value={filterMotherTongue} options={['', ...MOTHER_TONGUES]} placeholder="Any" />
+						</div>
+						<div>
+							<label for="bc-state" class="label text-xs">State</label>
+							<Combobox id="bc-state" bind:value={filterState} options={['', ...INDIA_STATES]} allowCustom={true} placeholder="Any" />
+						</div>
+						<div>
+							<label for="bc-country" class="label text-xs">Country</label>
+							<Combobox id="bc-country" bind:value={filterCountry} options={['', ...COUNTRIES]} allowCustom={true} placeholder="Any" />
+						</div>
 					</div>
 				</div>
 				<p class="mt-3 text-xs text-ink/60">
