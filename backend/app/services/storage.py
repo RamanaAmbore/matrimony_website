@@ -163,7 +163,9 @@ class R2Storage(StorageBackend):
         import boto3  # type: ignore
 
         self._bucket = bucket
-        self._public_base = public_base_url.rstrip("/")
+        # public_base_url is optional. Empty string → bucket has no public
+        # access configured; we serve every variant via signed URLs.
+        self._public_base = public_base_url.rstrip("/") if public_base_url else ""
         self._signed_ttl = signed_ttl_seconds
         self._client = boto3.client(
             "s3",
@@ -209,9 +211,19 @@ class R2Storage(StorageBackend):
             return False
 
     def public_url(self, key: str) -> str:
-        return f"{self._public_base}/{key}"
+        # If a public base URL is configured (custom domain or pub-XXX.r2.dev),
+        # use it — the bucket allows anonymous reads. Otherwise fall back to
+        # a signed URL so the response works against a default-private bucket.
+        if self._public_base:
+            return f"{self._public_base}/{key}"
+        return self._sign(key)
 
     def private_url(self, key: str) -> str:
+        # Always signed regardless of public_base config — the passport
+        # variant must never be publicly fetchable.
+        return self._sign(key)
+
+    def _sign(self, key: str) -> str:
         try:
             return self._client.generate_presigned_url(
                 "get_object",
