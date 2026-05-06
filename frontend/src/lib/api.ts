@@ -155,6 +155,22 @@ export interface DetailRequest {
 	profile_city?: string | null;
 }
 
+/** Enriched request row returned by GET /requests/mine.
+ *  Includes all DetailRequest fields plus denormalised profile snapshot fields
+ *  so the user-facing requests grid doesn't need a second fetch per row.
+ */
+export interface EnrichedRequest extends DetailRequest {
+	profile_first_name: string | null;
+	profile_last_name: string | null;
+	profile_number: string | null;
+	profile_gender: Gender | null;
+	profile_dob: string | null;
+	profile_city: string | null;
+	profile_state: string | null;
+	profile_status: ProfileStatus | null;
+	profile_blurred_url: string | null;
+}
+
 export interface SearchResult {
 	id: string;
 	gender: Gender;
@@ -492,8 +508,17 @@ export const search = {
 // ─── Requests ─────────────────────────────────────────────────────────────────
 
 export const requests = {
+	/** @deprecated Use listMine() for the enriched shape. */
 	async mine(): Promise<DetailRequest[]> {
 		return request('/api/requests/mine');
+	},
+
+	async listMine(): Promise<EnrichedRequest[]> {
+		return request('/api/requests/mine');
+	},
+
+	async delete(id: string): Promise<void> {
+		return request(`/api/requests/${id}`, { method: 'DELETE' });
 	}
 };
 

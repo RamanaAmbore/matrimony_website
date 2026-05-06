@@ -250,8 +250,14 @@
 
 	const primaryPhoto = $derived(photos.find((p) => p.is_primary) ?? photos[0] ?? null);
 
-	// Whether the viewer should see the full data (owner or admin)
-	const canSeeFull = $derived(isOwner || isAdmin);
+	// A user whose detail request has been approved receives the full profile from the
+	// backend, including passport_url on photos. We detect that access grant by checking
+	// whether the first photo carries a passport_url (the backend only includes it when
+	// the caller is owner, admin, or approved-request holder).
+	const hasApprovedRequestAccess = $derived(photos.length > 0 && !!photos[0].passport_url);
+
+	// Whether the viewer should see the full data (owner, admin, or approved request holder)
+	const canSeeFull = $derived(isOwner || isAdmin || hasApprovedRequestAccess);
 
 	// Bug 2: keep displayedPhoto in sync with primaryPhoto on first load;
 	// user clicks on a thumbnail to override it.

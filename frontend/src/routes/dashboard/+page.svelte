@@ -1,12 +1,22 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { profiles as profilesApi, type Profile } from '$lib/api';
+	import { onMount, onDestroy } from 'svelte';
+	import { createGrid, ModuleRegistry, AllCommunityModule, type GridApi } from 'ag-grid-community';
+	import 'ag-grid-community/styles/ag-grid.css';
+	import 'ag-grid-community/styles/ag-theme-quartz.css';
+
+	ModuleRegistry.registerModules([AllCommunityModule]);
+
+	import {
+		profiles as profilesApi,
+		type Profile,
+		ApiError
+	} from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
-	import { ApiError } from '$lib/api';
-	import { Plus, User, Edit, Loader, SendHorizonal, FileEdit, Clock, CheckCircle, XCircle, Settings } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
+	import { Plus, User, Edit, Loader, SendHorizonal, Settings, Eye, Trash2 } from 'lucide-svelte';
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
+	import ConfirmDelete from '$lib/components/ConfirmDelete.svelte';
 
 	let { data } = $props();
 
@@ -14,6 +24,14 @@
 	let loading = $state(true);
 	let error = $state('');
 	let submitting = $state<Record<string, boolean>>({});
+
+	// Delete modal state
+	let deleteModalOpen = $state(false);
+	let pendingDelete = $state<Profile | null>(null);
+	let deleting = $state(false);
+
+	// ag-Grid
+	let gridApi: GridApi | undefined;
 
 	onMount(async () => {
 		try {
@@ -29,29 +47,17 @@
 		}
 	});
 
-	function statusClass(status: Profile['status']) {
-		switch (status) {
-			case 'approved': return 'badge-approved';
-			case 'pending': return 'badge-pending';
-			case 'rejected': return 'badge-rejected';
-			default: return 'badge-draft';
-		}
-	}
-
-	function statusLabel(status: Profile['status']) {
-		switch (status) {
-			case 'approved': return 'Approved';
-			case 'pending': return 'Under Review';
-			case 'rejected': return 'Rejected';
-			default: return 'Draft';
-		}
-	}
+	onDestroy(() => {
+		gridApi?.destroy();
+		gridApi = undefined;
+	});
 
 	async function submitProfile(id: string) {
 		submitting[id] = true;
 		try {
 			const updated = await profilesApi.submit(id);
 			profileList = profileList.map(p => p.id === id ? updated : p);
+			gridApi?.setGridOption('rowData', [...profileList]);
 			toastStore.success('Profile submitted for review!');
 		} catch (err) {
 			if (err instanceof ApiError) {
@@ -64,15 +70,169 @@
 		}
 	}
 
-	function calcAge(dob: string): number {
-		const birth = new Date(dob);
-		const now = new Date();
-		let age = now.getFullYear() - birth.getFullYear();
-		if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) {
-			age--;
-		}
-		return age;
+	function openDeleteModal(profile: Profile) {
+		pendingDelete = profile;
+		deleteModalOpen = true;
 	}
+
+	async function confirmDelete() {
+		if (!pendingDelete) return;
+		deleting = true;
+		try {
+			await profilesApi.delete(pendingDelete.id);
+			profileList = profileList.filter(p => p.id !== pendingDelete!.id);
+			gridApi?.setGridOption('rowData', [...profileList]);
+			toastStore.success('Profile deleted');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Delete failed');
+		} finally {
+			deleting = false;
+			pendingDelete = null;
+		}
+	}
+
+	function formatDob(dob: string): string {
+		// ISO YYYY-MM-DD → DD-MM-YYYY
+		if (!dob) return '—';
+		const [y, m, d] = dob.split('-');
+		return `${d}-${m}-${y}`;
+	}
+
+	// Inline status pill HTML (mirrors admin grid style)
+	function statusPill(status: string): string {
+		const styles: Record<string, string> = {
+			approved: 'background:#fef3c7;color:#92400e',  // saffron/25 text-maroon (badge-approved)
+			pending:  'background:#fef9c3;color:#92400e',  // badge-pending
+			rejected: 'background:#fee2e2;color:#dc2626',  // badge-rejected
+			draft:    'background:#f3f4f6;color:#6b7280'   // badge-draft
+		};
+		const label = status === 'pending' ? 'Under Review' : status.charAt(0).toUpperCase() + status.slice(1);
+		return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[status] ?? ''}">${label}</span>`;
+	}
+
+	// ag-Grid use:action
+	function profilesGridAction(node: HTMLDivElement, rows: Profile[]) {
+		const make = (data: Profile[]) => {
+			gridApi?.destroy();
+			const colDefs = [
+				{
+					field: 'profile_number',
+					headerName: 'ID',
+					width: 130,
+					sortable: true,
+					filter: true,
+					headerClass: 'mk-header',
+					cellStyle: { fontFamily: 'monospace', fontSize: '12px', color: '#6b7280', fontVariantNumeric: 'tabular-nums' }
+				},
+				{
+					headerName: 'Name',
+					width: 200,
+					sortable: true,
+					filter: true,
+					headerClass: 'mk-header',
+					valueGetter: (p: { data: Profile }) => `${p.data.first_name} ${p.data.last_name ?? ''}`.trim()
+				},
+				{
+					field: 'gender',
+					headerName: 'Gender',
+					width: 100,
+					sortable: true,
+					filter: true,
+					headerClass: 'mk-header',
+					valueFormatter: (p: { value: string }) => p.value.charAt(0).toUpperCase() + p.value.slice(1)
+				},
+				{
+					field: 'dob',
+					headerName: 'DOB',
+					width: 120,
+					sortable: true,
+					headerClass: 'mk-header',
+					cellStyle: { fontVariantNumeric: 'tabular-nums' },
+					valueFormatter: (p: { value: string }) => formatDob(p.value)
+				},
+				{
+					headerName: 'Location',
+					width: 190,
+					filter: true,
+					headerClass: 'mk-header',
+					valueGetter: (p: { data: Profile }) => [p.data.city, p.data.state].filter(Boolean).join(', ')
+				},
+				{
+					field: 'status',
+					headerName: 'Status',
+					width: 130,
+					sortable: true,
+					filter: true,
+					headerClass: 'mk-header',
+					cellRenderer: (p: { value: string }) => statusPill(p.value)
+				},
+				{
+					headerName: '',
+					width: 90,
+					sortable: false,
+					filter: false,
+					pinned: 'right' as const,
+					headerClass: 'mk-header',
+					cellRenderer: (p: { data: Profile }) => {
+						return `<div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;height:100%">
+							<button data-action="view" data-id="${p.data.id}" title="View profile" style="background:none;border:1px solid #c9a227;border-radius:4px;padding:3px 5px;cursor:pointer;color:#6b0f1a;">
+								<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+							</button>
+							<button data-action="delete" data-id="${p.data.id}" title="Delete profile" style="background:#e63946;border:none;border-radius:4px;padding:3px 5px;cursor:pointer;color:#fff;">
+								<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+							</button>
+						</div>`;
+					},
+					onCellClicked: (e: { event: Event; data: Profile }) => {
+						const target = (e.event.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
+						if (!target) return;
+						const action = target.dataset.action;
+						if (action === 'view') {
+							goto(`/profiles/${e.data.id}`);
+						} else if (action === 'delete') {
+							openDeleteModal(e.data);
+						}
+					}
+				}
+			];
+
+			gridApi = createGrid(node, {
+				columnDefs: colDefs as any[],
+				rowData: [...data],
+				rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
+				onRowClicked: (e) => {
+					// Only navigate if the click wasn't on an action button
+					const target = e.event?.target as HTMLElement | null;
+					if (target?.closest('[data-action]')) return;
+					if (e.data) goto(`/profiles/${(e.data as Profile).id}`);
+				},
+				defaultColDef: { resizable: true, floatingFilter: true, filter: true },
+				pagination: true,
+				paginationPageSize: 20,
+				theme: 'legacy'
+			});
+		};
+
+		make(rows);
+		return { destroy: () => { gridApi?.destroy(); gridApi = undefined; } };
+	}
+
+	const AG_STYLE = [
+		'--ag-header-background-color: #6b0f1a',
+		'--ag-header-foreground-color: #fff8e7',
+		'--ag-header-column-separator-display: block',
+		'--ag-header-column-separator-color: #a01428',
+		'--ag-header-column-separator-width: 1px',
+		'--ag-cell-horizontal-border: solid #e8dcc8',
+		'--ag-row-border-color: #e8dcc8',
+		'--ag-row-border-width: 1px',
+		'--ag-selected-row-background-color: #fdf3e7',
+		'--ag-row-hover-color: #fdf8f0',
+		'--ag-font-size: 13px',
+		'--ag-grid-size: 6px',
+		'--ag-list-item-height: 36px',
+		'--ag-header-height: 42px'
+	].join('; ');
 </script>
 
 <svelte:head>
@@ -147,7 +307,6 @@
 		</div>
 	{:else if profileList.length === 0}
 		<div class="py-16 text-center">
-			<!-- Decorative empty-state kalasha-ish circle -->
 			<div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-cream/60 border-2 border-gold/30">
 				<User size={40} class="text-gold/50" />
 			</div>
@@ -163,89 +322,72 @@
 			{/if}
 		</div>
 	{:else}
-		<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each profileList as profile (profile.id)}
-				<div
-					class="card flex flex-col gap-3 cursor-pointer"
-					role="link"
-					tabindex="0"
-					onclick={(e) => { if ((e.target as HTMLElement).closest('button, a')) return; goto(`/profiles/${profile.id}`); }}
-					onkeydown={(e) => { if (e.key === 'Enter') goto(`/profiles/${profile.id}`); }}
-				>
-					<div class="flex items-start justify-between">
-						<div>
-							<h2 class="font-serif text-lg font-semibold text-maroon">
-								{profile.first_name}{profile.surname_clan ? ` ${profile.surname_clan}` : ''}
-							</h2>
-							<p class="text-sm text-ink/60 capitalize">
-								{profile.gender} · {calcAge(profile.dob)} yrs
-							</p>
-							<span class="font-mono text-[0.65rem] text-maroon/60">{profile.profile_number ?? '—'}</span>
-						</div>
-						{#if data.user?.is_admin}
-							<a
-								href="/admin/profiles?status={profile.status}"
-								class="{statusClass(profile.status)} inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
-								title="View in admin"
-							>
-								{#if profile.status === 'draft'}<FileEdit size={12} class="-mt-0.5 inline-block" />
-								{:else if profile.status === 'pending'}<Clock size={12} class="-mt-0.5 inline-block" />
-								{:else if profile.status === 'approved'}<CheckCircle size={12} class="-mt-0.5 inline-block" />
-								{:else if profile.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
-								{/if}
-								{statusLabel(profile.status)}
-							</a>
-						{:else}
-							<span class="{statusClass(profile.status)} inline-flex items-center gap-1">
-								{#if profile.status === 'draft'}<FileEdit size={12} class="-mt-0.5 inline-block" />
-								{:else if profile.status === 'pending'}<Clock size={12} class="-mt-0.5 inline-block" />
-								{:else if profile.status === 'approved'}<CheckCircle size={12} class="-mt-0.5 inline-block" />
-								{:else if profile.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
-								{/if}
-								{statusLabel(profile.status)}
-							</span>
-						{/if}
-					</div>
-
-					<div class="text-sm text-ink/70 space-y-0.5">
-						<p>{profile.occupation}</p>
-						<p>{profile.city}, {profile.state}</p>
-					</div>
-
-					<p class="text-xs text-ink/50">
-						{#if profile.status === 'draft'}
-							Not yet submitted — complete your profile and submit for review.
-						{:else if profile.status === 'pending'}
-							Under admin review — you will be notified once approved.
-						{:else if profile.status === 'approved'}
-							Live in search results.
-						{:else if profile.status === 'rejected'}
-							Not approved — edit and resubmit, or contact admin.
-						{/if}
-					</p>
-
-					<div class="flex flex-wrap gap-2 mt-auto pt-2 border-t border-gold/20">
-						<a href="/profiles/{profile.id}" class="btn-secondary flex flex-col items-center justify-center flex-1 text-center leading-tight text-sm py-1 min-h-[44px] whitespace-normal">
-							<span>View</span>
-							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('view', langStore.current)}</span>
-						</a>
-						<a href="/profiles/{profile.id}/edit" class="btn-primary flex flex-col items-center justify-center flex-1 text-center leading-tight text-sm py-1 min-h-[44px] whitespace-normal">
-							<span class="flex items-center gap-1"><Edit size={13} />Edit</span>
-							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('edit', langStore.current)}</span>
-						</a>
-						{#if profile.status === 'draft'}
-							<button
-								onclick={() => submitProfile(profile.id)}
-								disabled={submitting[profile.id]}
-								class="btn-secondary flex flex-col w-full items-center justify-center leading-tight text-sm py-1 min-h-[44px] whitespace-normal border-saffron text-saffron hover:bg-saffron/10 disabled:opacity-50"
-							>
-								<span class="flex items-center gap-1"><SendHorizonal size={13} />{submitting[profile.id] ? 'Submitting…' : 'Submit'}</span>
-								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('submitProfile', langStore.current)}</span>
-							</button>
-						{/if}
-					</div>
-				</div>
-			{/each}
+		<div class="mt-6">
+			<p class="mb-2 text-xs text-ink/50">Click a row to view profile. Use the action buttons in the last column to view or delete.</p>
+			<!-- ag-Grid -->
+			{#key profileList.length}
+			<div
+				use:profilesGridAction={profileList}
+				class="ag-theme-quartz w-full rounded-lg overflow-hidden border border-[#c8a96e] shadow-sm"
+				style="height: 420px; {AG_STYLE}"
+			></div>
+			{/key}
 		</div>
 	{/if}
 </div>
+
+<!-- Double-confirm delete modal -->
+<ConfirmDelete
+	bind:open={deleteModalOpen}
+	title="Delete profile?"
+	description={pendingDelete
+		? `This will permanently remove ${pendingDelete.first_name} ${pendingDelete.last_name ?? ''}'s profile, all photos, and detail requests. This cannot be undone.`
+		: 'This will permanently remove the profile. This cannot be undone.'}
+	onConfirm={confirmDelete}
+/>
+
+<style>
+	:global(.mk-header) {
+		font-weight: 700 !important;
+		font-size: 12px !important;
+		letter-spacing: 0.06em !important;
+		text-transform: uppercase !important;
+	}
+	:global(.mk-header .ag-header-cell-text) {
+		color: #fff8e7 !important;
+	}
+	:global(.mk-header .ag-icon) {
+		color: #ffb627 !important;
+	}
+	:global(.ag-theme-quartz .ag-floating-filter) {
+		background: #fdf8f0 !important;
+		border-bottom: 1px solid #e8dcc8 !important;
+	}
+	:global(.ag-theme-quartz .ag-floating-filter-input input) {
+		font-size: 12px !important;
+		border: 1px solid #e8dcc8 !important;
+		border-radius: 4px !important;
+		padding: 2px 6px !important;
+	}
+	:global(.ag-theme-quartz .ag-floating-filter-input input:focus) {
+		border-color: #6b0f1a !important;
+		outline: none !important;
+	}
+	:global(.ag-theme-quartz .ag-paging-panel) {
+		flex-wrap: wrap !important;
+		row-gap: 4px !important;
+		column-gap: 8px !important;
+		padding: 6px 10px !important;
+		justify-content: center !important;
+	}
+	@media (max-width: 640px) {
+		:global(.ag-theme-quartz .ag-paging-page-size),
+		:global(.ag-theme-quartz .ag-paging-row-summary-panel) {
+			display: none !important;
+		}
+		:global(.ag-theme-quartz .ag-paging-panel) {
+			font-size: 12px !important;
+			gap: 4px !important;
+		}
+	}
+</style>
