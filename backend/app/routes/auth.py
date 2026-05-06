@@ -298,6 +298,44 @@ class AuthController(Controller):
 
         return {"message": "Email verified successfully"}
 
+    @post("/me/resend-verification", status_code=200)
+    async def resend_my_verification(
+        self,
+        db: AsyncSession,
+        request: Request,
+    ) -> dict[str, Any]:
+        """H7: self-service resend of the email verification link.
+
+        For users who never received the original email or whose token
+        expired. No password required (authenticated session is enough),
+        but rate-limited to one fresh token per call.
+        """
+        payload = request.scope.get("user_payload")
+        if not payload:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        result = await db.execute(select(User).where(User.id == uuid.UUID(payload["sub"])))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+        if user.email_verified:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "already_verified", "message": "Your email is already verified"},
+            )
+
+        token = auth_svc.generate_token()
+        user.email_verification_token = token
+        await db.commit()
+
+        try:
+            await email_svc.send_verification_email(user.email, token, full_name=user.full_name)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("Failed to send verification email: %s", exc)
+
+        return {"message": f"Verification email sent to {user.email}"}
+
     # ── Account self-service ────────────────────────────────────────────────
     # All three updates require the current password as a confirmation.
     # Email-update resets email_verified+is_approved (the user must re-verify
@@ -522,20 +560,52 @@ class AuthController(Controller):
         return response
 
     @get("/me")
-    async def me(self, request: Request) -> dict[str, Any]:
+    async def me(self, request: Request, db: AsyncSession) -> Response[dict[str, Any]]:
+        """Return the current user.
+
+        Re-queries the DB instead of just echoing the JWT payload so that
+        role changes (promote, demote, revoke, reinstate, approve, unapprove,
+        verify_email) take effect on the very next page load — the previous
+        echo-the-JWT version forced users to log out + log in again to see
+        promote/demote results.
+
+        If the user has been deleted or revoked since the JWT was minted,
+        return 401 and clear the cookie so the client redirects to login.
+        """
         payload: dict[str, Any] | None = request.scope.get("user_payload")
         if not payload:
             raise HTTPException(
                 status_code=401,
                 detail={"code": "unauthenticated", "message": "Not authenticated"},
             )
-        return {
-            "uuid": payload["sub"],
-            "user_id": payload.get("handle", ""),
-            "email": payload.get("email", ""),
-            "full_name": payload.get("full_name", ""),
-            "is_admin": payload.get("is_admin", False),
-            "is_super": payload.get("is_super", False),
-            "email_verified": payload.get("email_verified", False),
-            "is_approved": payload.get("is_approved", True),
-        }
+
+        try:
+            uid = uuid.UUID(payload["sub"])
+        except (KeyError, ValueError):
+            raise HTTPException(
+                status_code=401,
+                detail={"code": "unauthenticated", "message": "Not authenticated"},
+            )
+
+        result = await db.execute(select(User).where(User.id == uid))
+        user = result.scalar_one_or_none()
+        if not user or user.is_revoked:
+            # User was deleted or revoked after JWT was minted — clear the
+            # cookie so the next request is a clean anonymous one.
+            response: Response[dict[str, Any]] = Response(
+                content={"code": "unauthenticated", "message": "Session no longer valid"},
+                status_code=401,
+            )
+            response.delete_cookie(key=_JWT_COOKIE, path="/")
+            return response
+
+        return Response(content={
+            "uuid": str(user.id),
+            "user_id": user.user_handle,
+            "email": user.email,
+            "full_name": user.full_name,
+            "is_admin": user.is_admin,
+            "is_super": user.is_super,
+            "email_verified": user.email_verified,
+            "is_approved": user.is_approved,
+        })

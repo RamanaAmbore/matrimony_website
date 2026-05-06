@@ -107,8 +107,12 @@ def _build_base_query(
 ) -> Any:
     """Build a filtered SQLAlchemy query for approved profiles (no order/limit).
 
-    Excludes profiles whose owner is revoked — a revoked owner can't log in,
-    and their profiles must drop out of search until the owner is reinstated.
+    Excludes profiles whose owner is currently revoked OR unapproved.
+    - revoked: owner can't log in; profile must vanish until reinstate
+    - unapproved: owner re-entered the pending queue (most common path is
+      after they changed their email, which resets is_approved=False).
+      Their existing approved profiles must drop out of search until an
+      admin re-approves the owner.
     """
     query = (
         select(Profile)
@@ -116,6 +120,7 @@ def _build_base_query(
         .where(
             Profile.status == ProfileStatusEnum.approved,
             User.is_revoked == False,  # noqa: E712
+            User.is_approved == True,  # noqa: E712
         )
         .options(selectinload(Profile.photos))
     )

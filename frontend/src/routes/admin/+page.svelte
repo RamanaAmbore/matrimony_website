@@ -999,7 +999,7 @@
 										onclick={() => resendVerificationFromGrid(selectedUser!)}
 									>
 										<span class="text-xs">Resend Verification</span>
-										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('verifyEmail', langStore.current)}</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('resendVerification', langStore.current)}</span>
 									</button>
 									<button
 										class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
@@ -1007,7 +1007,7 @@
 										onclick={() => verifyEmailFromGrid(selectedUser!)}
 									>
 										<span class="text-xs flex items-center gap-1"><ShieldCheck size={13} />Verify (override)</span>
-										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('verifyEmail', langStore.current)}</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('verifyEmailOverride', langStore.current)}</span>
 									</button>
 								{/if}
 								<!-- Promote: super-only -->

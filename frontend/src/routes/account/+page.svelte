@@ -182,6 +182,21 @@
 		pwErrors = {};
 	}
 
+	// ── Resend verification (H7) ─────────────────────────────────────────────
+	let resendLoading = $state(false);
+
+	async function handleResendVerification() {
+		resendLoading = true;
+		try {
+			const res = await authApi.resendMyVerification();
+			toastStore.success(res.message);
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 80) : 'Could not send verification email');
+		} finally {
+			resendLoading = false;
+		}
+	}
+
 	// ── Delete account section state (G9) ────────────────────────────────────
 	let deleteOpen = $state(false);
 	let deleteCurrentPw = $state('');
@@ -256,9 +271,21 @@
 	{#if user && !user.email_verified}
 		<div class="flex items-start gap-3 rounded-lg border border-saffron/40 bg-saffron/10 px-5 py-4">
 			<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0 text-saffron" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-			<div class="text-sm text-ink/80">
+			<div class="text-sm text-ink/80 flex-1">
 				<p class="font-semibold text-saffron">Email verification required.</p>
 				<p>Your email address is not yet verified. Please check your inbox and click the verification link. Your account will also need admin re-approval before you can create or update profiles.</p>
+				<button
+					type="button"
+					class="mt-2 inline-flex items-center gap-1 rounded border border-saffron bg-white px-3 py-1.5 text-xs font-semibold text-maroon hover:bg-saffron/20 disabled:opacity-50"
+					disabled={resendLoading}
+					onclick={handleResendVerification}
+				>
+					{#if resendLoading}
+						<Loader size={12} class="animate-spin" />
+					{/if}
+					<span>Resend verification email</span>
+					<span lang={langStore.current} class="opacity-80">· {tx('resendVerification', langStore.current)}</span>
+				</button>
 			</div>
 		</div>
 	{/if}

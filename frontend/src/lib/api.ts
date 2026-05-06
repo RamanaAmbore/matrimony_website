@@ -446,6 +446,10 @@ export const auth = {
 			method: 'POST',
 			body: JSON.stringify({ current_password, confirmation })
 		});
+	},
+
+	async resendMyVerification(): Promise<{ message: string }> {
+		return request('/api/auth/me/resend-verification', { method: 'POST' });
 	}
 };
 

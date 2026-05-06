@@ -362,6 +362,18 @@ class AdminController(Controller):
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
+        # H3: refuse to approve a profile whose owner is currently revoked.
+        # Search would hide it anyway, but admin work and the approval email
+        # would be wasted on an account that can't log in.
+        if profile.owner and profile.owner.is_revoked:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "owner_revoked",
+                    "message": "Owner account is revoked — reinstate the user before approving the profile",
+                },
+            )
+
         profile.status = ProfileStatusEnum.approved
         profile.admin_notes = data.admin_notes
         await db.commit()
@@ -422,17 +434,33 @@ class AdminController(Controller):
         # rejected_at).
         profile.rejected_at = datetime.now(timezone.utc)
         # G2: cascade-revoke any pending requests targeting this profile.
-        # Otherwise requesters sit waiting for a response on a profile that
-        # is no longer visible.
-        await db.execute(
-            update(DetailRequest)
+        # Capture the affected requests first so H6 can email each requester.
+        cascaded = await db.execute(
+            select(DetailRequest)
             .where(
                 DetailRequest.profile_id == pid,
                 DetailRequest.status == RequestStatusEnum.pending,
             )
-            .values(status=RequestStatusEnum.revoked, responded_at=datetime.now(timezone.utc))
+            .options(selectinload(DetailRequest.requester))
         )
+        cascaded_requests = list(cascaded.scalars())
+        for cascaded_req in cascaded_requests:
+            cascaded_req.status = RequestStatusEnum.revoked
+            cascaded_req.responded_at = datetime.now(timezone.utc)
         await db.commit()
+
+        # H6: notify requesters whose pending requests were just cascade-revoked
+        # so they aren't left waiting on a profile that's now offline.
+        for cascaded_req in cascaded_requests:
+            if cascaded_req.requester:
+                try:
+                    asyncio.create_task(email_svc.send_detail_request_rejected(
+                        cascaded_req.requester.email,
+                        profile.first_name,
+                        "The profile is no longer available.",
+                    ))
+                except Exception as exc:
+                    logger.warning("Failed to schedule cascade-reject email: %s", exc)
 
         try:
             owner_result = await db.execute(select(User).where(User.id == profile.owner_user_id))
@@ -518,6 +546,31 @@ class AdminController(Controller):
                 detail={"code": "not_revoked", "message": "Revoke before deleting"},
             )
 
+        # H2: unlink photo files on disk before cascade. Same gap that G3
+        # closed for user-delete, still present here. Without this every
+        # admin profile-delete leaks the JPEG variants under MEDIA_ROOT.
+        photos_to_unlink = await db.execute(select(Photo).where(Photo.profile_id == pid))
+        for photo in photos_to_unlink.scalars():
+            for path_rel in (photo.passport_path, photo.blurred_path, photo.thumb_path):
+                fpath = MEDIA_ROOT / path_rel
+                if fpath.exists():
+                    try:
+                        fpath.unlink()
+                    except OSError as exc:
+                        logger.warning("Failed to unlink %s: %s", fpath, exc)
+            photo_dir = MEDIA_ROOT / "profiles" / str(pid) / str(photo.id)
+            if photo_dir.exists() and not any(photo_dir.iterdir()):
+                try:
+                    photo_dir.rmdir()
+                except OSError:
+                    pass
+        profile_dir = MEDIA_ROOT / "profiles" / str(pid)
+        if profile_dir.exists() and not any(profile_dir.iterdir()):
+            try:
+                profile_dir.rmdir()
+            except OSError:
+                pass
+
         deleted = {
             "id": str(profile.id),
             "profile_number": profile.profile_number,
@@ -567,10 +620,40 @@ class AdminController(Controller):
         except ValueError:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Request not found"})
 
-        result = await db.execute(select(DetailRequest).where(DetailRequest.id == rid))
+        result = await db.execute(
+            select(DetailRequest)
+            .where(DetailRequest.id == rid)
+            .options(
+                selectinload(DetailRequest.requester),
+                selectinload(DetailRequest.profile).selectinload(Profile.owner),
+            )
+        )
         req = result.scalar_one_or_none()
         if not req:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Request not found"})
+
+        # H4: refuse to approve if the requester is revoked. G1 already
+        # cascade-revokes pending requests at revoke time, but this guard
+        # closes the race window where a revoke fires after admin started
+        # approving but before the commit lands.
+        if req.requester and req.requester.is_revoked:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "requester_revoked",
+                    "message": "Requester account is revoked — cannot approve",
+                },
+            )
+        # Defence-in-depth: also refuse if the target profile's owner has been
+        # revoked since the request was placed.
+        if req.profile and req.profile.owner and req.profile.owner.is_revoked:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "owner_revoked",
+                    "message": "Profile owner is revoked — cannot approve request",
+                },
+            )
 
         req.status = RequestStatusEnum.approved
         req.admin_notes = data.admin_notes
