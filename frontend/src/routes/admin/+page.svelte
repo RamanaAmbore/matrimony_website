@@ -1227,17 +1227,21 @@
 			></div>
 			{/key}
 
-			<!-- Selected profile action panel -->
+			<!-- Selected profile action panel.
+			     Stack vertically on mobile, side-by-side on sm+ — matches the
+			     user-panel pattern. Avoids the "name overlaps Approve/Suspend/
+			     Revoke buttons" issue when the row was forced into a single
+			     flex line on narrow viewports. -->
 			{#if selectedProfile}
-				<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
-					<div class="min-w-0 flex-1">
+				<div class="mt-4 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
+					<div class="min-w-0">
 						<!-- Tight one-line header: name + age. Status, gender, location
 						     are visible in the row above and would crowd the buttons. -->
 						<p class="font-semibold text-ink">
 							{selectedProfile.first_name}{selectedProfile.last_name ? ` ${selectedProfile.last_name}` : ''}{ageFromDob(selectedProfile.dob) !== null ? `, ${ageFromDob(selectedProfile.dob)}` : ''}
 						</p>
 					</div>
-					<div class="flex shrink-0 flex-wrap gap-2">
+					<div class="mt-3 flex flex-wrap gap-2">
 						<a href="/profiles/{selectedProfile.id}" class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal">
 							<span>View →</span>
 							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('view', langStore.current)}</span>
@@ -1335,17 +1339,19 @@
 			></div>
 			{/key}
 
-			<!-- Selected request action panel -->
+			<!-- Selected request action panel — stack vertically on all
+			     widths (matches the user / profile panels) so action buttons
+			     never overlap the request label on mobile. -->
 			{#if selectedRequest}
-				<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
-					<div class="min-w-0 flex-1">
+				<div class="mt-4 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
+					<div class="min-w-0">
 						<p class="font-semibold text-ink font-mono text-sm">{selectedRequest.id.slice(0, 8)}…</p>
 						<p class="text-sm text-ink/60">
 							Status: <span class="{selectedRequest.status === 'approved' ? 'text-green-600' : selectedRequest.status === 'revoked' ? 'text-vermilion' : 'text-saffron'} font-medium capitalize">{selectedRequest.status}</span>
 							{#if selectedRequest.message} · "{selectedRequest.message}"{/if}
 						</p>
 					</div>
-					<div class="flex shrink-0 flex-wrap gap-2">
+					<div class="mt-3 flex flex-wrap gap-2">
 						{#if selectedRequest.status === 'pending'}
 							<button
 								class="btn-primary flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
