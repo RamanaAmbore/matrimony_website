@@ -3,7 +3,10 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Maratha Kalyanam — మరాఠా కళ్యాణం | Maratha Matrimony</title>
 		<meta name="description" content="Trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states. Admin-verified profiles. Privacy-first photo sharing." />
+		<meta name="keywords" content="Maratha matrimony, Maratha Kalyanam, Andhra Pradesh matrimony, Telangana matrimony, Maharashtra matrimony, Maratha community matrimony, gotra matching, nakshatram matching, Maratha wedding, kuldevata, devak, Indian matrimony" />
+		<meta name="author" content="Maratha Kalyanam" />
 
 		<!-- Open Graph / WhatsApp / Facebook — static so crawlers see them without JS -->
 		<meta property="og:type" content="website" />
@@ -39,9 +42,79 @@
 		<link rel="canonical" href="https://marathakalyanam.com/" />
 		<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 		<meta name="googlebot" content="index, follow" />
+
+		<!-- JSON-LD: Organization + WebSite — embedded statically so the text-only
+		     crawl pass picks them up without waiting for JS hydration. -->
+		<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "Organization",
+			"name": "Maratha Kalyanam",
+			"alternateName": "మరాఠా కళ్యాణం",
+			"url": "https://marathakalyanam.com",
+			"logo": "https://marathakalyanam.com/brand/logo.png",
+			"description": "Trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states.",
+			"areaServed": [
+				{ "@type": "AdministrativeArea", "name": "Andhra Pradesh" },
+				{ "@type": "AdministrativeArea", "name": "Telangana" },
+				{ "@type": "AdministrativeArea", "name": "Maharashtra" }
+			],
+			"contactPoint": {
+				"@type": "ContactPoint",
+				"email": "admin.marathakalyanam@gmail.com",
+				"contactType": "customer support",
+				"areaServed": "IN"
+			}
+		}
+		</script>
+		<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "WebSite",
+			"name": "Maratha Kalyanam",
+			"url": "https://marathakalyanam.com",
+			"inLanguage": ["en", "te", "mr", "hi", "kn", "ta"],
+			"potentialAction": {
+				"@type": "SearchAction",
+				"target": "https://marathakalyanam.com/search?gotra={search_term_string}",
+				"query-input": "required name=search_term_string"
+			}
+		}
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
+
+		<!-- Static fallback content for crawlers that don't run JS, and for users
+		     hitting the page before hydration finishes. The interactive app
+		     replaces this entirely once JS boots. -->
+		<noscript>
+			<div style="max-width:760px;margin:2rem auto;padding:1.5rem;font-family:system-ui,sans-serif;color:#2b0a0e;line-height:1.6;">
+				<h1 style="font-size:2rem;margin:0 0 .5rem;color:#6B0F1A;">Maratha Kalyanam — మరాఠా కళ్యాణం</h1>
+				<p style="font-size:1.05rem;margin:0 0 1rem;">
+					Trusted matrimonial platform for the Maratha community settled across
+					Andhra Pradesh, Telangana, Maharashtra and other states.
+					Admin-verified profiles. Gotra, nakshatram and kuldevata matching.
+					Privacy-first photo sharing.
+				</p>
+				<h2 style="font-size:1.25rem;margin:1rem 0 .5rem;color:#6B0F1A;">Why Maratha Kalyanam?</h2>
+				<ul>
+					<li><strong>Community-Focused</strong> — built for Maratha families with deep respect for gotra, nakshatram, kuldevata and devak traditions.</li>
+					<li><strong>Admin-Verified</strong> — every profile reviewed and approved before going live; contact details shared only after mutual interest.</li>
+					<li><strong>Privacy First</strong> — photos blurred in search; full details shared only after admin-approved request.</li>
+				</ul>
+				<p>
+					<a href="/search">Browse profiles</a> ·
+					<a href="/register">Create your profile</a> ·
+					<a href="/about">About us</a> ·
+					<a href="/login">Login</a>
+				</p>
+				<p style="font-size:.9rem;color:#666;margin-top:1.5rem;">
+					This site needs JavaScript to load the interactive matrimony experience.
+					Enable JavaScript in your browser, or browse the links above.
+				</p>
+			</div>
+		</noscript>
 	</body>
 </html>
