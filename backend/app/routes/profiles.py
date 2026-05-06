@@ -617,10 +617,13 @@ class ProfileController(Controller):
             profile.hobbies = data.hobbies
             changed = True
 
-        # If the profile was approved or rejected and is now being edited, reset to
-        # pending so an admin re-reviews the updated content.
-        if changed and profile.status in (ProfileStatusEnum.approved, ProfileStatusEnum.rejected):
-            profile.status = ProfileStatusEnum.pending
+        # Editing any non-draft profile (pending / approved / rejected) drops
+        # the status back to draft so the owner can review their changes and
+        # explicitly resubmit. Approved profiles in particular are pulled from
+        # search the moment the owner starts editing, until they Submit again
+        # and admin re-approves.
+        if changed and profile.status != ProfileStatusEnum.draft:
+            profile.status = ProfileStatusEnum.draft
 
         await db.commit()
         await db.refresh(profile)

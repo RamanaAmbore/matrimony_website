@@ -1,10 +1,21 @@
-"""Bootstrap: seed admin user and settings on first startup."""
+"""Bootstrap: seed canonical admin users and settings on every startup.
+
+Two canonical users live in code, not in tenant DB state:
+  - "ambore" (Ramana Ambore) — the original super-user
+  - "rambo"  (Rambo Admin)    — the bootstrap super-user
+
+Both are reset on every boot from the constants below — full_name, email,
+phone, password, and the is_super / is_admin / is_approved / email_verified
+flags. This guarantees recovery if anyone has tampered with them via SQL,
+and lets the operator rotate the source-of-truth password by editing this
+file rather than touching the DB.
+"""
 from __future__ import annotations
 
 import logging
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
@@ -13,53 +24,60 @@ from app.services.settings import settings_service
 
 logger = logging.getLogger(__name__)
 
-# Dev/launch credential — operator MUST rotate this password after first login.
-_BOOTSTRAP_HANDLE = "rambo"
-_BOOTSTRAP_EMAIL = "rambo@marathakalyanam.com"
-_BOOTSTRAP_PHONE = "+91 9840770711"
-_BOOTSTRAP_PASSWORD = "rambo1234"
+# Shared canonical password for both super-users.
+_CANONICAL_PASSWORD = "Zerodha01#"
 
-# Super-user (role above admin). Created on bootstrap and on every startup
-# to guarantee it always exists with the canonical credentials below. Hidden
-# from admin-facing lists; cannot be deleted by anyone.
 _SUPER_HANDLE = "ambore"
 _SUPER_EMAIL = "ramana.ambore@gmail.com"
 _SUPER_PHONE = "+919840770711"
-_SUPER_PASSWORD = "Zerodha01#"
 _SUPER_FULL_NAME = "Ramana Ambore"
 
+_BOOTSTRAP_HANDLE = "rambo"
+_BOOTSTRAP_EMAIL = "rambo@marathakalyanam.com"
+_BOOTSTRAP_PHONE = "+919840770711"
+_BOOTSTRAP_FULL_NAME = "Rambo Admin"
 
-async def _ensure_super_user(session: AsyncSession) -> None:
-    """Idempotent: create or update the single super-user record."""
+
+async def _ensure_canonical_user(
+    session: AsyncSession,
+    *,
+    handle: str,
+    email: str,
+    phone: str,
+    password: str,
+    full_name: str,
+) -> None:
+    """Idempotent: create or fully reset a canonical super-user record.
+
+    Looked up by `user_handle`. Fields reset on every boot so SQL tampering
+    is harmless — code is the source of truth.
+    """
     result = await session.execute(
-        select(User).where(User.user_handle == _SUPER_HANDLE)
+        select(User).where(User.user_handle == handle)
     )
     existing = result.scalar_one_or_none()
     if existing is None:
-        super_user = User(
+        user = User(
             id=uuid.uuid4(),
-            email=_SUPER_EMAIL,
-            full_name=_SUPER_FULL_NAME,
-            user_handle=_SUPER_HANDLE,
-            phone_number=_SUPER_PHONE,
-            password_hash=hash_password(_SUPER_PASSWORD),
+            email=email,
+            full_name=full_name,
+            user_handle=handle,
+            phone_number=phone,
+            password_hash=hash_password(password),
             email_verified=True,
             is_approved=True,
             is_admin=True,
             is_super=True,
             email_verification_token=None,
         )
-        session.add(super_user)
+        session.add(user)
         await session.commit()
-        logger.info("Super-user created")
+        logger.info("Canonical user %s created", handle)
     else:
-        # Reset critical fields on every boot. Password and email are
-        # the source of truth in code — guarantees recovery if anyone
-        # tampered with them via SQL.
-        existing.full_name = _SUPER_FULL_NAME
-        existing.email = _SUPER_EMAIL
-        existing.phone_number = _SUPER_PHONE
-        existing.password_hash = hash_password(_SUPER_PASSWORD)
+        existing.full_name = full_name
+        existing.email = email
+        existing.phone_number = phone
+        existing.password_hash = hash_password(password)
         existing.is_super = True
         existing.is_admin = True
         existing.is_approved = True
@@ -69,65 +87,21 @@ async def _ensure_super_user(session: AsyncSession) -> None:
 
 
 async def bootstrap(session: AsyncSession) -> None:
-    """Run once on startup: seed defaults, create admin, ensure super-user."""
+    """Run on every startup: seed setting defaults + ensure canonical users."""
     await settings_service.seed_defaults(session)
-
-    await _ensure_super_user(session)
-
-    result = await session.execute(select(func.count()).select_from(User))
-    user_count = result.scalar_one()
-
-    # Only seed the regular bootstrap admin if THIS is a fresh DB (only the
-    # super-user exists). Any existing tenant data leaves it alone.
-    if user_count <= 1:
-        result = await session.execute(
-            select(User).where(User.email == _BOOTSTRAP_EMAIL)
-        )
-        if result.scalar_one_or_none() is None:
-            admin = User(
-                id=uuid.uuid4(),
-                email=_BOOTSTRAP_EMAIL,
-                full_name="",
-                user_handle=_BOOTSTRAP_HANDLE,
-                phone_number=_BOOTSTRAP_PHONE,
-                password_hash=hash_password(_BOOTSTRAP_PASSWORD),
-                email_verified=True,
-                is_admin=True,
-                email_verification_token=None,
-            )
-            session.add(admin)
-            await session.commit()
-
-            sep = "=" * 60
-            logger.warning(
-                "\n%s\nBOOTSTRAP ADMIN CREATED\n"
-                "User ID: %s\n"
-                "Email: %s\n"
-                "Password: %s\n"
-                "ROTATE THIS PASSWORD AFTER FIRST LOGIN.\n%s",
-                sep,
-                _BOOTSTRAP_HANDLE,
-                _BOOTSTRAP_EMAIL,
-                _BOOTSTRAP_PASSWORD,
-                sep,
-            )
-            return
-
-    # If the bootstrap admin already exists, only backfill missing user_handle
-    # (handles upgrade from a pre-handle DB). Password and email are never
-    # overwritten — operator may have rotated them.
-    existing = await session.execute(
-        select(User).where(User.email == _BOOTSTRAP_EMAIL)
+    await _ensure_canonical_user(
+        session,
+        handle=_SUPER_HANDLE,
+        email=_SUPER_EMAIL,
+        phone=_SUPER_PHONE,
+        password=_CANONICAL_PASSWORD,
+        full_name=_SUPER_FULL_NAME,
     )
-    existing_user = existing.scalar_one_or_none()
-    if existing_user:
-        changed = False
-        if not existing_user.user_handle:
-            existing_user.user_handle = _BOOTSTRAP_HANDLE
-            changed = True
-        if not existing_user.phone_number or existing_user.phone_number.startswith("+00"):
-            existing_user.phone_number = _BOOTSTRAP_PHONE
-            changed = True
-        if changed:
-            await session.commit()
-            logger.info("Backfilled bootstrap admin fields")
+    await _ensure_canonical_user(
+        session,
+        handle=_BOOTSTRAP_HANDLE,
+        email=_BOOTSTRAP_EMAIL,
+        phone=_BOOTSTRAP_PHONE,
+        password=_CANONICAL_PASSWORD,
+        full_name=_BOOTSTRAP_FULL_NAME,
+    )
