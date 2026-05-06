@@ -145,20 +145,39 @@ class PhotoController(Controller):
             storage_svc.write_async(thumb_rel, thumb_bytes),
         )
 
-        photo = Photo(
-            id=photo_id,
-            profile_id=pid,
-            original_filename=filename,
-            passport_path=passport_rel,
-            blurred_path=blurred_rel,
-            thumb_path=thumb_rel,
-            byte_size=len(passport_bytes),
-            is_primary=is_primary,
-        )
-        db.add(photo)
-        _reset_to_pending_if_approved(profile, is_owner_edit=is_owner)
-        await db.commit()
-        await db.refresh(photo)
+        # Wrap the DB-side work in try/except. If anything fails between
+        # the file writes above and the commit below, we delete the just-
+        # uploaded files so they don't become orphans (which is how the
+        # 1700+ historical orphans accumulated). The DB is rolled back on
+        # the same exception.
+        try:
+            photo = Photo(
+                id=photo_id,
+                profile_id=pid,
+                original_filename=filename,
+                passport_path=passport_rel,
+                blurred_path=blurred_rel,
+                thumb_path=thumb_rel,
+                byte_size=len(passport_bytes),
+                is_primary=is_primary,
+            )
+            db.add(photo)
+            _reset_to_pending_if_approved(profile, is_owner_edit=is_owner)
+            await db.commit()
+            await db.refresh(photo)
+        except Exception:
+            # Best-effort cleanup of the uploaded files before re-raising.
+            try:
+                await _asyncio.gather(
+                    storage_svc.delete_async(passport_rel),
+                    storage_svc.delete_async(blurred_rel),
+                    storage_svc.delete_async(thumb_rel),
+                    return_exceptions=True,
+                )
+            except Exception:
+                pass
+            await db.rollback()
+            raise
 
         return _photo_to_dict(photo, request)
 
