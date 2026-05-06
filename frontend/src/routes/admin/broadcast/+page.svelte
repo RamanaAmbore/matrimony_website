@@ -4,16 +4,24 @@
 	import { Loader } from 'lucide-svelte';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
+	import Combobox from '$lib/components/Combobox.svelte';
+	import { MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER } from '$lib/profileOptions';
+
+	const COUNTRIES = [...COUNTRIES_PRIORITY, ...COUNTRIES_OTHER];
 
 	let broadcastSubject = $state('');
 	let broadcastBody = $state('');
 
-	// Audience filters
+	// Audience filters — user-side flags
 	let filterVerifiedOnly = $state(false);
 	let filterUnverifiedOnly = $state(false);
 	let filterApprovedOnly = $state(false);
 	let filterUnapprovedOnly = $state(false);
 	let filterAdminOnly = $state(false);
+	// Audience filters — profile-side dropdowns
+	let filterMotherTongue = $state('');
+	let filterState = $state('');
+	let filterCountry = $state('');
 
 	let broadcastSending = $state(false);
 	let broadcastResult = $state<{ sent: number; failed: number } | null>(null);
@@ -39,6 +47,9 @@
 		if (filterApprovedOnly) parts.push('approved users');
 		if (filterUnapprovedOnly) parts.push('unapproved users');
 		if (filterAdminOnly) parts.push('admin users');
+		if (filterMotherTongue) parts.push(`mother tongue ${filterMotherTongue}`);
+		if (filterState) parts.push(`state ${filterState}`);
+		if (filterCountry) parts.push(`country ${filterCountry}`);
 		return parts.length > 0 ? parts.join(', ') : null;
 	});
 
@@ -57,7 +68,10 @@
 				filter_unverified_only: filterUnverifiedOnly || undefined,
 				filter_approved_only: filterApprovedOnly || undefined,
 				filter_unapproved_only: filterUnapprovedOnly || undefined,
-				filter_admin_only: filterAdminOnly || undefined
+				filter_admin_only: filterAdminOnly || undefined,
+				filter_mother_tongue: filterMotherTongue || undefined,
+				filter_state: filterState || undefined,
+				filter_country: filterCountry || undefined
 			});
 			broadcastResult = result;
 			toastStore.success(`Broadcast sent: ${result.sent} delivered, ${result.failed} failed.`);
@@ -161,6 +175,23 @@
 						/>
 						Admin users only
 					</label>
+				</div>
+
+				<!-- Profile-side filters: restrict audience to users whose profile
+				     matches all selected criteria. Empty = no restriction. -->
+				<div class="mt-4 grid grid-cols-1 gap-3 border-t border-gold/20 pt-3 sm:grid-cols-3">
+					<div>
+						<label for="bc-tongue" class="label text-xs">Mother tongue</label>
+						<Combobox id="bc-tongue" bind:value={filterMotherTongue} options={['', ...MOTHER_TONGUES]} placeholder="Any" />
+					</div>
+					<div>
+						<label for="bc-state" class="label text-xs">State</label>
+						<Combobox id="bc-state" bind:value={filterState} options={['', ...INDIA_STATES]} allowCustom={true} placeholder="Any" />
+					</div>
+					<div>
+						<label for="bc-country" class="label text-xs">Country</label>
+						<Combobox id="bc-country" bind:value={filterCountry} options={['', ...COUNTRIES]} allowCustom={true} placeholder="Any" />
+					</div>
 				</div>
 				<p class="mt-3 text-xs text-ink/60">
 					{#if filterSummary()}

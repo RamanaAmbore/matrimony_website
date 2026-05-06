@@ -622,6 +622,9 @@ export const admin = {
 		filter_admin_only?: boolean;
 		filter_unapproved_only?: boolean;
 		filter_unverified_only?: boolean;
+		filter_mother_tongue?: string;
+		filter_state?: string;
+		filter_country?: string;
 	}): Promise<{ sent: number; failed: number }> {
 		return request('/api/admin/broadcast-email', {
 			method: 'POST',

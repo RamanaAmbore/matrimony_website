@@ -38,6 +38,12 @@ class BroadcastEmailBody(msgspec.Struct):
     filter_admin_only: bool = False
     filter_unapproved_only: bool = False
     filter_unverified_only: bool = False
+    # Profile-derived filters: scope the audience to users who own at least
+    # one profile matching ALL the supplied profile-side criteria. Empty/None
+    # = no profile-side restriction.
+    filter_mother_tongue: str | None = None
+    filter_state: str | None = None
+    filter_country: str | None = None
 
 
 def _require_admin(request: Request) -> dict[str, Any]:
@@ -947,6 +953,23 @@ class AdminController(Controller):
             query = query.where(User.is_approved == False)  # noqa: E712
         if data.filter_admin_only:
             query = query.where(User.is_admin == True)  # noqa: E712
+
+        # Profile-derived filters — restrict to users whose profiles match.
+        # Joining users → profiles where ALL provided profile criteria match.
+        # Distinct on user.id so a user with multiple matching profiles is
+        # only emailed once.
+        profile_filters = [
+            (data.filter_mother_tongue, Profile.mother_tongue),
+            (data.filter_state, Profile.state),
+            (data.filter_country, Profile.country),
+        ]
+        active_profile_filters = [(v, col) for v, col in profile_filters if v]
+        if active_profile_filters:
+            query = query.join(Profile, Profile.owner_user_id == User.id)
+            for v, col in active_profile_filters:
+                query = query.where(col == v)
+            query = query.distinct()
+
         result = await db.execute(query)
         users = result.scalars().all()
 
