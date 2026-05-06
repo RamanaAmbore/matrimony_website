@@ -8,6 +8,7 @@
 	import { page } from '$app/stores';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
+	import ConfirmDelete from '$lib/components/ConfirmDelete.svelte';
 
 	const validStatuses = ['pending', 'approved', 'rejected', 'draft'];
 	const urlStatus = $page.url.searchParams.get('status') ?? '';
@@ -15,8 +16,10 @@
 	let profileList = $state<Profile[]>([]);
 	let loading = $state(true);
 	let processingId = $state<string | null>(null);
-	let rejectNotes = $state<Record<string, string>>({});
-	let showRejectForm = $state<Record<string, boolean>>({});
+
+	// ConfirmDelete modal state
+	let deleteOpen = $state(false);
+	let pendingDelete = $state<{ id: string; label: string } | null>(null);
 
 	async function load() {
 		loading = true;
@@ -53,22 +56,26 @@
 		}
 	}
 
-	async function reject(id: string) {
-		const notes = rejectNotes[id];
-		if (!notes?.trim()) {
-			toastStore.error('Rejection reason is required');
-			return;
-		}
-		processingId = id;
+	function startReject(profile: Profile) {
+		pendingDelete = {
+			id: profile.id,
+			label: `${profile.first_name} ${profile.last_name}`
+		};
+		deleteOpen = true;
+	}
+
+	async function doDelete() {
+		if (!pendingDelete) return;
+		processingId = pendingDelete.id;
 		try {
-			await adminApi.profiles.reject(id, notes.trim());
-			profileList = profileList.filter((p) => p.id !== id);
-			toastStore.success('Profile rejected');
-			showRejectForm = { ...showRejectForm, [id]: false };
+			await adminApi.profiles.delete(pendingDelete.id);
+			profileList = profileList.filter((p) => p.id !== pendingDelete!.id);
+			toastStore.success('Profile rejected and removed');
 		} catch {
-			toastStore.error('Rejection failed');
+			toastStore.error('Delete failed');
 		} finally {
 			processingId = null;
+			pendingDelete = null;
 		}
 	}
 
@@ -86,6 +93,13 @@
 <svelte:head>
 	<title>Admin: Profiles — Maratha Kalyanam</title>
 </svelte:head>
+
+<ConfirmDelete
+	bind:open={deleteOpen}
+	title="Reject + delete profile?"
+	description={`Reject and permanently remove ${pendingDelete?.label ?? 'this profile'} and all photos. Cannot be undone.`}
+	onConfirm={doDelete}
+/>
 
 <div class="mx-auto max-w-6xl px-4 py-10">
 	<div class="flex flex-wrap items-center justify-between gap-3 mb-2">
@@ -166,7 +180,7 @@
 									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approve', langStore.current)}</span>
 								</button>
 								<button
-									onclick={() => (showRejectForm = { ...showRejectForm, [profile.id]: !showRejectForm[profile.id] })}
+									onclick={() => startReject(profile)}
 									disabled={processingId === profile.id}
 									class="flex flex-col items-center justify-center text-center leading-tight rounded bg-vermilion px-3 py-1.5 min-h-[44px] text-sm text-white hover:bg-vermilion/80 focus-visible:outline-2 focus-visible:outline-saffron disabled:opacity-60 whitespace-normal"
 								>
@@ -176,36 +190,6 @@
 							{/if}
 						</div>
 					</div>
-
-					{#if showRejectForm[profile.id]}
-						<div class="mt-4 border-t border-gold/20 pt-4 flex flex-col gap-2">
-							<label class="label" for="reject-{profile.id}">Rejection reason (required)</label>
-							<textarea
-								id="reject-{profile.id}"
-								class="input resize-none"
-								rows="2"
-								bind:value={rejectNotes[profile.id]}
-								placeholder="Explain the reason for rejection…"
-							></textarea>
-							<div class="flex gap-2">
-								<button
-									onclick={() => (showRejectForm = { ...showRejectForm, [profile.id]: false })}
-									class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-sm py-1.5 px-3 min-h-[44px] whitespace-normal"
-								>
-									<span class="text-xs">Cancel</span>
-									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('cancel', langStore.current)}</span>
-								</button>
-								<button
-									onclick={() => reject(profile.id)}
-									disabled={processingId === profile.id}
-									class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-sm py-1.5 px-3 min-h-[44px] whitespace-normal"
-								>
-									<span class="text-xs">{processingId === profile.id ? 'Rejecting…' : 'Confirm Reject'}</span>
-									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('confirmReject', langStore.current)}</span>
-								</button>
-							</div>
-						</div>
-					{/if}
 				</div>
 			{/each}
 		</div>

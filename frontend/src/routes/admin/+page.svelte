@@ -29,6 +29,7 @@
 	} from 'lucide-svelte';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
+	import ConfirmDelete from '$lib/components/ConfirmDelete.svelte';
 
 	let { data } = $props();
 	let loggedInUser = $derived<User | null>(data.user ?? null);
@@ -44,10 +45,25 @@
 	let loading = $state(true);
 	let error = $state('');
 
-	// Reject notes state: keyed by item id
-	let rejectNotes = $state<Record<string, string>>({});
-	let rejectOpen = $state<Record<string, boolean>>({});
-	// Per-item action loading
+	// ── Shared ConfirmDelete modal ───────────────────────────────────────────────
+
+	let confirmOpen = $state(false);
+	let confirmTitle = $state('');
+	let confirmDescription = $state('');
+	let confirmCallback = $state<(() => Promise<void>) | null>(null);
+
+	function openConfirm(title: string, description: string, callback: () => Promise<void>) {
+		confirmTitle = title;
+		confirmDescription = description;
+		confirmCallback = callback;
+		confirmOpen = true;
+	}
+
+	async function handleConfirm() {
+		if (confirmCallback) await confirmCallback();
+	}
+
+	// Per-item action loading (legacy pending tab)
 	let actionLoading = $state<Record<string, boolean>>({});
 
 	// ── All Profiles tab state ───────────────────────────────────────────────────
@@ -95,15 +111,11 @@
 	let profilesGridApi: GridApi | undefined;
 	let selectedProfile = $state<Profile | null>(null);
 	let profileActionLoading = $state(false);
-	let profileRejectNote = $state('');
-	let profileRejectOpen = $state(false);
 
 	// Requests grid
 	let requestsGridApi: GridApi | undefined;
 	let selectedRequest = $state<DetailRequest | null>(null);
 	let requestActionLoading = $state(false);
-	let requestRejectNote = $state('');
-	let requestRejectOpen = $state(false);
 
 
 	// Content section anchor for scroll-into-view on tab change
@@ -243,23 +255,28 @@
 		}
 	}
 
-	async function deleteUserFromGrid(u: User) {
-		if (!confirm(`Delete user "${u.email}"? This cannot be undone.`)) return;
-		userActionLoading = true;
-		try {
-			await adminApi.users.delete(u.uuid);
-			allUsers = allUsers!.filter(x => x.uuid !== u.uuid);
-			selectedUser = null;
-			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
-			if (dashboard) {
-				dashboard.stats.users = Math.max(0, dashboard.stats.users - 1);
+	function startDeleteUser(u: User) {
+		openConfirm(
+			'Reject + delete user?',
+			`Permanently remove user "${u.email}" and all their profiles, photos, and requests. Cannot be undone.`,
+			async () => {
+				userActionLoading = true;
+				try {
+					await adminApi.users.delete(u.uuid);
+					allUsers = allUsers!.filter(x => x.uuid !== u.uuid);
+					selectedUser = null;
+					usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+					if (dashboard) {
+						dashboard.stats.users = Math.max(0, dashboard.stats.users - 1);
+					}
+					toastStore.success('User deleted');
+				} catch (err) {
+					toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+				} finally {
+					userActionLoading = false;
+				}
 			}
-			toastStore.success('User deleted');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
-		} finally {
-			userActionLoading = false;
-		}
+		);
 	}
 
 	async function doApproveProfile() {
@@ -278,52 +295,66 @@
 		}
 	}
 
-	async function doRejectProfile() {
-		if (!selectedProfile || !profileRejectNote.trim()) { toastStore.error('Add a rejection reason'); return; }
-		profileActionLoading = true;
-		try {
-			await adminApi.profiles.reject(selectedProfile.id, profileRejectNote.trim());
-			allProfiles = allProfiles!.map(p => p.id === selectedProfile!.id ? { ...p, status: 'rejected' as const } : p);
-			selectedProfile = { ...selectedProfile, status: 'rejected' };
-			profileRejectOpen = false;
-			profileRejectNote = '';
-			profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
-			toastStore.success('Profile rejected');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
-		} finally {
-			profileActionLoading = false;
-		}
+	function startRejectProfile() {
+		if (!selectedProfile) return;
+		const label = `${selectedProfile.first_name} ${selectedProfile.last_name ?? ''}`.trim();
+		openConfirm(
+			'Reject + delete profile?',
+			`Reject and permanently remove ${label}'s profile and all photos. Cannot be undone.`,
+			async () => {
+				if (!selectedProfile) return;
+				profileActionLoading = true;
+				try {
+					await adminApi.profiles.delete(selectedProfile.id);
+					const wasStatus = selectedProfile.status;
+					allProfiles = (allProfiles ?? []).filter(p => p.id !== selectedProfile!.id);
+					selectedProfile = null;
+					profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
+					if (dashboard) {
+						dashboard.stats.profiles_total = Math.max(0, dashboard.stats.profiles_total - 1);
+						const k = `profiles_${wasStatus}` as keyof typeof dashboard.stats;
+						const cur = dashboard.stats[k];
+						if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
+					}
+					toastStore.success('Profile rejected and removed');
+				} catch (err) {
+					toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+				} finally {
+					profileActionLoading = false;
+				}
+			}
+		);
 	}
 
-	async function doDeleteProfile() {
+	function startDeleteProfile() {
 		if (!selectedProfile) return;
 		const label = `${selectedProfile.profile_number} (${selectedProfile.first_name} ${selectedProfile.last_name ?? ''})`.trim();
-		if (!confirm(`Delete profile ${label}? This cannot be undone — photos and detail requests on this profile are also removed.`)) {
-			return;
-		}
-		profileActionLoading = true;
-		try {
-			await adminApi.profiles.delete(selectedProfile.id);
-			const wasStatus = selectedProfile.status;
-			allProfiles = (allProfiles ?? []).filter(p => p.id !== selectedProfile!.id);
-			selectedProfile = null;
-			profileRejectOpen = false;
-			profileRejectNote = '';
-			profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
-			// Decrement dashboard counters so chip totals stay accurate
-			if (dashboard) {
-				dashboard.stats.profiles_total = Math.max(0, dashboard.stats.profiles_total - 1);
-				const k = `profiles_${wasStatus}` as keyof typeof dashboard.stats;
-				const cur = dashboard.stats[k];
-				if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
+		openConfirm(
+			'Reject + delete profile?',
+			`Permanently remove profile ${label} and all photos. Cannot be undone.`,
+			async () => {
+				if (!selectedProfile) return;
+				profileActionLoading = true;
+				try {
+					await adminApi.profiles.delete(selectedProfile.id);
+					const wasStatus = selectedProfile.status;
+					allProfiles = (allProfiles ?? []).filter(p => p.id !== selectedProfile!.id);
+					selectedProfile = null;
+					profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
+					if (dashboard) {
+						dashboard.stats.profiles_total = Math.max(0, dashboard.stats.profiles_total - 1);
+						const k = `profiles_${wasStatus}` as keyof typeof dashboard.stats;
+						const cur = dashboard.stats[k];
+						if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
+					}
+					toastStore.success('Profile deleted');
+				} catch (err) {
+					toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+				} finally {
+					profileActionLoading = false;
+				}
 			}
-			toastStore.success('Profile deleted');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
-		} finally {
-			profileActionLoading = false;
-		}
+		);
 	}
 
 	async function doApproveRequest() {
@@ -342,49 +373,69 @@
 		}
 	}
 
-	async function doRejectRequest() {
-		if (!selectedRequest || !requestRejectNote.trim()) { toastStore.error('Add a rejection reason'); return; }
-		requestActionLoading = true;
-		try {
-			await adminApi.requests.reject(selectedRequest.id, requestRejectNote.trim());
-			allRequests = allRequests!.map(r => r.id === selectedRequest!.id ? { ...r, status: 'rejected' as const } : r);
-			selectedRequest = { ...selectedRequest, status: 'rejected' };
-			requestRejectOpen = false;
-			requestRejectNote = '';
-			requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
-			toastStore.success('Request rejected');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
-		} finally {
-			requestActionLoading = false;
-		}
+	function startRejectRequest() {
+		if (!selectedRequest) return;
+		const profileName = selectedRequest.profile_first_name
+			? `${selectedRequest.profile_first_name} ${selectedRequest.profile_last_name ?? ''}`.trim()
+			: selectedRequest.profile_id;
+		const label = selectedRequest.request_number || selectedRequest.id.slice(0, 8) + '…';
+		openConfirm(
+			'Reject + delete request?',
+			`Reject and permanently remove request ${label} for ${profileName}. Cannot be undone.`,
+			async () => {
+				if (!selectedRequest) return;
+				requestActionLoading = true;
+				try {
+					await adminApi.requests.delete(selectedRequest.id);
+					const wasStatus = selectedRequest.status;
+					allRequests = (allRequests ?? []).filter(r => r.id !== selectedRequest!.id);
+					selectedRequest = null;
+					requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
+					if (dashboard) {
+						dashboard.stats.requests_total = Math.max(0, dashboard.stats.requests_total - 1);
+						const k = `requests_${wasStatus}` as keyof typeof dashboard.stats;
+						const cur = dashboard.stats[k];
+						if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
+					}
+					toastStore.success('Request rejected and removed');
+				} catch (err) {
+					toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+				} finally {
+					requestActionLoading = false;
+				}
+			}
+		);
 	}
 
-	async function doDeleteRequest() {
+	function startDeleteRequest() {
 		if (!selectedRequest) return;
 		const label = selectedRequest.request_number || selectedRequest.id.slice(0, 8) + '…';
-		if (!confirm(`Delete request ${label}? This cannot be undone.`)) return;
-		requestActionLoading = true;
-		try {
-			await adminApi.requests.delete(selectedRequest.id);
-			const wasStatus = selectedRequest.status;
-			allRequests = (allRequests ?? []).filter(r => r.id !== selectedRequest!.id);
-			selectedRequest = null;
-			requestRejectOpen = false;
-			requestRejectNote = '';
-			requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
-			if (dashboard) {
-				dashboard.stats.requests_total = Math.max(0, dashboard.stats.requests_total - 1);
-				const k = `requests_${wasStatus}` as keyof typeof dashboard.stats;
-				const cur = dashboard.stats[k];
-				if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
+		openConfirm(
+			'Reject + delete request?',
+			`Permanently remove request ${label}. Cannot be undone.`,
+			async () => {
+				if (!selectedRequest) return;
+				requestActionLoading = true;
+				try {
+					await adminApi.requests.delete(selectedRequest.id);
+					const wasStatus = selectedRequest.status;
+					allRequests = (allRequests ?? []).filter(r => r.id !== selectedRequest!.id);
+					selectedRequest = null;
+					requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
+					if (dashboard) {
+						dashboard.stats.requests_total = Math.max(0, dashboard.stats.requests_total - 1);
+						const k = `requests_${wasStatus}` as keyof typeof dashboard.stats;
+						const cur = dashboard.stats[k];
+						if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
+					}
+					toastStore.success('Request deleted');
+				} catch (err) {
+					toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+				} finally {
+					requestActionLoading = false;
+				}
 			}
-			toastStore.success('Request deleted');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
-		} finally {
-			requestActionLoading = false;
-		}
+		);
 	}
 
 	onDestroy(() => {
@@ -399,8 +450,8 @@
 	function selectTab(tab: Tab) {
 		// Clear selection when leaving a tab so stale panels don't persist
 		if (activeTab !== tab) {
-			if (activeTab === 'profiles') { selectedProfile = null; profileRejectOpen = false; }
-			if (activeTab === 'requests') { selectedRequest = null; requestRejectOpen = false; }
+			if (activeTab === 'profiles') { selectedProfile = null; }
+			if (activeTab === 'requests') { selectedRequest = null; }
 			if (activeTab === 'users') selectedUser = null;
 		}
 		activeTab = tab;
@@ -425,21 +476,26 @@
 		}
 	}
 
-	async function rejectProfile(p: PendingProfileSummary) {
-		const notes = rejectNotes[p.id] ?? '';
-		if (!notes.trim()) { toastStore.error('Add a rejection reason'); return; }
-		actionLoading[p.id] = true;
-		try {
-			await adminApi.profiles.reject(p.id, notes);
-			dashboard!.pending_profiles = dashboard!.pending_profiles.filter(x => x.id !== p.id);
-			dashboard!.stats.profiles_pending = Math.max(0, dashboard!.stats.profiles_pending - 1);
-			rejectOpen[p.id] = false;
-			toastStore.success('Profile rejected');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
-		} finally {
-			actionLoading[p.id] = false;
-		}
+	function startRejectPendingProfile(p: PendingProfileSummary) {
+		const label = `${p.first_name} ${p.last_name}`;
+		openConfirm(
+			'Reject + delete profile?',
+			`Reject and permanently remove ${label}'s profile and all photos. Cannot be undone.`,
+			async () => {
+				actionLoading[p.id] = true;
+				try {
+					await adminApi.profiles.delete(p.id);
+					dashboard!.pending_profiles = dashboard!.pending_profiles.filter(x => x.id !== p.id);
+					dashboard!.stats.profiles_pending = Math.max(0, dashboard!.stats.profiles_pending - 1);
+					dashboard!.stats.profiles_total = Math.max(0, dashboard!.stats.profiles_total - 1);
+					toastStore.success('Profile rejected and removed');
+				} catch (err) {
+					toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+				} finally {
+					actionLoading[p.id] = false;
+				}
+			}
+		);
 	}
 
 	// ── Request actions (legacy — kept for type compat) ──────────────────────────
@@ -458,21 +514,26 @@
 		}
 	}
 
-	async function rejectRequest(r: PendingRequest) {
-		const notes = rejectNotes[r.id] ?? '';
-		if (!notes.trim()) { toastStore.error('Add a rejection reason'); return; }
-		actionLoading[r.id] = true;
-		try {
-			await adminApi.requests.reject(r.id, notes);
-			dashboard!.pending_requests = dashboard!.pending_requests.filter(x => x.id !== r.id);
-			dashboard!.stats.requests_pending = Math.max(0, dashboard!.stats.requests_pending - 1);
-			rejectOpen[r.id] = false;
-			toastStore.success('Request rejected');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
-		} finally {
-			actionLoading[r.id] = false;
-		}
+	function startRejectPendingRequest(r: PendingRequest) {
+		const profileName = `${r.profile_first_name} ${r.profile_last_name}`;
+		openConfirm(
+			'Reject + delete request?',
+			`Reject and permanently remove the request for ${profileName}. Cannot be undone.`,
+			async () => {
+				actionLoading[r.id] = true;
+				try {
+					await adminApi.requests.delete(r.id);
+					dashboard!.pending_requests = dashboard!.pending_requests.filter(x => x.id !== r.id);
+					dashboard!.stats.requests_pending = Math.max(0, dashboard!.stats.requests_pending - 1);
+					dashboard!.stats.requests_total = Math.max(0, dashboard!.stats.requests_total - 1);
+					toastStore.success('Request rejected and removed');
+				} catch (err) {
+					toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+				} finally {
+					actionLoading[r.id] = false;
+				}
+			}
+		);
 	}
 
 	// ── Helpers ──────────────────────────────────────────────────────────────────
@@ -509,14 +570,12 @@
 	function applyProfileFilter(f: typeof profileStatusFilter) {
 		profileStatusFilter = f;
 		selectedProfile = null;
-		profileRejectOpen = false;
 		if (f) loadAllProfiles();
 	}
 
 	function applyRequestFilter(f: typeof requestStatusFilter) {
 		requestStatusFilter = f;
 		selectedRequest = null;
-		requestRejectOpen = false;
 		if (f) loadAllRequests();
 	}
 
@@ -580,7 +639,7 @@
 				columnDefs: columnDefs as any[],
 				rowData: [...rows],
 				rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
-				onRowClicked: (e) => { selectedProfile = e.data as Profile; profileRejectOpen = false; profileRejectNote = ''; },
+				onRowClicked: (e) => { selectedProfile = e.data as Profile; },
 				defaultColDef: { resizable: true, floatingFilter: true, filter: true },
 				pagination: true, paginationPageSize: 20, theme: 'legacy'
 			});
@@ -617,7 +676,7 @@
 				columnDefs: columnDefs as any[],
 				rowData: [...rows],
 				rowSelection: { mode: 'singleRow', checkboxes: false, enableClickSelection: true },
-				onRowClicked: (e) => { selectedRequest = e.data as DetailRequest; requestRejectOpen = false; requestRejectNote = ''; },
+				onRowClicked: (e) => { selectedRequest = e.data as DetailRequest; },
 				defaultColDef: { resizable: true, floatingFilter: true, filter: true },
 				pagination: true, paginationPageSize: 20, theme: 'legacy'
 			});
@@ -633,6 +692,14 @@
 <svelte:head>
 	<title>Dashboard — Maratha Kalyanam</title>
 </svelte:head>
+
+<!-- Shared ConfirmDelete modal — one instance, reused for all entity types -->
+<ConfirmDelete
+	bind:open={confirmOpen}
+	title={confirmTitle}
+	description={confirmDescription}
+	onConfirm={handleConfirm}
+/>
 
 <div class="mx-auto max-w-6xl px-4 py-10">
 	<h1 class="font-serif text-3xl font-bold text-maroon">Dashboard</h1>
@@ -871,7 +938,7 @@
 								<button
 									class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded bg-vermilion text-cream hover:bg-vermilion/80 disabled:opacity-50"
 									disabled={userActionLoading}
-									onclick={() => deleteUserFromGrid(selectedUser!)}
+									onclick={() => startDeleteUser(selectedUser!)}
 								>
 									<span class="text-xs flex items-center gap-1"><Trash2 size={13} />Delete User</span>
 									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('deleteUser', langStore.current)}</span>
@@ -947,7 +1014,7 @@
 							<button
 								class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
 								disabled={profileActionLoading}
-								onclick={() => { profileRejectOpen = !profileRejectOpen; profileRejectNote = ''; }}
+								onclick={startRejectProfile}
 							>
 								<span>✕ Reject</span>
 								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
@@ -957,7 +1024,7 @@
 						<button
 							class="flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal rounded bg-vermilion text-cream hover:bg-vermilion/90 disabled:opacity-50"
 							disabled={profileActionLoading}
-							onclick={doDeleteProfile}
+							onclick={startDeleteProfile}
 						>
 							{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
 							<span>🗑 Delete</span>
@@ -965,25 +1032,6 @@
 						</button>
 					</div>
 				</div>
-				{#if profileRejectOpen && selectedProfile.status === 'pending'}
-					<div class="flex gap-2 mt-2">
-						<input
-							type="text"
-							class="input flex-1 text-sm"
-							placeholder="Rejection reason (required)"
-							bind:value={profileRejectNote}
-						/>
-						<button
-							class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-sm px-4 py-1.5 min-h-[44px] whitespace-normal"
-							disabled={profileActionLoading}
-							onclick={doRejectProfile}
-						>
-							{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-							<span class="text-xs">Confirm</span>
-							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('confirmReject', langStore.current)}</span>
-						</button>
-					</div>
-				{/if}
 			{:else}
 				<p class="mt-3 text-xs text-ink/40 text-center">Click a row to select and act on it</p>
 			{/if}
@@ -1050,7 +1098,7 @@
 							<button
 								class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
 								disabled={requestActionLoading}
-								onclick={() => { requestRejectOpen = !requestRejectOpen; requestRejectNote = ''; }}
+								onclick={startRejectRequest}
 							>
 								<span>✕ Reject</span>
 								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
@@ -1060,7 +1108,7 @@
 						<button
 							class="flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal rounded bg-vermilion text-cream hover:bg-vermilion/90 disabled:opacity-50"
 							disabled={requestActionLoading}
-							onclick={doDeleteRequest}
+							onclick={startDeleteRequest}
 						>
 							{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
 							<span>🗑 Delete</span>
@@ -1068,25 +1116,6 @@
 						</button>
 					</div>
 				</div>
-				{#if requestRejectOpen && selectedRequest.status === 'pending'}
-					<div class="flex gap-2 mt-2">
-						<input
-							type="text"
-							class="input flex-1 text-sm"
-							placeholder="Rejection reason (required)"
-							bind:value={requestRejectNote}
-						/>
-						<button
-							class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-sm px-4 py-1.5 min-h-[44px] whitespace-normal"
-							disabled={requestActionLoading}
-							onclick={doRejectRequest}
-						>
-							{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-							<span class="text-xs">Confirm</span>
-							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('confirmReject', langStore.current)}</span>
-						</button>
-					</div>
-				{/if}
 			{:else}
 				<p class="mt-3 text-xs text-ink/40 text-center">Click a row to select and act on it</p>
 			{/if}
