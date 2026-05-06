@@ -101,22 +101,31 @@ def _smart_crop(
     return img.crop((left, top, left + new_w, top + new_h))
 
 
-def _encode_jpeg(img: Image.Image, max_bytes: int) -> bytes:
-    """Encode JPEG, stepping quality down until ≤ max_bytes."""
-    quality = 90
+def _encode_jpeg(img: Image.Image, max_bytes: int, start_quality: int = 90) -> bytes:
+    """Encode JPEG, stepping quality down until ≤ max_bytes.
+
+    Order of operations: try start_quality first, drop by 5 until we hit a
+    floor of 40, then downscale 5% and reset. `progressive=True` shaves a
+    few % at no quality cost. `optimize=True` enables Pillow's Huffman
+    optimisation pass (slow-ish but worth it for smaller payloads).
+    """
+    quality = start_quality
     while True:
         buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=quality, optimize=True)
+        img.save(buf, format="JPEG", quality=quality, optimize=True, progressive=True)
         data = buf.getvalue()
-        if len(data) <= max_bytes or quality <= 40:
-            if len(data) <= max_bytes:
-                return data
-            # Still too large — downscale 5% and retry from quality=90
-            w, h = img.size
-            img = img.resize((int(w * 0.95), int(h * 0.95)), Image.LANCZOS)
-            quality = 90
+        if len(data) <= max_bytes:
+            return data
+        if quality > 40:
+            quality -= 5
             continue
-        quality -= 5
+        # At quality floor — downscale 5% and retry from start_quality
+        w, h = img.size
+        if w < 100 or h < 100:
+            # Refuse to spiral down to nothing — return whatever we have.
+            return data
+        img = img.resize((int(w * 0.95), int(h * 0.95)), Image.LANCZOS)
+        quality = start_quality
 
 
 def process_upload(
@@ -124,101 +133,130 @@ def process_upload(
     filename: str,
     is_primary: bool = False,
 ) -> tuple[bytes, bytes, bytes]:
-    """Process uploaded photo.
+    """Process uploaded photo into passport / blurred / thumb variants.
+
+    All three variants are JPEG-encoded with iterative quality stepping so
+    each lands within its own size cap. Errors include the actual measured
+    value and the limit that was hit so the user can act on the message.
 
     Args:
         file_bytes: raw upload bytes
         filename: original filename (used for error messages)
         is_primary: True when this upload becomes the profile's primary
-            photo. Face detection is enforced ONLY for primary photos
-            (the photo shown blurred in search must be a clear face).
-            Non-primary photos can be lifestyle/full-body shots.
+            photo. Face detection — when enabled in settings — is enforced
+            ONLY for primary photos. Non-primary photos can be lifestyle
+            or full-body shots.
 
     Returns (passport_bytes, blurred_bytes, thumb_bytes).
     Raises PhotoValidationError on rejection.
     """
+    # Settings — all knobs in one place ------------------------------------
     upload_max_mb = settings_service.get_int("upload_max_mb", 10)
+    upload_min_kb = settings_service.get_int("upload_min_kb", 5)
+    photo_min_dim_px = settings_service.get_int("photo_min_dimension_px", 400)
+    photo_max_dim_px = settings_service.get_int("photo_max_dimension_px", 4000)
+    require_face = is_primary and settings_service.get_bool("require_face_detection", False)
+    passport_w = settings_service.get_int("photo_passport_width", 413)
+    passport_h = settings_service.get_int("photo_passport_height", 531)
+    photo_max_kb = settings_service.get_int("photo_max_kb", 350)
+    photo_min_kb = settings_service.get_int("photo_min_kb", 10)
+    blur_width = settings_service.get_int("photo_blur_width", 600)
+    blur_radius = settings_service.get_int("photo_blur_radius", 14)
+    blur_max_kb = settings_service.get_int("photo_blur_max_kb", 120)
+    thumb_size = settings_service.get_int("photo_thumb_size", 150)
+    thumb_max_kb = settings_service.get_int("photo_thumb_max_kb", 25)
+
+    raw_kb = len(file_bytes) / 1024
+
+    # 1. Raw size guards (cheap, fail fast) ---------------------------------
     if len(file_bytes) > upload_max_mb * 1024 * 1024:
         raise PhotoValidationError(
-            f"File too large. Maximum size is {upload_max_mb} MB."
+            f"File '{filename}' is {raw_kb / 1024:.1f} MB — maximum allowed is {upload_max_mb} MB. "
+            f"Please choose a smaller file or compress it before uploading."
+        )
+    if len(file_bytes) < upload_min_kb * 1024:
+        raise PhotoValidationError(
+            f"File '{filename}' is only {raw_kb:.1f} KB — minimum allowed is {upload_min_kb} KB. "
+            f"This looks like a thumbnail or icon; please upload a proper photo."
         )
 
+    # 2. Decode --------------------------------------------------------------
     try:
         img = Image.open(io.BytesIO(file_bytes))
     except Exception:
-        raise PhotoValidationError("Cannot read image file. Please upload a JPEG, PNG, or WebP.")
+        raise PhotoValidationError(
+            f"Cannot read '{filename}'. Make sure it's a valid image file (JPEG, PNG, or WebP)."
+        )
 
     if img.format not in ALLOWED_FORMATS:
         raise PhotoValidationError(
-            f"Unsupported format '{img.format}'. Please upload JPEG, PNG, or WebP."
+            f"Format '{img.format}' is not supported (allowed: {', '.join(sorted(ALLOWED_FORMATS))}). "
+            f"Please re-save '{filename}' as JPEG, PNG, or WebP and try again."
         )
 
-    # EXIF orient
     img = _exif_orient(img)
     img = img.convert("RGB")
-
     iw, ih = img.size
+
+    # 3. Source dimension guards --------------------------------------------
+    short_side = min(iw, ih)
+    if short_side < photo_min_dim_px:
+        raise PhotoValidationError(
+            f"Photo is too small ({iw}×{ih} px) — the shortest side must be at least "
+            f"{photo_min_dim_px} px. Please upload a higher-resolution photo."
+        )
+
+    # 4. CPU/memory saver: pre-downscale enormous images BEFORE doing further
+    #    work. Iterative JPEG encoding on a 12000×9000 image is wasteful when
+    #    the largest variant we keep is 800px wide.
+    long_side = max(iw, ih)
+    if long_side > photo_max_dim_px:
+        scale = photo_max_dim_px / long_side
+        img = img.resize((int(iw * scale), int(ih * scale)), Image.LANCZOS)
+        iw, ih = img.size
+
     image_area = iw * ih
 
-    # Face detection only enforced on the primary photo (shown blurred
-    # in search) — non-primary photos may be lifestyle / full-body /
-    # group shots where a strict single-face check would over-reject.
-    require_face = is_primary and settings_service.get_bool("require_face_detection", True)
-    passport_w = settings_service.get_int("photo_passport_width", 413)
-    passport_h = settings_service.get_int("photo_passport_height", 531)
-    photo_max_kb = settings_service.get_int("photo_max_kb", 500)
-    photo_min_kb = settings_service.get_int("photo_min_kb", 25)
-    blur_width = settings_service.get_int("photo_blur_width", 600)
-    blur_radius = settings_service.get_int("photo_blur_radius", 14)
-    thumb_size = settings_service.get_int("photo_thumb_size", 150)
-
+    # 5. Optional face check (off by default in current settings) -----------
     cx, cy = iw // 2, ih // 2
-
     if require_face:
         face = _detect_face(img)
         if face is None:
             raise PhotoValidationError(
-                "We could not detect exactly one clear face in the photo. "
-                "Please upload a photo with a single, forward-facing portrait."
+                "Could not detect exactly one clear face in this photo. "
+                "Please upload a single forward-facing portrait, well-lit, with no other people."
             )
         fx, fy, fw, fh = face
-        face_area = fw * fh
-        if face_area < 0.08 * image_area:
+        if (fw * fh) < 0.08 * image_area:
             raise PhotoValidationError(
-                "The face in the photo is too small. Please upload a closer portrait photo."
+                f"The detected face occupies only {(fw * fh) / image_area * 100:.0f}% of the frame. "
+                f"Please upload a closer portrait — at least 8% of the image should be face."
             )
-        cx = fx + fw // 2
-        cy = fy + fh // 2
+        cx, cy = fx + fw // 2, fy + fh // 2
 
-    # --- Passport variant ---
+    # 6. Passport variant: smart-crop to portrait aspect, encode under cap --
     passport_img = _smart_crop(img, passport_w, passport_h, cx, cy)
     passport_img = passport_img.resize((passport_w, passport_h), Image.LANCZOS)
     passport_bytes = _encode_jpeg(passport_img, photo_max_kb * 1024)
     if len(passport_bytes) < photo_min_kb * 1024:
         raise PhotoValidationError(
-            f"Photo is too low quality after processing ({len(passport_bytes) // 1024} KB; "
-            f"minimum {photo_min_kb} KB). Please upload a higher-resolution photo."
+            f"After processing, the photo compressed to {len(passport_bytes) / 1024:.1f} KB — "
+            f"below the {photo_min_kb} KB quality floor. The source is too low-detail or too "
+            f"flat (e.g. screenshot, AI-generated). Please upload a real high-resolution photo."
         )
 
-    # --- Blurred variant ---
-    blur_ratio = blur_width / img.width
-    blur_h = int(img.height * blur_ratio)
+    # 7. Blurred variant: scale to blur_width, Gaussian blur, encode under cap
+    blur_h = int(img.height * (blur_width / img.width))
     blurred_img = img.resize((blur_width, blur_h), Image.LANCZOS)
     blurred_img = blurred_img.filter(ImageFilter.GaussianBlur(radius=blur_radius))
-    buf = io.BytesIO()
-    blurred_img.save(buf, format="JPEG", quality=70)
-    blurred_bytes = buf.getvalue()
+    blurred_bytes = _encode_jpeg(blurred_img, blur_max_kb * 1024, start_quality=80)
 
-    # --- Thumb variant ---
-    side = thumb_size
-    tw, th = img.size
-    short = min(tw, th)
-    tx = (tw - short) // 2
-    ty = (th - short) // 2
+    # 8. Thumb variant: square crop to thumb_size, encode under cap ---------
+    short = min(iw, ih)
+    tx = (iw - short) // 2
+    ty = (ih - short) // 2
     thumb_img = img.crop((tx, ty, tx + short, ty + short))
-    thumb_img = thumb_img.resize((side, side), Image.LANCZOS)
-    buf = io.BytesIO()
-    thumb_img.save(buf, format="JPEG", quality=75)
-    thumb_bytes = buf.getvalue()
+    thumb_img = thumb_img.resize((thumb_size, thumb_size), Image.LANCZOS)
+    thumb_bytes = _encode_jpeg(thumb_img, thumb_max_kb * 1024, start_quality=80)
 
     return passport_bytes, blurred_bytes, thumb_bytes

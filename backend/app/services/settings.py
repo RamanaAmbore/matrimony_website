@@ -18,19 +18,28 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "smtp_user": "",
     "smtp_password": "",
     "smtp_from": "no-reply@marathakalyanam.com",
-    # Photo settings — sizes tuned to be lenient enough for typical phone
-    # photos while still bounding storage. Face detection is OFF by default
-    # because it over-rejects on group / lifestyle / poorly-lit phone shots
-    # and admins prefer to make that judgement call manually during review.
-    "photo_max_kb": 500,
-    "photo_min_kb": 10,
+    # Photo settings — sizes tuned for typical smartphone portraits while
+    # still bounding storage. Face detection is OFF by default because it
+    # over-rejects on group / lifestyle / poorly-lit phone shots and admins
+    # prefer to make that judgement call manually during review.
+    #
+    # All three output variants (passport / blurred / thumb) go through
+    # iterative JPEG quality stepping with their own size caps — see
+    # services/images.py:_encode_jpeg.
+    "photo_max_kb": 250,           # passport JPEG cap (413×531)
+    "photo_min_kb": 12,            # passport JPEG floor — guards quality
+    "photo_blur_max_kb": 80,       # blurred variant cap (≈600 wide, blurred)
+    "photo_thumb_max_kb": 20,      # square 150×150 thumb cap
     "photo_passport_width": 413,
     "photo_passport_height": 531,
     "photo_blur_width": 600,
     "photo_blur_radius": 14,
     "photo_thumb_size": 150,
+    "photo_min_dimension_px": 600, # shortest source side; below pixelates on crop
+    "photo_max_dimension_px": 4000,# longest source side; pre-downscale beyond this
     "photos_max_per_profile": 2,
-    "upload_max_mb": 10,
+    "upload_max_mb": 8,            # raw upload cap
+    "upload_min_kb": 20,           # raw upload floor — rejects thumbs / icons
     "require_face_detection": False,
     "require_admin_approval_for_profiles": True,
     "matrimony_tg_token": "",
