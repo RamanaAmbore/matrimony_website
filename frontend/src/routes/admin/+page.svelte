@@ -1152,7 +1152,7 @@
 										onclick={() => suspendUser(selectedUser!)}
 									>
 										<span class="text-xs">⏸ Suspend</span>
-										<span lang={langStore.current} class="text-[10px] opacity-90">Suspend</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('suspend', langStore.current)}</span>
 									</button>
 								{/if}
 								{#if selectedUser.is_suspended && (!selectedUser.is_admin || loggedInUser?.is_super)}
@@ -1162,7 +1162,7 @@
 										onclick={() => unsuspendUser(selectedUser!)}
 									>
 										<span class="text-xs flex items-center gap-1"><RotateCcw size={13} />Unsuspend</span>
-										<span lang={langStore.current} class="text-[10px] opacity-90">Unsuspend</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('unsuspend', langStore.current)}</span>
 									</button>
 								{/if}
 								<!-- Revoke: super-only when target is admin, otherwise any admin -->

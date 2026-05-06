@@ -346,12 +346,13 @@
 					type="button"
 					onclick={handleTogglePause}
 					disabled={pauseLoading}
-					class="shrink-0 rounded px-4 py-2 text-sm font-semibold disabled:opacity-50 {user.is_paused ? 'bg-saffron text-maroon hover:bg-marigold' : 'border border-maroon/40 text-maroon hover:bg-maroon/5'}"
+					class="shrink-0 flex flex-col items-center justify-center leading-tight rounded px-4 py-2 text-sm font-semibold disabled:opacity-50 {user.is_paused ? 'bg-saffron text-maroon hover:bg-marigold' : 'border border-maroon/40 text-maroon hover:bg-maroon/5'}"
 				>
 					{#if pauseLoading}
 						<Loader size={14} class="inline animate-spin" />
 					{:else}
 						<span>{user.is_paused ? 'Unpause' : 'Pause'}</span>
+						<span lang={langStore.current} class="text-[10px] opacity-90">{tx(user.is_paused ? 'unpause' : 'pause', langStore.current)}</span>
 					{/if}
 				</button>
 			</div>
