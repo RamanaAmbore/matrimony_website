@@ -382,7 +382,7 @@
 					{:else if profile.status === 'pending'}
 						<p class="text-center text-sm text-saffron font-medium">Under admin review</p>
 					{/if}
-				{:else if profile.status === 'approved'}
+				{:else if profile.status === 'approved' && !isAdmin}
 					{#if data.user?.is_approved}
 					{#if !showRequestForm}
 						<button
