@@ -30,6 +30,7 @@
 		Clock,
 		CheckCircle,
 		XCircle,
+		RotateCcw,
 		Megaphone,
 		Settings
 	} from 'lucide-svelte';
@@ -78,21 +79,21 @@
 	let allProfiles = $state<Profile[] | null>(null);
 	let allProfilesLoading = $state(false);
 	let allProfilesError = $state('');
-	let profileStatusFilter = $state<'all' | 'pending' | 'approved' | 'rejected' | 'draft' | null>(null);
+	let profileStatusFilter = $state<'all' | 'pending' | 'approved' | 'revoked' | 'draft' | null>(null);
 
 	// ── All Requests tab state ───────────────────────────────────────────────────
 
 	let allRequests = $state<DetailRequest[] | null>(null);
 	let allRequestsLoading = $state(false);
 	let allRequestsError = $state('');
-	let requestStatusFilter = $state<'all' | 'pending' | 'approved' | 'rejected' | null>(null);
+	let requestStatusFilter = $state<'all' | 'pending' | 'approved' | 'revoked' | null>(null);
 
 	// ── All Users tab state ──────────────────────────────────────────────────────
 
 	let allUsers = $state<User[] | null>(null);
 	let allUsersLoading = $state(false);
 	let allUsersError = $state('');
-	let userFilter = $state<'all' | 'pending' | 'approved' | null>(null);
+	let userFilter = $state<'all' | 'pending' | 'approved' | 'revoked' | null>(null);
 	// When false (default), admins are hidden from the Users grid so the
 	// list shows just regular users. Toggle to true to include admins.
 	let userIncludeAdmins = $state(false);
@@ -106,14 +107,18 @@
 				: dashboard.stats.users - (dashboard.stats.users_admins ?? 0)
 			: 0
 	);
-	// Pending = email_verified false OR is_approved false; Approved = both true.
-	// Mirrors the userStatus() helper used everywhere else.
-	let usersPending = $derived(
+	// userStatus() now returns 'revoked' | 'approved' | 'pending'
+	let usersRevoked = $derived(
 		(allUsers ?? []).filter(
-			(u) => (!userIncludeAdmins ? !u.is_admin : true) && !(u.email_verified && u.is_approved)
+			(u) => (!userIncludeAdmins ? !u.is_admin : true) && u.is_revoked
 		).length
 	);
-	let usersApproved = $derived(Math.max(0, usersTotal - usersPending));
+	let usersPending = $derived(
+		(allUsers ?? []).filter(
+			(u) => (!userIncludeAdmins ? !u.is_admin : true) && !u.is_revoked && !(u.email_verified && u.is_approved)
+		).length
+	);
+	let usersApproved = $derived(Math.max(0, usersTotal - usersPending - usersRevoked));
 
 	// ag-Grid state
 	let usersGridApi: GridApi | undefined;
@@ -268,9 +273,39 @@
 		}
 	}
 
+	async function revokeUser(u: User) {
+		userActionLoading = true;
+		try {
+			const updated = await adminApi.users.revoke(u.uuid);
+			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
+			selectedUser = updated;
+			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			toastStore.success('User revoked');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
+	async function reinstateUser(u: User) {
+		userActionLoading = true;
+		try {
+			const updated = await adminApi.users.reinstate(u.uuid);
+			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
+			selectedUser = updated;
+			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			toastStore.success('User reinstated');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+		} finally {
+			userActionLoading = false;
+		}
+	}
+
 	function startDeleteUser(u: User) {
 		openConfirm(
-			'Reject + delete user?',
+			'Delete user?',
 			`Permanently remove user "${u.email}" and all their profiles, photos, and requests. Cannot be undone.`,
 			async () => {
 				userActionLoading = true;
@@ -308,35 +343,36 @@
 		}
 	}
 
-	function startRejectProfile() {
+	async function doRevokeProfile() {
 		if (!selectedProfile) return;
-		const label = `${selectedProfile.first_name} ${selectedProfile.last_name ?? ''}`.trim();
-		openConfirm(
-			'Reject + delete profile?',
-			`Reject and permanently remove ${label}'s profile and all photos. Cannot be undone.`,
-			async () => {
-				if (!selectedProfile) return;
-				profileActionLoading = true;
-				try {
-					await adminApi.profiles.delete(selectedProfile.id);
-					const wasStatus = selectedProfile.status;
-					allProfiles = (allProfiles ?? []).filter(p => p.id !== selectedProfile!.id);
-					selectedProfile = null;
-					profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
-					if (dashboard) {
-						dashboard.stats.profiles_total = Math.max(0, dashboard.stats.profiles_total - 1);
-						const k = `profiles_${wasStatus}` as keyof typeof dashboard.stats;
-						const cur = dashboard.stats[k];
-						if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
-					}
-					toastStore.success('Profile rejected and removed');
-				} catch (err) {
-					toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
-				} finally {
-					profileActionLoading = false;
-				}
-			}
-		);
+		profileActionLoading = true;
+		try {
+			const updated = await adminApi.profiles.reject(selectedProfile.id);
+			allProfiles = allProfiles!.map(p => p.id === selectedProfile!.id ? updated : p);
+			selectedProfile = updated;
+			profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
+			toastStore.success('Profile revoked');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			profileActionLoading = false;
+		}
+	}
+
+	async function doReinstateProfile() {
+		if (!selectedProfile) return;
+		profileActionLoading = true;
+		try {
+			const updated = await adminApi.profiles.reinstate(selectedProfile.id);
+			allProfiles = allProfiles!.map(p => p.id === selectedProfile!.id ? updated : p);
+			selectedProfile = updated;
+			profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
+			toastStore.success('Profile reinstated');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			profileActionLoading = false;
+		}
 	}
 
 	function startDeleteProfile() {
@@ -386,38 +422,36 @@
 		}
 	}
 
-	function startRejectRequest() {
+	async function doRevokeRequest() {
 		if (!selectedRequest) return;
-		const profileName = selectedRequest.profile_first_name
-			? `${selectedRequest.profile_first_name} ${selectedRequest.profile_last_name ?? ''}`.trim()
-			: selectedRequest.profile_id;
-		const label = selectedRequest.request_number || selectedRequest.id.slice(0, 8) + '…';
-		openConfirm(
-			'Reject + delete request?',
-			`Reject and permanently remove request ${label} for ${profileName}. Cannot be undone.`,
-			async () => {
-				if (!selectedRequest) return;
-				requestActionLoading = true;
-				try {
-					await adminApi.requests.delete(selectedRequest.id);
-					const wasStatus = selectedRequest.status;
-					allRequests = (allRequests ?? []).filter(r => r.id !== selectedRequest!.id);
-					selectedRequest = null;
-					requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
-					if (dashboard) {
-						dashboard.stats.requests_total = Math.max(0, dashboard.stats.requests_total - 1);
-						const k = `requests_${wasStatus}` as keyof typeof dashboard.stats;
-						const cur = dashboard.stats[k];
-						if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
-					}
-					toastStore.success('Request rejected and removed');
-				} catch (err) {
-					toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
-				} finally {
-					requestActionLoading = false;
-				}
-			}
-		);
+		requestActionLoading = true;
+		try {
+			const updated = await adminApi.requests.reject(selectedRequest.id);
+			allRequests = allRequests!.map(r => r.id === selectedRequest!.id ? updated : r);
+			selectedRequest = updated;
+			requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
+			toastStore.success('Request revoked');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			requestActionLoading = false;
+		}
+	}
+
+	async function doReinstateRequest() {
+		if (!selectedRequest) return;
+		requestActionLoading = true;
+		try {
+			const updated = await adminApi.requests.reinstate(selectedRequest.id);
+			allRequests = allRequests!.map(r => r.id === selectedRequest!.id ? updated : r);
+			selectedRequest = updated;
+			requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
+			toastStore.success('Request reinstated');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
+		} finally {
+			requestActionLoading = false;
+		}
 	}
 
 	function startDeleteRequest() {
@@ -489,26 +523,18 @@
 		}
 	}
 
-	function startRejectPendingProfile(p: PendingProfileSummary) {
-		const label = `${p.first_name} ${p.last_name}`;
-		openConfirm(
-			'Reject + delete profile?',
-			`Reject and permanently remove ${label}'s profile and all photos. Cannot be undone.`,
-			async () => {
-				actionLoading[p.id] = true;
-				try {
-					await adminApi.profiles.delete(p.id);
-					dashboard!.pending_profiles = dashboard!.pending_profiles.filter(x => x.id !== p.id);
-					dashboard!.stats.profiles_pending = Math.max(0, dashboard!.stats.profiles_pending - 1);
-					dashboard!.stats.profiles_total = Math.max(0, dashboard!.stats.profiles_total - 1);
-					toastStore.success('Profile rejected and removed');
-				} catch (err) {
-					toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
-				} finally {
-					actionLoading[p.id] = false;
-				}
-			}
-		);
+	async function rejectPendingProfile(p: PendingProfileSummary) {
+		actionLoading[p.id] = true;
+		try {
+			await adminApi.profiles.reject(p.id);
+			dashboard!.pending_profiles = dashboard!.pending_profiles.filter(x => x.id !== p.id);
+			dashboard!.stats.profiles_pending = Math.max(0, dashboard!.stats.profiles_pending - 1);
+			toastStore.success('Profile revoked');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+		} finally {
+			actionLoading[p.id] = false;
+		}
 	}
 
 	// ── Request actions (legacy — kept for type compat) ──────────────────────────
@@ -527,26 +553,18 @@
 		}
 	}
 
-	function startRejectPendingRequest(r: PendingRequest) {
-		const profileName = `${r.profile_first_name} ${r.profile_last_name}`;
-		openConfirm(
-			'Reject + delete request?',
-			`Reject and permanently remove the request for ${profileName}. Cannot be undone.`,
-			async () => {
-				actionLoading[r.id] = true;
-				try {
-					await adminApi.requests.delete(r.id);
-					dashboard!.pending_requests = dashboard!.pending_requests.filter(x => x.id !== r.id);
-					dashboard!.stats.requests_pending = Math.max(0, dashboard!.stats.requests_pending - 1);
-					dashboard!.stats.requests_total = Math.max(0, dashboard!.stats.requests_total - 1);
-					toastStore.success('Request rejected and removed');
-				} catch (err) {
-					toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
-				} finally {
-					actionLoading[r.id] = false;
-				}
-			}
-		);
+	async function rejectPendingRequest(r: PendingRequest) {
+		actionLoading[r.id] = true;
+		try {
+			await adminApi.requests.reject(r.id);
+			dashboard!.pending_requests = dashboard!.pending_requests.filter(x => x.id !== r.id);
+			dashboard!.stats.requests_pending = Math.max(0, dashboard!.stats.requests_pending - 1);
+			toastStore.success('Request revoked');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
+		} finally {
+			actionLoading[r.id] = false;
+		}
 	}
 
 	// ── Helpers ──────────────────────────────────────────────────────────────────
@@ -554,10 +572,9 @@
 	function computeUsersRows(f: typeof userFilter): User[] {
 		if (!f || !allUsers) return [];
 		let rows: User[];
-		// Pending = the userStatus() helper returns 'pending' (email not verified
-		// OR account not approved). Approved = both flags true.
-		if (f === 'pending') rows = allUsers.filter((u: any) => !(u.email_verified && u.is_approved));
-		else if (f === 'approved') rows = allUsers.filter((u: any) => u.email_verified && u.is_approved);
+		if (f === 'revoked') rows = allUsers.filter((u: any) => u.is_revoked);
+		else if (f === 'pending') rows = allUsers.filter((u: any) => !u.is_revoked && !(u.email_verified && u.is_approved));
+		else if (f === 'approved') rows = allUsers.filter((u: any) => !u.is_revoked && u.email_verified && u.is_approved);
 		else rows = allUsers; // 'all'
 		// Hide admins by default — operator opts in via the "Include admins" checkbox.
 		if (!userIncludeAdmins) rows = rows.filter((u: any) => !u.is_admin);
@@ -567,12 +584,15 @@
 	function computeProfilesRows(f: typeof profileStatusFilter): Profile[] {
 		if (!f || !allProfiles) return [];
 		if (f === 'all') return allProfiles;
+		// 'revoked' also catches legacy 'rejected' records
+		if (f === 'revoked') return allProfiles.filter(p => p.status === 'revoked' || p.status === 'rejected');
 		return allProfiles.filter(p => p.status === f);
 	}
 
 	function computeRequestsRows(f: typeof requestStatusFilter): DetailRequest[] {
 		if (!f || !allRequests) return [];
 		if (f === 'all') return allRequests;
+		if (f === 'revoked') return allRequests.filter(r => r.status === 'revoked' || r.status === 'rejected');
 		return allRequests.filter(r => r.status === f);
 	}
 
@@ -606,9 +626,11 @@
 				{ field: 'phone_number', headerName: 'Phone', width: 150, headerClass: 'mk-header' },
 				{ headerName: 'Status', width: 140, sortable: true, headerClass: 'mk-header',
 				  valueGetter: (p: { data: User }) => userStatus(p.data),
-				  cellClass: (p: { value: string }) => p.value === 'approved' ? 'mk-cell-green' : 'mk-cell-amber',
+				  cellClass: (p: { value: string }) => p.value === 'approved' ? 'mk-cell-green' : p.value === 'revoked' ? 'mk-cell-vermilion' : 'mk-cell-amber',
 				  cellRenderer: (p: { value: string }) => p.value === 'approved'
 					? '<span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;border-radius:9999px;padding:1px 8px;font-size:11px;font-weight:600">&#10003; Approved</span>'
+					: p.value === 'revoked'
+					? '<span style="display:inline-flex;align-items:center;gap:4px;background:#fee2e2;color:#dc2626;border-radius:9999px;padding:1px 8px;font-size:11px;font-weight:600">&#10005; Revoked</span>'
 					: '<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;border-radius:9999px;padding:1px 8px;font-size:11px;font-weight:600">&#9888; Pending</span>' },
 				{ field: 'is_admin', headerName: 'Admin', width: 100, sortable: true, headerClass: 'mk-header',
 				  cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-maroon' : '',
@@ -641,8 +663,9 @@
 				  valueFormatter: (p: { value: string }) => p.value.charAt(0).toUpperCase() + p.value.slice(1) },
 				{ field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true, headerClass: 'mk-header',
 				  cellRenderer: (p: { value: string }) => {
-					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', rejected: 'background:#fee2e2;color:#dc2626', draft: 'background:#f3f4f6;color:#6b7280' };
-					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${p.value}</span>`;
+					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', rejected: 'background:#fee2e2;color:#dc2626', revoked: 'background:#fee2e2;color:#dc2626', draft: 'background:#f3f4f6;color:#6b7280' };
+					const label = (p.value === 'rejected' || p.value === 'revoked') ? 'Revoked' : p.value.charAt(0).toUpperCase() + p.value.slice(1);
+					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${label}</span>`;
 				  }},
 				{ headerName: 'Location', width: 200, filter: true, headerClass: 'mk-header',
 				  valueGetter: (p: { data: Profile }) => [p.data.city, p.data.state].filter(Boolean).join(', ') },
@@ -681,8 +704,9 @@
 				{ field: 'requester_email', headerName: 'Requester', width: 240, sortable: true, filter: true, headerClass: 'mk-header' },
 				{ field: 'status', headerName: 'Status', width: 120, sortable: true, filter: true, headerClass: 'mk-header',
 				  cellRenderer: (p: { value: string }) => {
-					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', rejected: 'background:#fee2e2;color:#dc2626' };
-					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${p.value}</span>`;
+					const styles: Record<string, string> = { approved: 'background:#dcfce7;color:#16a34a', pending: 'background:#fef3c7;color:#92400e', rejected: 'background:#fee2e2;color:#dc2626', revoked: 'background:#fee2e2;color:#dc2626' };
+					const label = (p.value === 'rejected' || p.value === 'revoked') ? 'Revoked' : p.value.charAt(0).toUpperCase() + p.value.slice(1);
+					return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[p.value] ?? ''}">${label}</span>`;
 				  }},
 				{ field: 'created_at', headerName: 'Date', width: 130, sortable: true, headerClass: 'mk-header',
 				  valueFormatter: (p: { value: string }) => new Date(p.value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }
@@ -769,6 +793,12 @@
 							onclick={() => { selectTab('users'); applyUserFilter('approved'); }}
 						>Approved · {usersApproved}</button>
 					{/if}
+					{#if usersRevoked > 0}
+						<button
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'revoked' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
+							onclick={() => { selectTab('users'); applyUserFilter('revoked'); }}
+						>Revoked · {usersRevoked}</button>
+					{/if}
 					<label class="ml-auto inline-flex cursor-pointer items-center gap-1.5 text-xs text-ink/60">
 						<input
 							type="checkbox"
@@ -809,9 +839,9 @@
 					{/if}
 					{#if dashboard.stats.profiles_rejected > 0}
 						<button
-							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'rejected' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
-							onclick={() => { selectTab('profiles'); applyProfileFilter('rejected'); }}
-						>Rejected · {dashboard.stats.profiles_rejected}</button>
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'revoked' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
+							onclick={() => { selectTab('profiles'); applyProfileFilter('revoked'); }}
+						>Revoked · {dashboard.stats.profiles_rejected}</button>
 					{/if}
 					{#if dashboard.stats.profiles_draft > 0}
 						<button
@@ -851,9 +881,9 @@
 					{/if}
 					{#if dashboard.stats.requests_rejected > 0}
 						<button
-							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'rejected' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
-							onclick={() => { selectTab('requests'); applyRequestFilter('rejected'); }}
-						>Rejected · {dashboard.stats.requests_rejected}</button>
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'requests' && requestStatusFilter === 'revoked' ? 'border-maroon bg-maroon text-cream' : 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'}"
+							onclick={() => { selectTab('requests'); applyRequestFilter('revoked'); }}
+						>Revoked · {dashboard.stats.requests_rejected}</button>
 					{/if}
 				</div>
 			</div>
@@ -905,62 +935,94 @@
 							<p class="text-xs text-ink/50">
 								{selectedUser.user_id}
 								{#if selectedUser.is_admin} · <span class="text-saffron font-semibold">Admin</span>{/if}
-								{#if selectedUser.email_verified} · <span class="text-green-600">Email verified</span>{:else} · <span class="text-marigold">Unverified email</span>{/if}
-								{#if selectedUser.is_approved} · <span class="text-green-600">Approved</span>{:else} · <span class="text-marigold">Not approved</span>{/if}
+								{#if selectedUser.is_revoked} · <span class="text-vermilion font-semibold">Revoked</span>
+								{:else if selectedUser.email_verified} · <span class="text-green-600">Email verified</span>{:else} · <span class="text-marigold">Unverified email</span>
+								{/if}
+								{#if !selectedUser.is_revoked}
+									{#if selectedUser.is_approved} · <span class="text-green-600">Approved</span>{:else} · <span class="text-marigold">Not approved</span>{/if}
+								{/if}
 							</p>
 						</div>
 						<div class="mt-3 flex flex-wrap gap-2">
-							{#if !selectedUser.is_approved}
-								<button
-									class="btn-primary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
-									disabled={userActionLoading}
-									onclick={() => approveUser(selectedUser!)}
-								>
-									{#if userActionLoading}<Loader size={13} class="animate-spin" />{/if}
-									<span class="text-xs">Approve User</span>
-									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approveUser', langStore.current)}</span>
-								</button>
-							{:else if !selectedUser.is_admin || loggedInUser?.is_super}
-								<!-- Revoking approval from an admin is super-only -->
-								<button
-									class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
-									disabled={userActionLoading}
-									onclick={() => unapproveUser(selectedUser!)}
-								>
-									<span class="text-xs">Revoke Approval</span>
-									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('revokeApproval', langStore.current)}</span>
-								</button>
+							{#if !selectedUser.is_revoked}
+								{#if !selectedUser.is_approved}
+									<button
+										class="btn-primary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
+										disabled={userActionLoading}
+										onclick={() => approveUser(selectedUser!)}
+									>
+										{#if userActionLoading}<Loader size={13} class="animate-spin" />{/if}
+										<span class="text-xs">Approve User</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approveUser', langStore.current)}</span>
+									</button>
+								{:else if !selectedUser.is_admin || loggedInUser?.is_super}
+									<!-- Revoking approval from an admin is super-only -->
+									<button
+										class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
+										disabled={userActionLoading}
+										onclick={() => unapproveUser(selectedUser!)}
+									>
+										<span class="text-xs">Revoke Approval</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('revokeApproval', langStore.current)}</span>
+									</button>
+								{/if}
+								{#if !selectedUser.email_verified}
+									<button
+										class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
+										disabled={userActionLoading}
+										onclick={() => verifyEmailFromGrid(selectedUser!)}
+									>
+										<span class="text-xs flex items-center gap-1"><ShieldCheck size={13} />Verify Email</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('verifyEmail', langStore.current)}</span>
+									</button>
+								{/if}
+								<!-- Promote: super-only -->
+								{#if loggedInUser?.is_super && !selectedUser.is_admin}
+									<button
+										class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
+										disabled={userActionLoading}
+										onclick={() => promoteUserFromGrid(selectedUser!)}
+									>
+										<span class="text-xs">Make Admin</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('makeAdmin', langStore.current)}</span>
+									</button>
+								{/if}
+								<!-- Demote: super-only for admin targets -->
+								{#if loggedInUser?.is_super && selectedUser.is_admin}
+									<button
+										class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded border border-vermilion/40 bg-white text-vermilion hover:bg-vermilion/5 disabled:opacity-50"
+										disabled={userActionLoading}
+										onclick={() => demoteUserFromGrid(selectedUser!)}
+									>
+										<span class="text-xs">Demote to User</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('demoteToUser', langStore.current)}</span>
+									</button>
+								{/if}
+								<!-- Revoke: super-only when target is admin, otherwise any admin -->
+								{#if !selectedUser.is_admin || loggedInUser?.is_super}
+									<button
+										class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded border border-vermilion/40 bg-white text-vermilion hover:bg-vermilion/5 disabled:opacity-50"
+										disabled={userActionLoading}
+										onclick={() => revokeUser(selectedUser!)}
+									>
+										<span class="text-xs flex items-center gap-1"><XCircle size={13} />Revoke</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
+									</button>
+								{/if}
+							{:else}
+								<!-- Reinstated: super-only when target is admin -->
+								{#if !selectedUser.is_admin || loggedInUser?.is_super}
+									<button
+										class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded border border-green-600 bg-white text-green-700 hover:bg-green-50 disabled:opacity-50"
+										disabled={userActionLoading}
+										onclick={() => reinstateUser(selectedUser!)}
+									>
+										<span class="text-xs flex items-center gap-1"><RotateCcw size={13} />Reinstate</span>
+										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approve', langStore.current)}</span>
+									</button>
+								{/if}
 							{/if}
-							{#if !selectedUser.email_verified}
-								<button
-									class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
-									disabled={userActionLoading}
-									onclick={() => verifyEmailFromGrid(selectedUser!)}
-								>
-									<span class="text-xs flex items-center gap-1"><ShieldCheck size={13} />Verify Email</span>
-									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('verifyEmail', langStore.current)}</span>
-								</button>
-							{/if}
-							{#if !selectedUser.is_admin}
-								<button
-									class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
-									disabled={userActionLoading}
-									onclick={() => promoteUserFromGrid(selectedUser!)}
-								>
-									<span class="text-xs">Make Admin</span>
-									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('makeAdmin', langStore.current)}</span>
-								</button>
-							{/if}
-							{#if loggedInUser?.is_super && selectedUser.is_admin}
-								<button
-									class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded border border-vermilion/40 bg-white text-vermilion hover:bg-vermilion/5 disabled:opacity-50"
-									disabled={userActionLoading}
-									onclick={() => demoteUserFromGrid(selectedUser!)}
-								>
-									<span class="text-xs">Demote to User</span>
-									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('demoteToUser', langStore.current)}</span>
-								</button>
-							{/if}
+							<!-- Delete: super-only for admin targets; any-admin for non-admin users -->
 							{#if loggedInUser?.is_super || (loggedInUser?.is_admin && !selectedUser.is_admin)}
 								<button
 									class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded bg-vermilion text-cream hover:bg-vermilion/80 disabled:opacity-50"
@@ -1020,17 +1082,17 @@
 						</p>
 						<p class="text-sm text-ink/60 capitalize flex flex-wrap items-center gap-1.5">
 							{selectedProfile.gender} ·
-							<span class="badge inline-flex items-center gap-1 {selectedProfile.status === 'approved' ? 'badge-approved' : selectedProfile.status === 'pending' ? 'badge-pending' : selectedProfile.status === 'rejected' ? 'badge-rejected' : 'badge-draft'}">
+							<span class="badge inline-flex items-center gap-1 {selectedProfile.status === 'approved' ? 'badge-approved' : selectedProfile.status === 'pending' ? 'badge-pending' : (selectedProfile.status === 'revoked' || selectedProfile.status === 'rejected') ? 'badge-revoked' : 'badge-draft'}">
 								{#if selectedProfile.status === 'draft'}
 									<FileEdit size={11} class="-mt-0.5 inline-block" />
 								{:else if selectedProfile.status === 'pending'}
 									<Clock size={11} class="-mt-0.5 inline-block" />
 								{:else if selectedProfile.status === 'approved'}
 									<CheckCircle size={11} class="-mt-0.5 inline-block" />
-								{:else if selectedProfile.status === 'rejected'}
+								{:else if selectedProfile.status === 'revoked' || selectedProfile.status === 'rejected'}
 									<XCircle size={11} class="-mt-0.5 inline-block" />
 								{/if}
-								{selectedProfile.status}
+								{selectedProfile.status === 'rejected' ? 'Revoked' : selectedProfile.status}
 							</span>
 							· {selectedProfile.city}{selectedProfile.state ? `, ${selectedProfile.state}` : ''}
 						</p>
@@ -1053,10 +1115,22 @@
 							<button
 								class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
 								disabled={profileActionLoading}
-								onclick={startRejectProfile}
+								onclick={doRevokeProfile}
 							>
-								<span>✕ Reject</span>
+								{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+								<span>✕ Revoke</span>
 								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
+							</button>
+						{/if}
+						{#if selectedProfile.status === 'revoked' || selectedProfile.status === 'rejected'}
+							<button
+								class="flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal rounded border border-green-600 bg-white text-green-700 hover:bg-green-50 disabled:opacity-50"
+								disabled={profileActionLoading}
+								onclick={doReinstateProfile}
+							>
+								{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+								<span class="flex items-center gap-1"><RotateCcw size={12} />Reinstate</span>
+								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approve', langStore.current)}</span>
 							</button>
 						{/if}
 						<!-- Delete is always available on any profile status -->
@@ -1066,7 +1140,7 @@
 							onclick={startDeleteProfile}
 						>
 							{#if profileActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-							<span>🗑 Delete</span>
+							<span class="flex items-center gap-1"><Trash2 size={12} />Delete</span>
 							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('delete', langStore.current)}</span>
 						</button>
 					</div>
@@ -1119,7 +1193,7 @@
 					<div class="min-w-0 flex-1">
 						<p class="font-semibold text-ink font-mono text-sm">{selectedRequest.id.slice(0, 8)}…</p>
 						<p class="text-sm text-ink/60">
-							Status: <span class="{selectedRequest.status === 'approved' ? 'text-green-600' : selectedRequest.status === 'rejected' ? 'text-vermilion' : 'text-saffron'} font-medium capitalize">{selectedRequest.status}</span>
+							Status: <span class="{selectedRequest.status === 'approved' ? 'text-green-600' : (selectedRequest.status === 'revoked' || selectedRequest.status === 'rejected') ? 'text-vermilion' : 'text-saffron'} font-medium capitalize">{selectedRequest.status === 'rejected' ? 'Revoked' : selectedRequest.status}</span>
 							{#if selectedRequest.message} · "{selectedRequest.message}"{/if}
 						</p>
 					</div>
@@ -1137,10 +1211,22 @@
 							<button
 								class="btn-danger flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
 								disabled={requestActionLoading}
-								onclick={startRejectRequest}
+								onclick={doRevokeRequest}
 							>
-								<span>✕ Reject</span>
+								{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+								<span>✕ Revoke</span>
 								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
+							</button>
+						{/if}
+						{#if selectedRequest.status === 'revoked' || selectedRequest.status === 'rejected'}
+							<button
+								class="flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal rounded border border-green-600 bg-white text-green-700 hover:bg-green-50 disabled:opacity-50"
+								disabled={requestActionLoading}
+								onclick={doReinstateRequest}
+							>
+								{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
+								<span class="flex items-center gap-1"><RotateCcw size={12} />Reinstate</span>
+								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approve', langStore.current)}</span>
 							</button>
 						{/if}
 						<!-- Delete is always available on any request status -->
@@ -1150,7 +1236,7 @@
 							onclick={startDeleteRequest}
 						>
 							{#if requestActionLoading}<Loader size={12} class="inline animate-spin mr-1" />{/if}
-							<span>🗑 Delete</span>
+							<span class="flex items-center gap-1"><Trash2 size={12} />Delete</span>
 							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('delete', langStore.current)}</span>
 						</button>
 					</div>
@@ -1194,6 +1280,10 @@
 	:global(.ag-theme-quartz .mk-cell-maroon) {
 		color: #6b0f1a !important;
 		font-weight: 700;
+	}
+	:global(.ag-theme-quartz .mk-cell-vermilion) {
+		color: #dc2626 !important;
+		font-weight: 600;
 	}
 	/* Sort/filter icons in header */
 	:global(.ag-theme-quartz .mk-header .ag-sort-indicator-icon),

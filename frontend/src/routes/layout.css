@@ -208,6 +208,10 @@ option:hover { background: var(--color-maroon); color: var(--color-cream); }
 		@apply inline-flex items-center rounded-full bg-vermilion/15 px-2.5 py-0.5 text-xs font-medium text-vermilion;
 	}
 
+	.badge-revoked {
+		@apply inline-flex items-center rounded-full bg-vermilion/15 px-2.5 py-0.5 text-xs font-medium text-vermilion;
+	}
+
 	.badge-draft {
 		@apply inline-flex items-center rounded-full bg-ink/10 px-2.5 py-0.5 text-xs font-medium text-ink;
 	}

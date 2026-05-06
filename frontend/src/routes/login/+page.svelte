@@ -37,6 +37,8 @@
 			if (err instanceof ApiError) {
 				if (err.status === 401) {
 					errors = { password: 'Invalid user ID / email or password' };
+				} else if (err.status === 403 && err.code === 'user_revoked') {
+					errors = { identifier: 'Your account has been revoked. Contact admin to reinstate.' };
 				} else if (err.status === 403) {
 					toastStore.error('Please verify your email first');
 				} else {

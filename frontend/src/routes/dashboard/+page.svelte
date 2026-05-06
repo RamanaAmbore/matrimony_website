@@ -104,10 +104,11 @@
 		const styles: Record<string, string> = {
 			approved: 'background:#fef3c7;color:#92400e',  // saffron/25 text-maroon (badge-approved)
 			pending:  'background:#fef9c3;color:#92400e',  // badge-pending
-			rejected: 'background:#fee2e2;color:#dc2626',  // badge-rejected
+			rejected: 'background:#fee2e2;color:#dc2626',  // badge-revoked (legacy)
+			revoked:  'background:#fee2e2;color:#dc2626',  // badge-revoked
 			draft:    'background:#f3f4f6;color:#6b7280'   // badge-draft
 		};
-		const label = status === 'pending' ? 'Under Review' : status.charAt(0).toUpperCase() + status.slice(1);
+		const label = status === 'pending' ? 'Under Review' : (status === 'rejected' || status === 'revoked') ? 'Revoked' : status.charAt(0).toUpperCase() + status.slice(1);
 		return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[status] ?? ''}">${label}</span>`;
 	}
 
@@ -300,6 +301,11 @@
 						<span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800">
 							<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 							Approved
+						</span>
+					{:else if userStatus(data.user) === 'revoked'}
+						<span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+							<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+							Revoked — contact admin
 						</span>
 					{:else}
 						<span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">

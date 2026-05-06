@@ -4,20 +4,20 @@
 	import { ApiError } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
-	import { Loader, CheckCircle, XCircle, Eye, FileEdit, Clock } from 'lucide-svelte';
+	import { Loader, CheckCircle, XCircle, Eye, FileEdit, Clock, RotateCcw, Trash2 } from 'lucide-svelte';
 	import { page } from '$app/stores';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
 	import ConfirmDelete from '$lib/components/ConfirmDelete.svelte';
 
-	const validStatuses = ['pending', 'approved', 'rejected', 'draft'];
+	const validStatuses = ['pending', 'approved', 'revoked', 'draft'];
 	const urlStatus = $page.url.searchParams.get('status') ?? '';
 	let statusFilter = $state(validStatuses.includes(urlStatus) ? urlStatus : 'pending');
 	let profileList = $state<Profile[]>([]);
 	let loading = $state(true);
 	let processingId = $state<string | null>(null);
 
-	// ConfirmDelete modal state
+	// ConfirmDelete modal state (delete only — reject is now one-click)
 	let deleteOpen = $state(false);
 	let pendingDelete = $state<{ id: string; label: string } | null>(null);
 
@@ -50,13 +50,50 @@
 			profileList = profileList.filter((p) => p.id !== id);
 			toastStore.success('Profile approved');
 		} catch (err) {
-			toastStore.error('Approval failed');
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Approval failed');
 		} finally {
 			processingId = null;
 		}
 	}
 
-	function startReject(profile: Profile) {
+	async function reject(id: string) {
+		processingId = id;
+		try {
+			const updated = await adminApi.profiles.reject(id);
+			// After rejecting, it becomes revoked — update in-place or remove if
+			// the current filter wouldn't show it.
+			if (statusFilter === 'revoked') {
+				profileList = profileList.map((p) => p.id === id ? updated : p);
+			} else {
+				profileList = profileList.filter((p) => p.id !== id);
+			}
+			toastStore.success('Profile revoked');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Revoke failed');
+		} finally {
+			processingId = null;
+		}
+	}
+
+	async function reinstate(id: string) {
+		processingId = id;
+		try {
+			const updated = await adminApi.profiles.reinstate(id);
+			// After reinstatement it becomes approved — remove from revoked filter view
+			if (statusFilter === 'approved') {
+				profileList = profileList.map((p) => p.id === id ? updated : p);
+			} else {
+				profileList = profileList.filter((p) => p.id !== id);
+			}
+			toastStore.success('Profile reinstated');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Reinstate failed');
+		} finally {
+			processingId = null;
+		}
+	}
+
+	function startDelete(profile: Profile) {
 		pendingDelete = {
 			id: profile.id,
 			label: `${profile.first_name} ${profile.last_name}`
@@ -70,9 +107,9 @@
 		try {
 			await adminApi.profiles.delete(pendingDelete.id);
 			profileList = profileList.filter((p) => p.id !== pendingDelete!.id);
-			toastStore.success('Profile rejected and removed');
-		} catch {
-			toastStore.error('Delete failed');
+			toastStore.success('Profile deleted');
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Delete failed');
 		} finally {
 			processingId = null;
 			pendingDelete = null;
@@ -88,6 +125,13 @@
 		}
 		return age;
 	}
+
+	function badgeClass(status: string): string {
+		if (status === 'approved') return 'badge-approved';
+		if (status === 'pending') return 'badge-pending';
+		if (status === 'revoked' || status === 'rejected') return 'badge-revoked';
+		return 'badge-draft';
+	}
 </script>
 
 <svelte:head>
@@ -96,8 +140,8 @@
 
 <ConfirmDelete
 	bind:open={deleteOpen}
-	title="Reject + delete profile?"
-	description={`Reject and permanently remove ${pendingDelete?.label ?? 'this profile'} and all photos. Cannot be undone.`}
+	title="Delete profile?"
+	description={`Permanently remove ${pendingDelete?.label ?? 'this profile'} and all photos. Cannot be undone.`}
 	onConfirm={doDelete}
 />
 
@@ -112,7 +156,7 @@
 
 	<!-- Status filter tabs -->
 	<div class="mt-4 flex gap-2 border-b border-gold/20 pb-0">
-		{#each ['pending', 'approved', 'rejected', 'draft'] as s}
+		{#each ['pending', 'approved', 'revoked', 'draft'] as s}
 			<button
 				onclick={() => (statusFilter = s)}
 				class="px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-150 -mb-px
@@ -143,13 +187,13 @@
 								>
 									{profile.first_name} {profile.last_name}
 								</a>
-								<span class="badge badge-{profile.status === 'approved' ? 'approved' : profile.status === 'pending' ? 'pending' : profile.status === 'rejected' ? 'rejected' : 'draft'} inline-flex items-center gap-1 capitalize">
+								<span class="badge {badgeClass(profile.status)} inline-flex items-center gap-1 capitalize">
 									{#if profile.status === 'draft'}<FileEdit size={12} class="-mt-0.5 inline-block" />
 									{:else if profile.status === 'pending'}<Clock size={12} class="-mt-0.5 inline-block" />
 									{:else if profile.status === 'approved'}<CheckCircle size={12} class="-mt-0.5 inline-block" />
-									{:else if profile.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
+									{:else if profile.status === 'revoked' || profile.status === 'rejected'}<XCircle size={12} class="-mt-0.5 inline-block" />
 									{/if}
-									{profile.status}
+									{profile.status === 'rejected' ? 'Revoked' : profile.status}
 								</span>
 							</div>
 							<p class="mt-1 text-sm text-ink/60 capitalize">
@@ -180,14 +224,35 @@
 									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approve', langStore.current)}</span>
 								</button>
 								<button
-									onclick={() => startReject(profile)}
+									onclick={() => reject(profile.id)}
 									disabled={processingId === profile.id}
 									class="flex flex-col items-center justify-center text-center leading-tight rounded bg-vermilion px-3 py-1.5 min-h-[44px] text-sm text-white hover:bg-vermilion/80 focus-visible:outline-2 focus-visible:outline-saffron disabled:opacity-60 whitespace-normal"
 								>
-									<span class="flex items-center gap-1"><XCircle size={13} />Reject</span>
+									<span class="flex items-center gap-1"><XCircle size={13} />Revoke</span>
 									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('reject', langStore.current)}</span>
 								</button>
 							{/if}
+
+							{#if profile.status === 'revoked' || profile.status === 'rejected'}
+								<button
+									onclick={() => reinstate(profile.id)}
+									disabled={processingId === profile.id}
+									class="flex flex-col items-center justify-center text-center leading-tight rounded border border-green-600 bg-white px-3 py-1.5 min-h-[44px] text-sm text-green-700 hover:bg-green-50 focus-visible:outline-2 focus-visible:outline-saffron disabled:opacity-60 whitespace-normal"
+								>
+									<span class="flex items-center gap-1"><RotateCcw size={13} />Reinstate</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approve', langStore.current)}</span>
+								</button>
+							{/if}
+
+							<!-- Delete: always available with double-confirm -->
+							<button
+								onclick={() => startDelete(profile)}
+								disabled={processingId === profile.id}
+								class="flex flex-col items-center justify-center text-center leading-tight rounded bg-vermilion px-3 py-1.5 min-h-[44px] text-sm text-white hover:bg-vermilion/80 focus-visible:outline-2 focus-visible:outline-saffron disabled:opacity-60 whitespace-normal"
+							>
+								<span class="flex items-center gap-1"><Trash2 size={13} />Delete</span>
+								<span lang={langStore.current} class="text-[10px] opacity-90">{tx('delete', langStore.current)}</span>
+							</button>
 						</div>
 					</div>
 				</div>

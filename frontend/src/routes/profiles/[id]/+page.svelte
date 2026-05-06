@@ -21,7 +21,8 @@
 		draft:    FileEdit,
 		pending:  Clock,
 		approved: CheckCircle,
-		rejected: XCircle
+		rejected: XCircle,
+		revoked:  XCircle
 	};
 	import Logo from '$lib/components/Logo.svelte';
 	import { tx } from '$lib/i18n';
@@ -457,8 +458,8 @@
 							? 'badge-approved'
 							: profile.status === 'pending'
 								? 'badge-pending'
-								: profile.status === 'rejected'
-									? 'badge-rejected'
+								: (profile.status === 'rejected' || profile.status === 'revoked')
+									? 'badge-revoked'
 									: 'badge-draft'}"
 					>
 						{#if profile.status === 'draft'}
@@ -467,10 +468,10 @@
 							<Clock size={12} class="-mt-0.5 inline-block" />
 						{:else if profile.status === 'approved'}
 							<CheckCircle size={12} class="-mt-0.5 inline-block" />
-						{:else if profile.status === 'rejected'}
+						{:else if profile.status === 'rejected' || profile.status === 'revoked'}
 							<XCircle size={12} class="-mt-0.5 inline-block" />
 						{/if}
-						{profile.status}
+						{profile.status === 'rejected' ? 'Revoked' : profile.status}
 					</span>
 				</div>
 

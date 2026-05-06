@@ -23,10 +23,11 @@ export interface User {
 	is_admin: boolean;
 	is_super: boolean;
 	is_approved: boolean;
+	is_revoked: boolean;
 	email_verified: boolean;
 }
 
-export type ProfileStatus = 'draft' | 'pending' | 'approved' | 'rejected';
+export type ProfileStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'revoked';
 export type Gender = 'bride' | 'groom';
 export type Manglik = 'yes' | 'no' | 'partial' | 'unknown';
 export type Diet = 'veg' | 'non-veg' | 'eggetarian' | 'jain' | 'vegan';
@@ -132,7 +133,7 @@ export interface ProfileWithPhotos {
 	is_full_access?: boolean;
 }
 
-export type RequestStatus = 'pending' | 'approved' | 'rejected';
+export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'revoked';
 
 export interface DetailRequest {
 	id: string;
@@ -541,11 +542,14 @@ export const admin = {
 				body: JSON.stringify({ admin_notes })
 			});
 		},
-		async reject(id: string, admin_notes: string): Promise<void> {
+		async reject(id: string, admin_notes?: string): Promise<Profile> {
 			return request(`/api/admin/profiles/${id}/reject`, {
 				method: 'POST',
 				body: JSON.stringify({ admin_notes })
 			});
+		},
+		async reinstate(id: string): Promise<Profile> {
+			return request(`/api/admin/profiles/${id}/reinstate`, { method: 'POST' });
 		},
 		async delete(
 			id: string
@@ -565,11 +569,14 @@ export const admin = {
 				body: JSON.stringify({ admin_notes })
 			});
 		},
-		async reject(id: string, admin_notes: string): Promise<void> {
+		async reject(id: string, admin_notes?: string): Promise<DetailRequest> {
 			return request(`/api/admin/requests/${id}/reject`, {
 				method: 'POST',
 				body: JSON.stringify({ admin_notes })
 			});
+		},
+		async reinstate(id: string): Promise<DetailRequest> {
+			return request(`/api/admin/requests/${id}/reinstate`, { method: 'POST' });
 		},
 		async delete(
 			id: string
@@ -596,6 +603,12 @@ export const admin = {
 		},
 		async demote(id: string): Promise<User> {
 			return request(`/api/admin/users/${id}/demote`, { method: 'POST' });
+		},
+		async revoke(id: string): Promise<User> {
+			return request(`/api/admin/users/${id}/revoke`, { method: 'POST' });
+		},
+		async reinstate(id: string): Promise<User> {
+			return request(`/api/admin/users/${id}/reinstate`, { method: 'POST' });
 		},
 		async delete(id: string): Promise<{ deleted: { uuid: string; user_id: string; email: string; is_admin: boolean } }> {
 			return request(`/api/admin/users/${id}/delete`, { method: 'POST' });

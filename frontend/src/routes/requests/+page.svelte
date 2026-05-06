@@ -71,12 +71,14 @@
 		const styles: Record<string, string> = {
 			approved: 'background:#dcfce7;color:#16a34a',
 			pending:  'background:#fef3c7;color:#92400e',
-			rejected: 'background:#fee2e2;color:#dc2626'
+			rejected: 'background:#fee2e2;color:#dc2626',
+			revoked:  'background:#fee2e2;color:#dc2626'
 		};
 		const labels: Record<string, string> = {
 			approved: 'Approved',
 			pending:  'Pending',
-			rejected: 'Rejected'
+			rejected: 'Revoked',
+			revoked:  'Revoked'
 		};
 		return `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:11px;font-weight:600;${styles[status] ?? ''}">${labels[status] ?? status}</span>`;
 	}

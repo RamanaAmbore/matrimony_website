@@ -1058,7 +1058,7 @@
 									<span lang={langStore.current} class="text-[10px] sm:text-xs opacity-90">{tx('save', langStore.current)}</span>
 								{/if}
 							</button>
-							{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
+							{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected' || profileStatus === 'revoked')}
 								<button
 									type="button"
 									onclick={handleSubmitForApproval}
@@ -1095,7 +1095,7 @@
 	{/each}
 </div>
 
-{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
+{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected' || profileStatus === 'revoked')}
 	{@const allDone = SECTIONS.every((_, i) => completedSections.has(i) || i === SECTIONS.length - 1)}
 	{#if allDone || completedSections.size >= SECTIONS.length - 1}
 		<div class="mt-8 rounded-lg border border-gold/30 bg-white p-6 text-center shadow-sm">
@@ -1968,7 +1968,7 @@
 					<span lang={langStore.current} class="text-[10px] sm:text-xs opacity-90">{tx('save', langStore.current)}</span>
 				{/if}
 			</button>
-			{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected')}
+			{#if onSubmitForApproval && (profileStatus === 'draft' || profileStatus === 'rejected' || profileStatus === 'revoked')}
 				<button
 					type="button"
 					onclick={handleSubmitForApproval}
