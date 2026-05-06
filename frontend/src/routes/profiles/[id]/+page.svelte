@@ -38,6 +38,7 @@
 	let requesting = $state(false);
 	let requestMessage = $state('');
 	let showRequestForm = $state(false);
+	let isFullAccess = $state(false);
 	let isOwner = $state(false);
 	let isAdmin = $state(false);
 
@@ -59,6 +60,7 @@
 			const result = await profilesApi.get(profileId);
 			profile = result.profile;
 			photos = result.photos;
+			isFullAccess = result.is_full_access ?? false;
 			// Determine ownership from layout user data
 			isOwner = data.user?.user_id === profile.owner_user_id;
 			isAdmin = data.user?.is_admin === true;
@@ -250,14 +252,9 @@
 
 	const primaryPhoto = $derived(photos.find((p) => p.is_primary) ?? photos[0] ?? null);
 
-	// A user whose detail request has been approved receives the full profile from the
-	// backend, including passport_url on photos. We detect that access grant by checking
-	// whether the first photo carries a passport_url (the backend only includes it when
-	// the caller is owner, admin, or approved-request holder).
-	const hasApprovedRequestAccess = $derived(photos.length > 0 && !!photos[0].passport_url);
-
-	// Whether the viewer should see the full data (owner, admin, or approved request holder)
-	const canSeeFull = $derived(isOwner || isAdmin || hasApprovedRequestAccess);
+	// Whether the viewer should see the full data — trust the explicit backend flag,
+	// or fall back to owner/admin status (covers page load before the flag is set).
+	const canSeeFull = $derived(isFullAccess || isOwner || isAdmin);
 
 	// Bug 2: keep displayedPhoto in sync with primaryPhoto on first load;
 	// user clicks on a thumbnail to override it.
@@ -386,6 +383,7 @@
 						<p class="text-center text-sm text-saffron font-medium">Under admin review</p>
 					{/if}
 				{:else if profile.status === 'approved'}
+					{#if data.user?.is_approved}
 					{#if !showRequestForm}
 						<button
 							onclick={() => (showRequestForm = true)}
@@ -423,7 +421,12 @@
 							</div>
 						</div>
 					{/if}
-				{/if}
+					{:else}
+						<p class="rounded-lg border border-saffron/40 bg-saffron/10 px-3 py-2.5 text-center text-xs font-medium text-saffron leading-relaxed">
+							Your account is awaiting admin approval — you can request details once approved.
+						</p>
+					{/if}
+					{/if}
 
 				<!-- Non-owner, non-admin blur notice -->
 				{#if !canSeeFull}

@@ -129,6 +129,7 @@ export interface Photo {
 export interface ProfileWithPhotos {
 	profile: Profile;
 	photos: Photo[];
+	is_full_access?: boolean;
 }
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';

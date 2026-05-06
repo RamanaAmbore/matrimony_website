@@ -25,7 +25,13 @@
 		UserCheck,
 		Inbox,
 		ShieldCheck,
-		Trash2
+		Trash2,
+		FileEdit,
+		Clock,
+		CheckCircle,
+		XCircle,
+		Megaphone,
+		Settings
 	} from 'lucide-svelte';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
@@ -86,7 +92,7 @@
 	let allUsers = $state<User[] | null>(null);
 	let allUsersLoading = $state(false);
 	let allUsersError = $state('');
-	let userFilter = $state<'all' | 'unverified' | 'verified' | null>(null);
+	let userFilter = $state<'all' | 'pending' | 'approved' | null>(null);
 	// When false (default), admins are hidden from the Users grid so the
 	// list shows just regular users. Toggle to true to include admins.
 	let userIncludeAdmins = $state(false);
@@ -100,8 +106,14 @@
 				: dashboard.stats.users - (dashboard.stats.users_admins ?? 0)
 			: 0
 	);
-	let usersUnverified = $derived(dashboard?.pending_users.length ?? 0);
-	let usersVerified = $derived(Math.max(0, usersTotal - usersUnverified));
+	// Pending = email_verified false OR is_approved false; Approved = both true.
+	// Mirrors the userStatus() helper used everywhere else.
+	let usersPending = $derived(
+		(allUsers ?? []).filter(
+			(u) => (!userIncludeAdmins ? !u.is_admin : true) && !(u.email_verified && u.is_approved)
+		).length
+	);
+	let usersApproved = $derived(Math.max(0, usersTotal - usersPending));
 
 	// ag-Grid state
 	let usersGridApi: GridApi | undefined;
@@ -542,8 +554,10 @@
 	function computeUsersRows(f: typeof userFilter): User[] {
 		if (!f || !allUsers) return [];
 		let rows: User[];
-		if (f === 'unverified') rows = allUsers.filter((u: any) => !u.email_verified);
-		else if (f === 'verified') rows = allUsers.filter((u: any) => u.email_verified);
+		// Pending = the userStatus() helper returns 'pending' (email not verified
+		// OR account not approved). Approved = both flags true.
+		if (f === 'pending') rows = allUsers.filter((u: any) => !(u.email_verified && u.is_approved));
+		else if (f === 'approved') rows = allUsers.filter((u: any) => u.email_verified && u.is_approved);
 		else rows = allUsers; // 'all'
 		// Hide admins by default — operator opts in via the "Include admins" checkbox.
 		if (!userIncludeAdmins) rows = rows.filter((u: any) => !u.is_admin);
@@ -703,8 +717,20 @@
 />
 
 <div class="mx-auto max-w-6xl px-4 py-10">
-	<h1 class="font-serif text-3xl font-bold text-maroon">Dashboard</h1>
-	<p class="mt-1 text-sm text-ink/60">Platform overview and quick approvals</p>
+	<div class="flex flex-wrap items-start justify-between gap-3">
+		<div>
+			<h1 class="font-serif text-3xl font-bold text-maroon">Dashboard</h1>
+			<p class="mt-1 text-sm text-ink/60">Platform overview and quick approvals</p>
+		</div>
+		<div class="flex flex-wrap items-center gap-2">
+			<a href="/admin/settings" class="inline-flex items-center gap-1.5 rounded border border-gold/50 bg-white px-3 py-1.5 text-sm font-medium text-maroon hover:border-saffron hover:bg-cream transition-colors">
+				<Settings size={15} />Settings
+			</a>
+			<a href="/admin/broadcast" class="inline-flex items-center gap-1.5 rounded border border-gold/50 bg-white px-3 py-1.5 text-sm font-medium text-maroon hover:border-saffron hover:bg-cream transition-colors">
+				<Megaphone size={15} />Broadcast
+			</a>
+		</div>
+	</div>
 
 	<!-- ── Stats row (always visible) ────────────────────────────────────────── -->
 	{#if loading}
@@ -731,17 +757,17 @@
 						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
 						onclick={() => { selectTab('users'); applyUserFilter('all'); }}
 					>All</button>
-					{#if usersUnverified > 0}
+					{#if usersPending > 0}
 						<button
-							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'unverified' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
-							onclick={() => { selectTab('users'); applyUserFilter('unverified'); }}
-						>Unverified · {usersUnverified}</button>
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'pending' ? 'border-maroon bg-maroon text-cream' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'}"
+							onclick={() => { selectTab('users'); applyUserFilter('pending'); }}
+						>Pending · {usersPending}</button>
 					{/if}
-					{#if usersVerified > 0}
+					{#if usersApproved > 0}
 						<button
-							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'verified' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
-							onclick={() => { selectTab('users'); applyUserFilter('verified'); }}
-						>Verified · {usersVerified}</button>
+							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'approved' ? 'border-maroon bg-maroon text-cream' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
+							onclick={() => { selectTab('users'); applyUserFilter('approved'); }}
+						>Approved · {usersApproved}</button>
 					{/if}
 					<label class="ml-auto inline-flex cursor-pointer items-center gap-1.5 text-xs text-ink/60">
 						<input
@@ -992,8 +1018,20 @@
 						<p class="font-semibold text-ink">
 							{selectedProfile.profile_number} — {selectedProfile.first_name} {selectedProfile.last_name ?? ''}
 						</p>
-						<p class="text-sm text-ink/60 capitalize">
-							{selectedProfile.gender} · <span class="{selectedProfile.status === 'approved' ? 'text-green-600' : selectedProfile.status === 'rejected' ? 'text-vermilion' : 'text-saffron'} font-medium">{selectedProfile.status}</span>
+						<p class="text-sm text-ink/60 capitalize flex flex-wrap items-center gap-1.5">
+							{selectedProfile.gender} ·
+							<span class="badge inline-flex items-center gap-1 {selectedProfile.status === 'approved' ? 'badge-approved' : selectedProfile.status === 'pending' ? 'badge-pending' : selectedProfile.status === 'rejected' ? 'badge-rejected' : 'badge-draft'}">
+								{#if selectedProfile.status === 'draft'}
+									<FileEdit size={11} class="-mt-0.5 inline-block" />
+								{:else if selectedProfile.status === 'pending'}
+									<Clock size={11} class="-mt-0.5 inline-block" />
+								{:else if selectedProfile.status === 'approved'}
+									<CheckCircle size={11} class="-mt-0.5 inline-block" />
+								{:else if selectedProfile.status === 'rejected'}
+									<XCircle size={11} class="-mt-0.5 inline-block" />
+								{/if}
+								{selectedProfile.status}
+							</span>
 							· {selectedProfile.city}{selectedProfile.state ? `, ${selectedProfile.state}` : ''}
 						</p>
 					</div>

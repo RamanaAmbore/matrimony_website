@@ -69,12 +69,12 @@
 		<div
 			bind:this={popoverEl}
 			role="tooltip"
-			class="absolute left-5 top-0 z-50 w-56 max-w-[calc(100vw-2rem)] rounded-lg border border-gold/50 bg-cream shadow-md"
+			class="absolute left-5 top-0 z-50 max-w-[280px] sm:max-w-xs w-[calc(100vw-2rem)] rounded-lg border border-gold/50 bg-cream shadow-md"
 			style="min-width:180px"
 		>
 			<div class="px-3 py-2.5 text-xs leading-relaxed">
 				<p class="text-ink/80">{text}</p>
-				<p class="mt-1 font-medium text-maroon" lang={langStore.current}>
+				<p class="mt-1 text-xs leading-relaxed text-maroon font-medium" lang={langStore.current}>
 					{tx(langKey, langStore.current)}
 				</p>
 			</div>
