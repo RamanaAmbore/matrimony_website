@@ -17,6 +17,9 @@ from app.schemas.auth import (
     LoginRequest,
     RegisterRequest,
     RegisterResponse,
+    UpdateEmailRequest,
+    UpdatePasswordRequest,
+    UpdatePhoneRequest,
     UserResponse,
     VerifyEmailRequest,
 )
@@ -284,6 +287,120 @@ class AuthController(Controller):
         await db.refresh(user)
 
         return {"message": "Email verified successfully"}
+
+    # ── Account self-service ────────────────────────────────────────────────
+    # All three updates require the current password as a confirmation.
+    # Email-update resets email_verified+is_approved (the user must re-verify
+    # the new email and an admin must re-approve). Phone + password updates
+    # leave the account state alone.
+
+    @post("/me/email", status_code=200)
+    async def update_email(
+        self,
+        data: UpdateEmailRequest,
+        db: AsyncSession,
+        request: Request,
+    ) -> dict[str, Any]:
+        payload = request.scope.get("user_payload")
+        if not payload:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        result = await db.execute(select(User).where(User.id == uuid.UUID(payload["sub"])))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        if not auth_svc.verify_password(data.current_password, user.password_hash):
+            raise HTTPException(status_code=403, detail={"code": "wrong_password", "message": "Current password is incorrect"})
+
+        new_email = data.new_email.strip().lower()
+        _validate_email(new_email)
+        if new_email == user.email:
+            raise HTTPException(status_code=422, detail={"code": "same_email", "message": "New email must differ from the current one"})
+
+        # Uniqueness — always enforced for email changes (operators almost
+        # certainly want this even in test mode).
+        existing = await db.execute(select(User).where(func.lower(User.email) == new_email))
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail={"code": "email_taken", "message": "That email is already registered"})
+
+        token = auth_svc.generate_token()
+        user.email = new_email
+        user.email_verified = False
+        user.is_approved = False
+        user.email_verification_token = token
+        await db.commit()
+
+        try:
+            await email_svc.send_verification_email(new_email, token, full_name=user.full_name)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("Failed to send verification email after update: %s", exc)
+
+        return {
+            "message": "Email updated. Please verify the new address from the link we just sent. Account approval will need re-confirmation by an admin.",
+            "email": new_email,
+        }
+
+    @post("/me/phone", status_code=200)
+    async def update_phone(
+        self,
+        data: UpdatePhoneRequest,
+        db: AsyncSession,
+        request: Request,
+    ) -> dict[str, Any]:
+        payload = request.scope.get("user_payload")
+        if not payload:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        result = await db.execute(select(User).where(User.id == uuid.UUID(payload["sub"])))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        if not auth_svc.verify_password(data.current_password, user.password_hash):
+            raise HTTPException(status_code=403, detail={"code": "wrong_password", "message": "Current password is incorrect"})
+
+        _validate_phone(data.new_phone)
+        normalized = _normalize_phone(data.new_phone)
+        if normalized == user.phone_number:
+            raise HTTPException(status_code=422, detail={"code": "same_phone", "message": "New phone must differ from the current one"})
+
+        # Uniqueness check (always enforced — same rationale as email)
+        existing = await db.execute(select(User).where(User.phone_number == normalized))
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail={"code": "phone_taken", "message": "That phone number is already registered"})
+
+        user.phone_number = normalized
+        await db.commit()
+        return {"message": "Phone number updated", "phone_number": normalized}
+
+    @post("/me/password", status_code=200)
+    async def update_password(
+        self,
+        data: UpdatePasswordRequest,
+        db: AsyncSession,
+        request: Request,
+    ) -> dict[str, Any]:
+        payload = request.scope.get("user_payload")
+        if not payload:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        result = await db.execute(select(User).where(User.id == uuid.UUID(payload["sub"])))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        if not auth_svc.verify_password(data.current_password, user.password_hash):
+            raise HTTPException(status_code=403, detail={"code": "wrong_password", "message": "Current password is incorrect"})
+
+        _validate_password(data.new_password)
+        if data.new_password == data.current_password:
+            raise HTTPException(status_code=422, detail={"code": "same_password", "message": "New password must differ from the current one"})
+
+        user.password_hash = auth_svc.hash_password(data.new_password)
+        await db.commit()
+        return {"message": "Password updated"}
 
     @get("/me")
     async def me(self, request: Request) -> dict[str, Any]:

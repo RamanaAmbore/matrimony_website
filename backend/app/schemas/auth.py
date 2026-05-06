@@ -37,6 +37,21 @@ class RegisterResponse(msgspec.Struct):
     uuid: str
 
 
+class UpdateEmailRequest(msgspec.Struct):
+    new_email: str
+    current_password: str
+
+
+class UpdatePhoneRequest(msgspec.Struct):
+    new_phone: str
+    current_password: str
+
+
+class UpdatePasswordRequest(msgspec.Struct):
+    current_password: str
+    new_password: str
+
+
 class ErrorDetail(msgspec.Struct):
     code: str
     message: str
