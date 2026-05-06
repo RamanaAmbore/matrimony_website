@@ -622,6 +622,24 @@
 									{#if errors.dob}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.dob}</p>{/if}
 								</div>
 
+								<!-- Time of Birth (optional) -->
+								<div>
+									<BilingualLabel key="timeOfBirth" for="time_enabled" />
+									<div class="flex items-center gap-2">
+										<input type="checkbox" id="time_enabled" bind:checked={timeEnabled} class="accent-maroon" />
+										<label for="time_enabled" class="text-sm text-ink/60">Add time of birth</label>
+									</div>
+									{#if timeEnabled}
+									<div class="mt-2 flex items-center gap-2">
+										<Combobox bind:value={time_hour} options={TIME_HOURS} placeholder="H" class="w-20" />
+										<span class="text-ink/60">:</span>
+										<Combobox bind:value={time_minute} options={TIME_MINUTES} placeholder="MM" class="w-20" />
+										<Combobox bind:value={time_ampm} options={TIME_AMPM} placeholder="AM" class="w-20" />
+									</div>
+									{/if}
+									<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · <span lang={langStore.current}>{tx('hintTimeOfBirth', langStore.current)}</span></p>
+								</div>
+
 								<!-- Marital Status -->
 								<div>
 									<BilingualLabel key="maritalStatus" for="marital_status" />
@@ -767,24 +785,6 @@
 										{/each}
 									</div>
 								</fieldset>
-							</div>
-
-							<!-- Time of Birth (optional) -->
-							<div>
-								<BilingualLabel key="timeOfBirth" for="time_enabled" />
-								<div class="flex items-center gap-2">
-									<input type="checkbox" id="time_enabled" bind:checked={timeEnabled} class="accent-maroon" />
-									<label for="time_enabled" class="text-sm text-ink/60">Add time of birth</label>
-								</div>
-								{#if timeEnabled}
-								<div class="mt-2 flex items-center gap-2">
-									<Combobox bind:value={time_hour} options={TIME_HOURS} placeholder="H" class="w-20" />
-									<span class="text-ink/60">:</span>
-									<Combobox bind:value={time_minute} options={TIME_MINUTES} placeholder="MM" class="w-20" />
-									<Combobox bind:value={time_ampm} options={TIME_AMPM} placeholder="AM" class="w-20" />
-								</div>
-								{/if}
-								<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · <span lang={langStore.current}>{tx('hintTimeOfBirth', langStore.current)}</span></p>
 							</div>
 
 							<!-- Place of Birth (optional) -->
@@ -1215,6 +1215,24 @@
 						</p>{/if}
 				</div>
 
+				<!-- Time of Birth (optional) -->
+				<div>
+					<BilingualLabel key="timeOfBirth" for="time_enabled_n" />
+					<div class="flex items-center gap-2">
+						<input type="checkbox" id="time_enabled_n" bind:checked={timeEnabled} class="accent-maroon" />
+						<label for="time_enabled_n" class="text-sm text-ink/60">Add time of birth</label>
+					</div>
+					{#if timeEnabled}
+					<div class="mt-2 flex items-center gap-2">
+						<Combobox bind:value={time_hour} options={TIME_HOURS} placeholder="H" class="w-20" />
+						<span class="text-ink/60">:</span>
+						<Combobox bind:value={time_minute} options={TIME_MINUTES} placeholder="MM" class="w-20" />
+						<Combobox bind:value={time_ampm} options={TIME_AMPM} placeholder="AM" class="w-20" />
+					</div>
+					{/if}
+					<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · <span lang={langStore.current}>{tx('hintTimeOfBirth', langStore.current)}</span></p>
+				</div>
+
 				<!-- Marital Status -->
 				<div>
 					<BilingualLabel key="maritalStatus" for="marital_status" />
@@ -1449,24 +1467,6 @@
 						{/each}
 					</div>
 				</fieldset>
-			</div>
-
-			<!-- Time of Birth (optional) -->
-			<div>
-				<BilingualLabel key="timeOfBirth" for="time_enabled_n" />
-				<div class="flex items-center gap-2">
-					<input type="checkbox" id="time_enabled_n" bind:checked={timeEnabled} class="accent-maroon" />
-					<label for="time_enabled_n" class="text-sm text-ink/60">Add time of birth</label>
-				</div>
-				{#if timeEnabled}
-				<div class="mt-2 flex items-center gap-2">
-					<Combobox bind:value={time_hour} options={TIME_HOURS} placeholder="H" class="w-20" />
-					<span class="text-ink/60">:</span>
-					<Combobox bind:value={time_minute} options={TIME_MINUTES} placeholder="MM" class="w-20" />
-					<Combobox bind:value={time_ampm} options={TIME_AMPM} placeholder="AM" class="w-20" />
-				</div>
-				{/if}
-				<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · <span lang={langStore.current}>{tx('hintTimeOfBirth', langStore.current)}</span></p>
 			</div>
 
 			<!-- Place of Birth (optional) -->
