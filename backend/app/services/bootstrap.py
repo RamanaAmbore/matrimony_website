@@ -33,9 +33,9 @@ _SUPER_PHONE = "+919840770711"
 _SUPER_FULL_NAME = "Ramana Ambore"
 
 _BOOTSTRAP_HANDLE = "rambo"
-_BOOTSTRAP_EMAIL = "rambo@marathakalyanam.com"
-_BOOTSTRAP_PHONE = "+919840770711"
-_BOOTSTRAP_FULL_NAME = "Rambo Admin"
+_BOOTSTRAP_EMAIL = "admin.marathakalyanam@gmail.com"
+_BOOTSTRAP_PHONE = "+15155254636"
+_BOOTSTRAP_FULL_NAME = "Ramana Ambore"
 
 
 async def _ensure_canonical_user(
