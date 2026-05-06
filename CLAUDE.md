@@ -97,18 +97,43 @@ DetailRequest (pending→approved→emailed), Setting (JSON config store).
 
 **Photo pipeline:**
 
-1. User uploads JPEG/PNG via `/profiles/{id}/photos`
-2. `images.process_upload()` validates:
-   - File size ≤ 10 MB (check `upload_max_mb` setting)
-   - OpenCV `CascadeClassifier` detects exactly 1 face (skip if `require_face_detection=false`)
-3. Auto-crop to face bounding box + padding
-4. Resize to 413×531 (portrait aspect, `photo_passport_*` settings)
-5. Re-encode JPEG, compress until ≤ 500 KB (check `photo_max_kb` setting)
-6. Store 3 variants:
-   - **passport.jpg** (full resolution, stored under `MEDIA_ROOT/profiles/{profile_id}/{photo_id}/`)
-   - **blurred.jpg** (Gaussian blur r=14 pixels; shown in search/public)
-   - **thumb.jpg** (150×150; admin lists)
-7. Record `Photo` model with paths; mark first as primary
+1. User uploads JPEG/PNG/WebP via `/profiles/{id}/photos`
+2. `images.process_upload()` validates ONLY size:
+   - Raw upload size between `upload_min_kb` (20) and `upload_max_mb` (6)
+   - Smaller / lower-res inputs are upscaled instead of rejected
+   - Face detection is **off by default** (`require_face_detection=false`)
+3. Crop based on slot:
+   - Slot 1 (primary): **413×531** face headshot (`photo_passport_width/height`)
+   - Slot 2 (secondary): **600×900** full-body (`photo_body_width/height`)
+4. Three variants encoded via iterative quality stepping (`_encode_jpeg`):
+   - **passport.jpg** — main display variant (face or body crop), capped at `photo_max_kb` (180)
+   - **blurred.jpg** — Gaussian blur r=14, capped at `photo_blur_max_kb` (50)
+   - **thumb.jpg** — 150×150 square, capped at `photo_thumb_max_kb` (12)
+5. Photos written + URLs served via the **storage abstraction**
+   (`services/storage.py`) — see Storage backend below
+6. Record `Photo` row with path + byte_size; first photo flagged primary
+7. **Rollback safety**: if DB commit fails after the storage writes, the
+   three uploaded objects are deleted before re-raising — no orphans
+
+**Storage backend:**
+
+Photos route through `services/storage.py` instead of writing directly
+to the filesystem. The active backend is selected by the `storage_provider`
+setting:
+
+| `storage_provider` | What happens |
+|---|---|
+| `local` (default) | Writes to `MEDIA_ROOT/profiles/<pid>/<photo_id>/<variant>.jpg`. URLs are `marathakalyanam.com/media/...`. The existing `/media/` Litestar route serves them. |
+| `r2` | Writes to a Cloudflare R2 bucket via the S3 API (boto3). `blurred` + `thumb` URLs point to `r2_public_base_url/<key>` (cacheable, public). `passport` URLs are signed S3 GET URLs with `r2_signed_url_ttl_sec` TTL — privacy stays gated even with a public bucket. If `r2_public_base_url` is empty, all URLs are signed (private bucket mode). |
+
+Flipping `storage_provider` between `local` and `r2` via `/admin/settings`
+takes effect on the next request — `get_storage()` builds a fresh backend
+each call. Local files are not auto-deleted when flipping to r2; they
+remain on disk as a revert safety net until purged.
+
+To migrate live photos from local → R2, see `backend/scripts/R2_SETUP.md`
+and `backend/scripts/migrate_photos_to_r2.py`. The migration script is
+idempotent (skips files already present in R2 with matching size).
 
 **Endpoints:** See [API contract](#api-contract) table below.
 
@@ -178,12 +203,21 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 | POST | /admin/requests/{id}/approve | admin | Approve + email full profile + photos |
 | POST | /admin/requests/{id}/reject | admin | Reject |
 | GET | /admin/users | admin | List all users |
-| POST | /admin/users/{id}/promote | admin | Grant admin role |
-| POST | /admin/users/{id}/approve | admin | Approve user account (sets is_approved=true) + send account_approved email |
-| POST | /admin/users/{id}/unapprove | admin | Revoke user approval |
-| POST | /admin/users/{id}/verify_email | admin | Mark email as verified (sets email_verified=true) |
-| POST | /admin/users/{id}/demote | admin | Strip admin role from a user. |
+| POST | /admin/users/{id}/promote | super | Grant admin role. Target must be approved + verified + not revoked. |
+| POST | /admin/users/{id}/approve | admin | Approve user account (sets is_approved=true) + send account_approved email. Super-only on admin targets. |
+| POST | /admin/users/{id}/unapprove | admin | Revoke user approval. Super-only on admin targets. |
+| POST | /admin/users/{id}/verify_email | admin | Mark email as verified. Super-only on admin targets. |
+| POST | /admin/users/{id}/resend_verification | admin | Regenerate verification token + re-send email. |
+| POST | /admin/users/{id}/demote | super | Strip admin role from a user. |
+| POST | /admin/users/{id}/revoke | admin | Soft-revoke (login blocked, is_approved=False). Super-only on admin targets. Cascade-revokes user's pending requests. |
+| POST | /admin/users/{id}/reinstate | admin | Reverse revoke. Sets is_approved=True only if email_verified. |
+| POST | /admin/users/{id}/suspend | admin | Admin enforcement hold. Login still works; profiles drop from search; can't create new ones. Super-only on admin targets. |
+| POST | /admin/users/{id}/unsuspend | admin | Lift admin suspension. Does NOT clear is_paused (user-only toggle). |
 | POST | /admin/users/{id}/delete | admin | Hard-delete a user. Cascades profiles, photos, detail requests. Cannot delete self. |
+| POST | /auth/me/pause | self | Vacation mode — set is_paused=True. Profile hides from search; can still log in. |
+| POST | /auth/me/unpause | self | Clear self-pause. Cannot clear admin's is_suspended. |
+| POST | /auth/me/delete | self | Self-service account deletion. Requires current password + typed `DELETE` confirmation. Super-users blocked (bootstrap-pinned). |
+| POST | /auth/me/resend-verification | self | Self-service: regenerate token + re-send verification email. |
 | POST | /admin/broadcast-email | admin | Send broadcast email to filtered user subset. Lives at frontend route `/admin/broadcast`. Body booleans (all optional): `filter_verified_only` (default true), `filter_unverified_only`, `filter_approved_only`, `filter_unapproved_only`, `filter_admin_only`. Verified ↔ unverified and approved ↔ unapproved are mutually exclusive. |
 | GET | /admin/settings | admin | Get all settings (mask smtp_password) |
 | PUT | /admin/settings | admin | Update settings (JSON body) |
@@ -197,10 +231,10 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 
 | Entity | Key fields | Notes |
 |--------|-----------|-------|
-| **User** | id (UUID), email (unique), full_name (VARCHAR 120), user_handle (unique), phone_number, password_hash, email_verified, is_admin, is_approved, created_at | Bootstrap admin created on first startup if no users exist. full_name is mandatory. is_approved: admin must set after email verification before user can create profiles. |
-| **Profile** | id, owner_user_id (FK User), gender (bride/groom), first_name, last_name, dob, age, height_cm, weight_kg, complexion, body_type, blood_group, education, college_university, occupation, employer, work_location, annual_income_inr, pin_code, city, state, country, gotra, kuldevata, devak, surname_clan, sub_caste, nakshatram, rashi, time_of_birth, place_of_birth, manglik (yes/no/partial/unknown), mother_tongue (default "Telugu"), marital_status, diet (veg/non-veg/eggetarian), about, partner_expectations, father_occupation, mother_occupation, num_brothers, num_sisters, num_brothers_married, num_sisters_married, family_type, family_status, family_values, native_place, smokes, drinks, hobbies, status (draft/pending/approved/rejected), admin_notes, created_at, updated_at | Stateful: draft → pending (on submit) → approved/rejected (admin). Editing approved profile resets to pending. Extended fields cover personal, professional, family, lifestyle, astrological, and demographic details |
-| **Photo** | id, profile_id (FK), original_filename, passport_path, blurred_path, thumb_path, byte_size, is_primary, created_at | Three variants stored under `MEDIA_ROOT/profiles/{profile_id}/{photo_id}/`. Max 5 per profile |
-| **DetailRequest** | id, requester_user_id (FK User), profile_id (FK Profile), status (pending/approved/rejected), message, admin_notes, responded_at, created_at | Unique constraint on (requester_user_id, profile_id). Admin approves → email full profile + passport photos to requester |
+| **User** | id (UUID), email, full_name, user_handle (unique), phone_number, password_hash, email_verified, is_admin, is_super, is_approved, is_revoked, is_paused, is_suspended, created_at | Five role/state flags: `is_admin` (admin powers), `is_super` (above admin — super-tier hidden from regular admins), `is_approved` (can create profiles), `is_revoked` (banned — login blocked), `is_paused` (self vacation mode — login OK, profile hidden), `is_suspended` (admin enforcement — login OK, profile hidden, only admin can lift). Bootstrap users seeded on every boot from `services/bootstrap.py`. |
+| **Profile** | id, owner_user_id (FK User), gender, first_name, last_name, dob, demographic + astro + family + lifestyle fields, status (draft/pending/approved/revoked), admin_notes, rejected_at, created_at, updated_at | Stateful: draft → pending → approved/revoked. Owner edit drops approved→pending. `rejected_at` enforces "must edit before resubmit" guard. Visible in search only when status=approved AND owner is_approved AND NOT (is_revoked / is_paused / is_suspended). |
+| **Photo** | id, profile_id (FK), original_filename, passport_path, blurred_path, thumb_path, byte_size, is_primary, created_at | Three variants. Storage backend (local disk under `MEDIA_ROOT` or Cloudflare R2) chosen at runtime by `storage_provider` setting. Max 2 per profile. |
+| **DetailRequest** | id, requester_user_id (FK User), profile_id (FK Profile), status (pending/approved/revoked), message, admin_notes, responded_at, created_at | Unique constraint on (requester_user_id, profile_id). User-revoke / profile-revoke cascade-revoke pending requests. Approve → email full profile + passport bytes (read via storage). |
 | **Setting** | key (primary), value (JSON-encoded), updated_at, updated_by (FK User) | Runtime config: SMTP host/port/user/password, photo dimensions/limits, admin email, approval flags |
 
 ## Settings keys
@@ -216,16 +250,29 @@ secrets).
 | smtp_user | string | (empty) | SMTP auth username |
 | smtp_password | string | (empty) | SMTP auth password (masked in UI, edited via /admin/settings) |
 | smtp_from | string | no-reply@marathakalyanam.com | Email "From" address |
-| photo_max_kb | int | 500 | Max JPEG size after compression |
-| photo_passport_width | int | 413 | Passport photo width (pixels) |
-| photo_passport_height | int | 531 | Passport photo height (pixels) |
+| photo_max_kb | int | 180 | Max passport-variant JPEG size after compression |
+| photo_min_kb | int | 12 | Passport-variant JPEG floor (informational; not enforced as rejection) |
+| photo_blur_max_kb | int | 50 | Blurred-variant JPEG cap |
+| photo_thumb_max_kb | int | 12 | Thumb-variant JPEG cap |
+| photo_passport_width / height | int | 413 / 531 | Slot 1 (face) crop dimensions |
+| photo_body_width / height | int | 600 / 900 | Slot 2 (full body) crop dimensions |
 | photo_blur_width | int | 600 | Blurred variant width (for preview) |
 | photo_blur_radius | int | 14 | Gaussian blur radius (pixels) |
 | photo_thumb_size | int | 150 | Thumbnail size (square) |
-| photos_max_per_profile | int | 5 | Max photos per profile |
-| upload_max_mb | int | 10 | Max file upload size (MB) |
-| require_face_detection | bool | true | Enforce single-face photo validation via OpenCV |
+| photo_min_dimension_px | int | 600 | Source min shortest side; smaller is upscaled (no longer rejected) |
+| photo_max_dimension_px | int | 3500 | Source longest side; longer is downscaled to save CPU |
+| photos_max_per_profile | int | 2 | Max photos per profile |
+| upload_max_mb | int | 6 | Max raw upload size (MB) |
+| upload_min_kb | int | 20 | Min raw upload size (KB) — rejects thumbnails / icons |
+| require_face_detection | bool | false | Enforce single-face photo validation via OpenCV (off by default) |
 | require_admin_approval_for_profiles | bool | true | Profiles require admin approval (pending→approved) or auto-approve on submit |
+| storage_provider | string | local | Photo storage backend. `local` = host filesystem under MEDIA_ROOT. `r2` = Cloudflare R2 via S3 API. Flip via `/admin/settings`; effective immediately. |
+| r2_endpoint | string | (empty) | S3 API URL `https://<account-id>.r2.cloudflarestorage.com` (only used when `storage_provider=r2`) |
+| r2_bucket | string | (empty) | R2 bucket name |
+| r2_access_key_id | string | (empty) | R2 token AKID |
+| r2_secret_access_key | string | (empty) | R2 token secret (masked in UI) |
+| r2_public_base_url | string | (empty) | Public host for blurred/thumb URLs (e.g. `https://pub-XXX.r2.dev` or custom domain). Empty → all URLs signed (private bucket mode). |
+| r2_signed_url_ttl_sec | int | 3600 | TTL for signed passport URLs (seconds) |
 | is_prod | bool | false | **Production mode flag.** When true: reject duplicate email/phone; email subjects omit `[TEST MODE]` prefix; frontend validation is strict. When false (test): allow duplicates; add `[TEST MODE]` to subjects; frontend can be lenient. |
 | site_url | string | https://marathakalyanam.com | Base URL injected into all email templates for links (verify_email, approve, etc.). Read by frontend via `/site/info`. |
 
@@ -303,17 +350,67 @@ functions.
 - **`test`** — pytest coverage; `backend/tests`
 - **`doc`** — *.md updates; `CLAUDE.md`, `USER_GUIDE.md`, `ADMIN_GUIDE.md`
 
-## Recent changes (May 2026)
+## v2.0 — May 2026
 
-- Added `/site/info` public endpoint for frontend to query `is_prod` and `site_url`
-- Added `/admin/dashboard` endpoint returning stats + up to 25 pending items (replaces
-  `/admin/stats`); dashboard stats now include `profiles_rejected`, `profiles_draft`,
-  `requests_approved`, `requests_rejected`
-- Admin UI now lazy-loads full user/profile/request lists on tab chip clicks (no longer pre-fetches)
-- Email subjects now include `[TEST MODE]` prefix when `is_prod=false`
-- Navbar shows role chips (User/Admin/Test mode badge)
-- Image baseline: home.jpg 556 KB JPEG, logo.png 76 KB
-- ag-Grid v33 requires explicit ModuleRegistry registration
+This is a milestone release. Major surfaces redesigned: user lifecycle,
+photo storage, admin UI, SEO posture.
+
+**User lifecycle — three independent state-flag axes**
+
+  - `is_revoked` — admin ban; **blocks login**
+  - `is_paused` — user-controlled vacation mode; login still works,
+    profile hidden from search, can't create new profiles
+  - `is_suspended` — admin enforcement hold; same external effect as
+    paused but only an admin can lift it
+  - `is_approved` — admin OK-to-create; gated regardless of the three
+    above
+  Cascade behaviour: revoke + reject-profile both revoke pending detail
+  requests; cleanup paths are storage-backend-aware.
+
+**Photo storage abstraction (`services/storage.py`)**
+
+  - `storage_provider` setting: `local` (default) | `r2`
+  - LocalStorage writes to `MEDIA_ROOT`, R2Storage writes via boto3 to
+    a Cloudflare R2 bucket (S3 API)
+  - Slot 1 = passport-style face headshot (413×531), slot 2 = full-body
+    (600×900); both go through iterative-quality JPEG encoding under
+    per-variant size caps
+  - Upload rollback safety: DB commit failure deletes the just-written
+    storage objects so no orphans accumulate
+  - Migration tooling at `backend/scripts/migrate_photos_to_r2.py` +
+    `R2_SETUP.md`
+
+**Admin dashboard**
+
+  - `/admin/dashboard` returns stats + pending lists; stats include
+    photos_count + photos_total_bytes for storage visibility
+  - users_admins / users_super counts withheld for non-super callers
+  - Admin tier (rows where is_admin=True) hidden from non-super
+    `/admin/users` listing
+  - Selected-profile / selected-request panels stack vertically on
+    mobile so labels don't overlap action buttons
+  - "Suspend / Unsuspend" buttons + status chips per user
+
+**SSR + SEO**
+
+  - SvelteKit SSR enabled (was SPA-only). `hooks.server.ts` proxies
+    `/api/*` to the local backend (port 8003) so SSR-time fetches don't
+    short-circuit through SvelteKit's internal dispatcher
+  - `app.html` carries title + JSON-LD + `<noscript>` body fallback so
+    text-only crawl pass sees full content
+  - nginx sends `www.marathakalyanam.com` 301 → apex (no more duplicate
+    content)
+  - sitemap.xml published; submitted in GSC
+
+**Other**
+
+  - 4 canonical bootstrap users: ambore (super), super (super-handle,
+    Venkat Somajigiri), rambo (admin), admin (admin)
+  - Phase 1 (March-April 2026) features still standing: i18n in 5 indic
+    langs, settings-driven config, telegram ops alerts, soft-revoke
+    lifecycle, request cascade
+  - Image baseline: home.jpg 556 KB, logo.png 76 KB
+  - ag-Grid v33 requires explicit ModuleRegistry registration
 
 ## Conventions
 
@@ -329,7 +426,12 @@ functions.
   `/admin/settings` to change SMTP, owner email, etc. This ensures config is consistent across
   all app instances.
 - **Profile status machine:** draft → (user submits) → pending → (admin approves/rejects) →
-  approved/rejected. Editing an approved profile resets it to pending for re-approval.
+  approved/revoked. Editing an approved profile resets it to pending for re-approval.
+  Re-submitting a revoked profile requires the owner to actually edit (`updated_at >
+  rejected_at`) — `submit_profile` 409s otherwise.
+- **Photo storage:** all photo I/O goes through `services/storage.py`. Never read/write
+  `MEDIA_ROOT` directly from route handlers. The active backend (`local` or `r2`) is chosen
+  at runtime by `storage_provider` setting, no service restart needed to flip.
 - **Email fallback:** if `smtp_host` is empty or unreachable, `email_svc._send()` logs HTML to
   stdout instead of raising. Useful for dev/test without real SMTP.
 - **ag-Grid in frontend:** v33+ requires `ModuleRegistry.registerModules([AllCommunityModule])`

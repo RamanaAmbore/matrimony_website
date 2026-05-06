@@ -14,7 +14,6 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.config import MEDIA_ROOT
 from app.models.photo import Photo
 from app.models.profile import Profile, ProfileStatusEnum
 from app.models.request import DetailRequest, RequestStatusEnum
@@ -256,7 +255,7 @@ class AdminController(Controller):
 
         # Total disk usage of all stored photos (passport variant only —
         # blurred + thumb are derived and roughly proportional). Useful for
-        # ops to keep an eye on MEDIA_ROOT growth.
+        # ops to keep an eye on storage growth (works for local + R2).
         photos_total_bytes = (
             await db.execute(select(func.coalesce(func.sum(Photo.byte_size), 0)))
         ).scalar_one() or 0

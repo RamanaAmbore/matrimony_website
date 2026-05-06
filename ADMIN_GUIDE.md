@@ -133,27 +133,135 @@ The Settings page is the **only safe place to enter sensitive data** (SMTP crede
 | smtp_user | string | (empty) | SMTP auth username (leave blank if not needed) | Yes |
 | smtp_password | string | (empty) | SMTP auth password. **MASKED in UI (shown as `***` if set).** Edit only via this page, never in code. | Yes |
 | smtp_from | string | no-reply@marathakalyanam.com | "From:" email address in outbound mail | Yes |
-| photo_max_kb | int | 500 | Max JPEG size after compression (KB). Smaller = faster upload/load but lower quality. | Yes |
-| photo_passport_width | int | 413 | Passport photo width (pixels) | No |
-| photo_passport_height | int | 531 | Passport photo height (pixels) | No |
+| photo_max_kb | int | 180 | Max passport-variant JPEG size after compression (KB). Smaller = faster but lower quality. | Yes |
+| photo_min_kb | int | 12 | Passport JPEG floor (informational; not a hard reject). | Yes |
+| photo_blur_max_kb | int | 50 | Blurred variant cap (KB). | Yes |
+| photo_thumb_max_kb | int | 12 | Thumb variant cap (KB). | Yes |
+| photo_passport_width | int | 413 | Slot 1 (face) width (pixels) | No |
+| photo_passport_height | int | 531 | Slot 1 (face) height (pixels) | No |
+| photo_body_width | int | 600 | Slot 2 (full body) width (pixels) | No |
+| photo_body_height | int | 900 | Slot 2 (full body) height (pixels) | No |
 | photo_blur_width | int | 600 | Blurred variant width (pixels, for search results) | Yes |
 | photo_blur_radius | int | 14 | Gaussian blur radius (pixels); higher = more blurred | Yes |
 | photo_thumb_size | int | 150 | Thumbnail size (square, pixels, for admin interface) | Yes |
-| photos_max_per_profile | int | 5 | Max photos per profile | Yes |
-| upload_max_mb | int | 10 | Max file upload size (MB) | Yes |
-| require_face_detection | bool | true | Enforce single-face photo validation via OpenCV. If false, any photo is accepted. | Yes |
+| photo_min_dimension_px | int | 600 | Source min shortest side. Smaller is upscaled rather than rejected. | Yes |
+| photo_max_dimension_px | int | 3500 | Source longest side; longer is downscaled before processing. | Yes |
+| photos_max_per_profile | int | 2 | Max photos per profile (slot 1 face, slot 2 body) | Yes |
+| upload_max_mb | int | 6 | Max raw upload size (MB) | Yes |
+| upload_min_kb | int | 20 | Min raw upload size (KB). Below = thumbnail/icon, rejected. | Yes |
+| require_face_detection | bool | false | Enforce single-face photo validation via OpenCV. **Off by default** — over-rejects normal phone shots. | Yes |
 | require_admin_approval_for_profiles | bool | true | If true: profiles go to pending on submit, admin must approve. If false: auto-approve on submit. | Yes |
 | is_prod | bool | false | When true: reject duplicate email/phone registrations (production mode). When false: allow multiple accounts with same contact info (testing mode). | Yes |
 | site_url | string | https://marathakalyanam.com | Base URL injected into all email templates for links (verify_email, approve, etc.). Update if domain changes. | Yes |
+| storage_provider | string | local | **Photo storage backend.** `local` = host filesystem under `MEDIA_ROOT`. `r2` = Cloudflare R2 via S3 API. Flip via this page; effective immediately on the next request. | Yes |
+| r2_endpoint | string | (empty) | R2 S3 API URL: `https://<account-id>.r2.cloudflarestorage.com` | Yes |
+| r2_bucket | string | (empty) | R2 bucket name | Yes |
+| r2_access_key_id | string | (empty) | R2 token Access Key ID | Yes |
+| r2_secret_access_key | string | (empty) | R2 token secret. **MASKED in UI**. | Yes |
+| r2_public_base_url | string | (empty) | Public R2 URL for blurred/thumb (e.g. `https://pub-XXX.r2.dev`). Empty → all URLs signed (private bucket mode). | Yes |
+| r2_signed_url_ttl_sec | int | 3600 | TTL (seconds) for signed passport URLs | Yes |
 
 ### Common adjustments
 
 - **Slow email delivery?** Check `smtp_host`, `smtp_port`, and credentials.
-- **Photos too large?** Reduce `photo_max_kb` or `photo_passport_width`.
-- **Too many spam profiles?** Set `require_admin_approval_for_profiles` to `true` (already default).
-- **Turn off face detection for testing?** Set `require_face_detection` to `false` (not recommended for production).
+- **Photos uploads being rejected?** Check `upload_max_mb` and `upload_min_kb`. The pipeline only rejects on raw size out-of-bounds — dimensions, format, post-compression byte count are all handled gracefully.
+- **Too many spam profiles?** Keep `require_admin_approval_for_profiles` at `true` (default).
+- **Switching photo storage from local disk to Cloudflare R2:** see "Photo storage migration" below.
 
 **⚠️ SMTP credentials are sensitive:** never log them, never put them in `.env` (bootstrap secrets only). Use the Settings UI.
+
+## Photo storage migration (local ↔ Cloudflare R2)
+
+The site can store photos either on the host filesystem (`local`) or in
+a Cloudflare R2 bucket (`r2`). Default is `local`. The active backend
+is chosen by the `storage_provider` setting and can be flipped at
+runtime — the next request reads the new value, no service restart.
+
+### When to use each
+
+| Backend | Best for |
+|---|---|
+| `local` | Single-server deployment, low traffic, no externalisation needed. Photos in `MEDIA_ROOT/profiles/<pid>/<photo_id>/`. |
+| `r2` | Multi-server, edge-cacheable public assets (blurred + thumb), durability without on-host backups. Cost ≈ $0.02 / GB / month. |
+
+### Set up R2 (one-time)
+
+Detailed walkthrough: `backend/scripts/R2_SETUP.md`. Summary:
+
+1. Cloudflare → R2 → **Create bucket** (e.g. `marathakalyanam-photos`).
+2. R2 → **Manage R2 API Tokens** → Create token with **Object Read & Write**, scoped to that bucket.
+3. Bucket → **Settings** → enable **Public R2.dev URL** (or set up a custom domain). Copy the public URL.
+4. In `/admin/settings`, set:
+   - `r2_endpoint` → `https://<account-id>.r2.cloudflarestorage.com`
+   - `r2_bucket` → bucket name
+   - `r2_access_key_id` → token AKID
+   - `r2_secret_access_key` → token secret
+   - `r2_public_base_url` → public URL from step 3 (or leave empty for signed-only mode)
+5. **Don't flip `storage_provider` to `r2` yet** — first migrate.
+
+### Migrate existing local photos to R2
+
+```bash
+ssh ramboq "cd /opt/marathakalyanam/backend && source .venv/bin/activate && \
+  python -m scripts.migrate_photos_to_r2 --dry-run"   # preview
+ssh ramboq "cd /opt/marathakalyanam/backend && source .venv/bin/activate && \
+  python -m scripts.migrate_photos_to_r2"             # actual upload
+```
+
+The script is idempotent — re-running skips files already present in R2.
+Local files are NOT deleted by the migration; they remain as a revert
+safety net.
+
+### Flip the active backend
+
+In `/admin/settings`, change `storage_provider` from `local` to `r2`.
+Effective immediately. Verify via:
+
+- `/search` (anonymous) — blurred URLs should now point at the R2 host
+- A profile detail page (logged in) — passport URLs should be signed
+  S3 URLs ending in `?X-Amz-Signature=...`
+
+### Reverting
+
+Flip `storage_provider` back to `local`. Local files are still on disk;
+the site recovers cleanly. Files written to R2 between flip and revert
+are orphaned — purge manually if needed.
+
+### Cleaning up orphans
+
+Past user/profile deletes before the v2 cleanup fix may have left
+orphan photo files (no matching `Photo` row). Use:
+
+```bash
+ssh ramboq "cd /opt/marathakalyanam/backend && source .venv/bin/activate && \
+  python /tmp/cleanup_orphans.py"           # report only
+ssh ramboq "cd /opt/marathakalyanam/backend && source .venv/bin/activate && \
+  python /tmp/cleanup_orphans.py --delete"  # delete from BOTH local + R2
+```
+
+The script lives at `/tmp` because it's a one-shot. Re-create from
+`backend/scripts/cleanup_orphans.py` if you ever ship it permanently.
+
+## Suspending vs revoking users
+
+Three escalating admin actions are available per user. They serve
+distinct purposes — pick the right one:
+
+| Action | Effect on login | Effect on profile visibility | Reversible by |
+|---|---|---|---|
+| **Suspend** (admin) | Login still allowed | Profile hidden from search, can't create new ones | Admin only |
+| **Revoke** (admin) | **Blocks login** entirely | Profile hidden | Admin (reinstate) |
+| **Pause** (user, self-service) | Login still allowed | Profile hidden | User can self-unpause |
+
+Use **Suspend** when you need to investigate without permanent
+escalation (TOS hold, identity verification pending). The user can
+still log in and respond to admin messages. Use **Revoke** when the
+account should be locked out entirely (TOS violation, abuse). Use
+**Reinstate** to reverse a revoke.
+
+The admin user-action panel surfaces buttons contextually — Suspend
+appears when the user isn't already suspended, Unsuspend when they
+are. Same for revoke / reinstate.
 
 ## Sending a broadcast email
 
