@@ -26,9 +26,6 @@
 		Inbox,
 		ShieldCheck,
 		Trash2,
-		FileEdit,
-		Clock,
-		CheckCircle,
 		XCircle,
 		RotateCcw,
 		Megaphone,
@@ -146,6 +143,20 @@
 		if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
 		if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 		return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+	}
+
+	// Compute age in completed years from an ISO date string. Used by the
+	// selected-profile action panel where we want a tight header without
+	// status / location / gender clutter.
+	function ageFromDob(dob: string | null | undefined): number | null {
+		if (!dob) return null;
+		const d = new Date(dob);
+		if (Number.isNaN(d.getTime())) return null;
+		const t = new Date();
+		let a = t.getFullYear() - d.getFullYear();
+		const md = t.getMonth() - d.getMonth();
+		if (md < 0 || (md === 0 && t.getDate() < d.getDate())) a -= 1;
+		return a;
 	}
 
 	// ── Mount: dashboard only — full lists fetched lazily on chip click ──────────
@@ -1179,24 +1190,10 @@
 			{#if selectedProfile}
 				<div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-gold/30 bg-white px-5 py-4 shadow-sm">
 					<div class="min-w-0 flex-1">
+						<!-- Tight one-line header: name + age. Status, gender, location
+						     are visible in the row above and would crowd the buttons. -->
 						<p class="font-semibold text-ink">
-							{selectedProfile.profile_number} — {selectedProfile.first_name} {selectedProfile.last_name ?? ''}
-						</p>
-						<p class="text-sm text-ink/60 capitalize flex flex-wrap items-center gap-1.5">
-							{selectedProfile.gender} ·
-							<span class="badge inline-flex items-center gap-1 {selectedProfile.status === 'approved' ? 'badge-approved' : selectedProfile.status === 'pending' ? 'badge-pending' : selectedProfile.status === 'revoked' ? 'badge-revoked' : 'badge-draft'}">
-								{#if selectedProfile.status === 'draft'}
-									<FileEdit size={11} class="-mt-0.5 inline-block" />
-								{:else if selectedProfile.status === 'pending'}
-									<Clock size={11} class="-mt-0.5 inline-block" />
-								{:else if selectedProfile.status === 'approved'}
-									<CheckCircle size={11} class="-mt-0.5 inline-block" />
-								{:else if selectedProfile.status === 'revoked'}
-									<XCircle size={11} class="-mt-0.5 inline-block" />
-								{/if}
-								{selectedProfile.status}
-							</span>
-							· {selectedProfile.city}{selectedProfile.state ? `, ${selectedProfile.state}` : ''}
+							{selectedProfile.first_name}{selectedProfile.last_name ? ` ${selectedProfile.last_name}` : ''}{ageFromDob(selectedProfile.dob) !== null ? `, ${ageFromDob(selectedProfile.dob)}` : ''}
 						</p>
 					</div>
 					<div class="flex shrink-0 flex-wrap gap-2">
