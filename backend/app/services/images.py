@@ -156,10 +156,16 @@ def process_upload(
     photo_min_dim_px = settings_service.get_int("photo_min_dimension_px", 400)
     photo_max_dim_px = settings_service.get_int("photo_max_dimension_px", 4000)
     require_face = is_primary and settings_service.get_bool("require_face_detection", False)
-    passport_w = settings_service.get_int("photo_passport_width", 413)
-    passport_h = settings_service.get_int("photo_passport_height", 531)
-    photo_max_kb = settings_service.get_int("photo_max_kb", 350)
-    photo_min_kb = settings_service.get_int("photo_min_kb", 10)
+    # Slot 1 (primary) = face headshot, slot 2 (secondary) = full-body shot.
+    # The display crop dimensions differ; both go through the same JPEG cap.
+    if is_primary:
+        crop_w = settings_service.get_int("photo_passport_width", 413)
+        crop_h = settings_service.get_int("photo_passport_height", 531)
+    else:
+        crop_w = settings_service.get_int("photo_body_width", 600)
+        crop_h = settings_service.get_int("photo_body_height", 900)
+    photo_max_kb = settings_service.get_int("photo_max_kb", 180)
+    photo_min_kb = settings_service.get_int("photo_min_kb", 12)
     blur_width = settings_service.get_int("photo_blur_width", 600)
     blur_radius = settings_service.get_int("photo_blur_radius", 14)
     blur_max_kb = settings_service.get_int("photo_blur_max_kb", 120)
@@ -234,9 +240,10 @@ def process_upload(
             )
         cx, cy = fx + fw // 2, fy + fh // 2
 
-    # 6. Passport variant: smart-crop to portrait aspect, encode under cap --
-    passport_img = _smart_crop(img, passport_w, passport_h, cx, cy)
-    passport_img = passport_img.resize((passport_w, passport_h), Image.LANCZOS)
+    # 6. Display variant: smart-crop to face aspect (slot 1) or body aspect
+    #    (slot 2), then JPEG-encode under the size cap.
+    passport_img = _smart_crop(img, crop_w, crop_h, cx, cy)
+    passport_img = passport_img.resize((crop_w, crop_h), Image.LANCZOS)
     passport_bytes = _encode_jpeg(passport_img, photo_max_kb * 1024)
     if len(passport_bytes) < photo_min_kb * 1024:
         raise PhotoValidationError(

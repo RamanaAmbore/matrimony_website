@@ -18,27 +18,45 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "smtp_user": "",
     "smtp_password": "",
     "smtp_from": "no-reply@marathakalyanam.com",
-    # Photo settings — sizes tuned for typical smartphone portraits while
-    # still bounding storage. Face detection is OFF by default because it
-    # over-rejects on group / lifestyle / poorly-lit phone shots and admins
-    # prefer to make that judgement call manually during review.
+    # Photo settings — balanced for storage vs functional quality.
     #
-    # All three output variants (passport / blurred / thumb) go through
-    # iterative JPEG quality stepping with their own size caps — see
-    # services/images.py:_encode_jpeg.
-    "photo_max_kb": 250,           # passport JPEG cap (413×531)
+    # Functionality the photos actually serve:
+    #   passport — admin reviews at 413×531; needs facial recognition
+    #              clarity. JPEG q85-90 yields ~60-80 KB. 180 KB cap is
+    #              comfortable headroom without bloat.
+    #   blurred  — public-search obfuscation; Gaussian-blurred so
+    #              entropy is low and JPEG compresses to ~25-40 KB
+    #              easily. 50 KB cap.
+    #   thumb    — 150×150 admin-grid avatar; typical 5-8 KB. 12 KB cap.
+    #
+    # Per profile (2 photos) ~ 240–500 KB on disk. 1000 active profiles
+    # ≈ 0.5 GB total. That's the sweet spot for a small matrimony site
+    # on cheap block storage without surprising the operator.
+    #
+    # Face detection is OFF by default — over-rejects on group/lifestyle/
+    # poorly-lit phone shots; admins prefer manual judgement at review.
+    #
+    # All three output variants share the iterative JPEG quality-stepper
+    # in services/images.py:_encode_jpeg.
+    "photo_max_kb": 180,           # passport JPEG cap (413×531)
     "photo_min_kb": 12,            # passport JPEG floor — guards quality
-    "photo_blur_max_kb": 80,       # blurred variant cap (≈600 wide, blurred)
-    "photo_thumb_max_kb": 20,      # square 150×150 thumb cap
+    "photo_blur_max_kb": 50,       # blurred variant cap (≈600 wide, blurred)
+    "photo_thumb_max_kb": 12,      # square 150×150 thumb cap
+    # Two photo slots, two different crop targets:
+    #   slot 1 (primary)  — passport-style face headshot at 413×531
+    #   slot 2 (secondary) — full-body shot at 600×900 (taller aspect
+    #                        keeps head-to-toe in frame)
     "photo_passport_width": 413,
     "photo_passport_height": 531,
+    "photo_body_width": 600,
+    "photo_body_height": 900,
     "photo_blur_width": 600,
     "photo_blur_radius": 14,
     "photo_thumb_size": 150,
     "photo_min_dimension_px": 600, # shortest source side; below pixelates on crop
-    "photo_max_dimension_px": 4000,# longest source side; pre-downscale beyond this
+    "photo_max_dimension_px": 3500,# longest source side; pre-downscale beyond this
     "photos_max_per_profile": 2,
-    "upload_max_mb": 8,            # raw upload cap
+    "upload_max_mb": 6,            # raw upload cap — covers 99% of phone photos
     "upload_min_kb": 20,           # raw upload floor — rejects thumbs / icons
     "require_face_detection": False,
     "require_admin_approval_for_profiles": True,

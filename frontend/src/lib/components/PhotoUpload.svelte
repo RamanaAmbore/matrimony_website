@@ -134,8 +134,15 @@
 			{:else}
 				<div class="flex flex-col items-center gap-2 text-ink/50">
 					<ImagePlus size={28} class="text-gold" />
-					<p class="text-sm font-medium">Drag & drop or click to upload</p>
-					<p class="text-xs">Passport-style photo — one face clearly visible · JPEG/PNG/WebP</p>
+					{#if photoList.length === 0}
+						<p class="text-sm font-medium">Photo 1 — passport-style face headshot</p>
+						<p class="text-xs">Clear, well-lit, looking at camera. Cropped to 413×531. JPEG/PNG/WebP.</p>
+					{:else if photoList.length === 1}
+						<p class="text-sm font-medium">Photo 2 — full-body shot</p>
+						<p class="text-xs">Standing, head-to-toe visible. Cropped to 600×900. JPEG/PNG/WebP.</p>
+					{:else}
+						<p class="text-sm font-medium">Drag & drop or click to upload</p>
+					{/if}
 				</div>
 			{/if}
 		</div>
