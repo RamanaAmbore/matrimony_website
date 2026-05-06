@@ -115,36 +115,9 @@
 	<meta name="publisher" content="Maratha Kalyanam" />
 	<meta name="keywords" content="Maratha matrimony, Maratha Kalyanam, Andhra Pradesh matrimony, Telangana matrimony, Maharashtra matrimony, Maratha community matrimony, gotra matching, nakshatram matching, Maratha wedding, kuldevata, devak, Indian matrimony" />
 
-	<!-- JSON-LD structured data: Organization + WebSite (with sitelink search action) -->
-	<script type="application/ld+json">
-		{
-			"@context": "https://schema.org",
-			"@type": "Organization",
-			"name": "Maratha Kalyanam",
-			"alternateName": "మరాఠా కళ్యాణం",
-			"url": "https://marathakalyanam.com",
-			"logo": "https://marathakalyanam.com/brand/logo.png",
-			"description": "Trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states.",
-			"areaServed": [
-				{ "@type": "AdministrativeArea", "name": "Andhra Pradesh" },
-				{ "@type": "AdministrativeArea", "name": "Telangana" },
-				{ "@type": "AdministrativeArea", "name": "Maharashtra" }
-			]
-		}
-	</script>
-	<script type="application/ld+json">
-		{
-			"@context": "https://schema.org",
-			"@type": "WebSite",
-			"name": "Maratha Kalyanam",
-			"url": "https://marathakalyanam.com",
-			"potentialAction": {
-				"@type": "SearchAction",
-				"target": "https://marathakalyanam.com/search?gotra={search_term_string}",
-				"query-input": "required name=search_term_string"
-			}
-		}
-	</script>
+	<!-- JSON-LD Organization + WebSite blocks live in app.html so the
+	     text-only crawl pass picks them up without waiting for hydration.
+	     Avoid emitting duplicates here. -->
 </svelte:head>
 
 <!-- ── Header (sticky at top) ─────────────────────────────────────────────── -->

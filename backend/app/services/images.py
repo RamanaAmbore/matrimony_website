@@ -174,7 +174,10 @@ def process_upload(
 
     raw_kb = len(file_bytes) / 1024
 
-    # 1. Raw size guards (cheap, fail fast) ---------------------------------
+    # The ONLY hard rejections are file-size out of bounds. Everything else
+    # gets best-effort handled — small images are upscaled, exotic formats
+    # are converted to RGB JPEG, low-quality post-compression output is
+    # accepted as-is. No face detection (off by default in settings).
     if len(file_bytes) > upload_max_mb * 1024 * 1024:
         raise PhotoValidationError(
             f"File '{filename}' is {raw_kb / 1024:.1f} MB — maximum allowed is {upload_max_mb} MB. "
@@ -183,47 +186,44 @@ def process_upload(
     if len(file_bytes) < upload_min_kb * 1024:
         raise PhotoValidationError(
             f"File '{filename}' is only {raw_kb:.1f} KB — minimum allowed is {upload_min_kb} KB. "
-            f"This looks like a thumbnail or icon; please upload a proper photo."
+            f"Please upload a higher-resolution photo."
         )
 
-    # 2. Decode --------------------------------------------------------------
+    # Decode. Pillow handles JPEG/PNG/WebP/GIF/BMP/TIFF/HEIF (with plugin) —
+    # if it can't open the bytes at all, that's the only decode-side failure.
     try:
         img = Image.open(io.BytesIO(file_bytes))
-    except Exception:
+        # Force-load the data so format-detection errors surface here
+        # rather than later during resize.
+        img.load()
+    except Exception as exc:
         raise PhotoValidationError(
-            f"Cannot read '{filename}'. Make sure it's a valid image file (JPEG, PNG, or WebP)."
-        )
-
-    if img.format not in ALLOWED_FORMATS:
-        raise PhotoValidationError(
-            f"Format '{img.format}' is not supported (allowed: {', '.join(sorted(ALLOWED_FORMATS))}). "
-            f"Please re-save '{filename}' as JPEG, PNG, or WebP and try again."
+            f"Could not read '{filename}' as an image ({type(exc).__name__}). "
+            f"Please re-save it as JPEG or PNG and try again."
         )
 
     img = _exif_orient(img)
     img = img.convert("RGB")
     iw, ih = img.size
 
-    # 3. Source dimension guards --------------------------------------------
-    short_side = min(iw, ih)
-    if short_side < photo_min_dim_px:
-        raise PhotoValidationError(
-            f"Photo is too small ({iw}×{ih} px) — the shortest side must be at least "
-            f"{photo_min_dim_px} px. Please upload a higher-resolution photo."
-        )
-
-    # 4. CPU/memory saver: pre-downscale enormous images BEFORE doing further
-    #    work. Iterative JPEG encoding on a 12000×9000 image is wasteful when
-    #    the largest variant we keep is 800px wide.
+    # If the source is smaller than the target crop, upscale it instead of
+    # rejecting. The result will be soft but visually intact — better than
+    # bouncing the user with a "too small" error.
     long_side = max(iw, ih)
     if long_side > photo_max_dim_px:
         scale = photo_max_dim_px / long_side
         img = img.resize((int(iw * scale), int(ih * scale)), Image.LANCZOS)
         iw, ih = img.size
+    short_side = min(iw, ih)
+    if short_side < photo_min_dim_px:
+        scale = photo_min_dim_px / short_side
+        img = img.resize((int(iw * scale), int(ih * scale)), Image.LANCZOS)
+        iw, ih = img.size
 
     image_area = iw * ih
 
-    # 5. Optional face check (off by default in current settings) -----------
+    # Face check is opt-in and off by default. Errors here are still
+    # surfaced to the user since they're explicitly enabled by the operator.
     cx, cy = iw // 2, ih // 2
     if require_face:
         face = _detect_face(img)
@@ -240,17 +240,16 @@ def process_upload(
             )
         cx, cy = fx + fw // 2, fy + fh // 2
 
-    # 6. Display variant: smart-crop to face aspect (slot 1) or body aspect
-    #    (slot 2), then JPEG-encode under the size cap.
+    # Display variant: smart-crop to face aspect (slot 1) or body aspect
+    # (slot 2), then JPEG-encode under the size cap. Whatever comes out of
+    # _encode_jpeg is accepted — even if very small (flat / low-detail
+    # source) we'd rather store it than reject the upload.
     passport_img = _smart_crop(img, crop_w, crop_h, cx, cy)
     passport_img = passport_img.resize((crop_w, crop_h), Image.LANCZOS)
     passport_bytes = _encode_jpeg(passport_img, photo_max_kb * 1024)
-    if len(passport_bytes) < photo_min_kb * 1024:
-        raise PhotoValidationError(
-            f"After processing, the photo compressed to {len(passport_bytes) / 1024:.1f} KB — "
-            f"below the {photo_min_kb} KB quality floor. The source is too low-detail or too "
-            f"flat (e.g. screenshot, AI-generated). Please upload a real high-resolution photo."
-        )
+    # photo_min_kb is now informational only — kept in settings for ops
+    # visibility but no longer enforced as a rejection.
+    _ = photo_min_kb
 
     # 7. Blurred variant: scale to blur_width, Gaussian blur, encode under cap
     blur_h = int(img.height * (blur_width / img.width))

@@ -256,21 +256,10 @@
 		}
 	}
 
-	async function unapproveUser(u: User) {
-		userActionLoading = true;
-		try {
-			const updated = await adminApi.users.unapprove(u.uuid);
-			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
-			selectedUser = updated;
-			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
-			refreshDashboardStats();
-			toastStore.success('Approval revoked');
-		} catch (err) {
-			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
-		} finally {
-			userActionLoading = false;
-		}
-	}
+	// unapproveUser handler removed when the "Revoke Approval" button was
+	// dropped from the action panel. The backend endpoint
+	// /admin/users/{id}/unapprove and the api.users.unapprove() client
+	// method are still available for scripted use.
 
 	async function promoteUserFromGrid(u: User) {
 		userActionLoading = true;
@@ -1057,17 +1046,12 @@
 											<span lang={langStore.current} class="text-[10px] opacity-90">{tx('approveUser', langStore.current)}</span>
 										</button>
 									{/if}
-								{:else if !selectedUser.is_admin || loggedInUser?.is_super}
-									<!-- Revoking approval from an admin is super-only -->
-									<button
-										class="btn-secondary text-sm flex flex-col items-center justify-center text-center leading-tight px-3 py-1.5 min-h-[44px] whitespace-normal"
-										disabled={userActionLoading}
-										onclick={() => unapproveUser(selectedUser!)}
-									>
-										<span class="text-xs">Revoke Approval</span>
-										<span lang={langStore.current} class="text-[10px] opacity-90">{tx('revokeApproval', langStore.current)}</span>
-									</button>
 								{/if}
+								<!-- The old "Revoke Approval" (clears is_approved without
+								     blocking login) was collapsed into the harder "Revoke" below
+								     to remove the two-step ambiguity. Flow is now simply
+								     approve → revoke → reinstate / delete. The /admin/users/{id}/
+								     unapprove endpoint still exists for scripted use. -->
 								<!-- Verifying email of an admin is super-only (mirrors approve gate).
 								     Resend Verification preserves the verify-then-approve flow; Verify
 								     Email is the override that skips it. -->

@@ -41,10 +41,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 			redirect: 'manual'
 		});
 
-		// Pass through status + headers. Set-Cookie may need special handling
-		// for multi-value, but we don't expect /api/* to issue cookies during
-		// SSR-time fetches (login/logout only run client-side).
-		return new Response(response.body, {
+		// Buffer the body before returning. SvelteKit's internal request
+		// dispatcher (the one event.fetch uses for same-origin URLs) caches
+		// the response for hydration replay, which means the body stream
+		// can get consumed before the calling load() function reads it.
+		// Returning a fully-buffered Response avoids that race entirely.
+		const buf = await response.arrayBuffer();
+		return new Response(buf, {
 			status: response.status,
 			statusText: response.statusText,
 			headers: response.headers
