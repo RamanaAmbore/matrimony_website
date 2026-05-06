@@ -450,7 +450,10 @@ class ProfileController(Controller):
         if not profile:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
 
-        if str(profile.owner_user_id) != user["sub"] and not user.get("is_admin"):
+        is_owner = str(profile.owner_user_id) == user["sub"]
+        is_admin_caller = bool(user.get("is_admin")) or bool(user.get("is_super"))
+
+        if not is_owner and not is_admin_caller:
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
 
         # ASCII validation
@@ -619,21 +622,30 @@ class ProfileController(Controller):
             profile.hobbies = data.hobbies
             changed = True
 
-        # Saving / editing any profile (other than ones already pending review)
-        # drops it into pending status so an admin re-reviews the updated
-        # content. Approved profiles in particular leave search the moment
-        # the owner saves an edit, and only re-appear after a fresh approval.
+        # Status transition rules on edit:
+        #
+        # Owner edit: any change drops the profile back to pending so an
+        #   admin re-reviews. Approved profiles leave search the moment the
+        #   owner saves and only re-appear after fresh approval. This is
+        #   the "owner edited an approved profile" case that fires G5.
+        #
+        # Admin / super edit: status is preserved. The whole point of
+        #   admin-side editing is to fix up content without un-approving
+        #   their own edit. No telegram alert either — the admin is the
+        #   one making the change.
         was_approved_before_edit = profile.status == ProfileStatusEnum.approved
-        if changed and profile.status != ProfileStatusEnum.pending:
+        owner_edit_demoted_to_pending = False
+        if changed and is_owner and profile.status != ProfileStatusEnum.pending:
             profile.status = ProfileStatusEnum.pending
+            owner_edit_demoted_to_pending = True
 
         await db.commit()
         await db.refresh(profile)
         await db.refresh(profile, ["photos"])
 
-        # G5: ops alert when an approved profile is edited and drops back to
-        # pending — distinguishes these from genuinely-new submissions.
-        if changed and was_approved_before_edit:
+        # G5: ops alert only when the owner's edit moved an approved profile
+        # back to pending. Admin edits don't fire the alert.
+        if owner_edit_demoted_to_pending and was_approved_before_edit:
             from app.services.telegram import notify_profile_edited_after_approve
             asyncio.create_task(notify_profile_edited_after_approve(
                 name=f"{profile.first_name} {profile.last_name or ''}".strip(),

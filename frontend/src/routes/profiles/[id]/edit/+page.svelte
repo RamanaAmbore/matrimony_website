@@ -22,6 +22,14 @@
 	let submittingForApproval = $state(false);
 	let serverErrors = $state<Record<string, string>>({});
 
+	// Admin/super are allowed to edit any profile, but the UX context is
+	// different: their saves don't change the profile status, and the
+	// "Submit for approval" button is meaningless to them. Compute these
+	// once we have the profile loaded.
+	let currentUser = $derived(data.user);
+	let isOwner = $derived(profile && currentUser ? profile.owner_user_id === currentUser.uuid : false);
+	let isAdminEditor = $derived(!isOwner && !!currentUser?.is_admin);
+
 	onMount(async () => {
 		try {
 			const result = await profilesApi.get(profileId);
@@ -33,7 +41,9 @@
 				return;
 			}
 			toastStore.error('Failed to load profile');
-			goto('/dashboard');
+			// Non-owner non-admin viewers shouldn't even reach this route, but
+			// if they do, send them somewhere sensible.
+			goto(currentUser?.is_admin ? '/admin' : '/dashboard');
 		} finally {
 			loading = false;
 		}
@@ -102,12 +112,31 @@
 			</p>
 		</div>
 
-		<!-- Photos section — shown first so user sees it immediately -->
+		{#if isAdminEditor}
+			<!-- Admin / super editing someone else's profile. The save behaviour
+			     is intentionally different from owner saves: status is preserved
+			     so the admin can fix typos, photos, etc. without un-approving
+			     their own correction. -->
+			<div class="mb-4 flex items-start gap-3 rounded-lg border border-maroon/40 bg-maroon/5 px-5 py-3">
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0 text-maroon" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+				<div class="text-sm text-ink/80">
+					<p class="font-semibold text-maroon">Editing as admin</p>
+					<p>You are editing this profile on behalf of <span class="font-medium">{profile.first_name}</span>. Status and rejection state are preserved — your edits won't drop the profile back to pending.</p>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Photos section — shown first so user sees it immediately. Admin can
+		     also upload/delete; backend preserves status on admin-initiated CRUD. -->
 		<PhotoUpload {profileId} initialPhotos={photos} isOwner={true} onCountChange={(n) => photoCount = n} />
 
 		<p class="mt-4 mb-2 text-sm text-ink/60">
-			Upload at least one photo before submitting for approval. Photos are blurred in public search results — clear version shared only after admin approves a contact request.
-			<span class="block mt-0.5 text-xs" lang={langStore.current}>{tx('editPhotoPrivacyNote', langStore.current)}</span>
+			{#if isAdminEditor}
+				Upload, replace or delete photos as needed. Status will not change.
+			{:else}
+				Upload at least one photo before submitting for approval. Photos are blurred in public search results — clear version shared only after admin approves a contact request.
+				<span class="block mt-0.5 text-xs" lang={langStore.current}>{tx('editPhotoPrivacyNote', langStore.current)}</span>
+			{/if}
 		</p>
 
 		<div class="mt-6">
@@ -116,7 +145,7 @@
 				{submitting}
 				{serverErrors}
 				onSubmit={handleSave}
-				onSubmitForApproval={submitForApproval}
+				onSubmitForApproval={isAdminEditor ? undefined : submitForApproval}
 				{submittingForApproval}
 				profileStatus={profile.status}
 				{photoCount}

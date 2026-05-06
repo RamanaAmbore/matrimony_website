@@ -20,18 +20,34 @@ from app.services.images import PhotoValidationError, process_upload
 from app.services.settings import settings_service
 
 
-def _reset_to_pending_if_approved(profile: Profile) -> bool:
-    """G4: photo CRUD on an approved profile drops it back to pending so an
-    admin re-reviews the visual content. Without this, an owner could swap
-    the verified photo out post-approval (bait-and-switch). Mirrors the
-    same auto-pending behaviour used by `update_profile`.
+def _reset_to_pending_if_approved(profile: Profile, is_owner_edit: bool) -> bool:
+    """G4: photo CRUD by the OWNER on an approved profile drops it back to
+    pending so an admin re-reviews the visual content. Without this, an
+    owner could swap the verified photo out post-approval (bait-and-switch).
+    Mirrors the same auto-pending behaviour used by `update_profile`.
+
+    Admin / super edits preserve status — the admin is the reviewer, no
+    re-review is needed when they make the change themselves.
 
     Returns True if the status was reset.
     """
-    if profile.status == ProfileStatusEnum.approved:
+    if is_owner_edit and profile.status == ProfileStatusEnum.approved:
         profile.status = ProfileStatusEnum.pending
         return True
     return False
+
+
+def _check_can_edit_photos(profile: Profile, user_payload: dict) -> tuple[bool, bool]:
+    """Returns (is_owner, is_admin_caller). Raises 403 if neither.
+
+    Admin / super may upload, delete, and reorder photos on any profile —
+    same access pattern the rest of the admin profile-edit flow uses.
+    """
+    is_owner = str(profile.owner_user_id) == user_payload["sub"]
+    is_admin_caller = bool(user_payload.get("is_admin")) or bool(user_payload.get("is_super"))
+    if not is_owner and not is_admin_caller:
+        raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
+    return is_owner, is_admin_caller
 
 
 def _photo_to_dict(photo: Photo, request: Request) -> dict[str, Any]:
@@ -83,10 +99,7 @@ class PhotoController(Controller):
                 status_code=404, detail={"code": "not_found", "message": "Profile not found"}
             )
 
-        if str(profile.owner_user_id) != user["sub"]:
-            raise HTTPException(
-                status_code=403, detail={"code": "forbidden", "message": "Not your profile"}
-            )
+        is_owner, _is_admin = _check_can_edit_photos(profile, user)
 
         max_photos = settings_service.get_int("photos_max_per_profile", 3)
         if len(profile.photos) >= max_photos:
@@ -138,7 +151,7 @@ class PhotoController(Controller):
             is_primary=is_primary,
         )
         db.add(photo)
-        _reset_to_pending_if_approved(profile)
+        _reset_to_pending_if_approved(profile, is_owner_edit=is_owner)
         await db.commit()
         await db.refresh(photo)
 
@@ -174,10 +187,7 @@ class PhotoController(Controller):
                 status_code=404, detail={"code": "not_found", "message": "Profile not found"}
             )
 
-        if str(profile.owner_user_id) != user["sub"]:
-            raise HTTPException(
-                status_code=403, detail={"code": "forbidden", "message": "Not your profile"}
-            )
+        is_owner, _is_admin = _check_can_edit_photos(profile, user)
 
         result2 = await db.execute(
             select(Photo).where(Photo.id == phid, Photo.profile_id == pid)
@@ -195,7 +205,7 @@ class PhotoController(Controller):
 
         was_primary = photo.is_primary
         await db.delete(photo)
-        _reset_to_pending_if_approved(profile)
+        _reset_to_pending_if_approved(profile, is_owner_edit=is_owner)
         await db.commit()
 
         if was_primary:
@@ -237,10 +247,7 @@ class PhotoController(Controller):
                 status_code=404, detail={"code": "not_found", "message": "Profile not found"}
             )
 
-        if str(profile.owner_user_id) != user["sub"]:
-            raise HTTPException(
-                status_code=403, detail={"code": "forbidden", "message": "Not your profile"}
-            )
+        is_owner, _is_admin = _check_can_edit_photos(profile, user)
 
         result2 = await db.execute(select(Photo).where(Photo.profile_id == pid))
         all_photos = result2.scalars().all()
@@ -255,7 +262,7 @@ class PhotoController(Controller):
                 status_code=404, detail={"code": "not_found", "message": "Photo not found"}
             )
 
-        _reset_to_pending_if_approved(profile)
+        _reset_to_pending_if_approved(profile, is_owner_edit=is_owner)
         await db.commit()
         await db.refresh(target)
         return _photo_to_dict(target, request)

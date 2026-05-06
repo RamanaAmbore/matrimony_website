@@ -1177,6 +1177,14 @@
 							<span>View →</span>
 							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('view', langStore.current)}</span>
 						</a>
+						<a
+							href="/profiles/{selectedProfile.id}/edit"
+							class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
+							title="Edit this profile as admin — status will not change"
+						>
+							<span>Edit ✎</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('edit', langStore.current)}</span>
+						</a>
 						{#if selectedProfile.status === 'pending'}
 							<button
 								class="btn-primary flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
