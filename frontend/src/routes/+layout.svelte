@@ -325,6 +325,9 @@
 				<a href="/requests" class={drawerLinkClass('/requests')} aria-current={isActive('/requests') ? 'page' : undefined} onclick={closeDrawer}>
 					{T.requests.en} <span lang={langStore.current}>{tx('requests', langStore.current)}</span>
 				</a>
+				<a href="/account" class={drawerLinkClass('/account')} aria-current={isActive('/account') ? 'page' : undefined} onclick={closeDrawer}>
+					{T.myAccount.en} <span lang={langStore.current}>{tx('myAccount', langStore.current)}</span>
+				</a>
 				{#if user.is_admin}
 					<div class="my-2 h-px bg-gold/20"></div>
 					<p class="px-3 text-xs font-semibold tracking-wider text-ink/40 uppercase">

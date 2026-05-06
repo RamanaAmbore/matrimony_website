@@ -3,7 +3,7 @@
 	import { profiles as profilesApi, type Profile } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { ApiError } from '$lib/api';
-	import { Plus, User, Edit, Loader, SendHorizonal, FileEdit, Clock, CheckCircle, XCircle } from 'lucide-svelte';
+	import { Plus, User, Edit, Loader, SendHorizonal, FileEdit, Clock, CheckCircle, XCircle, Settings } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
@@ -115,9 +115,19 @@
 
 	{#if data.user}
 		<div class="mt-4 rounded-lg border border-gold/30 bg-white px-5 py-4 text-sm">
-			<p class="font-medium text-maroon font-serif text-base mb-2">Account Details
-				<span class="ml-1" lang={langStore.current}>{tx('dashAccountDetails', langStore.current)}</span>
-			</p>
+			<div class="flex items-start justify-between gap-3 flex-wrap">
+				<p class="font-medium text-maroon font-serif text-base mb-2">Account Details
+					<span class="ml-1" lang={langStore.current}>{tx('dashAccountDetails', langStore.current)}</span>
+				</p>
+				<a
+					href="/account"
+					class="btn-secondary flex items-center gap-1.5 text-sm py-1 px-3 min-h-[36px] whitespace-nowrap"
+				>
+					<Settings size={14} />
+					<span>{T.myAccount.en}</span>
+					<span lang={langStore.current} class="text-[10px] opacity-80">{tx('myAccount', langStore.current)}</span>
+				</a>
+			</div>
 			<div class="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4 text-ink/70">
 				<div><span class="text-xs text-ink/50 block">Name</span>{data.user.full_name || '—'}</div>
 				<div><span class="text-xs text-ink/50 block">User ID</span><span class="font-mono">{data.user.user_id}</span></div>

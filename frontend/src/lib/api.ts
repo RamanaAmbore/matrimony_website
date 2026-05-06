@@ -398,6 +398,18 @@ export const auth = {
 
 	async me(): Promise<User> {
 		return request('/api/auth/me');
+	},
+
+	async updateEmail(new_email: string, current_password: string): Promise<{ message: string; email: string }> {
+		return request('/api/auth/me/email', { method: 'POST', body: JSON.stringify({ new_email, current_password }) });
+	},
+
+	async updatePhone(new_phone: string, current_password: string): Promise<{ message: string; phone_number: string }> {
+		return request('/api/auth/me/phone', { method: 'POST', body: JSON.stringify({ new_phone, current_password }) });
+	},
+
+	async updatePassword(current_password: string, new_password: string): Promise<{ message: string }> {
+		return request('/api/auth/me/password', { method: 'POST', body: JSON.stringify({ current_password, new_password }) });
 	}
 };
 
