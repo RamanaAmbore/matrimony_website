@@ -346,13 +346,8 @@
 				<User size={40} class="text-gold/50" />
 			</div>
 			<h2 class="mt-2 font-serif text-xl font-semibold text-maroon">No profiles yet</h2>
-			<p class="mt-2 text-ink/60">Create your first profile to start appearing in search results.</p>
-			{#if !data.user || data.user.is_approved}
-				<a href="/profiles/new" class="btn-primary mt-6 inline-flex flex-col items-center justify-center text-center leading-tight px-3 py-2 min-h-[52px] whitespace-normal">
-					<span class="flex items-center gap-1.5 text-sm"><Plus size={16} />New Profile</span>
-					<span lang={langStore.current} class="text-[10px] opacity-90">{tx('newProfile', langStore.current)}</span>
-				</a>
-			{:else}
+			<p class="mt-2 text-ink/60">Use the "New Profile" button in the top right to start appearing in search results.</p>
+			{#if data.user && !data.user.is_approved}
 				<p class="mt-4 text-sm text-saffron font-medium">Your account is pending admin approval before you can create profiles.</p>
 			{/if}
 		</div>
