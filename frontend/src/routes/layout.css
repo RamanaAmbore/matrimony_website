@@ -94,13 +94,16 @@ option:hover { background: var(--color-maroon); color: var(--color-cream); }
 		font-style: inherit !important;
 	}
 
-	/* Hero section bilingual paragraph — literal hex to bypass any var() resolution issues */
+	/* Hero section bilingual paragraph — sits on a translucent maroon plate.
+	   Cream text on maroon gives high contrast without needing a heavy stroke;
+	   the subtle shadow adds depth so the script doesn't look flat against
+	   the plate. Stroke kept very thin (0.2px) for crispness on small glyphs. */
 	p.hero-te {
 		opacity: 1 !important;
-		color: #f4a300 !important;
-		-webkit-text-stroke: 0.8px #ffb627 !important;
+		color: #fff8e7 !important;
+		-webkit-text-stroke: 0.2px rgba(43,10,14,0.6) !important;
 		paint-order: stroke fill;
-		text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.7);
+		text-shadow: 0 1px 2px rgba(0,0,0,0.45);
 	}
 
 	/* Navbar & footer bilingual labels: darker orange.

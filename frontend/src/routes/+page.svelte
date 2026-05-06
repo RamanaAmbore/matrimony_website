@@ -64,14 +64,14 @@
 				The trusted matrimonial platform for the Maratha community settled across Andhra, Telangana,
 				Maharashtra and other states. Admin-verified profiles. Privacy-first photo sharing.
 			</p>
-			<!-- Indic line sits on a soft saffron tint so the script reads
-			     comfortably over the wedding-photo backdrop. The plate is
-			     transparent enough to let the photo show through, but solid
-			     enough to give consistent contrast across all six langs. -->
+			<!-- Indic line sits on a maroon plate so cream text reads cleanly.
+			     Maroon (matching the navbar) gives high contrast for indic
+			     scripts while staying on-palette; the saffron border adds
+			     warmth without competing with the text. -->
 			<p
 				class="hero-te mx-auto mb-8 max-w-lg rounded-xl px-4 py-2 text-base md:text-lg"
 				lang={langStore.current}
-				style="background: rgba(255,182,39,0.18); border: 1px solid rgba(255,182,39,0.35); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);"
+				style="background: rgba(107,15,26,0.55); border: 1px solid rgba(255,182,39,0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);"
 			>
 				{tx('homeHeroTagline', langStore.current)}
 			</p>
