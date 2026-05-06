@@ -141,6 +141,28 @@
 
 	// ── Mount: dashboard only — full lists fetched lazily on chip click ──────────
 
+	/**
+	 * Re-fetch the dashboard endpoint to keep the chip counts honest after a
+	 * state-changing admin action. Necessary because:
+	 *   - approve/revoke/reinstate moves a row between status buckets, and
+	 *     the local mutations don't always know which counters to bump
+	 *   - delete-user cascade-removes profiles + requests in the DB; the
+	 *     frontend has no way to enumerate the cascaded rows from the UX
+	 *     side, so a refetch is the only correct way to refresh totals
+	 * One extra round-trip per admin action is fine — dashboard is a handful
+	 * of cheap COUNT queries.
+	 */
+	async function refreshDashboardStats() {
+		try {
+			const fresh = await adminApi.dashboard();
+			dashboard = fresh;
+		} catch (err) {
+			// Don't blow up the action — local stats just stay stale until
+			// the next manual page refresh.
+			console.warn('Failed to refresh dashboard stats', err);
+		}
+	}
+
 	onMount(async () => {
 		try {
 			dashboard = await adminApi.dashboard();
@@ -205,6 +227,7 @@
 			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
 			selectedUser = updated;
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			refreshDashboardStats();
 			toastStore.success('User approved');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -220,6 +243,7 @@
 			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
 			selectedUser = updated;
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			refreshDashboardStats();
 			toastStore.success('Approval revoked');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -235,6 +259,7 @@
 			allUsers = allUsers!.map(x => x.uuid === u.uuid ? { ...x, is_admin: true } : x);
 			selectedUser = { ...u, is_admin: true };
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			refreshDashboardStats();
 			toastStore.success('Promoted to admin');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -250,6 +275,7 @@
 			allUsers = allUsers!.map(x => x.uuid === u.uuid ? { ...x, email_verified: true } : x);
 			selectedUser = { ...u, email_verified: true };
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			refreshDashboardStats();
 			toastStore.success('Email verified');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -277,6 +303,7 @@
 			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
 			selectedUser = updated;
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			refreshDashboardStats();
 			toastStore.success('Admin demoted');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -292,6 +319,9 @@
 			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
 			selectedUser = updated;
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			// User revoke G1-cascades pending requests → revoked. Refetch to
+			// keep request stat tiles in sync.
+			refreshDashboardStats();
 			toastStore.success('User revoked');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -307,6 +337,7 @@
 			allUsers = allUsers!.map(x => x.uuid === u.uuid ? updated : x);
 			selectedUser = updated;
 			usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
+			refreshDashboardStats();
 			toastStore.success('User reinstated');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -324,11 +355,18 @@
 				try {
 					await adminApi.users.delete(u.uuid);
 					allUsers = allUsers!.filter(x => x.uuid !== u.uuid);
+					// User delete cascade-removes profiles + photos + requests in
+					// the DB. We can't enumerate the cascaded rows here, so drop
+					// any locally-cached profile/request lists to force a fresh
+					// fetch on next chip click, and refetch the dashboard for
+					// accurate counts.
+					allProfiles = null;
+					allRequests = null;
 					selectedUser = null;
+					selectedProfile = null;
+					selectedRequest = null;
 					usersGridApi?.setGridOption('rowData', [...computeUsersRows(userFilter)]);
-					if (dashboard) {
-						dashboard.stats.users = Math.max(0, dashboard.stats.users - 1);
-					}
+					refreshDashboardStats();
 					toastStore.success('User deleted');
 				} catch (err) {
 					toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -347,6 +385,7 @@
 			allProfiles = allProfiles!.map(p => p.id === selectedProfile!.id ? { ...p, status: 'approved' as const } : p);
 			selectedProfile = { ...selectedProfile, status: 'approved' };
 			profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
+			refreshDashboardStats();
 			toastStore.success('Profile approved');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -363,6 +402,10 @@
 			allProfiles = allProfiles!.map(p => p.id === selectedProfile!.id ? updated : p);
 			selectedProfile = updated;
 			profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
+			// Profile revoke G2-cascades pending requests for this profile.
+			// Drop the cached request list so it refetches with the new state.
+			allRequests = null;
+			refreshDashboardStats();
 			toastStore.success('Profile revoked');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -379,6 +422,7 @@
 			allProfiles = allProfiles!.map(p => p.id === selectedProfile!.id ? updated : p);
 			selectedProfile = updated;
 			profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
+			refreshDashboardStats();
 			toastStore.success('Profile reinstated');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -398,16 +442,15 @@
 				profileActionLoading = true;
 				try {
 					await adminApi.profiles.delete(selectedProfile.id);
-					const wasStatus = selectedProfile.status;
 					allProfiles = (allProfiles ?? []).filter(p => p.id !== selectedProfile!.id);
+					// Profile delete cascades photos + detail-requests in the
+					// DB; drop cached request list and refetch dashboard for
+					// fresh counts.
+					allRequests = null;
 					selectedProfile = null;
+					selectedRequest = null;
 					profilesGridApi?.setGridOption('rowData', [...computeProfilesRows(profileStatusFilter)]);
-					if (dashboard) {
-						dashboard.stats.profiles_total = Math.max(0, dashboard.stats.profiles_total - 1);
-						const k = `profiles_${wasStatus}` as keyof typeof dashboard.stats;
-						const cur = dashboard.stats[k];
-						if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
-					}
+					refreshDashboardStats();
 					toastStore.success('Profile deleted');
 				} catch (err) {
 					toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -426,6 +469,7 @@
 			allRequests = allRequests!.map(r => r.id === selectedRequest!.id ? { ...r, status: 'approved' as const } : r);
 			selectedRequest = { ...selectedRequest, status: 'approved' };
 			requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
+			refreshDashboardStats();
 			toastStore.success('Request approved — email sent');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -442,6 +486,7 @@
 			allRequests = allRequests!.map(r => r.id === selectedRequest!.id ? updated : r);
 			selectedRequest = updated;
 			requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
+			refreshDashboardStats();
 			toastStore.success('Request revoked');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -458,6 +503,7 @@
 			allRequests = allRequests!.map(r => r.id === selectedRequest!.id ? updated : r);
 			selectedRequest = updated;
 			requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
+			refreshDashboardStats();
 			toastStore.success('Request reinstated');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -477,16 +523,10 @@
 				requestActionLoading = true;
 				try {
 					await adminApi.requests.delete(selectedRequest.id);
-					const wasStatus = selectedRequest.status;
 					allRequests = (allRequests ?? []).filter(r => r.id !== selectedRequest!.id);
 					selectedRequest = null;
 					requestsGridApi?.setGridOption('rowData', [...computeRequestsRows(requestStatusFilter)]);
-					if (dashboard) {
-						dashboard.stats.requests_total = Math.max(0, dashboard.stats.requests_total - 1);
-						const k = `requests_${wasStatus}` as keyof typeof dashboard.stats;
-						const cur = dashboard.stats[k];
-						if (typeof cur === 'number') (dashboard.stats[k] as number) = Math.max(0, cur - 1);
-					}
+					refreshDashboardStats();
 					toastStore.success('Request deleted');
 				} catch (err) {
 					toastStore.error(err instanceof ApiError ? err.message.slice(0, 60) : 'Action failed');
@@ -525,8 +565,7 @@
 		try {
 			await adminApi.profiles.approve(p.id);
 			dashboard!.pending_profiles = dashboard!.pending_profiles.filter(x => x.id !== p.id);
-			dashboard!.stats.profiles_pending = Math.max(0, dashboard!.stats.profiles_pending - 1);
-			dashboard!.stats.profiles_approved += 1;
+			refreshDashboardStats();
 			toastStore.success('Profile approved');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -540,7 +579,9 @@
 		try {
 			await adminApi.profiles.reject(p.id);
 			dashboard!.pending_profiles = dashboard!.pending_profiles.filter(x => x.id !== p.id);
-			dashboard!.stats.profiles_pending = Math.max(0, dashboard!.stats.profiles_pending - 1);
+			// Profile reject G2-cascades pending requests; drop their cache.
+			allRequests = null;
+			refreshDashboardStats();
 			toastStore.success('Profile revoked');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -556,7 +597,7 @@
 		try {
 			await adminApi.requests.approve(r.id);
 			dashboard!.pending_requests = dashboard!.pending_requests.filter(x => x.id !== r.id);
-			dashboard!.stats.requests_pending = Math.max(0, dashboard!.stats.requests_pending - 1);
+			refreshDashboardStats();
 			toastStore.success('Request approved — email sent');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
@@ -570,7 +611,7 @@
 		try {
 			await adminApi.requests.reject(r.id);
 			dashboard!.pending_requests = dashboard!.pending_requests.filter(x => x.id !== r.id);
-			dashboard!.stats.requests_pending = Math.max(0, dashboard!.stats.requests_pending - 1);
+			refreshDashboardStats();
 			toastStore.success('Request revoked');
 		} catch (err) {
 			toastStore.error(err instanceof ApiError ? err.message.slice(0, 35) : 'Action failed');
