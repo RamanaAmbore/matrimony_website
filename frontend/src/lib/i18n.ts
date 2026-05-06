@@ -11,7 +11,6 @@ export type I18nEntry = {
 	kn?: string;
 	ta?: string;
 	hi?: string;
-	bgc?: string;  // Haryanvi (ISO 639-3); when missing, falls back to Hindi.
 };
 
 export const T: Record<string, I18nEntry> = {
@@ -699,7 +698,6 @@ export type BilingualKey = keyof typeof T;
  *
  * Fallback chain:
  *   - explicit `lang` translation if present
- *   - Hindi for Haryanvi (`bgc`) since they're the closest related languages
  *   - Telugu otherwise (the canonical second language for this matrimony site)
  */
 export function tx(key: BilingualKey, lang: Lang): string {
@@ -708,6 +706,5 @@ export function tx(key: BilingualKey, lang: Lang): string {
 	if (lang === 'te') return entry.te;
 	const direct = (entry as Record<string, string>)[lang];
 	if (direct) return direct;
-	if (lang === 'bgc' && entry.hi) return entry.hi;
 	return entry.te;
 }

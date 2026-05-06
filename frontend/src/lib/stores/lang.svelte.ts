@@ -1,17 +1,15 @@
 // Reactive language preference, persisted to localStorage. The English line
 // in the bilingual UI is constant; this store controls which translation
-// is shown alongside it (Telugu / Marathi / Kannada / Tamil / Hindi / Haryanvi).
-// Haryanvi uses ISO 639-3 code 'bgc'.
+// is shown alongside it (Telugu / Marathi / Kannada / Tamil / Hindi).
 
-export type Lang = 'te' | 'mr' | 'kn' | 'ta' | 'hi' | 'bgc';
+export type Lang = 'te' | 'mr' | 'kn' | 'ta' | 'hi';
 
 export const LANGS: { code: Lang; label: string; native: string }[] = [
 	{ code: 'te',  label: 'Telugu',    native: 'తెలుగు' },
 	{ code: 'mr',  label: 'Marathi',   native: 'मराठी' },
 	{ code: 'kn',  label: 'Kannada',   native: 'ಕನ್ನಡ' },
 	{ code: 'ta',  label: 'Tamil',     native: 'தமிழ்' },
-	{ code: 'hi',  label: 'Hindi',     native: 'हिन्दी' },
-	{ code: 'bgc', label: 'Haryanvi',  native: 'हरियाणवी' }
+	{ code: 'hi',  label: 'Hindi',     native: 'हिन्दी' }
 ];
 
 const STORAGE_KEY = 'mk_lang';
