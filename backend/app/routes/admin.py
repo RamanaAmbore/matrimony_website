@@ -166,17 +166,38 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        """Single-call admin home: stats + pending items for inline review."""
+        """Single-call admin home: stats + pending items for inline review.
+
+        Visibility rules:
+          - Super caller     → sees all counts including users_admins +
+                               users_super. The total `users` count is of
+                               all non-super accounts (regular + admin).
+          - Non-super admin  → only sees the regular-user universe. The
+                               `users` total excludes admins AND supers,
+                               and neither users_admins nor users_super
+                               is included in the response. Admins should
+                               not even know the admin tier exists.
+        """
         payload = _require_admin(request)
         is_super_caller = bool(payload.get("is_super"))
 
-        # ── Stats ────────────────────────────────────────────────────────────
-        # Exclude super-users from every users-derived count.
-        users_count = (
-            await db.execute(
-                select(func.count()).select_from(User).where(User.is_super == False)  # noqa: E712
-            )
-        ).scalar_one()
+        # ── User counts ──────────────────────────────────────────────────────
+        if is_super_caller:
+            users_count = (
+                await db.execute(
+                    select(func.count()).select_from(User).where(User.is_super == False)  # noqa: E712
+                )
+            ).scalar_one()
+        else:
+            # Hide admin-tier accounts from non-super admins.
+            users_count = (
+                await db.execute(
+                    select(func.count()).select_from(User).where(
+                        User.is_super == False, User.is_admin == False  # noqa: E712
+                    )
+                )
+            ).scalar_one()
+
         users_admins = (
             await db.execute(
                 select(func.count()).select_from(User).where(
@@ -184,9 +205,6 @@ class AdminController(Controller):
                 )
             )
         ).scalar_one()
-        # Super count is only computed for super callers — regular admins
-        # don't get visibility into how many supers exist (privileged role
-        # remains invisible from below).
         users_super = (
             await db.execute(
                 select(func.count()).select_from(User).where(User.is_super == True)  # noqa: E712
@@ -244,7 +262,6 @@ class AdminController(Controller):
 
         stats: dict[str, Any] = {
             "users": users_count,
-            "users_admins": users_admins,
             "profiles_total": profiles_total,
             "profiles_pending": profiles_pending,
             "profiles_approved": profiles_approved,
@@ -257,9 +274,10 @@ class AdminController(Controller):
             "photos_count": photos_count,
             "photos_total_bytes": int(photos_total_bytes),
         }
-        # Conditionally surface super-only stats. Regular admins should
-        # not even see that there's a super-tier.
+        # Admin-tier counts are visible only to super-users. Regular admins
+        # don't get told how many other admins or supers exist.
         if is_super_caller:
+            stats["users_admins"] = users_admins
             stats["users_super"] = users_super
 
         # ── Pending profiles (up to 25) with owner email ────────────────────
@@ -898,12 +916,20 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> list[dict[str, Any]]:
-        _require_admin(request)
-        # Hide super-users from the admin list — super is a privileged
-        # invisible role that even other admins should not see or act on.
-        result = await db.execute(
-            select(User).where(User.is_super == False).order_by(User.created_at.desc())  # noqa: E712
-        )
+        """List manageable users.
+
+        - Super caller     → all non-super accounts (regular + admin)
+        - Non-super admin  → regular accounts only (admin tier is hidden)
+
+        Super-users themselves are never listed.
+        """
+        payload = _require_admin(request)
+        is_super_caller = bool(payload.get("is_super"))
+        query = select(User).where(User.is_super == False)  # noqa: E712
+        if not is_super_caller:
+            query = query.where(User.is_admin == False)  # noqa: E712
+        query = query.order_by(User.created_at.desc())
+        result = await db.execute(query)
         users = result.scalars().all()
         return [_serialize_user(u) for u in users]
 

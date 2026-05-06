@@ -723,9 +723,14 @@
 					: p.value === 'revoked'
 					? '<span style="display:inline-flex;align-items:center;gap:4px;background:#fee2e2;color:#dc2626;border-radius:9999px;padding:1px 8px;font-size:11px;font-weight:600">&#10005; Revoked</span>'
 					: '<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;border-radius:9999px;padding:1px 8px;font-size:11px;font-weight:600">&#9888; Pending</span>' },
-				{ field: 'is_admin', headerName: 'Admin', width: 100, sortable: true, headerClass: 'mk-header',
-				  cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-maroon' : '',
-				  cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#9733; Admin</span>' : '' }
+				// Admin column is super-only — non-super admins don't see the
+				// admin tier (it's filtered out of /admin/users for them, but
+				// hide the column too in case the API ever leaks).
+				...(loggedInUser?.is_super ? [{
+					field: 'is_admin', headerName: 'Admin', width: 100, sortable: true, headerClass: 'mk-header',
+					cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-maroon' : '',
+					cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#9733; Admin</span>' : ''
+				}] : [])
 			];
 			usersGridApi = createGrid(node, {
 				columnDefs: columnDefs as any[],
@@ -899,8 +904,12 @@
 							onclick={() => { selectTab('users'); applyUserFilter('revoked'); }}
 						>Revoked · {usersRevoked}</button>
 					{/if}
-					{#if dashboard?.stats?.users_admins}
-						<span class="rounded-full border border-saffron/40 bg-saffron/10 px-3 py-1 text-xs font-semibold text-maroon" title="Number of admin users (excluded from the user list unless 'Include admins' is on)">
+					<!-- Admin / Super counts are super-only tier visibility. Regular
+					     admins don't see how many other admins/supers exist (the
+					     backend also withholds these counts in /admin/dashboard
+					     for non-super callers, so the {#if} is defensive). -->
+					{#if loggedInUser?.is_super && dashboard?.stats?.users_admins}
+						<span class="rounded-full border border-saffron/40 bg-saffron/10 px-3 py-1 text-xs font-semibold text-maroon" title="Number of admin users">
 							Admins · {dashboard.stats.users_admins}
 						</span>
 					{/if}
@@ -909,14 +918,18 @@
 							Super · {dashboard.stats.users_super}
 						</span>
 					{/if}
-					<label class="ml-auto inline-flex cursor-pointer items-center gap-1.5 text-xs text-ink/60">
-						<input
-							type="checkbox"
-							class="rounded accent-maroon"
-							bind:checked={userIncludeAdmins}
-						/>
-						Include admins
-					</label>
+					<!-- "Include admins" toggle is super-only; non-super admins
+					     don't have admin users in their list to begin with. -->
+					{#if loggedInUser?.is_super}
+						<label class="ml-auto inline-flex cursor-pointer items-center gap-1.5 text-xs text-ink/60">
+							<input
+								type="checkbox"
+								class="rounded accent-maroon"
+								bind:checked={userIncludeAdmins}
+							/>
+							Include admins
+						</label>
+					{/if}
 				</div>
 			</div>
 
