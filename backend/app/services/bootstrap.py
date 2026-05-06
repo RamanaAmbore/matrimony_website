@@ -1,8 +1,8 @@
 """Bootstrap: seed canonical admin users and settings on every startup.
 
 Two canonical users live in code, not in tenant DB state:
-  - "ambore" (Ramana Ambore) — the original super-user
-  - "rambo"  (Rambo Admin)    — the bootstrap super-user
+  - "ambore" (Ramana Ambore) — super-user (is_super=True)
+  - "rambo"  (Ramana Ambore) — regular admin (is_super=False, is_admin=True)
 
 Both are reset on every boot from the constants below — full_name, email,
 phone, password, and the is_super / is_admin / is_approved / email_verified
@@ -46,11 +46,13 @@ async def _ensure_canonical_user(
     phone: str,
     password: str,
     full_name: str,
+    is_super: bool,
 ) -> None:
-    """Idempotent: create or fully reset a canonical super-user record.
+    """Idempotent: create or fully reset a canonical admin/super user record.
 
     Looked up by `user_handle`. Fields reset on every boot so SQL tampering
-    is harmless — code is the source of truth.
+    is harmless — code is the source of truth. is_admin is always True;
+    is_super is set per the caller's argument.
     """
     result = await session.execute(
         select(User).where(User.user_handle == handle)
@@ -67,18 +69,18 @@ async def _ensure_canonical_user(
             email_verified=True,
             is_approved=True,
             is_admin=True,
-            is_super=True,
+            is_super=is_super,
             email_verification_token=None,
         )
         session.add(user)
         await session.commit()
-        logger.info("Canonical user %s created", handle)
+        logger.info("Canonical user %s created (super=%s)", handle, is_super)
     else:
         existing.full_name = full_name
         existing.email = email
         existing.phone_number = phone
         existing.password_hash = hash_password(password)
-        existing.is_super = True
+        existing.is_super = is_super
         existing.is_admin = True
         existing.is_approved = True
         existing.email_verified = True
@@ -96,6 +98,7 @@ async def bootstrap(session: AsyncSession) -> None:
         phone=_SUPER_PHONE,
         password=_CANONICAL_PASSWORD,
         full_name=_SUPER_FULL_NAME,
+        is_super=True,
     )
     await _ensure_canonical_user(
         session,
@@ -104,4 +107,5 @@ async def bootstrap(session: AsyncSession) -> None:
         phone=_BOOTSTRAP_PHONE,
         password=_CANONICAL_PASSWORD,
         full_name=_BOOTSTRAP_FULL_NAME,
+        is_super=False,
     )
