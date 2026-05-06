@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from litestar import Controller, get, post
+from litestar import Controller, delete, get, post
 from litestar.connection import Request
 from litestar.exceptions import HTTPException
 from sqlalchemy import select
@@ -13,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.photo import Photo
 from app.models.profile import Profile, ProfileStatusEnum
 from app.models.request import DetailRequest, RequestStatusEnum
 from app.models.user import User
@@ -132,6 +133,9 @@ class RequestController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> list[dict[str, Any]]:
+        """List requests the current user has made, enriched with the profile
+        snapshot (name, gender, age, city, primary blurred photo) so the
+        frontend can render a grid without an extra round-trip per row."""
         user = request.scope.get("user_payload")
         if not user:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
@@ -140,7 +144,59 @@ class RequestController(Controller):
         result = await db.execute(
             select(DetailRequest)
             .where(DetailRequest.requester_user_id == requester_id)
+            .options(selectinload(DetailRequest.profile).selectinload(Profile.photos))
             .order_by(DetailRequest.created_at.desc())
         )
-        reqs = result.scalars().all()
-        return [_serialize_request(r) for r in reqs]
+        base = str(request.base_url).rstrip("/")
+        out: list[dict[str, Any]] = []
+        for r in result.scalars().all():
+            row = _serialize_request(r)
+            p = r.profile
+            if p is not None:
+                primary_photo = next((ph for ph in p.photos if ph.is_primary), None) or (p.photos[0] if p.photos else None)
+                row.update({
+                    "profile_first_name": p.first_name,
+                    "profile_last_name": p.last_name,
+                    "profile_number": p.profile_number,
+                    "profile_gender": p.gender.value if p.gender else None,
+                    "profile_dob": p.dob.isoformat() if p.dob else None,
+                    "profile_city": p.city,
+                    "profile_state": p.state,
+                    "profile_status": p.status.value if p.status else None,
+                    "profile_blurred_url": (
+                        f"{base}/media/{primary_photo.blurred_path}" if primary_photo else None
+                    ),
+                })
+            out.append(row)
+        return out
+
+    @delete("/requests/{request_id:str}", status_code=204)
+    async def delete_request(
+        self,
+        request_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> None:
+        """Owner-side delete. Lets the requester remove a request they made,
+        regardless of status (pending / approved / rejected)."""
+        user = request.scope.get("user_payload")
+        if not user:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        try:
+            rid = uuid.UUID(request_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Request not found"})
+
+        result = await db.execute(select(DetailRequest).where(DetailRequest.id == rid))
+        req = result.scalar_one_or_none()
+        if not req:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Request not found"})
+
+        is_owner = str(req.requester_user_id) == user["sub"]
+        is_admin = bool(user.get("is_admin"))
+        if not is_owner and not is_admin:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your request"})
+
+        await db.delete(req)
+        await db.commit()

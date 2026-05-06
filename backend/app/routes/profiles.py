@@ -617,13 +617,12 @@ class ProfileController(Controller):
             profile.hobbies = data.hobbies
             changed = True
 
-        # Editing any non-draft profile (pending / approved / rejected) drops
-        # the status back to draft so the owner can review their changes and
-        # explicitly resubmit. Approved profiles in particular are pulled from
-        # search the moment the owner starts editing, until they Submit again
-        # and admin re-approves.
-        if changed and profile.status != ProfileStatusEnum.draft:
-            profile.status = ProfileStatusEnum.draft
+        # Saving / editing any profile (other than ones already pending review)
+        # drops it into pending status so an admin re-reviews the updated
+        # content. Approved profiles in particular leave search the moment
+        # the owner saves an edit, and only re-appear after a fresh approval.
+        if changed and profile.status != ProfileStatusEnum.pending:
+            profile.status = ProfileStatusEnum.pending
 
         await db.commit()
         await db.refresh(profile)
@@ -657,13 +656,8 @@ class ProfileController(Controller):
         if not is_owner and not is_admin:
             raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Not your profile"})
 
-        # Non-admins may only delete profiles that are draft or rejected.
-        # An approved profile is live on the platform; require admin action to remove it.
-        if is_owner and not is_admin and profile.status == ProfileStatusEnum.approved:
-            raise HTTPException(
-                status_code=409,
-                detail={"code": "invalid_status", "message": "Approved profiles cannot be deleted; contact the admin"},
-            )
+        # The owner may delete their own profile regardless of status — even an
+        # approved one. Admin can also delete any profile.
 
         # Clean up on-disk photo files. The DB cascade removes Photo rows, but
         # the JPEG variants under MEDIA_ROOT are external state we need to
