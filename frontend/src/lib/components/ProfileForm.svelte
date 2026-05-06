@@ -28,6 +28,7 @@
 	import { langStore } from '$lib/stores/lang.svelte';
 	import { asciiOnly } from '$lib/inputFilters';
 	import BilingualLabel from '$lib/components/BilingualLabel.svelte';
+	import HintPopup from '$lib/components/HintPopup.svelte';
 	import PhotoUpload from '$lib/components/PhotoUpload.svelte';
 	import Combobox from '$lib/components/Combobox.svelte';
 	import DobInput from '$lib/components/DobInput.svelte';
@@ -606,11 +607,10 @@
 
 								<!-- Surname / Clan (required) -->
 								<div>
-									<BilingualLabel key="surnameClan" for="surname_clan" required />
+									<div class="flex items-center gap-1"><BilingualLabel key="surnameClan" for="surname_clan" required /><HintPopup text="Your family/clan surname, e.g. Desai, Patil, More" langKey="hintSurnameClan" /></div>
 									<input id="surname_clan" type="text" class="input" class:border-vermilion={errors.surname_clan}
 										bind:value={surname_clan}
 										oninput={(e) => (surname_clan = asciiOnly(e.currentTarget.value))} />
-									<p class="mt-0.5 text-xs text-ink/45">Your family/clan surname, e.g. Desai, Patil, More · <span lang={langStore.current}>{tx('hintSurnameClan', langStore.current)}</span></p>
 									<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 									{#if errors.surname_clan}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.surname_clan}</p>{/if}
 								</div>
@@ -624,7 +624,7 @@
 
 								<!-- Time of Birth (optional) -->
 								<div>
-									<BilingualLabel key="timeOfBirth" for="time_enabled" />
+									<div class="flex items-center gap-1"><BilingualLabel key="timeOfBirth" for="time_enabled" /><HintPopup text="Used for kundali matching" langKey="hintTimeOfBirth" /></div>
 									<div class="flex items-center gap-2">
 										<input type="checkbox" id="time_enabled" bind:checked={timeEnabled} class="accent-maroon" />
 										<label for="time_enabled" class="text-sm text-ink/60">Add time of birth</label>
@@ -637,7 +637,6 @@
 										<Combobox bind:value={time_ampm} options={TIME_AMPM} placeholder="AM" class="w-20" />
 									</div>
 									{/if}
-									<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · <span lang={langStore.current}>{tx('hintTimeOfBirth', langStore.current)}</span></p>
 								</div>
 
 								<!-- Marital Status -->
@@ -662,15 +661,13 @@
 
 								<!-- Sub-caste (optional) -->
 								<div class="sm:col-span-2">
-									<BilingualLabel key="caste" for="caste" />
+									<div class="flex items-center gap-1"><BilingualLabel key="caste" for="caste" /><HintPopup text="Pick from the list, or type your own if different" langKey="hintCastePickOrType" /></div>
 									<Combobox id="caste" bind:value={caste} options={CASTE_OPTIONS} allowCustom={true} placeholder="Select or type caste" />
-									<p class="mt-0.5 text-xs text-ink/45">Pick from the list, or type your own if different · <span lang={langStore.current}>{tx('hintCastePickOrType', langStore.current)}</span></p>
 								</div>
 
 								<div>
-									<BilingualLabel key="subCaste" for="sub_caste" />
+									<div class="flex items-center gap-1"><BilingualLabel key="subCaste" for="sub_caste" /><HintPopup text="Pick from the list, or type your own if different" langKey="hintCastePickOrType" /></div>
 									<Combobox id="sub_caste" bind:value={sub_caste} options={MARATHA_SUB_CASTES} allowCustom={true} placeholder="Select or type sub-caste" />
-									<p class="mt-0.5 text-xs text-ink/45">Pick from the list, or type your own if different · <span lang={langStore.current}>{tx('hintCastePickOrType', langStore.current)}</span></p>
 								</div>
 							</div>
 						</div>
@@ -718,27 +715,24 @@
 						<div class="grid gap-4 sm:grid-cols-2">
 							<!-- Gotra -->
 							<div>
-								<BilingualLabel key="gotra" for="gotra" />
+								<div class="flex items-center gap-1"><BilingualLabel key="gotra" for="gotra" /><HintPopup text="Ancestral lineage name, e.g. Kashyap, Bharadwaj" langKey="hintGotra" /></div>
 								<input id="gotra" type="text" class="input" class:border-vermilion={errors.gotra} bind:value={gotra} oninput={(e) => (gotra = asciiOnly(e.currentTarget.value))} />
-								<p class="mt-0.5 text-xs text-ink/45">Ancestral lineage name, e.g. Kashyap, Bharadwaj · <span lang={langStore.current}>{tx('hintGotra', langStore.current)}</span></p>
 								<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 								{#if errors.gotra}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.gotra}</p>{/if}
 							</div>
 
 							<!-- Kuldevata -->
 							<div>
-								<BilingualLabel key="kuldevata" for="kuldevata" />
+								<div class="flex items-center gap-1"><BilingualLabel key="kuldevata" for="kuldevata" /><HintPopup text="Your family deity, e.g. Bhavani, Khandoba" langKey="hintKuldevata" /></div>
 								<input id="kuldevata" type="text" class="input" class:border-vermilion={errors.kuldevata} bind:value={kuldevata} oninput={(e) => (kuldevata = asciiOnly(e.currentTarget.value))} />
-								<p class="mt-0.5 text-xs text-ink/45">Your family deity, e.g. Bhavani, Khandoba · <span lang={langStore.current}>{tx('hintKuldevata', langStore.current)}</span></p>
 								<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 								{#if errors.kuldevata}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.kuldevata}</p>{/if}
 							</div>
 
 							<!-- Devak -->
 							<div>
-								<BilingualLabel key="devak" for="devak" />
+								<div class="flex items-center gap-1"><BilingualLabel key="devak" for="devak" /><HintPopup text="Your family devak symbol, e.g. Neem, Audumbar" langKey="hintDevak" /></div>
 								<input id="devak" type="text" class="input" class:border-vermilion={errors.devak} bind:value={devak} oninput={(e) => (devak = asciiOnly(e.currentTarget.value))} />
-								<p class="mt-0.5 text-xs text-ink/45">Your family devak symbol, e.g. Neem, Audumbar · <span lang={langStore.current}>{tx('hintDevak', langStore.current)}</span></p>
 								<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 								{#if errors.devak}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.devak}</p>{/if}
 							</div>
@@ -789,9 +783,8 @@
 
 							<!-- Place of Birth (optional) -->
 							<div>
-								<BilingualLabel key="placeOfBirth" for="place_of_birth" />
+								<div class="flex items-center gap-1"><BilingualLabel key="placeOfBirth" for="place_of_birth" /><HintPopup text="City/town where you were born" langKey="hintPlaceOfBirth" /></div>
 								<input id="place_of_birth" type="text" class="input" bind:value={place_of_birth} oninput={(e) => (place_of_birth = asciiOnly(e.currentTarget.value))} placeholder="Optional" />
-								<p class="mt-0.5 text-xs text-ink/45">City/town where you were born · <span lang={langStore.current}>{tx('hintPlaceOfBirth', langStore.current)}</span></p>
 								<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 							</div>
 						</div>
@@ -831,9 +824,8 @@
 
 							<!-- Annual Income (optional) -->
 							<div>
-								<BilingualLabel key="income" for="annual_income" />
+								<div class="flex items-center gap-1"><BilingualLabel key="income" for="annual_income" /><HintPopup text="Annual income in Indian Rupees (numbers only)" langKey="hintAnnualIncome" /></div>
 								<input id="annual_income" type="number" min="0" step="10000" class="input" bind:value={annual_income_inr} placeholder="Optional, e.g. 800000" />
-								<p class="mt-0.5 text-xs text-ink/45">Annual income in Indian Rupees (numbers only) · <span lang={langStore.current}>{tx('hintAnnualIncome', langStore.current)}</span></p>
 							</div>
 
 							<!-- Work Location (optional) -->
@@ -926,9 +918,8 @@
 
 							<!-- Native Place -->
 							<div class="sm:col-span-2">
-								<BilingualLabel key="nativePlace" for="native_place" />
+								<div class="flex items-center gap-1"><BilingualLabel key="nativePlace" for="native_place" /><HintPopup text="Village or town your family originally belongs to" langKey="hintNativePlace" /></div>
 								<input id="native_place" type="text" class="input" class:border-vermilion={errors.native_place} bind:value={native_place} oninput={(e) => (native_place = asciiOnly(e.currentTarget.value))} placeholder="Optional — village/town of origin" />
-								<p class="mt-0.5 text-xs text-ink/45">Village or town your family originally belongs to · <span lang={langStore.current}>{tx('hintNativePlace', langStore.current)}</span></p>
 								<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 								{#if errors.native_place}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.native_place}</p>{/if}
 							</div>
@@ -1003,8 +994,7 @@
 						<div class="space-y-4">
 							<!-- About Yourself -->
 							<div>
-								<BilingualLabel key="about" for="about" />
-								<p class="mt-0.5 text-xs text-ink/45">Tell prospective families about yourself — your values, personality, lifestyle · <span lang={langStore.current}>{tx('hintAbout', langStore.current)}</span></p>
+								<div class="flex items-center gap-1"><BilingualLabel key="about" for="about" /><HintPopup text="Tell prospective families about yourself — your values, personality, lifestyle" langKey="hintAbout" /></div>
 								<textarea id="about" class="input mt-1 min-h-[120px] resize-y" class:border-vermilion={errors.about} bind:value={about} oninput={(e) => (about = asciiOnly(e.currentTarget.value))} maxlength={500} placeholder="A short description about yourself, your family, and interests…"></textarea>
 								<div class="mt-1 flex justify-between">
 									{#if errors.about}
@@ -1018,8 +1008,7 @@
 
 							<!-- Partner Expectations -->
 							<div>
-								<BilingualLabel key="partnerExpectations" for="expectations" />
-								<p class="mt-0.5 text-xs text-ink/45">Describe the qualities you're looking for in a partner · <span lang={langStore.current}>{tx('hintPartnerExpectations', langStore.current)}</span></p>
+								<div class="flex items-center gap-1"><BilingualLabel key="partnerExpectations" for="expectations" /><HintPopup text="Describe the qualities you're looking for in a partner" langKey="hintPartnerExpectations" /></div>
 								<textarea id="expectations" class="input mt-1 min-h-[140px] resize-y" class:border-vermilion={errors.partner_expectations} bind:value={partner_expectations} oninput={(e) => (partner_expectations = asciiOnly(e.currentTarget.value))} maxlength={800} placeholder="Describe what you're looking for in a partner…"></textarea>
 								<div class="mt-1 flex justify-between">
 									{#if errors.partner_expectations}
@@ -1190,7 +1179,7 @@
 
 				<!-- Surname / Clan -->
 				<div>
-					<BilingualLabel key="surnameClan" for="surname_clan" />
+					<div class="flex items-center gap-1"><BilingualLabel key="surnameClan" for="surname_clan" /><HintPopup text="Your family/clan surname, e.g. Desai, Patil, More" langKey="hintSurnameClan" /></div>
 					<input
 						id="surname_clan"
 						type="text"
@@ -1199,7 +1188,6 @@
 						bind:value={surname_clan}
 						oninput={(e) => (surname_clan = asciiOnly(e.currentTarget.value))}
 					/>
-					<p class="mt-0.5 text-xs text-ink/45">Your family/clan surname, e.g. Desai, Patil, More · <span lang={langStore.current}>{tx('hintSurnameClan', langStore.current)}</span></p>
 					<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 					{#if errors.surname_clan}<p class="mt-1 text-xs text-vermilion" data-error="true">
 							{errors.surname_clan}
@@ -1217,7 +1205,7 @@
 
 				<!-- Time of Birth (optional) -->
 				<div>
-					<BilingualLabel key="timeOfBirth" for="time_enabled_n" />
+					<div class="flex items-center gap-1"><BilingualLabel key="timeOfBirth" for="time_enabled_n" /><HintPopup text="Used for kundali matching" langKey="hintTimeOfBirth" /></div>
 					<div class="flex items-center gap-2">
 						<input type="checkbox" id="time_enabled_n" bind:checked={timeEnabled} class="accent-maroon" />
 						<label for="time_enabled_n" class="text-sm text-ink/60">Add time of birth</label>
@@ -1230,7 +1218,6 @@
 						<Combobox bind:value={time_ampm} options={TIME_AMPM} placeholder="AM" class="w-20" />
 					</div>
 					{/if}
-					<p class="mt-0.5 text-xs text-ink/45">Used for kundali matching · <span lang={langStore.current}>{tx('hintTimeOfBirth', langStore.current)}</span></p>
 				</div>
 
 				<!-- Marital Status -->
@@ -1257,15 +1244,13 @@
 
 				<!-- Sub-caste (optional) -->
 				<div class="sm:col-span-2">
-					<BilingualLabel key="caste" for="caste_edit" />
+					<div class="flex items-center gap-1"><BilingualLabel key="caste" for="caste_edit" /><HintPopup text="Pick from the list, or type your own if different" langKey="hintCastePickOrType" /></div>
 					<Combobox id="caste_edit" bind:value={caste} options={CASTE_OPTIONS} allowCustom={true} placeholder="Select or type caste" />
-					<p class="mt-0.5 text-xs text-ink/45">Pick from the list, or type your own if different · <span lang={langStore.current}>{tx('hintCastePickOrType', langStore.current)}</span></p>
 				</div>
 
 				<div>
-					<BilingualLabel key="subCaste" for="sub_caste_edit" />
+					<div class="flex items-center gap-1"><BilingualLabel key="subCaste" for="sub_caste_edit" /><HintPopup text="Pick from the list, or type your own if different" langKey="hintCastePickOrType" /></div>
 					<Combobox id="sub_caste_edit" bind:value={sub_caste} options={MARATHA_SUB_CASTES} allowCustom={true} placeholder="Select or type sub-caste" />
-					<p class="mt-0.5 text-xs text-ink/45">Pick from the list, or type your own if different · <span lang={langStore.current}>{tx('hintCastePickOrType', langStore.current)}</span></p>
 				</div>
 			</div>
 		</div>
@@ -1355,7 +1340,7 @@
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
 			<!-- Gotra -->
 			<div>
-				<BilingualLabel key="gotra" for="gotra" />
+				<div class="flex items-center gap-1"><BilingualLabel key="gotra" for="gotra" /><HintPopup text="Ancestral lineage name, e.g. Kashyap, Bharadwaj" langKey="hintGotra" /></div>
 				<input
 					id="gotra"
 					type="text"
@@ -1364,9 +1349,6 @@
 					bind:value={gotra}
 					oninput={(e) => (gotra = asciiOnly(e.currentTarget.value))}
 				/>
-				<p class="mt-0.5 text-xs text-ink/45">
-					Ancestral lineage name, e.g. Kashyap, Bharadwaj · <span lang={langStore.current}>{tx('hintGotra', langStore.current)}</span>
-				</p>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 				{#if errors.gotra}<p class="mt-1 text-xs text-vermilion" data-error="true">
 						{errors.gotra}
@@ -1375,7 +1357,7 @@
 
 			<!-- Kuldevata -->
 			<div>
-				<BilingualLabel key="kuldevata" for="kuldevata" />
+				<div class="flex items-center gap-1"><BilingualLabel key="kuldevata" for="kuldevata" /><HintPopup text="Your family deity, e.g. Bhavani, Khandoba" langKey="hintKuldevata" /></div>
 				<input
 					id="kuldevata"
 					type="text"
@@ -1384,9 +1366,6 @@
 					bind:value={kuldevata}
 					oninput={(e) => (kuldevata = asciiOnly(e.currentTarget.value))}
 				/>
-				<p class="mt-0.5 text-xs text-ink/45">
-					Your family deity, e.g. Bhavani, Khandoba · <span lang={langStore.current}>{tx('hintKuldevata', langStore.current)}</span>
-				</p>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 				{#if errors.kuldevata}<p class="mt-1 text-xs text-vermilion" data-error="true">
 						{errors.kuldevata}
@@ -1395,7 +1374,7 @@
 
 			<!-- Devak -->
 			<div>
-				<BilingualLabel key="devak" for="devak" />
+				<div class="flex items-center gap-1"><BilingualLabel key="devak" for="devak" /><HintPopup text="Your family devak symbol, e.g. Neem, Audumbar" langKey="hintDevak" /></div>
 				<input
 					id="devak"
 					type="text"
@@ -1404,9 +1383,6 @@
 					bind:value={devak}
 					oninput={(e) => (devak = asciiOnly(e.currentTarget.value))}
 				/>
-				<p class="mt-0.5 text-xs text-ink/45">
-					Your family devak symbol, e.g. Neem, Audumbar · <span lang={langStore.current}>{tx('hintDevak', langStore.current)}</span>
-				</p>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 				{#if errors.devak}<p class="mt-1 text-xs text-vermilion" data-error="true">
 						{errors.devak}
@@ -1471,7 +1447,7 @@
 
 			<!-- Place of Birth (optional) -->
 			<div>
-				<BilingualLabel key="placeOfBirth" for="place_of_birth" />
+				<div class="flex items-center gap-1"><BilingualLabel key="placeOfBirth" for="place_of_birth" /><HintPopup text="City/town where you were born" langKey="hintPlaceOfBirth" /></div>
 				<input
 					id="place_of_birth"
 					type="text"
@@ -1480,7 +1456,6 @@
 					oninput={(e) => (place_of_birth = asciiOnly(e.currentTarget.value))}
 					placeholder="Optional"
 				/>
-				<p class="mt-0.5 text-xs text-ink/45">City/town where you were born · <span lang={langStore.current}>{tx('hintPlaceOfBirth', langStore.current)}</span></p>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 			</div>
 		</div>
@@ -1567,7 +1542,7 @@
 
 			<!-- Annual Income (optional) -->
 			<div>
-				<BilingualLabel key="income" for="annual_income" />
+				<div class="flex items-center gap-1"><BilingualLabel key="income" for="annual_income" /><HintPopup text="Annual income in Indian Rupees (numbers only)" langKey="hintAnnualIncome" /></div>
 				<input
 					id="annual_income"
 					type="number"
@@ -1577,9 +1552,6 @@
 					bind:value={annual_income_inr}
 					placeholder="Optional, e.g. 800000"
 				/>
-				<p class="mt-0.5 text-xs text-ink/45">
-					Annual income in Indian Rupees (numbers only) · <span lang={langStore.current}>{tx('hintAnnualIncome', langStore.current)}</span>
-				</p>
 			</div>
 
 			<!-- Work Location (optional) -->
@@ -1770,7 +1742,7 @@
 
 			<!-- Native Place (optional) -->
 			<div class="sm:col-span-2">
-				<BilingualLabel key="nativePlace" for="native_place" />
+				<div class="flex items-center gap-1"><BilingualLabel key="nativePlace" for="native_place" /><HintPopup text="Village or town your family originally belongs to" langKey="hintNativePlace" /></div>
 				<input
 					id="native_place"
 					type="text"
@@ -1780,9 +1752,6 @@
 					oninput={(e) => (native_place = asciiOnly(e.currentTarget.value))}
 					placeholder="Optional — village/town of origin"
 				/>
-				<p class="mt-0.5 text-xs text-ink/45">
-					Village or town your family originally belongs to · <span lang={langStore.current}>{tx('hintNativePlace', langStore.current)}</span>
-				</p>
 				<p class="mt-0.5 text-[10px] text-ink/40">{ASCII_HINT}</p>
 				{#if errors.native_place}<p class="mt-1 text-xs text-vermilion" data-error="true">
 						{errors.native_place}
@@ -1923,8 +1892,7 @@
 		<div class="mt-4 space-y-4">
 			<!-- About Yourself -->
 			<div>
-				<BilingualLabel key="about" for="about" />
-				<p class="mt-0.5 text-xs text-ink/45">Tell prospective families about yourself — your values, personality, lifestyle · <span lang={langStore.current}>{tx('hintAbout', langStore.current)}</span></p>
+				<div class="flex items-center gap-1"><BilingualLabel key="about" for="about" /><HintPopup text="Tell prospective families about yourself — your values, personality, lifestyle" langKey="hintAbout" /></div>
 				<textarea
 					id="about"
 					class="input mt-1 min-h-[120px] resize-y"
@@ -1946,8 +1914,7 @@
 
 			<!-- Partner Expectations -->
 			<div>
-				<BilingualLabel key="partnerExpectations" for="expectations" />
-				<p class="mt-0.5 text-xs text-ink/45">Describe the qualities you're looking for in a partner · <span lang={langStore.current}>{tx('hintPartnerExpectations', langStore.current)}</span></p>
+				<div class="flex items-center gap-1"><BilingualLabel key="partnerExpectations" for="expectations" /><HintPopup text="Describe the qualities you're looking for in a partner" langKey="hintPartnerExpectations" /></div>
 				<textarea
 					id="expectations"
 					class="input mt-1 min-h-[140px] resize-y"

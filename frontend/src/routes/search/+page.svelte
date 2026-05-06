@@ -17,6 +17,7 @@
 		lifestyle: Coffee
 	};
 	import DualRangeSlider from '$lib/components/DualRangeSlider.svelte';
+	import HintPopup from '$lib/components/HintPopup.svelte';
 	import Combobox from '$lib/components/Combobox.svelte';
 	import { MOTHER_TONGUES, INDIA_STATES, COUNTRIES_PRIORITY, COUNTRIES_OTHER, DIET_OPTIONS } from '$lib/profileOptions';
 	import { tx } from '$lib/i18n';
@@ -193,13 +194,13 @@
 
 				<!-- Age range — dual-handle slider 18–60 -->
 				<div>
-					<p class="label">
-						Age {age_min}–{age_max} yrs · <span lang={langStore.current}>{tx('searchAge', langStore.current)}</span>
+					<p class="label flex items-center gap-1">
+						<span>Age {age_min}–{age_max} yrs · <span lang={langStore.current}>{tx('searchAge', langStore.current)}</span></span>
+						<HintPopup text="Filters by date of birth on record" langKey="hintSearchAgeFilter" />
 					</p>
 					<div class="mt-2">
 						<DualRangeSlider min={18} max={60} bind:valueMin={age_min} bind:valueMax={age_max} />
 					</div>
-					<p class="mt-0.5 text-xs text-ink/45">Filters by date of birth on record · <span lang={langStore.current}>{tx('hintSearchAgeFilter', langStore.current)}</span></p>
 				</div>
 
 				<!-- Language -->
@@ -216,13 +217,13 @@
 
 				<!-- Height range -->
 				<div>
-					<p class="label">
-						Height {cmToFtIn(height_min)}–{cmToFtIn(height_max)} · <span lang={langStore.current}>{tx('searchHeight', langStore.current)}</span>
+					<p class="label flex items-center gap-1">
+						<span>Height {cmToFtIn(height_min)}–{cmToFtIn(height_max)} · <span lang={langStore.current}>{tx('searchHeight', langStore.current)}</span></span>
+						<HintPopup text="Stored in cm, shown in ft/in" langKey="hintSearchHeightCm" />
 					</p>
 					<div class="mt-2">
 						<DualRangeSlider min={140} max={229} bind:valueMin={height_min} bind:valueMax={height_max} />
 					</div>
-					<p class="mt-0.5 text-xs text-ink/45">Stored in cm, shown in ft/in · <span lang={langStore.current}>{tx('hintSearchHeightCm', langStore.current)}</span></p>
 				</div>
 
 				<!-- Weight range -->
@@ -242,9 +243,11 @@
 
 				<!-- Gotra -->
 				<div>
-					<label for="f-gotra" class="label">Gotra · <span lang={langStore.current}>{tx('gotra', langStore.current)}</span></label>
+					<label for="f-gotra" class="label flex items-center gap-1">
+						<span>Gotra · <span lang={langStore.current}>{tx('gotra', langStore.current)}</span></span>
+						<HintPopup text="Exact or partial gotra name" langKey="hintSearchGotra" />
+					</label>
 					<input id="f-gotra" type="text" class="input text-sm" bind:value={gotra} placeholder="Any gotra" />
-					<p class="mt-0.5 text-xs text-ink/45">Exact or partial gotra name · <span lang={langStore.current}>{tx('hintSearchGotra', langStore.current)}</span></p>
 				</div>
 
 				<!-- Nakshatram -->
@@ -278,9 +281,11 @@
 
 				<!-- City -->
 				<div>
-					<label for="f-city" class="label">City · <span lang={langStore.current}>{tx('city', langStore.current)}</span></label>
+					<label for="f-city" class="label flex items-center gap-1">
+						<span>City · <span lang={langStore.current}>{tx('city', langStore.current)}</span></span>
+						<HintPopup text="Partial match — 'Hyder' matches Hyderabad" langKey="hintSearchCity" />
+					</label>
 					<input id="f-city" type="text" class="input text-sm" bind:value={city} placeholder="Any city" />
-					<p class="mt-0.5 text-xs text-ink/45">Partial match — 'Hyder' matches Hyderabad · <span lang={langStore.current}>{tx('hintSearchCity', langStore.current)}</span></p>
 				</div>
 
 				<!-- State -->
@@ -297,9 +302,11 @@
 
 				<!-- Pin Code -->
 				<div>
-					<label for="f-pin" class="label">Pin Code · <span lang={langStore.current}>{tx('pinCode', langStore.current)}</span></label>
+					<label for="f-pin" class="label flex items-center gap-1">
+						<span>Pin Code · <span lang={langStore.current}>{tx('pinCode', langStore.current)}</span></span>
+						<HintPopup text="Matches profiles starting with this pin" langKey="hintSearchPin" />
+					</label>
 					<input id="f-pin" type="text" inputmode="numeric" maxlength="10" class="input text-sm" bind:value={pin_code_filter} placeholder="e.g. 500001" />
-					<p class="mt-0.5 text-xs text-ink/45">Matches profiles starting with this pin · <span lang={langStore.current}>{tx('hintSearchPin', langStore.current)}</span></p>
 				</div>
 
 				<!-- ── Lifestyle ───────────────────────────────────────── -->

@@ -30,6 +30,7 @@
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
 	import ConfirmDelete from '$lib/components/ConfirmDelete.svelte';
+	import { userStatus } from '$lib/userStatus';
 
 	let { data } = $props();
 	let loggedInUser = $derived<User | null>(data.user ?? null);
@@ -589,12 +590,12 @@
 				{ field: 'user_id', headerName: 'User ID', width: 160, filter: true, sortable: true, headerClass: 'mk-header' },
 				{ field: 'full_name', headerName: 'Name', width: 180, filter: true, sortable: true, headerClass: 'mk-header' },
 				{ field: 'phone_number', headerName: 'Phone', width: 150, headerClass: 'mk-header' },
-				{ field: 'email_verified', headerName: 'Email Verified', width: 150, sortable: true, headerClass: 'mk-header',
-				  cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-green' : 'mk-cell-amber',
-				  cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#10003; Verified</span>' : '<span>&#9888; Pending</span>' },
-				{ field: 'is_approved', headerName: 'Approved', width: 130, sortable: true, headerClass: 'mk-header',
-				  cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-green' : 'mk-cell-amber',
-				  cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#10003; Approved</span>' : '<span>&mdash; Pending</span>' },
+				{ headerName: 'Status', width: 140, sortable: true, headerClass: 'mk-header',
+				  valueGetter: (p: { data: User }) => userStatus(p.data),
+				  cellClass: (p: { value: string }) => p.value === 'approved' ? 'mk-cell-green' : 'mk-cell-amber',
+				  cellRenderer: (p: { value: string }) => p.value === 'approved'
+					? '<span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;border-radius:9999px;padding:1px 8px;font-size:11px;font-weight:600">&#10003; Approved</span>'
+					: '<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;border-radius:9999px;padding:1px 8px;font-size:11px;font-weight:600">&#9888; Pending</span>' },
 				{ field: 'is_admin', headerName: 'Admin', width: 100, sortable: true, headerClass: 'mk-header',
 				  cellClass: (p: { value: boolean }) => p.value ? 'mk-cell-maroon' : '',
 				  cellRenderer: (p: { value: boolean }) => p.value ? '<span>&#9733; Admin</span>' : '' }

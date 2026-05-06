@@ -17,6 +17,7 @@
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
 	import ConfirmDelete from '$lib/components/ConfirmDelete.svelte';
+	import { userStatus } from '$lib/userStatus';
 
 	let { data } = $props();
 
@@ -293,6 +294,25 @@
 				<div><span class="text-xs text-ink/50 block">User ID</span><span class="font-mono">{data.user.user_id}</span></div>
 				<div><span class="text-xs text-ink/50 block">Email</span>{data.user.email}</div>
 				<div><span class="text-xs text-ink/50 block">Phone</span>{data.user.phone_number}</div>
+				<div class="col-span-2 sm:col-span-4 mt-1 flex items-center gap-2 flex-wrap">
+					<span class="text-xs text-ink/50">Account status</span>
+					{#if userStatus(data.user) === 'approved'}
+						<span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800">
+							<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+							Approved
+						</span>
+					{:else}
+						<span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+							<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+							Pending approval
+						</span>
+					{/if}
+					{#if !data.user.email_verified}
+						<span class="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-800">
+							Email unverified
+						</span>
+					{/if}
+				</div>
 			</div>
 		</div>
 	{/if}

@@ -73,9 +73,11 @@
 	}
 
 	function drawerLinkClass(href: string, exact = false) {
+		// Mirror the language dropdown palette: active = solid maroon + cream,
+		// hover = saffron + maroon, default = ink on cream.
 		return isActive(href, exact)
-			? 'flex items-center gap-2 rounded-lg px-3 py-2.5 bg-tangerine/20 text-tangerine font-semibold'
-			: 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-ink hover:bg-amber/20 hover:text-terracotta transition-colors duration-150';
+			? 'flex items-center gap-2 rounded-md px-3 py-2.5 bg-maroon text-cream font-medium'
+			: 'flex items-center gap-2 rounded-md px-3 py-2.5 text-ink hover:bg-saffron hover:text-maroon transition-colors duration-150';
 	}
 </script>
 

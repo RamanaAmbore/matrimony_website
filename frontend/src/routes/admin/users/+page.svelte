@@ -7,6 +7,7 @@
 	import { Loader, ShieldCheck, UserCheck } from 'lucide-svelte';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
+	import { userStatus } from '$lib/userStatus';
 
 	let userList = $state<User[]>([]);
 	let loading = $state(true);
@@ -87,24 +88,27 @@
 					<tr>
 						<th class="px-4 py-3 text-left font-semibold text-ink/70">User ID</th>
 						<th class="px-4 py-3 text-left font-semibold text-ink/70">Email</th>
-						<th class="px-4 py-3 text-left font-semibold text-ink/70">Verified</th>
+						<th class="px-4 py-3 text-left font-semibold text-ink/70">Status</th>
 						<th class="px-4 py-3 text-left font-semibold text-ink/70">Role</th>
 						<th class="px-4 py-3 text-right font-semibold text-ink/70">Actions</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-gold/10">
 					{#each filtered as user (user.uuid)}
+						{@const st = userStatus(user)}
 						<tr class="hover:bg-cream/50">
 							<td class="px-4 py-3 font-mono text-ink/80 text-sm">{user.user_id}</td>
 							<td class="px-4 py-3 text-ink">{user.email}</td>
 							<td class="px-4 py-3">
-								{#if user.email_verified}
-									<span class="flex items-center gap-1 text-green-600">
-										<UserCheck size={14} />
-										Verified
+								{#if st === 'approved'}
+									<span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
+										<UserCheck size={11} />
+										Approved
 									</span>
 								{:else}
-									<span class="text-ink/40">Unverified</span>
+									<span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+										Pending
+									</span>
 								{/if}
 							</td>
 							<td class="px-4 py-3">
