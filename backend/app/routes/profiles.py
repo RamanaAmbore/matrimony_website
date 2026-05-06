@@ -401,7 +401,7 @@ class ProfileController(Controller):
         if is_owner or is_admin:
             full = _serialize_full_profile(profile, request)
             photos_data = full.pop("photos", [])
-            return {"profile": full, "photos": photos_data}
+            return {"profile": full, "photos": photos_data, "is_full_access": True}
 
         # Non-owner: only approved profiles are visible at all
         if profile.status != ProfileStatusEnum.approved:
@@ -419,10 +419,10 @@ class ProfileController(Controller):
             if has_approval.scalar_one_or_none() is not None:
                 full = _serialize_full_profile(profile, request)
                 photos_data = full.pop("photos", [])
-                return {"profile": full, "photos": photos_data}
+                return {"profile": full, "photos": photos_data, "is_full_access": True}
 
         partial = _serialize_partial_profile(profile, request)
-        return {"profile": partial, "photos": []}
+        return {"profile": partial, "photos": [], "is_full_access": False}
 
     @patch("/{profile_id:str}")
     async def update_profile(
