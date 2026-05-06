@@ -508,11 +508,11 @@ class AuthController(Controller):
                 detail={"code": "forbidden", "message": "Super-users cannot self-delete; edit bootstrap.py"},
             )
 
-        # Unlink owned photo files before cascade-deleting the user — same
-        # pattern as the admin delete-user path so we don't leak JPEGs.
-        from app.config import MEDIA_ROOT
+        # Delete owned photo objects from the active storage backend
+        # before cascading the user — same pattern as admin delete-user.
         from app.models.photo import Photo
         from app.models.profile import Profile
+        from app.services import storage as storage_svc
 
         photos_to_unlink = await db.execute(
             select(Photo)
@@ -521,30 +521,7 @@ class AuthController(Controller):
         )
         for photo in photos_to_unlink.scalars():
             for path_rel in (photo.passport_path, photo.blurred_path, photo.thumb_path):
-                fpath = MEDIA_ROOT / path_rel
-                if fpath.exists():
-                    try:
-                        fpath.unlink()
-                    except OSError:
-                        pass
-
-        owned_profile_ids = await db.execute(select(Profile.id).where(Profile.owner_user_id == user.id))
-        for (pid,) in owned_profile_ids.all():
-            for sub in (MEDIA_ROOT / "profiles" / str(pid)).rglob("*"):
-                pass
-            profile_dir = MEDIA_ROOT / "profiles" / str(pid)
-            if profile_dir.exists():
-                for child in profile_dir.iterdir():
-                    if child.is_dir() and not any(child.iterdir()):
-                        try:
-                            child.rmdir()
-                        except OSError:
-                            pass
-                if not any(profile_dir.iterdir()):
-                    try:
-                        profile_dir.rmdir()
-                    except OSError:
-                        pass
+                await storage_svc.delete_async(path_rel)
 
         deleted_email = user.email
         deleted_name = user.full_name

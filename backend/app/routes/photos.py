@@ -1,6 +1,5 @@
 """Photo upload/management routes."""
 import uuid
-from pathlib import Path
 from typing import Annotated, Any
 
 from litestar import Controller, delete, post
@@ -13,9 +12,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.config import MEDIA_ROOT
 from app.models.photo import Photo
 from app.models.profile import Profile, ProfileStatusEnum
+from app.services import storage as storage_svc
 from app.services.images import PhotoValidationError, process_upload
 from app.services.settings import settings_service
 
@@ -51,14 +50,17 @@ def _check_can_edit_photos(profile: Profile, user_payload: dict) -> tuple[bool, 
 
 
 def _photo_to_dict(photo: Photo, request: Request) -> dict[str, Any]:
-    base = str(request.base_url).rstrip("/")
+    """Owner-side photo serialization. Caller is the profile owner (auth-
+    gated by the route), so passport gets a private URL — signed-URL on
+    R2, direct on local. Non-private variants always get public URLs."""
+    storage = storage_svc.get_storage()
     return {
         "id": str(photo.id),
         "profile_id": str(photo.profile_id),
         "original_filename": photo.original_filename,
-        "passport_url": f"{base}/media/{photo.passport_path}",
-        "blurred_url": f"{base}/media/{photo.blurred_path}",
-        "thumb_url": f"{base}/media/{photo.thumb_path}",
+        "passport_url": storage.private_url(photo.passport_path),
+        "blurred_url": storage.public_url(photo.blurred_path),
+        "thumb_url": storage.public_url(photo.thumb_path),
         "byte_size": photo.byte_size,
         "is_primary": photo.is_primary,
         "created_at": photo.created_at.isoformat(),
@@ -129,16 +131,19 @@ class PhotoController(Controller):
             )
 
         photo_id = uuid.uuid4()
-        photo_dir = MEDIA_ROOT / "profiles" / str(pid) / str(photo_id)
-        photo_dir.mkdir(parents=True, exist_ok=True)
-
         passport_rel = f"profiles/{pid}/{photo_id}/passport.jpg"
         blurred_rel = f"profiles/{pid}/{photo_id}/blurred.jpg"
         thumb_rel = f"profiles/{pid}/{photo_id}/thumb.jpg"
 
-        (photo_dir / "passport.jpg").write_bytes(passport_bytes)
-        (photo_dir / "blurred.jpg").write_bytes(blurred_bytes)
-        (photo_dir / "thumb.jpg").write_bytes(thumb_bytes)
+        # Write all three variants through the active storage backend
+        # (local disk or R2). Run in parallel via asyncio.gather since
+        # boto3 calls block — to_thread releases the loop.
+        import asyncio as _asyncio
+        await _asyncio.gather(
+            storage_svc.write_async(passport_rel, passport_bytes),
+            storage_svc.write_async(blurred_rel, blurred_bytes),
+            storage_svc.write_async(thumb_rel, thumb_bytes),
+        )
 
         photo = Photo(
             id=photo_id,
@@ -198,10 +203,9 @@ class PhotoController(Controller):
                 status_code=404, detail={"code": "not_found", "message": "Photo not found"}
             )
 
+        # Delete all three variants from the active storage backend.
         for path_rel in [photo.passport_path, photo.blurred_path, photo.thumb_path]:
-            fpath = MEDIA_ROOT / path_rel
-            if fpath.exists():
-                fpath.unlink()
+            await storage_svc.delete_async(path_rel)
 
         was_primary = photo.is_primary
         await db.delete(photo)

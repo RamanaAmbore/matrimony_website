@@ -12,7 +12,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.config import MEDIA_ROOT
 from app.models.photo import Photo
 from app.models.request import DetailRequest, RequestStatusEnum
 from app.models.profile import (
@@ -30,6 +29,7 @@ from app.models.profile import (
     TobaccoAlcoholEnum,
 )
 from app.schemas.profile import ProfileCreateRequest, ProfilePatchRequest
+from app.services import storage as storage_svc
 from app.services.keywords import extract_keywords
 from app.services.settings import settings_service
 from app.services.short_codes import generate_unique_code
@@ -54,24 +54,18 @@ def _compute_age(dob: date) -> int:
     return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
 
 
-def _photo_urls(photo: Photo, request: Request) -> dict[str, str]:
-    base = str(request.base_url).rstrip("/")
-    return {
-        "passport_url": f"{base}/media/{photo.passport_path}",
-        "blurred_url": f"{base}/media/{photo.blurred_path}",
-        "thumb_url": f"{base}/media/{photo.thumb_path}",
-    }
-
-
 def _serialize_photo(photo: Photo, request: Request, include_passport: bool = True) -> dict[str, Any]:
-    urls = _photo_urls(photo, request)
+    """Photo serializer used by full-profile responses (owner / admin /
+    approved-requester). Passport gets a private URL only when caller is
+    authorised (include_passport=True). Blurred + thumb are always public."""
+    storage = storage_svc.get_storage()
     return {
         "id": str(photo.id),
         "profile_id": str(photo.profile_id),
         "original_filename": photo.original_filename,
-        "passport_url": urls["passport_url"] if include_passport else None,
-        "blurred_url": urls["blurred_url"],
-        "thumb_url": urls["thumb_url"],
+        "passport_url": storage.private_url(photo.passport_path) if include_passport else None,
+        "blurred_url": storage.public_url(photo.blurred_path),
+        "thumb_url": storage.public_url(photo.thumb_path),
         "byte_size": photo.byte_size,
         "is_primary": photo.is_primary,
         "created_at": photo.created_at.isoformat(),
@@ -150,7 +144,7 @@ def _serialize_partial_profile(profile: Profile, request: Request) -> dict[str, 
     primary = next((p for p in profile.photos if p.is_primary), None)
     if primary is None and profile.photos:
         primary = profile.photos[0]
-    base = str(request.base_url).rstrip("/")
+    storage = storage_svc.get_storage()
     return {
         "id": str(profile.id),
         "gender": profile.gender.value,
@@ -167,8 +161,8 @@ def _serialize_partial_profile(profile: Profile, request: Request) -> dict[str, 
         "manglik": profile.manglik.value if profile.manglik else None,
         "diet": profile.diet.value if profile.diet else None,
         "mother_tongue": profile.mother_tongue,
-        "blurred_url": f"{base}/media/{primary.blurred_path}" if primary else None,
-        "thumb_url": f"{base}/media/{primary.thumb_path}" if primary else None,
+        "blurred_url": storage.public_url(primary.blurred_path) if primary else None,
+        "thumb_url": storage.public_url(primary.thumb_path) if primary else None,
         # New fields safe for partial view
         "marital_status": profile.marital_status.value if profile.marital_status else None,
         "family_type": profile.family_type.value if profile.family_type else None,
@@ -719,23 +713,13 @@ class ProfileController(Controller):
                 detail={"code": "not_revoked", "message": "Revoke before deleting"},
             )
 
-        # Clean up on-disk photo files. The DB cascade removes Photo rows, but
-        # the JPEG variants under MEDIA_ROOT are external state we need to
-        # delete explicitly — otherwise every deleted profile leaks files.
+        # Clean up photo objects from the active storage backend (R2 or
+        # local disk). The DB cascade removes Photo rows but the binary
+        # variants live outside the DB and must be deleted explicitly.
         photos_result = await db.execute(select(Photo).where(Photo.profile_id == pid))
         for photo in photos_result.scalars():
             for path_rel in (photo.passport_path, photo.blurred_path, photo.thumb_path):
-                fpath = MEDIA_ROOT / path_rel
-                if fpath.exists():
-                    fpath.unlink()
-            # Remove the photo's directory if it's now empty.
-            photo_dir = MEDIA_ROOT / "profiles" / str(pid) / str(photo.id)
-            if photo_dir.exists() and not any(photo_dir.iterdir()):
-                photo_dir.rmdir()
-        # Remove the profile-level directory if it's now empty.
-        profile_dir = MEDIA_ROOT / "profiles" / str(pid)
-        if profile_dir.exists() and not any(profile_dir.iterdir()):
-            profile_dir.rmdir()
+                await storage_svc.delete_async(path_rel)
 
         await db.delete(profile)
         await db.commit()

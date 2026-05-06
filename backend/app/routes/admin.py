@@ -27,6 +27,7 @@ from app.schemas.admin import (
 )
 from app.services import auth as auth_svc
 from app.services import email as email_svc
+from app.services import storage as storage_svc
 from app.services.settings import settings_service, SENSITIVE_KEYS
 
 logger = logging.getLogger(__name__)
@@ -86,16 +87,17 @@ def _serialize_user(u: User) -> dict[str, Any]:
 
 
 def _serialize_profile(profile: Profile, request: Request) -> dict[str, Any]:
-    base = str(request.base_url).rstrip("/")
+    storage = storage_svc.get_storage()
     photos = []
     photos_bytes = 0
     for photo in profile.photos:
         photos_bytes += photo.byte_size or 0
         photos.append({
             "id": str(photo.id),
-            "passport_url": f"{base}/media/{photo.passport_path}",
-            "blurred_url": f"{base}/media/{photo.blurred_path}",
-            "thumb_url": f"{base}/media/{photo.thumb_path}",
+            # Admin can always view passport — emit private URL.
+            "passport_url": storage.private_url(photo.passport_path),
+            "blurred_url": storage.public_url(photo.blurred_path),
+            "thumb_url": storage.public_url(photo.thumb_path),
             "is_primary": photo.is_primary,
             "byte_size": photo.byte_size or 0,
         })
@@ -588,30 +590,15 @@ class AdminController(Controller):
                 detail={"code": "not_revoked", "message": "Revoke before deleting"},
             )
 
-        # H2: unlink photo files on disk before cascade. Same gap that G3
-        # closed for user-delete, still present here. Without this every
-        # admin profile-delete leaks the JPEG variants under MEDIA_ROOT.
+        # H2: delete photo objects from the active storage backend before
+        # cascade. The DB cascade clears Photo rows but the binary variants
+        # live outside the DB and must be deleted explicitly. delete_async
+        # is no-op-on-miss so it's safe regardless of which backend is
+        # active.
         photos_to_unlink = await db.execute(select(Photo).where(Photo.profile_id == pid))
         for photo in photos_to_unlink.scalars():
             for path_rel in (photo.passport_path, photo.blurred_path, photo.thumb_path):
-                fpath = MEDIA_ROOT / path_rel
-                if fpath.exists():
-                    try:
-                        fpath.unlink()
-                    except OSError as exc:
-                        logger.warning("Failed to unlink %s: %s", fpath, exc)
-            photo_dir = MEDIA_ROOT / "profiles" / str(pid) / str(photo.id)
-            if photo_dir.exists() and not any(photo_dir.iterdir()):
-                try:
-                    photo_dir.rmdir()
-                except OSError:
-                    pass
-        profile_dir = MEDIA_ROOT / "profiles" / str(pid)
-        if profile_dir.exists() and not any(profile_dir.iterdir()):
-            try:
-                profile_dir.rmdir()
-            except OSError:
-                pass
+                await storage_svc.delete_async(path_rel)
 
         deleted = {
             "id": str(profile.id),
@@ -717,12 +704,19 @@ class AdminController(Controller):
             profile = profile_result.scalar_one_or_none()
 
             if requester and profile:
-                from app.config import MEDIA_ROOT
+                # Read passport bytes from the active storage backend
+                # (local disk or R2) for inline email attachment.
                 photo_bytes_map: dict[str, bytes] = {}
                 for photo in profile.photos:
-                    passport_file = MEDIA_ROOT / photo.passport_path
-                    if passport_file.exists():
-                        photo_bytes_map[str(photo.id)] = passport_file.read_bytes()
+                    try:
+                        photo_bytes_map[str(photo.id)] = await storage_svc.read_async(
+                            photo.passport_path
+                        )
+                    except Exception as exc:
+                        logger.warning(
+                            "Failed to read passport bytes for photo %s: %s",
+                            photo.id, exc,
+                        )
 
                 requester_name = requester.full_name if requester.full_name else "Member"
                 await email_svc.send_detail_request_approved(
@@ -1481,10 +1475,10 @@ class AdminController(Controller):
                 detail={"code": "not_revoked", "message": "Revoke before deleting"},
             )
 
-        # G3: unlink photo files on disk before cascade-deleting the user.
-        # The DB cascade removes Photo rows, but the JPEG variants under
-        # MEDIA_ROOT are external state — the cascade can't touch them, so
-        # without this every admin user-delete leaks files.
+        # G3: delete photo objects from the active storage backend before
+        # cascade-deleting the user. The DB cascade removes Photo rows but
+        # the binary variants live outside the DB and must be cleaned up
+        # explicitly via storage_svc (works for both local and R2).
         photos_to_unlink = await db.execute(
             select(Photo)
             .join(Profile, Profile.id == Photo.profile_id)
@@ -1492,29 +1486,7 @@ class AdminController(Controller):
         )
         for photo in photos_to_unlink.scalars():
             for path_rel in (photo.passport_path, photo.blurred_path, photo.thumb_path):
-                fpath = MEDIA_ROOT / path_rel
-                if fpath.exists():
-                    try:
-                        fpath.unlink()
-                    except OSError as exc:
-                        logger.warning("Failed to unlink %s: %s", fpath, exc)
-            photo_dir = MEDIA_ROOT / "profiles" / str(photo.profile_id) / str(photo.id)
-            if photo_dir.exists() and not any(photo_dir.iterdir()):
-                try:
-                    photo_dir.rmdir()
-                except OSError:
-                    pass
-        # Best-effort cleanup of profile-level dirs after the photo dirs are gone.
-        owned_profiles = await db.execute(
-            select(Profile.id).where(Profile.owner_user_id == uid)
-        )
-        for (pid,) in owned_profiles.all():
-            profile_dir = MEDIA_ROOT / "profiles" / str(pid)
-            if profile_dir.exists() and not any(profile_dir.iterdir()):
-                try:
-                    profile_dir.rmdir()
-                except OSError:
-                    pass
+                await storage_svc.delete_async(path_rel)
 
         deleted = {
             "uuid": str(user.id),

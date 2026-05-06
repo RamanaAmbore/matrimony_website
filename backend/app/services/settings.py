@@ -64,9 +64,23 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "matrimony_tg_chat_id": "",
     "matrimony_tg_enabled": True,
     "is_prod": False,
+    # ── Photo storage backend ────────────────────────────────────────────
+    # "local"  — write to MEDIA_ROOT on the host filesystem (default)
+    # "r2"     — write to Cloudflare R2 via the S3-compatible API. To
+    #            switch, populate the r2_* settings below and flip this
+    #            to "r2". To revert, flip back to "local". Local files
+    #            are not auto-deleted on switch — they remain as a
+    #            safety net until purged manually.
+    "storage_provider": "local",
+    "r2_endpoint": "",            # https://<account-id>.r2.cloudflarestorage.com
+    "r2_bucket": "",              # bucket name
+    "r2_access_key_id": "",       # token access key (sensitive)
+    "r2_secret_access_key": "",   # token secret (sensitive — masked in /admin/settings)
+    "r2_public_base_url": "",     # https://r2.marathakalyanam.com OR https://pub-XXX.r2.dev
+    "r2_signed_url_ttl_sec": 3600,  # how long passport-variant signed URLs stay valid
 }
 
-SENSITIVE_KEYS = {"smtp_password", "matrimony_tg_token"}
+SENSITIVE_KEYS = {"smtp_password", "matrimony_tg_token", "r2_secret_access_key"}
 
 
 class SettingsService:

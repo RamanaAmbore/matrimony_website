@@ -20,6 +20,7 @@ from app.models.profile import (
     TobaccoAlcoholEnum,
 )
 from app.models.user import User
+from app.services import storage as storage_svc
 
 # Anonymous preview constants
 _PREVIEW_PAGE = 1
@@ -35,7 +36,7 @@ def _serialize_partial(profile: Profile, request: Request) -> dict[str, Any]:
     primary = next((p for p in profile.photos if p.is_primary), None)
     if primary is None and profile.photos:
         primary = profile.photos[0]
-    base = str(request.base_url).rstrip("/")
+    storage = storage_svc.get_storage()
     return {
         "id": str(profile.id),
         "gender": profile.gender.value,
@@ -53,8 +54,8 @@ def _serialize_partial(profile: Profile, request: Request) -> dict[str, Any]:
         "manglik": profile.manglik.value if profile.manglik else None,
         "diet": profile.diet.value if profile.diet else None,
         "mother_tongue": profile.mother_tongue,
-        "blurred_url": f"{base}/media/{primary.blurred_path}" if primary else None,
-        "thumb_url": f"{base}/media/{primary.thumb_path}" if primary else None,
+        "blurred_url": storage.public_url(primary.blurred_path) if primary else None,
+        "thumb_url": storage.public_url(primary.thumb_path) if primary else None,
         # New fields safe for partial view
         "marital_status": profile.marital_status.value,
         "family_type": profile.family_type.value if profile.family_type else None,
@@ -68,7 +69,7 @@ def _serialize_preview(profile: Profile, request: Request) -> dict[str, Any]:
     primary = next((p for p in profile.photos if p.is_primary), None)
     if primary is None and profile.photos:
         primary = profile.photos[0]
-    base = str(request.base_url).rstrip("/")
+    storage = storage_svc.get_storage()
     return {
         "id": str(profile.id),
         "gender": profile.gender.value,
@@ -79,7 +80,7 @@ def _serialize_preview(profile: Profile, request: Request) -> dict[str, Any]:
         "state": profile.state,
         "gotra": profile.gotra,
         "nakshatram": profile.nakshatram,
-        "blurred_url": f"{base}/media/{primary.blurred_path}" if primary else None,
+        "blurred_url": storage.public_url(primary.blurred_path) if primary else None,
     }
 
 

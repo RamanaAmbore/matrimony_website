@@ -25,6 +25,7 @@ dependencies = [
     "uvicorn[standard]>=0.32.0",
     "aiofiles>=24.1.0",
     "psycopg2-binary>=2.9.10",
+    "boto3>=1.35.0",  # S3-compatible client for Cloudflare R2 photo storage
 ]
 
 [project.optional-dependencies]

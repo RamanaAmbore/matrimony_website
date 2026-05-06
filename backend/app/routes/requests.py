@@ -153,7 +153,8 @@ class RequestController(Controller):
             .options(selectinload(DetailRequest.profile).selectinload(Profile.photos))
             .order_by(DetailRequest.created_at.desc())
         )
-        base = str(request.base_url).rstrip("/")
+        from app.services import storage as storage_svc
+        storage = storage_svc.get_storage()
         out: list[dict[str, Any]] = []
         for r in result.scalars().all():
             row = _serialize_request(r)
@@ -170,7 +171,7 @@ class RequestController(Controller):
                     "profile_state": p.state,
                     "profile_status": p.status.value if p.status else None,
                     "profile_blurred_url": (
-                        f"{base}/media/{primary_photo.blurred_path}" if primary_photo else None
+                        storage.public_url(primary_photo.blurred_path) if primary_photo else None
                     ),
                 })
             out.append(row)
