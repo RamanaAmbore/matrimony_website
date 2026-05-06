@@ -2,7 +2,7 @@
 
 Four canonical users live in code, not in tenant DB state:
   - "ambore" (Ramana Ambore)        — super-user (primary)
-  - "venkat" (Venkat Somajigiri)    — super-user (secondary)
+  - "super"  (Venkat Somajigiri)    — super-user (secondary)
   - "rambo"  (Ramana Ambore)        — regular admin (operational)
   - "admin"  (Ramana Ambore)        — regular admin (day-to-day mod)
 
@@ -35,7 +35,7 @@ _SUPER_EMAIL = "ramana.ambore@gmail.com"
 _SUPER_PHONE = "+919840770711"
 _SUPER_FULL_NAME = "Ramana Ambore"
 
-_SUPER2_HANDLE = "venkat"
+_SUPER2_HANDLE = "super"
 _SUPER2_EMAIL = "marathakalyanam@gmail.com"
 _SUPER2_PHONE = "+919505250025"
 _SUPER2_FULL_NAME = "Venkat Somajigiri"
