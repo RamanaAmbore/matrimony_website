@@ -18,16 +18,20 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "smtp_user": "",
     "smtp_password": "",
     "smtp_from": "no-reply@marathakalyanam.com",
+    # Photo settings — sizes tuned to be lenient enough for typical phone
+    # photos while still bounding storage. Face detection is OFF by default
+    # because it over-rejects on group / lifestyle / poorly-lit phone shots
+    # and admins prefer to make that judgement call manually during review.
     "photo_max_kb": 500,
-    "photo_min_kb": 25,
+    "photo_min_kb": 10,
     "photo_passport_width": 413,
     "photo_passport_height": 531,
     "photo_blur_width": 600,
     "photo_blur_radius": 14,
     "photo_thumb_size": 150,
-    "photos_max_per_profile": 3,
+    "photos_max_per_profile": 2,
     "upload_max_mb": 10,
-    "require_face_detection": True,
+    "require_face_detection": False,
     "require_admin_approval_for_profiles": True,
     "matrimony_tg_token": "",
     "matrimony_tg_chat_id": "",

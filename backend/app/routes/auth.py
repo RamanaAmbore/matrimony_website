@@ -560,17 +560,13 @@ class AuthController(Controller):
         return response
 
     @get("/me")
-    async def me(self, request: Request, db: AsyncSession) -> Response[dict[str, Any]]:
-        """Return the current user.
+    async def me(self, request: Request, db: AsyncSession) -> dict[str, Any]:
+        """Return the current user, re-queried from the DB on each call so
+        role changes (promote, demote, revoke, approve, verify) take effect
+        on the next page load instead of requiring a re-login.
 
-        Re-queries the DB instead of just echoing the JWT payload so that
-        role changes (promote, demote, revoke, reinstate, approve, unapprove,
-        verify_email) take effect on the very next page load — the previous
-        echo-the-JWT version forced users to log out + log in again to see
-        promote/demote results.
-
-        If the user has been deleted or revoked since the JWT was minted,
-        return 401 and clear the cookie so the client redirects to login.
+        If the user was deleted or revoked since the JWT was minted, raise
+        401. The frontend already clears the cookie + redirects on 401.
         """
         payload: dict[str, Any] | None = request.scope.get("user_payload")
         if not payload:
@@ -590,16 +586,12 @@ class AuthController(Controller):
         result = await db.execute(select(User).where(User.id == uid))
         user = result.scalar_one_or_none()
         if not user or user.is_revoked:
-            # User was deleted or revoked after JWT was minted — clear the
-            # cookie so the next request is a clean anonymous one.
-            response: Response[dict[str, Any]] = Response(
-                content={"code": "unauthenticated", "message": "Session no longer valid"},
+            raise HTTPException(
                 status_code=401,
+                detail={"code": "session_invalid", "message": "Session no longer valid"},
             )
-            response.delete_cookie(key=_JWT_COOKIE, path="/")
-            return response
 
-        return Response(content={
+        return {
             "uuid": str(user.id),
             "user_id": user.user_handle,
             "email": user.email,
@@ -608,4 +600,4 @@ class AuthController(Controller):
             "is_super": user.is_super,
             "email_verified": user.email_verified,
             "is_approved": user.is_approved,
-        })
+        }

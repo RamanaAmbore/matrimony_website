@@ -45,6 +45,10 @@ export interface Profile {
 	profile_number: string;
 	owner_user_id: string;
 	status: ProfileStatus;
+	// Aggregated photo metadata (admin list only) — present on /admin/profiles
+	// responses, omitted on owner-facing endpoints.
+	photos_count?: number;
+	photos_bytes?: number;
 
 	// Basic Information
 	gender: Gender;
@@ -274,6 +278,8 @@ export interface AdminDashboard {
 		users: number;
 		users_admins: number;
 		users_super: number;
+		photos_count?: number;
+		photos_total_bytes?: number;
 		profiles_total: number;
 		profiles_pending: number;
 		profiles_approved: number;

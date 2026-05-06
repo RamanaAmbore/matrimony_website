@@ -139,6 +139,15 @@
 	// Content section anchor for scroll-into-view on tab change
 	let contentSectionEl = $state<HTMLElement | undefined>();
 
+	// Format an integer byte count into a human-readable label.
+	// Used by the dashboard photo-storage badge and the per-profile size column.
+	function formatBytes(n: number): string {
+		if (!n || n < 1024) return `${n} B`;
+		if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+		if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+		return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+	}
+
 	// ── Mount: dashboard only — full lists fetched lazily on chip click ──────────
 
 	/**
@@ -720,6 +729,15 @@
 				{ headerName: 'Location', width: 200, filter: true, headerClass: 'mk-header',
 				  valueGetter: (p: { data: Profile }) => [p.data.city, p.data.state].filter(Boolean).join(', ') },
 				{ field: 'education', headerName: 'Education', width: 180, filter: true, sortable: true, headerClass: 'mk-header' },
+				// Photo storage column — sortable by raw bytes; rendered as
+				// "<count> · <size>" so admins can spot heavy profiles at a glance.
+				{ headerName: 'Photos', width: 130, sortable: true, headerClass: 'mk-header',
+				  valueGetter: (p: { data: Profile }) => p.data.photos_bytes ?? 0,
+				  cellRenderer: (p: { data: Profile }) => {
+					const c = p.data.photos_count ?? 0;
+					const b = p.data.photos_bytes ?? 0;
+					return c > 0 ? `${c} · ${formatBytes(b)}` : '<span style="color:#9ca3af">—</span>';
+				  }},
 				{ field: 'created_at', headerName: 'Submitted', width: 130, sortable: true, headerClass: 'mk-header',
 				  valueFormatter: (p: { value: string }) => new Date(p.value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }
 			];
@@ -908,6 +926,15 @@
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'draft' ? 'border-maroon bg-maroon text-cream' : 'border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100'}"
 							onclick={() => { selectTab('profiles'); applyProfileFilter('draft'); }}
 						>Draft · {dashboard.stats.profiles_draft}</button>
+					{/if}
+					<!-- Photo storage badge — shown to anyone with admin access -->
+					{#if dashboard.stats.photos_count}
+						<span
+							class="ml-auto rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-xs font-semibold text-maroon"
+							title="Total bytes used by passport.jpg variants of every profile photo"
+						>
+							{dashboard.stats.photos_count} photos · {formatBytes(dashboard.stats.photos_total_bytes ?? 0)}
+						</span>
 					{/if}
 				</div>
 			</div>

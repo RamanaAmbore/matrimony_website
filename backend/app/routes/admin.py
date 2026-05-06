@@ -86,13 +86,16 @@ def _serialize_user(u: User) -> dict[str, Any]:
 def _serialize_profile(profile: Profile, request: Request) -> dict[str, Any]:
     base = str(request.base_url).rstrip("/")
     photos = []
+    photos_bytes = 0
     for photo in profile.photos:
+        photos_bytes += photo.byte_size or 0
         photos.append({
             "id": str(photo.id),
             "passport_url": f"{base}/media/{photo.passport_path}",
             "blurred_url": f"{base}/media/{photo.blurred_path}",
             "thumb_url": f"{base}/media/{photo.thumb_path}",
             "is_primary": photo.is_primary,
+            "byte_size": photo.byte_size or 0,
         })
 
     def age(dob: date) -> int:
@@ -103,6 +106,8 @@ def _serialize_profile(profile: Profile, request: Request) -> dict[str, Any]:
         "id": str(profile.id),
         "profile_number": profile.profile_number,
         "owner_user_id": str(profile.owner_user_id),
+        "photos_count": len(photos),
+        "photos_bytes": photos_bytes,
         "gender": profile.gender.value,
         "first_name": profile.first_name,
         "last_name": profile.last_name,
@@ -223,6 +228,14 @@ class AdminController(Controller):
             )
         ).scalar_one()
 
+        # Total disk usage of all stored photos (passport variant only —
+        # blurred + thumb are derived and roughly proportional). Useful for
+        # ops to keep an eye on MEDIA_ROOT growth.
+        photos_total_bytes = (
+            await db.execute(select(func.coalesce(func.sum(Photo.byte_size), 0)))
+        ).scalar_one() or 0
+        photos_count = (await db.execute(select(func.count()).select_from(Photo))).scalar_one()
+
         stats = {
             "users": users_count,
             "users_admins": users_admins,
@@ -236,6 +249,8 @@ class AdminController(Controller):
             "requests_approved": requests_approved,
             "requests_rejected": requests_rejected,
             "requests_total": requests_total,
+            "photos_count": photos_count,
+            "photos_total_bytes": int(photos_total_bytes),
         }
 
         # ── Pending profiles (up to 25) with owner email ────────────────────
