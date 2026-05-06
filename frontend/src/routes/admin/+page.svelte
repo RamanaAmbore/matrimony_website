@@ -873,14 +873,30 @@
 
 			<!-- ── All Users card ─────────────────────────────────────────── -->
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'users' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
-				<button
-					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'users' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
-					onclick={() => { selectTab('users'); applyUserFilter(null); }}
-				>
-					<Users size={20} class="text-saffron shrink-0" />
-					<span class="font-serif font-semibold {activeTab === 'users' ? 'text-cream' : 'text-maroon'}">Users</span>
-					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'users' ? 'text-cream' : 'text-ink'}">{usersTotal}</span>
-				</button>
+				<div class="relative {activeTab === 'users' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}">
+					<button
+						class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors"
+						onclick={() => { selectTab('users'); applyUserFilter(null); }}
+					>
+						<Users size={20} class="text-saffron shrink-0" />
+						<span class="font-serif font-semibold {activeTab === 'users' ? 'text-cream' : 'text-maroon'}">Users</span>
+						<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'users' ? 'text-cream' : 'text-ink'}">{usersTotal}</span>
+					</button>
+					<!-- Admin / Super counts in the header — display-only, not
+					     filter chips. Super-only (regular admins never see the
+					     admin tier exists). Positioned absolutely so they stay
+					     in the header band but don't hijack the click area. -->
+					{#if loggedInUser?.is_super && (dashboard?.stats?.users_admins || dashboard?.stats?.users_super)}
+						<div class="pointer-events-none absolute right-2 top-2 flex gap-1 text-[10px]">
+							{#if dashboard?.stats?.users_admins}
+								<span class="rounded bg-saffron/30 px-1.5 py-0.5 font-semibold text-maroon">A · {dashboard.stats.users_admins}</span>
+							{/if}
+							{#if dashboard?.stats?.users_super}
+								<span class="rounded bg-maroon/40 px-1.5 py-0.5 font-semibold text-cream">S · {dashboard.stats.users_super}</span>
+							{/if}
+						</div>
+					{/if}
+				</div>
 				<div class="flex flex-wrap items-center gap-2 bg-white px-4 py-3">
 					<button
 						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'users' && userFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
@@ -904,20 +920,9 @@
 							onclick={() => { selectTab('users'); applyUserFilter('revoked'); }}
 						>Revoked · {usersRevoked}</button>
 					{/if}
-					<!-- Admin / Super counts are super-only tier visibility. Regular
-					     admins don't see how many other admins/supers exist (the
-					     backend also withholds these counts in /admin/dashboard
-					     for non-super callers, so the {#if} is defensive). -->
-					{#if loggedInUser?.is_super && dashboard?.stats?.users_admins}
-						<span class="rounded-full border border-saffron/40 bg-saffron/10 px-3 py-1 text-xs font-semibold text-maroon" title="Number of admin users">
-							Admins · {dashboard.stats.users_admins}
-						</span>
-					{/if}
-					{#if loggedInUser?.is_super && dashboard?.stats?.users_super}
-						<span class="rounded-full border border-maroon/40 bg-maroon/10 px-3 py-1 text-xs font-semibold text-maroon" title="Number of super-users (always hidden from the user list)">
-							Super · {dashboard.stats.users_super}
-						</span>
-					{/if}
+					<!-- Admin/Super counts moved into the card header above (super-
+					     only, display-only badges). Chip row stays purely about
+					     filterable user statuses. -->
 					<!-- "Include admins" toggle is super-only; non-super admins
 					     don't have admin users in their list to begin with. -->
 					{#if loggedInUser?.is_super}
