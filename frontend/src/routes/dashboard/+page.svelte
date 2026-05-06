@@ -170,15 +170,22 @@
 				},
 				{
 					headerName: '',
-					width: 90,
+					width: 130,
 					sortable: false,
 					filter: false,
 					pinned: 'right' as const,
 					headerClass: 'mk-header',
 					cellRenderer: (p: { data: Profile }) => {
+						// View / Edit / Delete on every owner row regardless of admin
+						// status. Editing one's own profile follows the standard
+						// lifecycle (drops to pending) — admin/super-edit-preserves
+						// only kicks in when editing someone ELSE's profile.
 						return `<div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;height:100%">
 							<button data-action="view" data-id="${p.data.id}" title="View profile" style="background:none;border:1px solid #c9a227;border-radius:4px;padding:3px 5px;cursor:pointer;color:#6b0f1a;">
 								<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+							</button>
+							<button data-action="edit" data-id="${p.data.id}" title="Edit profile" style="background:none;border:1px solid #6b0f1a;border-radius:4px;padding:3px 5px;cursor:pointer;color:#6b0f1a;">
+								<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
 							</button>
 							<button data-action="delete" data-id="${p.data.id}" title="Delete profile" style="background:#e63946;border:none;border-radius:4px;padding:3px 5px;cursor:pointer;color:#fff;">
 								<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
@@ -191,6 +198,8 @@
 						const action = target.dataset.action;
 						if (action === 'view') {
 							goto(`/profiles/${e.data.id}`);
+						} else if (action === 'edit') {
+							goto(`/profiles/${e.data.id}/edit`);
 						} else if (action === 'delete') {
 							openDeleteModal(e.data);
 						}
