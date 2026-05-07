@@ -26,6 +26,7 @@ dependencies = [
     "aiofiles>=24.1.0",
     "psycopg2-binary>=2.9.10",
     "boto3>=1.35.0",  # S3-compatible client for Cloudflare R2 photo storage
+    "weasyprint>=63.0",  # HTML/CSS → PDF for admin profile dossiers
 ]
 
 [project.optional-dependencies]

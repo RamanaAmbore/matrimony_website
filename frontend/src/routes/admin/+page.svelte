@@ -29,7 +29,9 @@
 		XCircle,
 		RotateCcw,
 		Megaphone,
-		Settings
+		Settings,
+		FileText,
+		Download
 	} from 'lucide-svelte';
 	import { tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
@@ -1271,6 +1273,24 @@
 						>
 							<span>Edit ✎</span>
 							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('edit', langStore.current)}</span>
+						</a>
+						<a
+							href="/api/admin/profiles/{selectedProfile.id}/pdf"
+							target="_blank"
+							rel="noopener"
+							class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
+							title="View profile as a printable PDF dossier"
+						>
+							<span class="flex items-center gap-1"><FileText size={12} />PDF</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('viewPdf', langStore.current)}</span>
+						</a>
+						<a
+							href="/api/admin/profiles/{selectedProfile.id}/pdf?download=true"
+							class="btn-secondary flex flex-col items-center justify-center text-center leading-tight text-xs px-4 py-1.5 min-h-[44px] whitespace-normal"
+							title="Download this profile as a PDF file"
+						>
+							<span class="flex items-center gap-1"><Download size={12} />PDF</span>
+							<span lang={langStore.current} class="text-[10px] opacity-90">{tx('downloadPdf', langStore.current)}</span>
 						</a>
 						{#if selectedProfile.status === 'pending'}
 							<button

@@ -694,6 +694,8 @@ export const T: Record<string, I18nEntry> = {
   deleteUser:      { en: 'Delete User',       te: 'వినియోగదారుని తొలగించు', mr: 'वापरकर्ता हटवा',   kn: 'ಬಳಕೆದಾರ ಅಳಿಸಿ',    ta: 'பயனரை நீக்கு',      hi: 'उपयोगकर्ता हटाएं' },
   confirmReject:   { en: 'Confirm Reject',    te: 'తిరస్కరణను నిర్ధారించు', mr: 'नकाराची पुष्टी करा', kn: 'ತಿರಸ್ಕಾರವನ್ನು ದೃಢೀಕರಿಸಿ', ta: 'நிராகரிப்பை உறுதிசெய்', hi: 'अस्वीकृति की पुष्टि करें' },
   promoteToAdmin:  { en: 'Promote to Admin',  te: 'నిర్వాహకుడిగా పదోన్నతి', mr: 'प्रशासक म्हणून पदोन्नती करा', kn: 'ನಿರ್ವಾಹಕರಿಗೆ ಬಡ್ತಿ ನೀಡಿ', ta: 'நிர்வாகியாக உயர்த்து', hi: 'एडमिन के रूप में पदोन्नत करें' },
+  viewPdf:         { en: 'View PDF',          te: 'PDF చూడు',          mr: 'PDF पहा',          kn: 'PDF ನೋಡಿ',        ta: 'PDF பார்',          hi: 'PDF देखें' },
+  downloadPdf:     { en: 'Download PDF',      te: 'PDF డౌన్‌లోడ్',     mr: 'PDF डाउनलोड',      kn: 'PDF ಡೌನ್‌ಲೋಡ್',   ta: 'PDF பதிவிறக்கு',    hi: 'PDF डाउनलोड' },
   dashboardBack:   { en: '← Dashboard',       te: '← డాష్‌బోర్డ్',      mr: '← डॅशबोर्ड',        kn: '← ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',  ta: '← டாஷ்போர்டு',     hi: '← डैशबोर्ड' },
 };
 

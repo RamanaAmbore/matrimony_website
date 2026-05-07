@@ -10,6 +10,7 @@ import msgspec
 from litestar import Controller, get, post, put
 from litestar.connection import Request
 from litestar.exceptions import HTTPException
+from litestar.response import Response
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -26,6 +27,7 @@ from app.schemas.admin import (
 )
 from app.services import auth as auth_svc
 from app.services import email as email_svc
+from app.services import pdf as pdf_svc
 from app.services import storage as storage_svc
 from app.services.settings import settings_service, SENSITIVE_KEYS
 
@@ -380,6 +382,55 @@ class AdminController(Controller):
         result = await db.execute(query)
         profiles = result.scalars().all()
         return [_serialize_profile(p, request) for p in profiles]
+
+    @get("/profiles/{profile_id:str}/pdf")
+    async def profile_pdf(
+        self,
+        profile_id: str,
+        request: Request,
+        db: AsyncSession,
+        download: bool = False,
+    ) -> Response:
+        """Render a profile as a print-quality PDF dossier (admin/super only).
+
+        Default: Content-Disposition: inline → opens in the browser tab.
+        Pass `?download=true` to force a download with a sensible filename.
+        """
+        _require_admin(request)
+
+        try:
+            pid = uuid.UUID(profile_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
+
+        result = await db.execute(
+            select(Profile)
+            .where(Profile.id == pid)
+            .options(selectinload(Profile.photos), selectinload(Profile.owner))
+        )
+        profile = result.scalar_one_or_none()
+        if not profile:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Profile not found"})
+
+        try:
+            pdf_bytes = await pdf_svc.render_profile_pdf(profile)
+        except Exception as exc:
+            logger.exception("PDF render failed for profile %s", profile_id)
+            raise HTTPException(
+                status_code=500,
+                detail={"code": "pdf_render_failed", "message": f"Could not generate PDF: {exc}"},
+            ) from exc
+
+        filename = pdf_svc.safe_pdf_filename(profile)
+        disposition = "attachment" if download else "inline"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'{disposition}; filename="{filename}"',
+                "Cache-Control": "private, no-store",
+            },
+        )
 
     @post("/profiles/{profile_id:str}/approve")
     async def approve_profile(
