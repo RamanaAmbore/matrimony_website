@@ -49,10 +49,19 @@
 		{
 			"@context": "https://schema.org",
 			"@type": "Organization",
+			"@id": "https://marathakalyanam.com/#organization",
 			"name": "Maratha Kalyanam",
 			"alternateName": "మరాఠా కళ్యాణం",
 			"url": "https://marathakalyanam.com",
-			"logo": "https://marathakalyanam.com/brand/logo.png",
+			"logo": {
+				"@type": "ImageObject",
+				"url": "https://marathakalyanam.com/brand/logo.png",
+				"contentUrl": "https://marathakalyanam.com/brand/logo.png",
+				"width": 512,
+				"height": 512,
+				"caption": "Maratha Kalyanam logo"
+			},
+			"image": "https://marathakalyanam.com/brand/logo.png",
 			"description": "Trusted matrimonial platform for Maratha families across Andhra, Telangana, Maharashtra and other states.",
 			"areaServed": [
 				{ "@type": "AdministrativeArea", "name": "Andhra Pradesh" },
