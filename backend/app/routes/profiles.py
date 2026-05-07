@@ -663,24 +663,23 @@ class ProfileController(Controller):
         if data.hobbies is not None:
             profile.hobbies = data.hobbies
             changed = True
+        # contact_phone / contact_email: an empty / whitespace value is
+        # treated as "no change" rather than an explicit attempt to clear,
+        # because some clients (older bundles, autosave loops) re-send the
+        # full form with empty strings for fields they didn't touch. The
+        # DB NOT NULL constraint guarantees the column never becomes
+        # empty regardless. Only update when a meaningfully-different
+        # value arrives.
         if data.contact_phone is not None:
             new_phone = data.contact_phone.strip()
-            if not new_phone:
-                raise HTTPException(
-                    status_code=422,
-                    detail={"code": "missing_contact_phone", "message": "Contact phone is required"},
-                )
-            profile.contact_phone = new_phone
-            changed = True
+            if new_phone and new_phone != profile.contact_phone:
+                profile.contact_phone = new_phone
+                changed = True
         if data.contact_email is not None:
             new_email = data.contact_email.strip()
-            if not new_email:
-                raise HTTPException(
-                    status_code=422,
-                    detail={"code": "missing_contact_email", "message": "Contact email is required"},
-                )
-            profile.contact_email = new_email
-            changed = True
+            if new_email and new_email != profile.contact_email:
+                profile.contact_email = new_email
+                changed = True
 
         # Status transition rules on edit:
         #
