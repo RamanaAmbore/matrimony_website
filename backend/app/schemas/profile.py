@@ -27,6 +27,10 @@ class ProfileCreateRequest(msgspec.Struct, kw_only=True):
     last_name: str
     dob: str  # ISO date string YYYY-MM-DD
 
+    # --- Required contact (defaults from User; user can edit, can't blank) ---
+    contact_phone: str
+    contact_email: str
+
     # --- Optional at creation — filled across wizard sections ---
     height_cm: int | None = None
     complexion: str | None = None
@@ -79,8 +83,6 @@ class ProfileCreateRequest(msgspec.Struct, kw_only=True):
     smokes: str | None = None
     drinks: str | None = None
     hobbies: str | None = None
-    contact_phone: str | None = None
-    contact_email: str | None = None
 
 
 class ProfilePatchRequest(msgspec.Struct, kw_only=True):

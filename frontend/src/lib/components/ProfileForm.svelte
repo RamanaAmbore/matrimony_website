@@ -367,6 +367,12 @@
 			const age = new Date().getFullYear() - new Date(dob).getFullYear();
 			if (age < 18) e.dob = 'Must be at least 18 years old';
 		}
+		// Contact fields are required from first save — they default from
+		// the User's registration so the user has to actively blank them
+		// to fail this check.
+		if (!contact_phone.trim()) e.contact_phone = 'Required';
+		if (!contact_email.trim()) e.contact_email = 'Required';
+		else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact_email.trim())) e.contact_email = 'Enter a valid email';
 		if (about.length > 500) e.about = 'Max 500 characters';
 		if (partner_expectations.length > 800) e.partner_expectations = 'Max 800 characters';
 		errors = e;
@@ -399,6 +405,10 @@
 			// About
 			if (!about.trim()) e.about = 'Required';
 		}
+		// Contact (mandatory regardless of mode — defaults from User)
+		if (!contact_phone.trim()) e.contact_phone = 'Required';
+		if (!contact_email.trim()) e.contact_email = 'Required';
+		else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact_email.trim())) e.contact_email = 'Enter a valid email';
 		if (about.length > 500) e.about = 'Max 500 characters';
 		if (partner_expectations.length > 800) e.partner_expectations = 'Max 800 characters';
 		// Photo — use wizardPhotoCount when in wizard mode, else photoCount prop
@@ -1014,23 +1024,25 @@
 							</div>
 
 							<!-- Per-profile contact (defaulted from User's registration
-							     phone/email; freely editable). A single user can own
-							     multiple profiles with different or shared contact
-							     channels. -->
+							     phone/email; freely editable but mandatory). A single
+							     user can own multiple profiles with different or
+							     shared contact channels. -->
 							<div>
 								<label for="contact_phone_w" class="label">
-									<span class="block">Contact Phone <span class="text-xs font-normal text-ink/50">(optional)</span></span>
+									<span class="block">Contact Phone <span class="text-vermilion">*</span></span>
 									<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('contactPhone', langStore.current)}</span>
 								</label>
-								<input id="contact_phone_w" type="tel" inputmode="tel" maxlength="30" class="input" bind:value={contact_phone} oninput={(e) => (contact_phone = asciiOnly(e.currentTarget.value))} placeholder="e.g. +91 98xxxxxxxx" />
+								<input id="contact_phone_w" type="tel" inputmode="tel" maxlength="30" required class="input" class:border-vermilion={errors.contact_phone} bind:value={contact_phone} oninput={(e) => (contact_phone = asciiOnly(e.currentTarget.value))} placeholder="e.g. +91 98xxxxxxxx" />
+								{#if errors.contact_phone}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.contact_phone}</p>{/if}
 							</div>
 
 							<div>
 								<label for="contact_email_w" class="label">
-									<span class="block">Contact Email <span class="text-xs font-normal text-ink/50">(optional)</span></span>
+									<span class="block">Contact Email <span class="text-vermilion">*</span></span>
 									<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('contactEmail', langStore.current)}</span>
 								</label>
-								<input id="contact_email_w" type="email" inputmode="email" maxlength="255" class="input" bind:value={contact_email} oninput={(e) => (contact_email = asciiOnly(e.currentTarget.value))} placeholder="e.g. you@example.com" />
+								<input id="contact_email_w" type="email" inputmode="email" maxlength="255" required class="input" class:border-vermilion={errors.contact_email} bind:value={contact_email} oninput={(e) => (contact_email = asciiOnly(e.currentTarget.value))} placeholder="e.g. you@example.com" />
+								{#if errors.contact_email}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.contact_email}</p>{/if}
 							</div>
 						</div>
 
@@ -1918,10 +1930,10 @@
 				/>
 			</div>
 
-			<!-- Contact phone (optional) — separate from the User account phone -->
+			<!-- Contact phone (required) — defaults from the User account -->
 			<div>
 				<label for="contact_phone_n" class="label">
-					<span class="block">Contact Phone <span class="text-xs font-normal text-ink/50">(optional)</span></span>
+					<span class="block">Contact Phone <span class="text-vermilion">*</span></span>
 					<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('contactPhone', langStore.current)}</span>
 				</label>
 				<input
@@ -1929,17 +1941,20 @@
 					type="tel"
 					inputmode="tel"
 					maxlength="30"
+					required
 					class="input"
+					class:border-vermilion={errors.contact_phone}
 					bind:value={contact_phone}
 					oninput={(e) => (contact_phone = asciiOnly(e.currentTarget.value))}
 					placeholder="e.g. +91 98xxxxxxxx"
 				/>
+				{#if errors.contact_phone}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.contact_phone}</p>{/if}
 			</div>
 
-			<!-- Contact email (optional) — defaulted from User registration -->
+			<!-- Contact email (required) — defaults from the User account -->
 			<div>
 				<label for="contact_email_n" class="label">
-					<span class="block">Contact Email <span class="text-xs font-normal text-ink/50">(optional)</span></span>
+					<span class="block">Contact Email <span class="text-vermilion">*</span></span>
 					<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('contactEmail', langStore.current)}</span>
 				</label>
 				<input
@@ -1947,11 +1962,14 @@
 					type="email"
 					inputmode="email"
 					maxlength="255"
+					required
 					class="input"
+					class:border-vermilion={errors.contact_email}
 					bind:value={contact_email}
 					oninput={(e) => (contact_email = asciiOnly(e.currentTarget.value))}
 					placeholder="e.g. you@example.com"
 				/>
+				{#if errors.contact_email}<p class="mt-1 text-xs text-vermilion" data-error="true">{errors.contact_email}</p>{/if}
 			</div>
 		</div>
 	</details>

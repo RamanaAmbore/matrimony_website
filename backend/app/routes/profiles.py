@@ -319,6 +319,19 @@ class ProfileController(Controller):
         # ASCII validation
         _validate_free_text_fields(data)
 
+        # Contact fields are mandatory and default from the User on the
+        # frontend. Refuse a payload that arrives with either blanked out.
+        if not (data.contact_phone or "").strip():
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "missing_contact_phone", "message": "Contact phone is required"},
+            )
+        if not (data.contact_email or "").strip():
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "missing_contact_email", "message": "Contact email is required"},
+            )
+
         try:
             dob = date.fromisoformat(data.dob)
         except ValueError:
@@ -389,8 +402,8 @@ class ProfileController(Controller):
             smokes=_parse_enum(TobaccoAlcoholEnum, data.smokes, "smokes") if data.smokes else None,
             drinks=_parse_enum(TobaccoAlcoholEnum, data.drinks, "drinks") if data.drinks else None,
             hobbies=data.hobbies or None,
-            contact_phone=data.contact_phone or None,
-            contact_email=data.contact_email or None,
+            contact_phone=data.contact_phone.strip(),
+            contact_email=data.contact_email.strip(),
         )
         db.add(profile)
         await db.commit()
@@ -651,10 +664,22 @@ class ProfileController(Controller):
             profile.hobbies = data.hobbies
             changed = True
         if data.contact_phone is not None:
-            profile.contact_phone = data.contact_phone or None
+            new_phone = data.contact_phone.strip()
+            if not new_phone:
+                raise HTTPException(
+                    status_code=422,
+                    detail={"code": "missing_contact_phone", "message": "Contact phone is required"},
+                )
+            profile.contact_phone = new_phone
             changed = True
         if data.contact_email is not None:
-            profile.contact_email = data.contact_email or None
+            new_email = data.contact_email.strip()
+            if not new_email:
+                raise HTTPException(
+                    status_code=422,
+                    detail={"code": "missing_contact_email", "message": "Contact email is required"},
+                )
+            profile.contact_email = new_email
             changed = True
 
         # Status transition rules on edit:
