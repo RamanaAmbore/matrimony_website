@@ -32,11 +32,22 @@ from app.services.settings import settings_service
 logger = logging.getLogger(__name__)
 
 TEMPLATES_DIR = Path(__file__).parent.parent / "templates" / "pdf"
+LOGO_PATH = TEMPLATES_DIR / "logo.png"
 
 _jinja_env = Environment(
     loader=FileSystemLoader(str(TEMPLATES_DIR)),
     autoescape=select_autoescape(["html"]),
 )
+
+
+def _logo_data_url() -> str | None:
+    """Read the brand logo and return as a data URL. Cheap (~73 KB read)
+    so we don't bother caching — keeps a config flip / file swap live."""
+    try:
+        return "data:image/png;base64," + base64.b64encode(LOGO_PATH.read_bytes()).decode("ascii")
+    except OSError:
+        logger.warning("PDF: logo not found at %s", LOGO_PATH)
+        return None
 
 
 def _calc_age(dob: date) -> int:
@@ -99,6 +110,12 @@ async def render_profile_pdf(profile: Profile) -> bytes:
 
     owner = getattr(profile, "owner", None)
 
+    site_url = settings_service.get_str(
+        "site_url", "https://marathakalyanam.com"
+    ).rstrip("/")
+    # Pretty domain for inline brand callouts ("registered on marathakalyanam.com")
+    site_domain = site_url.replace("https://", "").replace("http://", "").rstrip("/")
+
     ctx = {
         "p": profile,
         "owner": owner,
@@ -118,9 +135,9 @@ async def render_profile_pdf(profile: Profile) -> bytes:
             if primary_photo and photo_urls and photo_urls[photos_sorted.index(primary_photo)]
             else None
         ),
-        "site_url": settings_service.get_str(
-            "site_url", "https://marathakalyanam.com"
-        ).rstrip("/"),
+        "site_url": site_url,
+        "site_domain": site_domain,
+        "logo_data_url": _logo_data_url(),
         "generated_at": datetime.now().strftime("%-d %b %Y, %-I:%M %p"),
         "fmt_enum": _enum_or_dash,
         "fmt_str": _str_or_dash,
