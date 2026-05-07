@@ -71,7 +71,7 @@
 			<p
 				class="hero-te mx-auto mb-8 max-w-lg rounded-xl px-4 py-2 text-base md:text-lg"
 				lang={langStore.current}
-				style="background: rgba(107,15,26,0.55); border: 1px solid rgba(255,182,39,0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);"
+				style="background: rgba(107,15,26,0.30); border: 1px solid rgba(255,182,39,0.4); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);"
 			>
 				{tx('homeHeroTagline', langStore.current)}
 			</p>

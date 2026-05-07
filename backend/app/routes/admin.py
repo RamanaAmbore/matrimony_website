@@ -391,12 +391,16 @@ class AdminController(Controller):
         db: AsyncSession,
         download: bool = False,
     ) -> Response:
-        """Render a profile as a print-quality PDF dossier (admin/super only).
+        """Render a profile as a print-quality PDF dossier (super only).
+
+        The dossier exposes the owner's contact info, so we restrict to
+        super-tier — regular admins do not see this option in the UI and
+        the endpoint refuses their token with 403.
 
         Default: Content-Disposition: inline → opens in the browser tab.
         Pass `?download=true` to force a download with a sensible filename.
         """
-        _require_admin(request)
+        _require_super(request)
 
         try:
             pid = uuid.UUID(profile_id)
