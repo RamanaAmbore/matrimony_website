@@ -1,21 +1,21 @@
 import type { RequestHandler } from './$types';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import faviconUrl from '$lib/favicon-bytes.ico?url';
 
 /**
  * Serve /favicon.ico with an explicit Content-Type. SvelteKit's static
  * handler returns the bytes but does not set a MIME type for `.ico`,
  * which trips up Google's favicon fetcher and a few other crawlers.
  *
- * The file lives in static/favicon.ico — we read it once at build time
- * via a relative path. Cache aggressively (immutable until we change it).
+ * Vite's `?url` import bundles the asset into the build with a hashed
+ * filename, then we read it back over the same SvelteKit fetch context
+ * so it works in dev and prod identically.
  */
-const FAVICON_PATH = join(process.cwd(), 'static', 'favicon.ico');
-let cached: Buffer | null = null;
+let cached: ArrayBuffer | null = null;
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ fetch }) => {
 	if (!cached) {
-		cached = await readFile(FAVICON_PATH);
+		const r = await fetch(faviconUrl);
+		cached = await r.arrayBuffer();
 	}
 	return new Response(cached, {
 		status: 200,
