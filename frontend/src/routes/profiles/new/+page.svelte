@@ -40,11 +40,11 @@
 		} catch (err) {
 			if (err instanceof ApiError) {
 				if (err.status === 401) { goto('/login'); return; }
-				if (err.status === 422) {
-					toastStore.error('Please fix the errors below');
-				} else {
-					toastStore.error(err.message.slice(0, 60));
-				}
+				// Show the server's actual error message (e.g. "Contact phone is
+				// required", "Date of birth is invalid"). Generic "fix the
+				// errors below" was misleading — there were no inline errors
+				// to fix; the failure was server-side and field-specific.
+				toastStore.error(err.message ? err.message.slice(0, 120) : 'Save failed. Please try again.');
 			} else {
 				toastStore.error('Save failed. Please try again.');
 			}

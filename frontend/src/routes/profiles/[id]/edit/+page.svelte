@@ -58,11 +58,10 @@
 			toastStore.success('Profile updated!');
 		} catch (err) {
 			if (err instanceof ApiError) {
-				if (err.status === 422) {
-					toastStore.error('Please fix the errors below');
-				} else {
-					toastStore.error(err.message.slice(0, 60));
-				}
+				// Surface the actual backend error message (eg. "Contact phone
+				// is required", "Profile not found"). Previously a 422 showed
+				// a generic "fix the errors below" with nothing to fix inline.
+				toastStore.error(err.message ? err.message.slice(0, 120) : 'Update failed. Try again.');
 			} else {
 				toastStore.error('Update failed. Try again.');
 			}
