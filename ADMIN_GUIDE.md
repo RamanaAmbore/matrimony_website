@@ -74,6 +74,34 @@ Profiles are submitted by users and queued for review.
 - Don't approve profiles with missing info or inappropriate photos
 - For unclear cases, reject with notes asking for clarification; don't guess
 
+### Generating profile PDFs
+
+Super-users (tier above admin) can generate a print-quality PDF dossier of any profile.
+
+**How to access:**
+
+1. Log in and go to **Admin > Profiles**
+2. Click a profile row to select it
+3. In the action panel (right side), look for **View PDF** or **Download PDF** buttons
+4. **View PDF:** Opens the PDF in a new browser tab for printing or viewing
+5. **Download PDF:** Downloads the PDF file to your device
+
+**What's in the PDF:**
+
+- Profile photo(s) — all variants embedded at high quality
+- Full profile details — name, age, astrology, family, lifestyle, etc.
+- Owner contact information — email address and phone number
+- Brand badge (Maratha Kalyanam branding)
+- Professionally formatted for A4 printing
+
+**Important:**
+
+- **Super-only access** — regular admins will not see the PDF buttons because
+  the dossier includes contact details (email + phone)
+- The same PDF can be viewed in-browser or downloaded; both show identical content
+- Works seamlessly with both local disk (`local`) and Cloudflare R2 (`r2`)
+  storage backends — photos are automatically embedded regardless of storage
+
 ## Approving full-detail requests
 
 When a user requests full details about another's approved profile, admin must approve.
@@ -361,6 +389,19 @@ ssh root@69.62.78.136
 ```
 
 Application directory: `/opt/marathakalyanam`
+
+### System dependencies
+
+The backend requires additional OS libraries for PDF generation (WeasyPrint):
+
+```bash
+apt install -y libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b \
+  libfontconfig1 libgdk-pixbuf-2.0-0
+```
+
+These are installed during server provisioning (via `deploy/` scripts).
+If rebuilding the server or adding new machines, ensure these packages
+are present. Without them, `/admin/profiles/{id}/pdf` calls will fail.
 
 ### Services
 

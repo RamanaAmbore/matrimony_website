@@ -419,10 +419,12 @@ class AdminController(Controller):
         try:
             pdf_bytes = await pdf_svc.render_profile_pdf(profile)
         except Exception as exc:
+            # Don't echo the exception text — WeasyPrint stack traces can
+            # include filesystem paths, font names, and HTML snippets.
             logger.exception("PDF render failed for profile %s", profile_id)
             raise HTTPException(
                 status_code=500,
-                detail={"code": "pdf_render_failed", "message": f"Could not generate PDF: {exc}"},
+                detail={"code": "pdf_render_failed", "message": "Could not generate PDF"},
             ) from exc
 
         filename = pdf_svc.safe_pdf_filename(profile)
@@ -1467,6 +1469,12 @@ class AdminController(Controller):
         user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+        # Mirror suspend_user's guard order: super accounts cannot be
+        # suspended in the first place, so unsuspending one is a no-op
+        # but the asymmetric guard hides that supers exist from any
+        # caller probing the API.
+        if user.is_super:
+            raise HTTPException(status_code=403, detail={"code": "forbidden", "message": "Cannot unsuspend a super-user"})
         if user.is_admin and not payload.get("is_super"):
             raise HTTPException(
                 status_code=403,
@@ -1623,7 +1631,14 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        """Send a custom broadcast email to all (or filtered) registered users."""
+        """Send a custom broadcast email to all (or filtered) registered users.
+
+        body_html is admin-supplied raw HTML rendered with `|safe` in the
+        broadcast template — admins can post arbitrary HTML to the email
+        body. This is intentional (admins are trusted to compose rich
+        content) and bounded by the admin trust model: a compromised
+        admin can already alter approved profiles, broadcast emails, etc.
+        """
         _require_admin(request)
 
         # Always exclude super-users from broadcasts (privileged hidden role).
@@ -1700,13 +1715,26 @@ class AdminController(Controller):
         request: Request,
         db: AsyncSession,
     ) -> dict[str, Any]:
-        _require_admin(request)
+        payload = _require_admin(request)
+        is_super_caller = bool(payload.get("is_super"))
 
-        users_count = (
-            await db.execute(
-                select(func.count()).select_from(User).where(User.is_super == False)  # noqa: E712
-            )
-        ).scalar_one()
+        # Mirror /admin/dashboard's visibility split: non-super admins see
+        # only the regular-user universe (admin tier hidden) so the count
+        # doesn't leak the existence of other admin accounts.
+        if is_super_caller:
+            users_count = (
+                await db.execute(
+                    select(func.count()).select_from(User).where(User.is_super == False)  # noqa: E712
+                )
+            ).scalar_one()
+        else:
+            users_count = (
+                await db.execute(
+                    select(func.count()).select_from(User).where(
+                        User.is_super == False, User.is_admin == False  # noqa: E712
+                    )
+                )
+            ).scalar_one()
         profiles_total = (await db.execute(select(func.count()).select_from(Profile))).scalar_one()
         profiles_pending = (
             await db.execute(

@@ -63,6 +63,10 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "matrimony_tg_token": "",
     "matrimony_tg_chat_id": "",
     "matrimony_tg_enabled": True,
+    # Shared secret Telegram echoes in the X-Telegram-Bot-Api-Secret-Token
+    # header on every webhook delivery. The webhook endpoint refuses any
+    # request whose header doesn't match. Empty = endpoint is disabled.
+    "matrimony_tg_webhook_secret": "",
     "is_prod": False,
     # ── Photo storage backend ────────────────────────────────────────────
     # "local"  — write to MEDIA_ROOT on the host filesystem (default)
@@ -80,7 +84,17 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "r2_signed_url_ttl_sec": 3600,  # how long passport-variant signed URLs stay valid
 }
 
-SENSITIVE_KEYS = {"smtp_password", "matrimony_tg_token", "r2_secret_access_key"}
+# Settings whose live values should never be returned to clients (masked in
+# both GET and PUT responses). r2_access_key_id is the AKID half of the R2
+# credential pair — a non-super admin holding it could authenticate to R2
+# directly and exfiltrate or alter photos, so we treat it like the secret.
+SENSITIVE_KEYS = {
+    "smtp_password",
+    "matrimony_tg_token",
+    "matrimony_tg_webhook_secret",
+    "r2_access_key_id",
+    "r2_secret_access_key",
+}
 
 
 class SettingsService:

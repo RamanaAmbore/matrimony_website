@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -11,7 +12,7 @@ from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import CORS_ORIGINS, IS_PROD
+from app.config import CORS_ORIGINS
 from app.db import AsyncSessionLocal, get_db_session
 from app.middleware.jwt_session import JWTSessionMiddleware
 from app.routes.auth import AuthController
@@ -98,5 +99,8 @@ app = Litestar(
         version="1.0.0",
         path="/docs",
     ),
-    debug=not IS_PROD,
+    # Litestar debug=True returns full Python tracebacks on 500s, including
+    # file paths and local variable values. We keep that off everywhere
+    # network-reachable. Set DEBUG=1 in the local .env to opt in for dev.
+    debug=os.environ.get("DEBUG", "0") == "1",
 )

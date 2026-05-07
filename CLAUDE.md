@@ -199,6 +199,7 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 | GET | /admin/profiles | admin | List all profiles with optional status filter |
 | POST | /admin/profiles/{id}/approve | admin | Approve profile + send email |
 | POST | /admin/profiles/{id}/reject | admin | Reject profile + send email |
+| GET | /admin/profiles/{id}/pdf | super | Render the profile as a print-quality PDF dossier (photos embedded, owner contact included). Default: `Content-Disposition: inline`. Pass `?download=true` for a forced download. Super-only — exposes contact info. |
 | GET | /admin/requests | admin | List all detail requests |
 | POST | /admin/requests/{id}/approve | admin | Approve + email full profile + photos |
 | POST | /admin/requests/{id}/reject | admin | Reject |
@@ -411,6 +412,48 @@ photo storage, admin UI, SEO posture.
     lifecycle, request cascade
   - Image baseline: home.jpg 556 KB, logo.png 76 KB
   - ag-Grid v33 requires explicit ModuleRegistry registration
+
+## v2.1 — May 2026
+
+Incremental release; polish on reporting, SEO, and super-user operations.
+
+**Profile PDF dossier (super-only)**
+
+  - New endpoint `GET /admin/profiles/{id}/pdf?download=bool` renders
+    an A4 print-quality PDF with embedded photos, owner contact
+    (email + phone), and brand badge
+  - Implemented via WeasyPrint (HTML+CSS) + Jinja2 template at
+    `backend/app/templates/pdf/profile.html`
+  - Brand logo bundled at `backend/app/templates/pdf/logo.png`; cached
+    as base64 data URL at module import
+  - Photos read via `storage_svc.read_async()` and embedded as base64
+    — works with both `local` and `r2` storage backends
+  - Frontend "View PDF" + "Download PDF" buttons on admin
+    selected-profile action panel; gated behind `loggedInUser?.is_super`
+  - **Super-only** — dossier exposes contact details so regular admins
+    cannot access the endpoint or UI buttons
+  - i18n keys `viewPdf` / `downloadPdf` added across en/te/mr/kn/ta/hi
+  - Server prerequisite: `apt install -y libpango-1.0-0 libpangoft2-1.0-0
+    libharfbuzz0b libfontconfig1 libgdk-pixbuf-2.0-0` (WeasyPrint
+    runtime deps; documented in `services/pdf.py` docstring)
+
+**SEO tightening**
+
+  - JSON-LD `Organization` now includes structured `ImageObject` for
+    logo: url + contentUrl + width/height (512) + caption. Top-level
+    `image` field also added.
+  - `/favicon.ico` now served via SvelteKit endpoint
+    (`frontend/src/routes/favicon.ico/+server.ts`) with explicit
+    `Content-Type: image/x-icon` and 1-day immutable cache. Static
+    favicon moved from `frontend/static/` to `frontend/src/lib/` so
+    route handler wins over SvelteKit's static middleware. Fixes
+    Google's favicon fetcher getting empty content-type from
+    adapter-node.
+
+**Home hero polish**
+
+  - Indic-text plate background opacity lightened (alpha 0.55 → 0.30)
+    for improved legibility against home background photo
 
 ## Conventions
 
