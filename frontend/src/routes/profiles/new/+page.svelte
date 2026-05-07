@@ -102,6 +102,8 @@
 			profileId={savedProfile?.id ?? ''}
 			autoSave={false}
 			isProd={data.siteInfo?.is_prod ?? true}
+			defaultContactPhone={data.user?.phone_number ?? ''}
+			defaultContactEmail={data.user?.email ?? ''}
 		/>
 	</div>
 </div>

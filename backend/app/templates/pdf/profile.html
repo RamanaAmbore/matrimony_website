@@ -419,13 +419,17 @@
   <!-- ============================================================ -->
   <!-- OWNER CONTACT (admin-only doc, so we expose this) -->
   <!-- ============================================================ -->
-  {% if owner or p.contact_phone %}
+  {% if owner or p.contact_phone or p.contact_email %}
   <div class="section">
     <h2>Contact</h2>
     <div class="owner-strip">
       <div>
-        <div class="lbl">Profile contact</div>
+        <div class="lbl">Profile phone</div>
         <div>{{ p.contact_phone or '—' }}</div>
+      </div>
+      <div>
+        <div class="lbl">Profile email</div>
+        <div>{{ p.contact_email or '—' }}</div>
       </div>
       <div>
         <div class="lbl">Account holder</div>

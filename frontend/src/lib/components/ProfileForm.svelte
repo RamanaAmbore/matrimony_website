@@ -55,7 +55,14 @@
 		autoSave = false,
 		wizardMode = false,
 		profileId = undefined,
-		isProd = true
+		isProd = true,
+		// Defaults for the per-profile contact fields. Caller (the
+		// new-profile route) passes the logged-in user's registration
+		// phone + email so those values are pre-populated; the form
+		// owner can then accept or edit them before saving. Edit mode
+		// passes nothing — initialData carries the persisted value.
+		defaultContactPhone = '',
+		defaultContactEmail = ''
 	}: {
 		initialData?: Partial<Profile>;
 		onSubmit: (data: Partial<ProfilePayload>) => void | Promise<void>;
@@ -69,6 +76,8 @@
 		wizardMode?: boolean;
 		profileId?: string;
 		isProd?: boolean;
+		defaultContactPhone?: string;
+		defaultContactEmail?: string;
 	} = $props();
 
 	// ── Form state — seeded once from initialData ─────────────────────────────
@@ -158,8 +167,17 @@
 	let pin_code = $state(untrack(() => initialData.pin_code ?? ''));
 
 	// Per-profile contact (candidate / family). Distinct from the User's
-	// account phone — admins create profiles on behalf of others.
-	let contact_phone = $state(untrack(() => initialData.contact_phone ?? ''));
+	// account phone/email — admins create profiles on behalf of others,
+	// and even a regular user creating multiple profiles may want
+	// different contact channels per profile. New-profile mode seeds
+	// these from the logged-in User's registration values; edit mode
+	// uses the persisted value off initialData.
+	let contact_phone = $state(
+		untrack(() => initialData.contact_phone ?? defaultContactPhone ?? '')
+	);
+	let contact_email = $state(
+		untrack(() => initialData.contact_email ?? defaultContactEmail ?? '')
+	);
 
 	// About
 	let about = $state(untrack(() => initialData.about ?? ''));
@@ -471,6 +489,7 @@
 			pin_code: pin_code.trim() || null,
 
 			contact_phone: contact_phone.trim() || null,
+			contact_email: contact_email.trim() || null,
 
 			about: about.trim(),
 			partner_expectations: partner_expectations.trim()
@@ -505,7 +524,7 @@
 			num_family_members, father_occupation, mother_occupation, num_brothers,
 			num_sisters, num_brothers_married, num_sisters_married, family_type,
 			family_status, family_values, native_place, diet, smokes, drinks,
-			hobbies, city, state_field, country, pin_code, contact_phone, about, partner_expectations
+			hobbies, city, state_field, country, pin_code, contact_phone, contact_email, about, partner_expectations
 		].join('|')
 	);
 
@@ -994,15 +1013,24 @@
 								<input id="pin_code" type="text" inputmode="numeric" maxlength="10" class="input" bind:value={pin_code} placeholder="e.g. 500001" />
 							</div>
 
-							<!-- Contact phone (optional) — distinct from the User account
-							     phone. Useful when an admin keys a profile on behalf of
-							     a candidate / family member. -->
+							<!-- Per-profile contact (defaulted from User's registration
+							     phone/email; freely editable). A single user can own
+							     multiple profiles with different or shared contact
+							     channels. -->
 							<div>
 								<label for="contact_phone_w" class="label">
 									<span class="block">Contact Phone <span class="text-xs font-normal text-ink/50">(optional)</span></span>
 									<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('contactPhone', langStore.current)}</span>
 								</label>
 								<input id="contact_phone_w" type="tel" inputmode="tel" maxlength="30" class="input" bind:value={contact_phone} oninput={(e) => (contact_phone = asciiOnly(e.currentTarget.value))} placeholder="e.g. +91 98xxxxxxxx" />
+							</div>
+
+							<div>
+								<label for="contact_email_w" class="label">
+									<span class="block">Contact Email <span class="text-xs font-normal text-ink/50">(optional)</span></span>
+									<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('contactEmail', langStore.current)}</span>
+								</label>
+								<input id="contact_email_w" type="email" inputmode="email" maxlength="255" class="input" bind:value={contact_email} oninput={(e) => (contact_email = asciiOnly(e.currentTarget.value))} placeholder="e.g. you@example.com" />
 							</div>
 						</div>
 
@@ -1905,6 +1933,24 @@
 					bind:value={contact_phone}
 					oninput={(e) => (contact_phone = asciiOnly(e.currentTarget.value))}
 					placeholder="e.g. +91 98xxxxxxxx"
+				/>
+			</div>
+
+			<!-- Contact email (optional) — defaulted from User registration -->
+			<div>
+				<label for="contact_email_n" class="label">
+					<span class="block">Contact Email <span class="text-xs font-normal text-ink/50">(optional)</span></span>
+					<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('contactEmail', langStore.current)}</span>
+				</label>
+				<input
+					id="contact_email_n"
+					type="email"
+					inputmode="email"
+					maxlength="255"
+					class="input"
+					bind:value={contact_email}
+					oninput={(e) => (contact_email = asciiOnly(e.currentTarget.value))}
+					placeholder="e.g. you@example.com"
 				/>
 			</div>
 		</div>
