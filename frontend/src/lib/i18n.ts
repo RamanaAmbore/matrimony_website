@@ -115,6 +115,7 @@ export const T: Record<string, I18nEntry> = {
 
   // Inline hardcoded phrases used in ProfileForm section headers (normal mode)
   pinCode:           { en: 'Pin Code',              te: 'పిన్ కోడ్',          mr: 'पिन कोड',           kn: 'ಪಿನ್ ಕೋಡ್',         ta: 'பின் கோட்',          hi: 'पिन कोड' },
+  contactPhone:      { en: 'Contact Phone',         te: 'సంప్రదింపు ఫోన్',   mr: 'संपर्क फोन',         kn: 'ಸಂಪರ್ಕ ಫೋನ್',      ta: 'தொடர்பு தொலைபேசி',  hi: 'संपर्क फ़ोन' },
   submitForApproval: { en: 'Submit for Approval',   te: 'అనుమతి కోసం సమర్పించండి', mr: 'मंजुरीसाठी सबमिट करा', kn: 'ಅನುಮೋದನೆಗಾಗಿ ಸಲ್ಲಿಸಿ', ta: 'அங்கீகாரத்திற்கு சமர்ப்பி', hi: 'अनुमोदन के लिए जमा करें' },
 
   // Brand wordmark (secondary script line; English "Maratha Kalyanam" stays constant)

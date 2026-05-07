@@ -157,6 +157,10 @@
 	let country = $state(untrack(() => initialData.country ?? 'India'));
 	let pin_code = $state(untrack(() => initialData.pin_code ?? ''));
 
+	// Per-profile contact (candidate / family). Distinct from the User's
+	// account phone — admins create profiles on behalf of others.
+	let contact_phone = $state(untrack(() => initialData.contact_phone ?? ''));
+
 	// About
 	let about = $state(untrack(() => initialData.about ?? ''));
 	let partner_expectations = $state(untrack(() => initialData.partner_expectations ?? ''));
@@ -466,6 +470,8 @@
 			country: country.trim(),
 			pin_code: pin_code.trim() || null,
 
+			contact_phone: contact_phone.trim() || null,
+
 			about: about.trim(),
 			partner_expectations: partner_expectations.trim()
 		};
@@ -499,7 +505,7 @@
 			num_family_members, father_occupation, mother_occupation, num_brothers,
 			num_sisters, num_brothers_married, num_sisters_married, family_type,
 			family_status, family_values, native_place, diet, smokes, drinks,
-			hobbies, city, state_field, country, pin_code, about, partner_expectations
+			hobbies, city, state_field, country, pin_code, contact_phone, about, partner_expectations
 		].join('|')
 	);
 
@@ -986,6 +992,17 @@
 									<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('pinCode', langStore.current)}</span>
 								</label>
 								<input id="pin_code" type="text" inputmode="numeric" maxlength="10" class="input" bind:value={pin_code} placeholder="e.g. 500001" />
+							</div>
+
+							<!-- Contact phone (optional) — distinct from the User account
+							     phone. Useful when an admin keys a profile on behalf of
+							     a candidate / family member. -->
+							<div>
+								<label for="contact_phone_w" class="label">
+									<span class="block">Contact Phone <span class="text-xs font-normal text-ink/50">(optional)</span></span>
+									<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('contactPhone', langStore.current)}</span>
+								</label>
+								<input id="contact_phone_w" type="tel" inputmode="tel" maxlength="30" class="input" bind:value={contact_phone} oninput={(e) => (contact_phone = asciiOnly(e.currentTarget.value))} placeholder="e.g. +91 98xxxxxxxx" />
 							</div>
 						</div>
 
@@ -1870,6 +1887,24 @@
 					class="input"
 					bind:value={pin_code}
 					placeholder="e.g. 500001"
+				/>
+			</div>
+
+			<!-- Contact phone (optional) — separate from the User account phone -->
+			<div>
+				<label for="contact_phone_n" class="label">
+					<span class="block">Contact Phone <span class="text-xs font-normal text-ink/50">(optional)</span></span>
+					<span class="block text-xs leading-tight font-normal" lang={langStore.current}>{tx('contactPhone', langStore.current)}</span>
+				</label>
+				<input
+					id="contact_phone_n"
+					type="tel"
+					inputmode="tel"
+					maxlength="30"
+					class="input"
+					bind:value={contact_phone}
+					oninput={(e) => (contact_phone = asciiOnly(e.currentTarget.value))}
+					placeholder="e.g. +91 98xxxxxxxx"
 				/>
 			</div>
 		</div>

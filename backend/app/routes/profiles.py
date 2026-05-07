@@ -133,6 +133,7 @@ def _serialize_full_profile(profile: Profile, request: Request) -> dict[str, Any
         "smokes": profile.smokes.value if profile.smokes else None,
         "drinks": profile.drinks.value if profile.drinks else None,
         "hobbies": profile.hobbies,
+        "contact_phone": profile.contact_phone,
         "partner_preference_keywords": profile.partner_preference_keywords,
         "created_at": profile.created_at.isoformat(),
         "updated_at": profile.updated_at.isoformat(),
@@ -228,6 +229,7 @@ def _validate_free_text_fields(data: ProfileCreateRequest | ProfilePatchRequest)
         ("college_university", getattr(data, "college_university", None)),
         ("employer", getattr(data, "employer", None)),
         ("work_location", getattr(data, "work_location", None)),
+        ("contact_phone", getattr(data, "contact_phone", None)),
     ]
     for field, value in text_fields:
         _require_ascii(value, field)
@@ -385,6 +387,7 @@ class ProfileController(Controller):
             smokes=_parse_enum(TobaccoAlcoholEnum, data.smokes, "smokes") if data.smokes else None,
             drinks=_parse_enum(TobaccoAlcoholEnum, data.drinks, "drinks") if data.drinks else None,
             hobbies=data.hobbies or None,
+            contact_phone=data.contact_phone or None,
         )
         db.add(profile)
         await db.commit()
@@ -643,6 +646,9 @@ class ProfileController(Controller):
             changed = True
         if data.hobbies is not None:
             profile.hobbies = data.hobbies
+            changed = True
+        if data.contact_phone is not None:
+            profile.contact_phone = data.contact_phone or None
             changed = True
 
         # Status transition rules on edit:

@@ -115,6 +115,9 @@ export interface Profile {
 	country: string;
 	pin_code?: string | null;
 
+	// Per-profile contact (separate from User account phone)
+	contact_phone?: string | null;
+
 	// About
 	about: string;
 	partner_expectations: string;

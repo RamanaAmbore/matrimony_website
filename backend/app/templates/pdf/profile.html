@@ -222,8 +222,8 @@
   /* ---- Owner contact strip ---- */
   .owner-strip {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2mm;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2mm 6mm;
     background: #2a1d14;
     color: #fdf6ec;
     border-radius: 2mm;
@@ -419,21 +419,25 @@
   <!-- ============================================================ -->
   <!-- OWNER CONTACT (admin-only doc, so we expose this) -->
   <!-- ============================================================ -->
-  {% if owner %}
+  {% if owner or p.contact_phone %}
   <div class="section">
-    <h2>Owner / Account holder</h2>
+    <h2>Contact</h2>
     <div class="owner-strip">
       <div>
-        <div class="lbl">Name</div>
-        <div>{{ owner.full_name or '—' }}</div>
+        <div class="lbl">Profile contact</div>
+        <div>{{ p.contact_phone or '—' }}</div>
       </div>
       <div>
-        <div class="lbl">Email</div>
-        <div>{{ owner.email or '—' }}</div>
+        <div class="lbl">Account holder</div>
+        <div>{{ owner.full_name if owner else '—' }}</div>
       </div>
       <div>
-        <div class="lbl">Phone</div>
-        <div>{{ owner.phone_number or '—' }}</div>
+        <div class="lbl">Account email</div>
+        <div>{{ owner.email if owner else '—' }}</div>
+      </div>
+      <div>
+        <div class="lbl">Account phone</div>
+        <div>{{ owner.phone_number if owner and owner.phone_number else '—' }}</div>
       </div>
     </div>
   </div>

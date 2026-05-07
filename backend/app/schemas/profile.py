@@ -79,6 +79,7 @@ class ProfileCreateRequest(msgspec.Struct, kw_only=True):
     smokes: str | None = None
     drinks: str | None = None
     hobbies: str | None = None
+    contact_phone: str | None = None
 
 
 class ProfilePatchRequest(msgspec.Struct, kw_only=True):
@@ -136,6 +137,7 @@ class ProfilePatchRequest(msgspec.Struct, kw_only=True):
     smokes: str | None = None
     drinks: str | None = None
     hobbies: str | None = None
+    contact_phone: str | None = None
 
 
 class PhotoSchema(msgspec.Struct):

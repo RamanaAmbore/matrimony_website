@@ -128,6 +128,7 @@ def _serialize_profile(profile: Profile, request: Request) -> dict[str, Any]:
         "rashi": profile.rashi,
         "manglik": profile.manglik.value,
         "diet": profile.diet.value,
+        "contact_phone": profile.contact_phone,
         "status": profile.status.value,
         "admin_notes": profile.admin_notes,
         "created_at": profile.created_at.isoformat(),

@@ -205,6 +205,10 @@ class Profile(Base):
     partner_preference_keywords: Mapped[list | None] = mapped_column(
         JSON, nullable=True
     )
+    # Per-profile contact (candidate / parent / matchmaker). Distinct from
+    # the owner User's phone — admins create profiles on behalf of others
+    # and need to capture the candidate's number separately.
+    contact_phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
