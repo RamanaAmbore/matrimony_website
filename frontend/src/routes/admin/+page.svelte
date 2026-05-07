@@ -942,14 +942,28 @@
 
 			<!-- ── All Profiles card ───────────────────────────────────────── -->
 			<div class="overflow-hidden rounded-xl border shadow-sm transition-all {activeTab === 'profiles' ? 'border-maroon shadow-md' : 'border-gold/40 hover:border-maroon/40 hover:shadow-md'}">
-				<button
-					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors {activeTab === 'profiles' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}"
-					onclick={() => { selectTab('profiles'); applyProfileFilter(null); }}
-				>
-					<UserCheck size={20} class="{activeTab === 'profiles' ? 'text-saffron' : 'text-gold'} shrink-0" />
-					<span class="font-serif font-semibold {activeTab === 'profiles' ? 'text-cream' : 'text-maroon'}">Profiles</span>
-					<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'profiles' ? 'text-cream' : 'text-ink'}">{dashboard.stats.profiles_total}</span>
-				</button>
+				<div class="relative {activeTab === 'profiles' ? 'bg-maroon' : 'bg-white hover:bg-maroon/5'}">
+					<button
+						class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors"
+						onclick={() => { selectTab('profiles'); applyProfileFilter(null); }}
+					>
+						<UserCheck size={20} class="{activeTab === 'profiles' ? 'text-saffron' : 'text-gold'} shrink-0" />
+						<span class="font-serif font-semibold {activeTab === 'profiles' ? 'text-cream' : 'text-maroon'}">Profiles</span>
+						<span class="ml-auto tabular-nums text-2xl font-bold {activeTab === 'profiles' ? 'text-cream' : 'text-ink'}">{dashboard.stats.profiles_total}</span>
+					</button>
+					<!-- Photos count + total bytes pinned to the header band, matching
+					     the Users-card admin/super badge placement. -->
+					{#if dashboard.stats.photos_count}
+						<div class="pointer-events-none absolute right-2 top-2 flex gap-1 text-[10px]">
+							<span
+								class="rounded bg-gold/30 px-1.5 py-0.5 font-semibold {activeTab === 'profiles' ? 'text-cream' : 'text-maroon'}"
+								title="Total bytes used by passport.jpg variants of every profile photo"
+							>
+								{dashboard.stats.photos_count} photos · {formatBytes(dashboard.stats.photos_total_bytes ?? 0)}
+							</span>
+						</div>
+					{/if}
+				</div>
 				<div class="flex flex-wrap gap-2 bg-white px-4 py-3">
 					<button
 						class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'all' ? 'border-maroon bg-maroon text-cream' : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100'}"
@@ -978,15 +992,6 @@
 							class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {activeTab === 'profiles' && profileStatusFilter === 'draft' ? 'border-maroon bg-maroon text-cream' : 'border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100'}"
 							onclick={() => { selectTab('profiles'); applyProfileFilter('draft'); }}
 						>Draft · {dashboard.stats.profiles_draft}</button>
-					{/if}
-					<!-- Photo storage badge — shown to anyone with admin access -->
-					{#if dashboard.stats.photos_count}
-						<span
-							class="ml-auto rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-xs font-semibold text-maroon"
-							title="Total bytes used by passport.jpg variants of every profile photo"
-						>
-							{dashboard.stats.photos_count} photos · {formatBytes(dashboard.stats.photos_total_bytes ?? 0)}
-						</span>
 					{/if}
 				</div>
 			</div>
