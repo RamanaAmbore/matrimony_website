@@ -6,7 +6,8 @@
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
 	import { asciiOnly } from '$lib/inputFilters';
-	import { User, AtSign, Mail, Phone, Lock } from 'lucide-svelte';
+	import { User, AtSign, Mail, Phone } from 'lucide-svelte';
+	import PasswordInput from '$lib/components/PasswordInput.svelte';
 
 	const USER_ID_RE = /^[A-Za-z][A-Za-z0-9_]{2,29}$/;
 	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -256,18 +257,14 @@
 				<span class="block">Password</span>
 				<span class="block leading-tight" lang={langStore.current}>{tx('password', langStore.current)}</span>
 			</label>
-			<div class="relative">
-			<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
-			<input
+			<PasswordInput
 				id="password"
-				type="password"
+				name="password"
 				autocomplete="new-password"
-				class="input pl-10"
-				class:border-vermilion={errors.password}
-				bind:value={password}
 				placeholder="Min. 8 chars · letter + digit"
+				bind:value={password}
+				hasError={!!errors.password}
 			/>
-		</div>
 			{#if errors.password}
 				<p class="mt-1 text-xs text-vermilion">{errors.password}</p>
 			{:else}
@@ -283,18 +280,14 @@
 				<span class="block">Confirm password</span>
 				<span class="block leading-tight" lang={langStore.current}>{tx('confirmPassword', langStore.current)}</span>
 			</label>
-			<div class="relative">
-			<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
-			<input
+			<PasswordInput
 				id="confirm-password"
-				type="password"
+				name="confirm-password"
 				autocomplete="new-password"
-				class="input pl-10"
-				class:border-vermilion={errors.confirmPassword}
-				bind:value={confirmPassword}
 				placeholder="Re-enter password"
+				bind:value={confirmPassword}
+				hasError={!!errors.confirmPassword}
 			/>
-		</div>
 			{#if errors.confirmPassword}
 				<p class="mt-1 text-xs text-vermilion">{errors.confirmPassword}</p>
 			{/if}

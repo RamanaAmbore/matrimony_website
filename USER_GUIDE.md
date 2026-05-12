@@ -24,6 +24,20 @@ profiles are reviewed by our team before being published, ensuring quality and s
    once approved.
 6. You're ready to create your first profile
 
+## Forgot password
+
+If you forget your password:
+
+1. On the login page, click **Forgot Password**
+2. Enter your email address
+3. We'll send you a password reset link (good for 1 hour)
+4. Click the link in your email
+5. Enter a new password (at least 8 characters, with a letter and a digit)
+6. Log in with your new password
+
+**Note:** If an admin has reset your password for you, you'll be notified by email and must
+change your password the next time you log in.
+
 ## Adding a profile
 
 Note: You must be email-verified AND admin-approved before you can create profiles. If you're

@@ -301,6 +301,17 @@ async def send_admin_view_request(
     )
 
 
+async def send_password_reset(to: str, token: str, full_name: str = "") -> None:
+    """Send a password reset link to the user.
+
+    Mirrors send_verification_email in structure. Falls back to stdout if
+    SMTP is not configured (same _send() fallback applies).
+    """
+    ts = _timestamps()
+    html = _render("password_reset.html", token=token, full_name=full_name)
+    await _send(to, f"Reset your Maratha Kalyanam password · {ts['ist_time']}", html)
+
+
 async def send_broadcast(
     to: str,
     subject: str,

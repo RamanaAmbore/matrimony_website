@@ -7,7 +7,8 @@
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
 	import { asciiOnly } from '$lib/inputFilters';
-	import { Mail, Lock } from 'lucide-svelte';
+	import { Mail } from 'lucide-svelte';
+	import PasswordInput from '$lib/components/PasswordInput.svelte';
 
 	let identifier = $state('');
 	let password = $state('');
@@ -96,21 +97,22 @@
 
 			<!-- Password -->
 			<div>
-				<label for="password" class="label block">
-					<span class="block">Password</span>
-					<span class="block leading-tight" lang={langStore.current}>{tx('password', langStore.current)}</span>
-				</label>
-				<div class="relative">
-					<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
-					<input
-						id="password"
-						type="password"
-						autocomplete="current-password"
-						class="input pl-10"
-						class:border-vermilion={errors.password}
-						bind:value={password}
-					/>
+				<div class="flex items-center justify-between">
+					<label for="password" class="label block">
+						<span class="block">Password</span>
+						<span class="block leading-tight" lang={langStore.current}>{tx('password', langStore.current)}</span>
+					</label>
+					<a href="/forgot-password" class="text-xs text-saffron hover:underline">
+						{tx('forgotPassword', langStore.current)}
+					</a>
 				</div>
+				<PasswordInput
+					id="password"
+					name="password"
+					autocomplete="current-password"
+					bind:value={password}
+					hasError={!!errors.password}
+				/>
 				{#if errors.password}
 					<p class="mt-1 text-xs text-vermilion">{errors.password}</p>
 				{/if}

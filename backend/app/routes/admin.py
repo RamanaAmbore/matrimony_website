@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
 import msgspec
@@ -15,6 +15,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.audit_log import AuditLog
 from app.models.photo import Photo
 from app.models.profile import Profile, ProfileStatusEnum
 from app.models.request import DetailRequest, RequestStatusEnum
@@ -29,6 +30,7 @@ from app.services import auth as auth_svc
 from app.services import email as email_svc
 from app.services import pdf as pdf_svc
 from app.services import storage as storage_svc
+from app.services.audit import log as audit_log
 from app.services.settings import settings_service, SENSITIVE_KEYS
 
 logger = logging.getLogger(__name__)
@@ -1561,6 +1563,266 @@ class AdminController(Controller):
         await db.delete(user)
         await db.commit()
         return {"deleted": deleted}
+
+    @post("/users/{user_id:str}/reset_password", status_code=200)
+    async def admin_reset_password(
+        self,
+        user_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Admin-initiated password reset for a user.
+
+        Generates a time-limited reset token, sets must_change_password=True,
+        sends the reset email (falls back to stdout), and writes an audit log
+        entry. The token is NEVER returned to the admin caller.
+
+        Permission rules:
+          - admin → can reset password for any non-admin user
+          - super → can reset password for admin users too
+          - cannot target super-users
+        """
+        payload = _require_admin(request)
+
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        result = await db.execute(select(User).where(User.id == uid))
+        target = result.scalar_one_or_none()
+        if not target:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        if target.is_super:
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Cannot reset a super-user's password"},
+            )
+        if target.is_admin and not payload.get("is_super"):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Only super-user can reset an admin's password"},
+            )
+
+        ttl_hours = settings_service.get_int("password_reset_ttl_hours", 1)
+        token = auth_svc.generate_token()
+        target.password_reset_token = token
+        target.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=ttl_hours)
+        target.must_change_password = True
+
+        actor_uid = uuid.UUID(payload["sub"])
+        actor_handle = payload.get("handle", "")
+        await audit_log(
+            db,
+            actor_user_id=actor_uid,
+            target_user_id=target.id,
+            action="password_reset_admin",
+            metadata={"actor_handle": actor_handle},
+        )
+
+        await db.commit()
+
+        try:
+            await email_svc.send_password_reset(target.email, token, full_name=target.full_name)
+        except Exception as exc:
+            logger.warning("Failed to send admin password reset email for %s: %s", target.email, exc)
+
+        return {"message": "Password reset email sent."}
+
+    @post("/users/{target_id:str}/impersonate", status_code=200)
+    async def impersonate_user(
+        self,
+        target_id: str,
+        request: Request,
+        db: AsyncSession,
+    ) -> Response[dict[str, Any]]:
+        """Super-only: assume another user's identity in the JWT session.
+
+        Guards:
+          - caller must be super
+          - caller must NOT already be impersonating (no daisy-chaining)
+          - target must exist
+          - target cannot be the caller
+          - target cannot be a bootstrap-pinned super-user
+        """
+        from app.services.bootstrap import is_protected_super
+        from app.services.jwt_auth import mint_jwt
+        from app.config import IS_PROD
+
+        payload = _require_super(request)
+
+        if payload.get("impersonator_id"):
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "already_impersonating", "message": "Stop the current impersonation before starting another"},
+            )
+
+        try:
+            tuid = uuid.UUID(target_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        caller_uid = uuid.UUID(payload["sub"])
+        if tuid == caller_uid:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "cannot_impersonate_self", "message": "Cannot impersonate yourself"},
+            )
+
+        result = await db.execute(select(User).where(User.id == tuid))
+        target = result.scalar_one_or_none()
+        if not target:
+            raise HTTPException(status_code=404, detail={"code": "not_found", "message": "User not found"})
+
+        if is_protected_super(target):
+            raise HTTPException(
+                status_code=403,
+                detail={"code": "forbidden", "message": "Cannot impersonate a bootstrap-pinned super-user"},
+            )
+
+        await audit_log(
+            db,
+            actor_user_id=caller_uid,
+            target_user_id=tuid,
+            action="impersonate_start",
+        )
+
+        # Mint JWT with target as effective user + real super as impersonator
+        new_token = mint_jwt(
+            user_id=str(target.id),
+            handle=target.user_handle,
+            email=target.email,
+            full_name=target.full_name,
+            is_admin=target.is_admin,
+            email_verified=target.email_verified,
+            is_approved=target.is_approved,
+            is_super=target.is_super,
+            is_paused=target.is_paused,
+            is_suspended=target.is_suspended,
+            impersonator_id=str(caller_uid),
+        )
+
+        # Re-fetch the caller for the impersonator block in response
+        caller_result = await db.execute(select(User).where(User.id == caller_uid))
+        caller = caller_result.scalar_one_or_none()
+
+        body: dict[str, Any] = {
+            "uuid": str(target.id),
+            "user_id": target.user_handle,
+            "email": target.email,
+            "full_name": target.full_name,
+            "is_admin": target.is_admin,
+            "is_super": target.is_super,
+            "email_verified": target.email_verified,
+            "is_approved": target.is_approved,
+            "is_paused": target.is_paused,
+            "is_suspended": target.is_suspended,
+            "must_change_password": target.must_change_password,
+            "impersonator": {
+                "id": str(caller.id),
+                "full_name": caller.full_name,
+                "email": caller.email,
+                "user_handle": caller.user_handle,
+                "is_admin": caller.is_admin,
+                "is_super": caller.is_super,
+            } if caller else None,
+        }
+
+        _JWT_COOKIE = "mk_jwt"
+        _COOKIE_MAX_AGE = 86400 * 7
+
+        response: Response[dict[str, Any]] = Response(content=body)
+        response.set_cookie(
+            key=_JWT_COOKIE,
+            value=new_token,
+            max_age=_COOKIE_MAX_AGE,
+            httponly=True,
+            samesite="lax",
+            secure=IS_PROD,
+            path="/",
+        )
+        return response
+
+    @get("/audit-log", status_code=200)
+    async def list_audit_log(
+        self,
+        request: Request,
+        db: AsyncSession,
+        page: int = 1,
+        per_page: int = 50,
+        actor_id: Optional[str] = None,
+        target_id: Optional[str] = None,
+        action: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """Paginated audit log. Super-only.
+
+        Query params:
+          - actor_id  (UUID str) — filter by actor
+          - target_id (UUID str) — filter by target
+          - action    (str)      — filter by action
+          - page      (int, default 1)
+          - per_page  (int, default 50, max 200)
+        """
+        _require_super(request)
+
+        per_page = min(per_page, 200)
+        page = max(page, 1)
+        offset = (page - 1) * per_page
+
+        base_query = select(AuditLog)
+
+        if actor_id:
+            try:
+                base_query = base_query.where(AuditLog.actor_user_id == uuid.UUID(actor_id))
+            except ValueError:
+                raise HTTPException(status_code=422, detail={"code": "invalid_uuid", "message": "actor_id is not a valid UUID"})
+
+        if target_id:
+            try:
+                base_query = base_query.where(AuditLog.target_user_id == uuid.UUID(target_id))
+            except ValueError:
+                raise HTTPException(status_code=422, detail={"code": "invalid_uuid", "message": "target_id is not a valid UUID"})
+
+        if action:
+            base_query = base_query.where(AuditLog.action == action)
+
+        total_result = await db.execute(
+            select(func.count()).select_from(base_query.subquery())
+        )
+        total = total_result.scalar_one()
+
+        rows_result = await db.execute(
+            base_query
+            .options(selectinload(AuditLog.actor), selectinload(AuditLog.target))
+            .order_by(AuditLog.created_at.desc())
+            .offset(offset)
+            .limit(per_page)
+        )
+        rows = rows_result.scalars().all()
+
+        def _user_mini(u: User | None) -> dict[str, Any] | None:
+            if u is None:
+                return None
+            return {
+                "id": str(u.id),
+                "full_name": u.full_name,
+                "user_handle": u.user_handle,
+            }
+
+        items = [
+            {
+                "id": str(row.id),
+                "actor": _user_mini(row.actor),
+                "target": _user_mini(row.target),
+                "action": row.action,
+                "metadata": row.audit_metadata,
+                "created_at": row.created_at.isoformat(),
+            }
+            for row in rows
+        ]
+
+        return {"items": items, "page": page, "per_page": per_page, "total": total}
 
     # --- Settings ---
     @get("/settings")

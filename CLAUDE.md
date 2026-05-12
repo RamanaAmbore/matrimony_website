@@ -21,13 +21,14 @@ backend/                       Async Python, Litestar ASGI framework
       photo.py                 Photo model: passport/blurred/thumb variants
       request.py               DetailRequest model: requester → profile
       setting.py               Setting model: runtime config (SMTP, limits, etc.)
+      audit_log.py             AuditLog model: actor/target/action (impersonate, password_reset_admin, etc.)
     routes/
-      auth.py                  POST /auth/{register|login|logout|verify-email}
+      auth.py                  POST /auth/{register|login|logout|verify-email|forgot-password|reset-password|stop-impersonating}
       profiles.py              CRUD + submit (draft → pending/approved)
       photos.py                POST /profiles/{id}/photos, DELETE, GET
       search.py                GET /search with filters (gender, age, gotra, etc.)
       requests.py              POST /profiles/{id}/request, GET /requests
-      admin.py                 Admin: profiles, requests, users, settings, stats
+      admin.py                 Admin: profiles, requests, users, settings, stats, audit-log; reset_password, impersonate
       media.py                 GET /media/* for passport/blurred/thumb files
     schemas/                   msgspec request/response models (typed)
     services/
@@ -39,7 +40,7 @@ backend/                       Async Python, Litestar ASGI framework
     templates/email/           Jinja2 templates for all transactional emails
   alembic/
     versions/
-      0001_initial_schema.py   Initial schema; migrations 0001–0011 cover all schema evolution
+      0001_initial_schema.py   Initial schema; migrations 0001–0026 cover all schema evolution
   tests/                       pytest + pytest-asyncio
   setup.py                     Dependencies: litestar, sqlalchemy, pillow, etc.
 
@@ -178,10 +179,13 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
 | POST | /auth/register | none | Email + full_name + password + user_handle + phone_number → user created (unverified) |
-| POST | /auth/login | none | Email + password → session set |
+| POST | /auth/login | none | Email + password → session set; returns `must_change_password` + `impersonator` fields |
 | POST | /auth/logout | yes | Clear session |
 | POST | /auth/verify-email | none | Token → user email_verified=true |
-| GET | /auth/me | yes* | Current user (or null if not logged in) |
+| POST | /auth/forgot-password | none | Email → if account exists (non-revoked), generates reset token + sends email (generic response to prevent enumeration) |
+| POST | /auth/reset-password | none | Token + new_password → validates token, resets password, clears must_change_password |
+| POST | /auth/stop-impersonating | yes* | Swap JWT back to real super's identity; requires active impersonation session; writes audit log |
+| GET | /auth/me | yes* | Current user (or null if not logged in); returns `must_change_password` + `impersonator` fields (null if not impersonating) |
 | GET | /site/info | none | Public config: `{is_prod: bool, site_url: string}` |
 | GET | /profiles | yes | List user's own profiles |
 | POST | /profiles | yes | Create draft profile |
@@ -214,10 +218,16 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 | POST | /admin/users/{id}/reinstate | admin | Reverse revoke. Sets is_approved=True only if email_verified. |
 | POST | /admin/users/{id}/suspend | admin | Admin enforcement hold. Login still works; profiles drop from search; can't create new ones. Super-only on admin targets. |
 | POST | /admin/users/{id}/unsuspend | admin | Lift admin suspension. Does NOT clear is_paused (user-only toggle). |
+| POST | /admin/users/{id}/reset_password | admin | Admin initiates password reset: generates token, sets must_change_password=true, sends email. Super-only on admin targets. Token never returned to admin. |
+| POST | /admin/users/{id}/impersonate | super | Assume target's identity in JWT; stores real super as impersonator_id. Blocked on super→super. Blocked on bootstrap-protected supers. Writes audit log. |
 | POST | /admin/users/{id}/delete | admin | Hard-delete a user. Cascades profiles, photos, detail requests. Cannot delete self. |
+| GET | /admin/audit-log | super | Paginated audit log. Query params: actor_id (UUID), target_id (UUID), action (str), page (int, default 1), per_page (int, default 50, max 200). |
+| POST | /auth/me/email | yes | Update email to a new address (must pass current password). Resets email_verified + is_approved. Blocked while impersonating. |
+| POST | /auth/me/phone | yes | Update phone number (must pass current password). Does not reset any flags. |
+| POST | /auth/me/password | yes | Change password (must pass current password). Clears must_change_password. Blocked while impersonating. |
 | POST | /auth/me/pause | self | Vacation mode — set is_paused=True. Profile hides from search; can still log in. |
 | POST | /auth/me/unpause | self | Clear self-pause. Cannot clear admin's is_suspended. |
-| POST | /auth/me/delete | self | Self-service account deletion. Requires current password + typed `DELETE` confirmation. Super-users blocked (bootstrap-pinned). |
+| POST | /auth/me/delete | self | Self-service account deletion. Requires current password + typed `DELETE` confirmation. Super-users blocked (bootstrap-pinned). Blocked while impersonating. |
 | POST | /auth/me/resend-verification | self | Self-service: regenerate token + re-send verification email. |
 | POST | /admin/broadcast-email | admin | Send broadcast email to filtered user subset. Lives at frontend route `/admin/broadcast`. Body booleans (all optional): `filter_verified_only` (default true), `filter_unverified_only`, `filter_approved_only`, `filter_unapproved_only`, `filter_admin_only`. Verified ↔ unverified and approved ↔ unapproved are mutually exclusive. |
 | GET | /admin/settings | admin | Get all settings (mask smtp_password) |
@@ -232,7 +242,8 @@ All endpoints return JSON. Auth via session cookie. Errors: `{ code, message }`.
 
 | Entity | Key fields | Notes |
 |--------|-----------|-------|
-| **User** | id (UUID), email, full_name, user_handle (unique), phone_number, password_hash, email_verified, is_admin, is_super, is_approved, is_revoked, is_paused, is_suspended, created_at | Five role/state flags: `is_admin` (admin powers), `is_super` (above admin — super-tier hidden from regular admins), `is_approved` (can create profiles), `is_revoked` (banned — login blocked), `is_paused` (self vacation mode — login OK, profile hidden), `is_suspended` (admin enforcement — login OK, profile hidden, only admin can lift). Bootstrap users seeded on every boot from `services/bootstrap.py`. |
+| **User** | id (UUID), email, full_name, user_handle (unique), phone_number, password_hash, email_verified, is_admin, is_super, is_approved, is_revoked, is_paused, is_suspended, password_reset_token, password_reset_expires_at, must_change_password, created_at | Five role/state flags: `is_admin` (admin powers), `is_super` (above admin — super-tier hidden from regular admins), `is_approved` (can create profiles), `is_revoked` (banned — login blocked), `is_paused` (self vacation mode — login OK, profile hidden), `is_suspended` (admin enforcement — login OK, profile hidden, only admin can lift). Password reset columns: `password_reset_token` (time-limited, indexed), `password_reset_expires_at` (TTL). `must_change_password` flag (admin-set after password reset; cleared on successful password change). Bootstrap users seeded on every boot from `services/bootstrap.py`. |
+| **AuditLog** | id (UUID), actor_user_id (FK User), target_user_id (FK User, nullable), action (str, indexed), audit_metadata (JSONB), created_at | Security audit trail. Records impersonation start/stop, admin password resets, etc. Indexed on actor/target/action/created_at for filtering. |
 | **Profile** | id, owner_user_id (FK User), gender, first_name, last_name, dob, demographic + astro + family + lifestyle fields, status (draft/pending/approved/revoked), admin_notes, rejected_at, created_at, updated_at | Stateful: draft → pending → approved/revoked. Owner edit drops approved→pending. `rejected_at` enforces "must edit before resubmit" guard. Visible in search only when status=approved AND owner is_approved AND NOT (is_revoked / is_paused / is_suspended). |
 | **Photo** | id, profile_id (FK), original_filename, passport_path, blurred_path, thumb_path, byte_size, is_primary, created_at | Three variants. Storage backend (local disk under `MEDIA_ROOT` or Cloudflare R2) chosen at runtime by `storage_provider` setting. Max 2 per profile. |
 | **DetailRequest** | id, requester_user_id (FK User), profile_id (FK Profile), status (pending/approved/revoked), message, admin_notes, responded_at, created_at | Unique constraint on (requester_user_id, profile_id). User-revoke / profile-revoke cascade-revoke pending requests. Approve → email full profile + passport bytes (read via storage). |
@@ -267,6 +278,7 @@ secrets).
 | upload_min_kb | int | 20 | Min raw upload size (KB) — rejects thumbnails / icons |
 | require_face_detection | bool | false | Enforce single-face photo validation via OpenCV (off by default) |
 | require_admin_approval_for_profiles | bool | true | Profiles require admin approval (pending→approved) or auto-approve on submit |
+| password_reset_ttl_hours | int | 1 | TTL for password reset tokens (hours). Applies to both user-initiated (forgot-password) and admin-initiated resets. |
 | storage_provider | string | local | Photo storage backend. `local` = host filesystem under MEDIA_ROOT. `r2` = Cloudflare R2 via S3 API. Flip via `/admin/settings`; effective immediately. |
 | r2_endpoint | string | (empty) | S3 API URL `https://<account-id>.r2.cloudflarestorage.com` (only used when `storage_provider=r2`) |
 | r2_bucket | string | (empty) | R2 bucket name |
@@ -455,6 +467,71 @@ Incremental release; polish on reporting, SEO, and super-user operations.
   - Indic-text plate background opacity lightened (alpha 0.55 → 0.30)
     for improved legibility against home background photo
 
+## v2.2 — May 2026
+
+Security and ops enhancements: password reset flow, super-user impersonation, audit log.
+
+**Password reset (user-initiated)**
+
+  - New endpoint `POST /auth/forgot-password` (public, no auth required)
+    returns generic success message to prevent email enumeration. Generates
+    time-limited token (TTL via `password_reset_ttl_hours` setting, default 1
+    hour), stores in `password_reset_token` and `password_reset_expires_at`
+    columns, sends email. Silently no-ops for revoked users.
+  - New endpoint `POST /auth/reset-password` (public) validates token, resets
+    password, clears `must_change_password`, deletes the reset token.
+  - Both endpoints powered by `auth_svc.generate_token()` (random 64-char hex).
+
+**Password reset (admin-initiated)**
+
+  - New endpoint `POST /admin/users/{id}/reset_password` (admin; super-only
+    on admin targets). Admin never sees the token. Generates reset token,
+    sets `must_change_password=true` (forces user to change password on next
+    login), sends email. Writes audit log entry `password_reset_admin`.
+  - Flow: user receives reset email → clicks link → enters new password via
+    `/auth/reset-password` → flag is cleared automatically.
+
+**Impersonation (super-only)**
+
+  - New endpoint `POST /admin/users/{target_id}/impersonate` (super-only).
+    Super assumes target's identity in the JWT. Stores real super's UUID as
+    `impersonator_id` in token (no DB state). Mints new JWT with target as
+    effective user. Writes audit log `impersonate_start`.
+  - `GET /auth/me` returns `impersonator` field (null if not impersonating):
+    contains real super's minimal info so frontend can show "Acting as
+    <target> — you are <super>".
+  - New endpoint `POST /auth/stop-impersonating` (auth required, when
+    impersonating). Swaps JWT back to real super's identity, writes audit
+    log `impersonate_stop`.
+  - Guards: cannot impersonate self, cannot daisy-chain (no impersonating
+    while already impersonating), cannot impersonate bootstrap-protected
+    supers (`_BOOTSTRAP_SUPER_HANDLES`: `ambore`, `super` — hardcoded in
+    bootstrap.py).
+  - Blocked operations while impersonating: `/auth/me/email`, `/auth/me/password`,
+    `/auth/me/delete` all 403 with code `blocked_while_impersonating`.
+  - Frontend shows sticky banner: "You are impersonating <target>. Stop
+    impersonating to return to your account."
+
+**Audit log (super-only)**
+
+  - New `AuditLog` model captures actor_user_id, target_user_id, action (str),
+    audit_metadata (JSONB), created_at. Indexed on actor/target/action/created_at.
+  - New endpoint `GET /admin/audit-log` (super-only). Paginated (default 50
+    rows/page, max 200). Query filters: actor_id (UUID), target_id (UUID),
+    action (str). Returns items with actor/target user minimal info, action,
+    metadata, created_at.
+  - Currently logged actions: `impersonate_start`, `impersonate_stop`,
+    `password_reset_admin`. Extensible for future security events.
+  - Migration 0026 creates the table and seeds `password_reset_ttl_hours = 1`.
+
+**User model updates**
+
+  - Three new columns on User: `password_reset_token` (VARCHAR 64, indexed),
+    `password_reset_expires_at` (TIMESTAMPTZ), `must_change_password` (BOOL,
+    default false).
+  - `/auth/login` and `/auth/me` both return `must_change_password` field so
+    frontend can optionally show a banner or redirect to password-change page.
+
 ## Conventions
 
 - **Async-only:** no sync DB calls anywhere. All routes async, all services async, all DB ops
@@ -481,3 +558,12 @@ Incremental release; polish on reporting, SEO, and super-user operations.
   before instantiating grids. Without this, grids render but silently fail to populate row data.
 - **Hardcoded URLs:** always read site_url from settings service; never hardcode
   `https://marathakalyanam.com` in code. Use `/site/info` endpoint on frontend if needed.
+- **Impersonation:** stored in JWT as `impersonator_id` (no DB state per-request). When a super
+  impersonates a user, `/auth/me` returns the target as the effective user + the real super's
+  info in the `impersonator` field. Security-sensitive operations (`/auth/me/email`, `/auth/me/password`,
+  `/auth/me/delete`) are blocked while impersonating (403). Bootstrap-protected supers (handles
+  in `_BOOTSTRAP_SUPER_HANDLES`: `ambore`, `super`) cannot be impersonated. Audit log captures
+  `impersonate_start` and `impersonate_stop` actions.
+- **Audit log:** records actor/target/action/metadata. Actions logged: `impersonate_start`,
+  `impersonate_stop`, `password_reset_admin`. Queryable via `/admin/audit-log` (super-only)
+  on actor_id, target_id, action, with pagination (default 50 rows/page, max 200).

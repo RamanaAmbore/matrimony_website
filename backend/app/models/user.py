@@ -7,6 +7,7 @@ from datetime import datetime
 from sqlalchemy import Boolean, DateTime, Index, String, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql.expression import false as sa_false
 
 from app.models.base import Base
 
@@ -47,6 +48,19 @@ class User(Base):
     # consequences as is_paused, but only admin can clear it. Useful when
     # admin needs to investigate without escalating to a full ban.
     is_suspended: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Password reset token (set by admin or via forgot-password flow).
+    # Cleared on successful password reset.
+    password_reset_token: Mapped[str | None] = mapped_column(
+        String(64), nullable=True, index=True
+    )
+    password_reset_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # Flag set by admin reset; forces user to change password on next login.
+    must_change_password: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, server_default=sa_false()
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

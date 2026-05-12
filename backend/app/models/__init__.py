@@ -5,6 +5,7 @@ from app.models.profile import Profile, GenderEnum, ManglikEnum, DietEnum, Profi
 from app.models.photo import Photo
 from app.models.request import DetailRequest, RequestStatusEnum
 from app.models.setting import Setting
+from app.models.audit_log import AuditLog
 
 __all__ = [
     "Base",
@@ -18,4 +19,5 @@ __all__ = [
     "DetailRequest",
     "RequestStatusEnum",
     "Setting",
+    "AuditLog",
 ]

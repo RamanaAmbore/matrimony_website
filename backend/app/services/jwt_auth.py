@@ -26,8 +26,14 @@ def mint_jwt(
     is_super: bool = False,
     is_paused: bool = False,
     is_suspended: bool = False,
+    impersonator_id: str | None = None,
 ) -> str:
-    """Create a signed JWT for the given user."""
+    """Create a signed JWT for the given user.
+
+    When *impersonator_id* is supplied (impersonation mode), ``sub`` is the
+    *target* (effective) user and ``impersonator_id`` is the real super behind
+    the wheel. Existing route handlers read only ``sub`` and are unaffected.
+    """
     now = datetime.now(timezone.utc)
     payload: dict[str, Any] = {
         "sub": user_id,
@@ -43,6 +49,8 @@ def mint_jwt(
         "iat": now,
         "exp": now + timedelta(seconds=_EXPIRY_SECONDS),
     }
+    if impersonator_id is not None:
+        payload["impersonator_id"] = impersonator_id
     return jwt.encode(payload, SESSION_SECRET, algorithm=_ALGORITHM)
 
 

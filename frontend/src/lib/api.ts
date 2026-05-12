@@ -14,6 +14,15 @@ export class ApiError extends Error {
 
 // ─── Entity interfaces ────────────────────────────────────────────────────────
 
+export interface ImpersonatorInfo {
+	id: string;
+	full_name: string;
+	email: string;
+	user_handle: string;
+	is_admin: boolean;
+	is_super: boolean;
+}
+
 export interface User {
 	uuid: string;
 	user_id: string;
@@ -24,9 +33,35 @@ export interface User {
 	is_super: boolean;
 	is_approved: boolean;
 	is_revoked: boolean;
-	is_paused?: boolean;     // user-set vacation mode
-	is_suspended?: boolean;  // admin-set enforcement hold
+	is_paused?: boolean;      // user-set vacation mode
+	is_suspended?: boolean;   // admin-set enforcement hold
 	email_verified: boolean;
+	must_change_password?: boolean;
+	impersonator?: ImpersonatorInfo | null;
+}
+
+// ─── Audit log ────────────────────────────────────────────────────────────────
+
+export interface AuditLogUser {
+	id: string;
+	full_name: string;
+	user_handle: string;
+}
+
+export interface AuditLogEntry {
+	id: string;
+	actor: AuditLogUser | null;
+	target: AuditLogUser | null;
+	action: string;
+	metadata: Record<string, unknown> | null;
+	created_at: string;
+}
+
+export interface AuditLogResponse {
+	items: AuditLogEntry[];
+	page: number;
+	per_page: number;
+	total: number;
 }
 
 export type ProfileStatus = 'draft' | 'pending' | 'approved' | 'revoked';
@@ -475,6 +510,24 @@ export const auth = {
 
 	async unpauseAccount(): Promise<{ is_paused: boolean; is_suspended: boolean; message: string }> {
 		return request('/api/auth/me/unpause', { method: 'POST' });
+	},
+
+	async forgotPassword(payload: { email: string }): Promise<{ message: string }> {
+		return request('/api/auth/forgot-password', {
+			method: 'POST',
+			body: JSON.stringify(payload)
+		});
+	},
+
+	async resetPassword(payload: { token: string; new_password: string }): Promise<{ message: string }> {
+		return request('/api/auth/reset-password', {
+			method: 'POST',
+			body: JSON.stringify(payload)
+		});
+	},
+
+	async stopImpersonating(): Promise<User> {
+		return request('/api/auth/stop-impersonating', { method: 'POST' });
 	}
 };
 
@@ -668,6 +721,12 @@ export const admin = {
 		},
 		async delete(id: string): Promise<{ deleted: { uuid: string; user_id: string; email: string; is_admin: boolean } }> {
 			return request(`/api/admin/users/${id}/delete`, { method: 'POST' });
+		},
+		async resetPassword(id: string): Promise<{ message: string }> {
+			return request(`/api/admin/users/${id}/reset_password`, { method: 'POST' });
+		},
+		async impersonate(id: string): Promise<User> {
+			return request(`/api/admin/users/${id}/impersonate`, { method: 'POST' });
 		}
 	},
 
@@ -681,6 +740,16 @@ export const admin = {
 				body: JSON.stringify(settings)
 			});
 		}
+	},
+
+	async auditLog(params: {
+		actor_id?: string;
+		target_id?: string;
+		action?: string;
+		page?: number;
+		per_page?: number;
+	}): Promise<AuditLogResponse> {
+		return request(`/api/admin/audit-log${buildQuery(params as Record<string, unknown>)}`);
 	},
 
 	async broadcastEmail(payload: {

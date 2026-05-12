@@ -3,6 +3,7 @@
 import asyncio
 import re
 import uuid
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from litestar import Controller, Response, get, post
@@ -15,9 +16,11 @@ from app.config import IS_PROD
 from app.models.user import User
 from app.schemas.auth import (
     DeleteAccountRequest,
+    ForgotPasswordRequest,
     LoginRequest,
     RegisterRequest,
     RegisterResponse,
+    ResetPasswordRequest,
     UpdateEmailRequest,
     UpdatePasswordRequest,
     UpdatePhoneRequest,
@@ -262,6 +265,7 @@ class AuthController(Controller):
             "is_approved": user.is_approved,
             "is_paused": user.is_paused,
             "is_suspended": user.is_suspended,
+            "must_change_password": user.must_change_password,
         }
 
         response: Response[dict[str, Any]] = Response(content=body)
@@ -360,6 +364,15 @@ class AuthController(Controller):
         if not payload:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
 
+        if payload.get("impersonator_id"):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "blocked_while_impersonating",
+                    "message": "Stop impersonating before changing security-sensitive fields",
+                },
+            )
+
         result = await db.execute(select(User).where(User.id == uuid.UUID(payload["sub"])))
         user = result.scalar_one_or_none()
         if not user:
@@ -454,6 +467,15 @@ class AuthController(Controller):
         if not payload:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
 
+        if payload.get("impersonator_id"):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "blocked_while_impersonating",
+                    "message": "Stop impersonating before changing security-sensitive fields",
+                },
+            )
+
         result = await db.execute(select(User).where(User.id == uuid.UUID(payload["sub"])))
         user = result.scalar_one_or_none()
         if not user:
@@ -467,6 +489,7 @@ class AuthController(Controller):
             raise HTTPException(status_code=422, detail={"code": "same_password", "message": "New password must differ from the current one"})
 
         user.password_hash = auth_svc.hash_password(data.new_password)
+        user.must_change_password = False
         await db.commit()
         return {"message": "Password updated"}
 
@@ -487,6 +510,15 @@ class AuthController(Controller):
         payload = request.scope.get("user_payload")
         if not payload:
             raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        if payload.get("impersonator_id"):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "blocked_while_impersonating",
+                    "message": "Stop impersonating before changing security-sensitive fields",
+                },
+            )
 
         if data.confirmation.strip() != "DELETE":
             raise HTTPException(
@@ -595,12 +627,19 @@ class AuthController(Controller):
 
     @get("/me")
     async def me(self, request: Request, db: AsyncSession) -> dict[str, Any]:
-        """Return the current user, re-queried from the DB on each call so
+        """Return the current (effective) user, re-queried from the DB on each call so
         role changes (promote, demote, revoke, approve, verify) take effect
         on the next page load instead of requiring a re-login.
 
         If the user was deleted or revoked since the JWT was minted, raise
         401. The frontend already clears the cookie + redirects on 401.
+
+        Impersonation shape:
+          - The main body is the *effective* user (same as today).
+          - ``impersonator`` is non-null when a super is acting as someone else:
+            it holds the real super's minimal info so the frontend can show
+            "Acting as <effective_user> — you are <real_super>".
+          - When not impersonating, ``impersonator`` is null.
         """
         payload: dict[str, Any] | None = request.scope.get("user_payload")
         if not payload:
@@ -625,6 +664,26 @@ class AuthController(Controller):
                 detail={"code": "session_invalid", "message": "Session no longer valid"},
             )
 
+        # Resolve impersonator info if present in the JWT
+        impersonator: dict[str, Any] | None = None
+        impersonator_id_str: str | None = payload.get("impersonator_id")
+        if impersonator_id_str:
+            try:
+                imp_uid = uuid.UUID(impersonator_id_str)
+                imp_result = await db.execute(select(User).where(User.id == imp_uid))
+                imp_user = imp_result.scalar_one_or_none()
+                if imp_user:
+                    impersonator = {
+                        "id": str(imp_user.id),
+                        "full_name": imp_user.full_name,
+                        "email": imp_user.email,
+                        "user_handle": imp_user.user_handle,
+                        "is_admin": imp_user.is_admin,
+                        "is_super": imp_user.is_super,
+                    }
+            except (ValueError, Exception):
+                pass  # malformed impersonator_id — ignore, treat as not impersonating
+
         return {
             "uuid": str(user.id),
             "user_id": user.user_handle,
@@ -636,4 +695,171 @@ class AuthController(Controller):
             "is_approved": user.is_approved,
             "is_paused": user.is_paused,
             "is_suspended": user.is_suspended,
+            "must_change_password": user.must_change_password,
+            "impersonator": impersonator,
         }
+
+    @post("/forgot-password", status_code=200)
+    async def forgot_password(
+        self,
+        data: ForgotPasswordRequest,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Public endpoint — always returns the same generic message to
+        prevent email enumeration.
+
+        If the email belongs to a non-revoked user, generates a reset token,
+        stores it with a TTL, and sends the password reset email (falls back
+        to stdout if SMTP unconfigured). Revoked users: silently no-op.
+        """
+        _GENERIC_OK = {"message": "If an account exists for that email, a reset link has been sent."}
+
+        email_lower = data.email.strip().lower()
+        result = await db.execute(
+            select(User).where(func.lower(User.email) == email_lower)
+        )
+        user = result.scalar_one_or_none()
+
+        if not user or user.is_revoked:
+            # Always return 200 — don't leak whether the email exists.
+            return _GENERIC_OK
+
+        ttl_hours = settings_service.get_int("password_reset_ttl_hours", 1)
+        token = auth_svc.generate_token()
+        user.password_reset_token = token
+        user.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=ttl_hours)
+        await db.commit()
+
+        try:
+            await email_svc.send_password_reset(user.email, token, full_name=user.full_name)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("Failed to send password reset email: %s", exc)
+
+        return _GENERIC_OK
+
+    @post("/reset-password", status_code=200)
+    async def reset_password(
+        self,
+        data: ResetPasswordRequest,
+        db: AsyncSession,
+    ) -> dict[str, Any]:
+        """Public endpoint — validate reset token, set new password.
+
+        Clears password_reset_token, password_reset_expires_at, and
+        must_change_password on success.
+        """
+        _TOKEN_ERR = HTTPException(
+            status_code=400,
+            detail={"code": "invalid_or_expired_token", "message": "Reset link is invalid or expired"},
+        )
+
+        result = await db.execute(
+            select(User).where(User.password_reset_token == data.token)
+        )
+        user = result.scalar_one_or_none()
+
+        if not user or not user.password_reset_expires_at:
+            raise _TOKEN_ERR
+
+        # Normalise timezone-naive datetimes stored by PostgreSQL
+        expires = user.password_reset_expires_at
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+
+        if datetime.now(timezone.utc) > expires:
+            raise _TOKEN_ERR
+
+        _validate_password(data.new_password)
+
+        user.password_hash = auth_svc.hash_password(data.new_password)
+        user.password_reset_token = None
+        user.password_reset_expires_at = None
+        user.must_change_password = False
+        await db.commit()
+
+        return {"message": "Password updated. Please log in."}
+
+    @post("/stop-impersonating", status_code=200)
+    async def stop_impersonating(
+        self,
+        request: Request,
+        db: AsyncSession,
+    ) -> Response[dict[str, Any]]:
+        """Swap the JWT back to the real super-user's identity.
+
+        Requires an active impersonation session (impersonator_id in JWT).
+        Writes an audit log entry and returns the real super's user object
+        (same shape as /auth/me).
+        """
+        payload = request.scope.get("user_payload")
+        if not payload:
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Authentication required"})
+
+        impersonator_id_str: str | None = payload.get("impersonator_id")
+        if not impersonator_id_str:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "not_impersonating", "message": "No active impersonation session"},
+            )
+
+        try:
+            real_uid = uuid.UUID(impersonator_id_str)
+            acted_as_uid = uuid.UUID(payload["sub"])
+        except (KeyError, ValueError):
+            raise HTTPException(status_code=401, detail={"code": "unauthenticated", "message": "Malformed session"})
+
+        real_result = await db.execute(select(User).where(User.id == real_uid))
+        real_user = real_result.scalar_one_or_none()
+        if not real_user or not real_user.is_super:
+            raise HTTPException(status_code=401, detail={"code": "session_invalid", "message": "Session no longer valid"})
+
+        # Audit log — does NOT commit (the commit happens at the route boundary)
+        from app.services.audit import log as audit_log
+        await audit_log(
+            db,
+            actor_user_id=real_uid,
+            target_user_id=acted_as_uid,
+            action="impersonate_stop",
+        )
+
+        # Mint a clean JWT for the real super (no impersonator_id)
+        new_token = mint_jwt(
+            user_id=str(real_user.id),
+            handle=real_user.user_handle,
+            email=real_user.email,
+            full_name=real_user.full_name,
+            is_admin=real_user.is_admin,
+            email_verified=real_user.email_verified,
+            is_approved=real_user.is_approved,
+            is_super=real_user.is_super,
+            is_paused=real_user.is_paused,
+            is_suspended=real_user.is_suspended,
+        )
+
+        body: dict[str, Any] = {
+            "uuid": str(real_user.id),
+            "user_id": real_user.user_handle,
+            "email": real_user.email,
+            "full_name": real_user.full_name,
+            "is_admin": real_user.is_admin,
+            "is_super": real_user.is_super,
+            "email_verified": real_user.email_verified,
+            "is_approved": real_user.is_approved,
+            "is_paused": real_user.is_paused,
+            "is_suspended": real_user.is_suspended,
+            "must_change_password": real_user.must_change_password,
+            "impersonator": None,
+        }
+
+        response: Response[dict[str, Any]] = Response(content=body)
+        response.set_cookie(
+            key=_JWT_COOKIE,
+            value=new_token,
+            max_age=_COOKIE_MAX_AGE,
+            httponly=True,
+            samesite="lax",
+            secure=IS_PROD,
+            path="/",
+        )
+        return response

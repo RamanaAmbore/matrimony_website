@@ -31,9 +31,11 @@
 		Megaphone,
 		Settings,
 		FileText,
-		Download
+		Download,
+		UserCog,
+		KeyRound
 	} from 'lucide-svelte';
-	import { tx } from '$lib/i18n';
+	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
 	import ConfirmDelete from '$lib/components/ConfirmDelete.svelte';
 	import { userStatus } from '$lib/userStatus';
@@ -418,6 +420,50 @@
 				}
 			}
 		);
+	}
+
+	// ── Admin reset password ─────────────────────────────────────────────────────
+
+	function startResetUserPassword(u: User) {
+		const msg = `Send password reset email to ${u.email}?\nThey will be required to set a new password on next login.`;
+		if (!confirm(msg)) return;
+		userActionLoading = true;
+		adminApi.users.resetPassword(u.uuid)
+			.then(() => { toastStore.success('Password reset email sent'); })
+			.catch((err: unknown) => {
+				toastStore.error(err instanceof ApiError ? (err as ApiError).message.slice(0, 50) : 'Action failed');
+			})
+			.finally(() => { userActionLoading = false; });
+	}
+
+	// ── Impersonation ────────────────────────────────────────────────────────────
+
+	// Returns true when the target is a bootstrap-pinned super that cannot be impersonated.
+	// Mirrors backend: bootstrapped handles are 'ambore' and 'super'.
+	function isProtectedSuper(u: User): boolean {
+		return u.is_super && ['ambore', 'super'].includes(u.user_id);
+	}
+
+	function canImpersonate(target: User): boolean {
+		if (!loggedInUser?.is_super) return false;
+		if (loggedInUser.impersonator) return false; // no daisy-chaining
+		if (target.uuid === loggedInUser.uuid) return false; // can't impersonate self
+		if (isProtectedSuper(target)) return false;
+		return true;
+	}
+
+	async function startImpersonate(u: User) {
+		const msg = `Act as ${u.full_name} (@${u.user_id})?\n\nYour actions will be performed as this user. An audit log entry will be recorded.`;
+		if (!confirm(msg)) return;
+		userActionLoading = true;
+		try {
+			await adminApi.users.impersonate(u.uuid);
+			// Reload the page so the layout picks up the new impersonating JWT
+			window.location.href = '/dashboard';
+		} catch (err) {
+			toastStore.error(err instanceof ApiError ? (err as ApiError).message.slice(0, 60) : 'Action failed');
+			userActionLoading = false;
+		}
 	}
 
 	async function doApproveProfile() {
@@ -1203,6 +1249,28 @@
 								>
 									<span class="text-xs flex items-center gap-1"><Trash2 size={13} />Delete User</span>
 									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('deleteUser', langStore.current)}</span>
+								</button>
+							{/if}
+							<!-- Admin reset password — super can reset admin, any admin can reset regular user -->
+							{#if !selectedUser.is_super && (loggedInUser?.is_super || (loggedInUser?.is_admin && !selectedUser.is_admin))}
+								<button
+									class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded border border-maroon/30 bg-white text-maroon hover:bg-maroon/5 disabled:opacity-50"
+									disabled={userActionLoading}
+									onclick={() => startResetUserPassword(selectedUser!)}
+								>
+									<span class="text-xs flex items-center gap-1"><KeyRound size={13} />{T.resetUserPassword.en}</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('resetUserPassword', langStore.current)}</span>
+								</button>
+							{/if}
+							<!-- Act as user (impersonate) — super only, cannot daisy-chain, cannot impersonate protected supers -->
+							{#if canImpersonate(selectedUser)}
+								<button
+									class="flex flex-col items-center justify-center text-center leading-tight text-sm px-3 py-1.5 min-h-[44px] whitespace-normal rounded border border-amber-500 bg-amber-50 text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+									disabled={userActionLoading}
+									onclick={() => startImpersonate(selectedUser!)}
+								>
+									<span class="text-xs flex items-center gap-1"><UserCog size={13} />{T.actAsUser.en}</span>
+									<span lang={langStore.current} class="text-[10px] opacity-90">{tx('actAsUser', langStore.current)}</span>
 								</button>
 							{/if}
 						</div>

@@ -5,7 +5,8 @@
 	import { invalidateAll, goto } from '$app/navigation';
 	import { T, tx } from '$lib/i18n';
 	import { langStore } from '$lib/stores/lang.svelte';
-	import { User, Mail, Phone, Lock, Loader, Trash2 } from 'lucide-svelte';
+	import { User, Mail, Phone, Lock, Loader, Trash2, ShieldAlert } from 'lucide-svelte';
+	import PasswordInput from '$lib/components/PasswordInput.svelte';
 
 	let { data } = $props();
 
@@ -273,6 +274,7 @@
 	});
 
 	let user = $derived(data.user);
+	let isImpersonating = $derived(!!(data.user?.impersonator));
 </script>
 
 <svelte:head>
@@ -291,6 +293,17 @@
 			<p class="mt-0.5 text-sm text-ink/60">Manage your email, phone, and password</p>
 		</div>
 	</div>
+
+	<!-- Impersonation block: security-sensitive writes disabled while acting as another user -->
+	{#if isImpersonating}
+		<div class="flex items-start gap-3 rounded-lg border-2 border-amber-500 bg-amber-50 px-5 py-4">
+			<ShieldAlert size={18} class="mt-0.5 shrink-0 text-amber-700" />
+			<div class="text-sm text-ink/80 flex-1">
+				<p class="font-semibold text-amber-700">{tx('blockedWhileImpersonating', langStore.current)}</p>
+				<p class="mt-0.5 text-ink/60">Password and email changes are blocked during an impersonation session. Phone changes remain available.</p>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Post-email-change warning: shown when email_verified is false -->
 	{#if user && !user.email_verified}
@@ -380,18 +393,15 @@
 					<span class="block">{T.currentPassword.en}</span>
 					<span class="block leading-tight text-xs text-ink/50" lang={langStore.current}>{tx('currentPassword', langStore.current)}</span>
 				</label>
-				<div class="relative">
-					<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
-					<input
-						id="email-current-pw"
-						type="password"
-						autocomplete="current-password"
-						class="input pl-10"
-						class:border-vermilion={emailErrors.current_password}
-						bind:value={emailCurrentPw}
-						placeholder="Your current password"
-					/>
-				</div>
+				<PasswordInput
+					id="email-current-pw"
+					name="email-current-pw"
+					autocomplete="current-password"
+					placeholder="Your current password"
+					bind:value={emailCurrentPw}
+					disabled={isImpersonating}
+					hasError={!!emailErrors.current_password}
+				/>
 				{#if emailErrors.current_password}
 					<p class="text-vermilion text-xs mt-1">{emailErrors.current_password}</p>
 				{/if}
@@ -426,7 +436,7 @@
 				<button
 					type="submit"
 					class="btn-primary flex flex-col items-center justify-center text-center leading-tight px-4 py-2 min-h-[44px] whitespace-normal disabled:opacity-50"
-					disabled={emailLoading}
+					disabled={emailLoading || isImpersonating}
 				>
 					{#if emailLoading}
 						<Loader size={16} class="animate-spin text-saffron" />
@@ -468,18 +478,14 @@
 					<span class="block">{T.currentPassword.en}</span>
 					<span class="block leading-tight text-xs text-ink/50" lang={langStore.current}>{tx('currentPassword', langStore.current)}</span>
 				</label>
-				<div class="relative">
-					<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
-					<input
-						id="phone-current-pw"
-						type="password"
-						autocomplete="current-password"
-						class="input pl-10"
-						class:border-vermilion={phoneErrors.current_password}
-						bind:value={phoneCurrentPw}
-						placeholder="Your current password"
-					/>
-				</div>
+				<PasswordInput
+					id="phone-current-pw"
+					name="phone-current-pw"
+					autocomplete="current-password"
+					placeholder="Your current password"
+					bind:value={phoneCurrentPw}
+					hasError={!!phoneErrors.current_password}
+				/>
 				{#if phoneErrors.current_password}
 					<p class="text-vermilion text-xs mt-1">{phoneErrors.current_password}</p>
 				{/if}
@@ -554,18 +560,15 @@
 					<span class="block">{T.currentPassword.en}</span>
 					<span class="block leading-tight text-xs text-ink/50" lang={langStore.current}>{tx('currentPassword', langStore.current)}</span>
 				</label>
-				<div class="relative">
-					<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
-					<input
-						id="pw-current"
-						type="password"
-						autocomplete="current-password"
-						class="input pl-10"
-						class:border-vermilion={pwErrors.current_password}
-						bind:value={pwCurrent}
-						placeholder="Your current password"
-					/>
-				</div>
+				<PasswordInput
+					id="pw-current"
+					name="pw-current"
+					autocomplete="current-password"
+					placeholder="Your current password"
+					bind:value={pwCurrent}
+					disabled={isImpersonating}
+					hasError={!!pwErrors.current_password}
+				/>
 				{#if pwErrors.current_password}
 					<p class="text-vermilion text-xs mt-1">{pwErrors.current_password}</p>
 				{/if}
@@ -577,18 +580,15 @@
 					<span class="block">{T.newPassword.en}</span>
 					<span class="block leading-tight text-xs text-ink/50" lang={langStore.current}>{tx('newPassword', langStore.current)}</span>
 				</label>
-				<div class="relative">
-					<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
-					<input
-						id="pw-new"
-						type="password"
-						autocomplete="new-password"
-						class="input pl-10"
-						class:border-vermilion={pwErrors.new_password}
-						bind:value={pwNew}
-						placeholder="Min. 8 chars · letter + digit"
-					/>
-				</div>
+				<PasswordInput
+					id="pw-new"
+					name="pw-new"
+					autocomplete="new-password"
+					placeholder="Min. 8 chars · letter + digit"
+					bind:value={pwNew}
+					disabled={isImpersonating}
+					hasError={!!pwErrors.new_password}
+				/>
 				{#if pwErrors.new_password}
 					<p class="text-vermilion text-xs mt-1">{pwErrors.new_password}</p>
 				{:else}
@@ -602,18 +602,15 @@
 					<span class="block">{T.confirmNewPassword.en}</span>
 					<span class="block leading-tight text-xs text-ink/50" lang={langStore.current}>{tx('confirmNewPassword', langStore.current)}</span>
 				</label>
-				<div class="relative">
-					<Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink/40" />
-					<input
-						id="pw-confirm"
-						type="password"
-						autocomplete="new-password"
-						class="input pl-10"
-						class:border-vermilion={pwErrors.confirm_password}
-						bind:value={pwConfirm}
-						placeholder="Re-enter new password"
-					/>
-				</div>
+				<PasswordInput
+					id="pw-confirm"
+					name="pw-confirm"
+					autocomplete="new-password"
+					placeholder="Re-enter new password"
+					bind:value={pwConfirm}
+					disabled={isImpersonating}
+					hasError={!!pwErrors.confirm_password}
+				/>
 				{#if pwErrors.confirm_password}
 					<p class="text-vermilion text-xs mt-1">{pwErrors.confirm_password}</p>
 				{/if}
@@ -623,7 +620,7 @@
 				<button
 					type="submit"
 					class="btn-primary flex flex-col items-center justify-center text-center leading-tight px-4 py-2 min-h-[44px] whitespace-normal disabled:opacity-50"
-					disabled={pwLoading}
+					disabled={pwLoading || isImpersonating}
 				>
 					{#if pwLoading}
 						<Loader size={16} class="animate-spin text-saffron" />
@@ -673,12 +670,13 @@
 
 				<div>
 					<label class="block text-xs font-medium text-ink/70 mb-1" for="del-pw">Current password</label>
-					<input
+					<PasswordInput
 						id="del-pw"
-						type="password"
-						class="input w-full {deleteErrors.current_password ? 'border-vermilion' : ''}"
-						bind:value={deleteCurrentPw}
+						name="del-pw"
 						autocomplete="current-password"
+						bind:value={deleteCurrentPw}
+						disabled={isImpersonating}
+						hasError={!!deleteErrors.current_password}
 					/>
 					{#if deleteErrors.current_password}
 						<p class="mt-1 text-xs text-vermilion">{deleteErrors.current_password}</p>

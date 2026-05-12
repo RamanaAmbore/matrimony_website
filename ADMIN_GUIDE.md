@@ -179,6 +179,7 @@ The Settings page is the **only safe place to enter sensitive data** (SMTP crede
 | upload_min_kb | int | 20 | Min raw upload size (KB). Below = thumbnail/icon, rejected. | Yes |
 | require_face_detection | bool | false | Enforce single-face photo validation via OpenCV. **Off by default** — over-rejects normal phone shots. | Yes |
 | require_admin_approval_for_profiles | bool | true | If true: profiles go to pending on submit, admin must approve. If false: auto-approve on submit. | Yes |
+| password_reset_ttl_hours | int | 1 | TTL (hours) for password reset tokens (both user self-service and admin-initiated). After this time, the reset link expires. | Yes |
 | is_prod | bool | false | When true: reject duplicate email/phone registrations (production mode). When false: allow multiple accounts with same contact info (testing mode). | Yes |
 | site_url | string | https://marathakalyanam.com | Base URL injected into all email templates for links (verify_email, approve, etc.). Update if domain changes. | Yes |
 | storage_provider | string | local | **Photo storage backend.** `local` = host filesystem under `MEDIA_ROOT`. `r2` = Cloudflare R2 via S3 API. Flip via this page; effective immediately on the next request. | Yes |
@@ -290,6 +291,94 @@ account should be locked out entirely (TOS violation, abuse). Use
 The admin user-action panel surfaces buttons contextually — Suspend
 appears when the user isn't already suspended, Unsuspend when they
 are. Same for revoke / reinstate.
+
+## Resetting a user's password
+
+If a user forgets their password, they can use the "Forgot Password" link
+on the login page. But if an admin needs to force a password reset (e.g.
+compromised account, suspected intrusion):
+
+1. Log in as admin
+2. Go to **Admin > Users**
+3. Click a user row to select them
+4. In the action panel, click **Reset Password**
+5. An email is immediately sent to the user with a reset link
+6. The user clicks the link, enters a new password, and logs in
+7. **Important:** the admin never sees the reset token — it's generated,
+   sent to the user's email, and validated by the user only
+8. On next login, the user is forced to change their password (if they
+   haven't already via the reset link)
+
+**Who can reset passwords?**
+- Regular admins can reset passwords for non-admin users
+- Super-users can reset passwords for anyone (including other admins)
+- Super-users cannot be targeted (they are bootstrap-pinned)
+
+## Impersonation (super-user only)
+
+Super-users can temporarily assume another user's identity to troubleshoot
+issues or verify behavior from a user's perspective.
+
+### How to impersonate
+
+1. Log in as a super-user
+2. Go to **Admin > Users**
+3. Click a user row to select them
+4. In the action panel, click **Impersonate**
+5. Your JWT cookie is updated to act as that user
+6. The UI shows a **sticky banner** at the top: "You are impersonating
+   [user name]. [Stop Impersonating]"
+7. You can now browse, search, and interact as that user
+8. Click **Stop Impersonating** (or go to your account menu) to return to
+   your own super identity
+
+### Restrictions while impersonating
+
+- **Cannot change passwords** — blocked (403) to prevent accidental
+  password reset while acting as another user
+- **Cannot change email** — blocked (403)
+- **Cannot delete account** — blocked (403)
+- **Cannot daisy-chain** — you cannot impersonate another user while
+  already impersonating someone
+- **Cannot impersonate bootstrap supers** — the two canonical supers
+  (`ambore`, `super`) whose credentials are hardcoded in bootstrap.py
+  cannot be impersonated
+
+### Audit trail
+
+Every time a super impersonates or stops impersonating, an entry is
+written to the audit log (see **Audit log** section below). This creates
+a complete record of who acted as whom and when.
+
+## Audit log (super-user only)
+
+The audit log records all security-sensitive actions: impersonation
+start/stop, admin-initiated password resets, etc.
+
+### Viewing the audit log
+
+1. Log in as a super-user
+2. Go to **Admin > Audit Log**
+3. The log shows all recent actions with:
+   - **Actor** — who performed the action (super's name and handle)
+   - **Target** — user affected by the action (if applicable)
+   - **Action** — what happened: `impersonate_start`, `impersonate_stop`,
+     `password_reset_admin`
+   - **Metadata** — additional details (e.g. which admin reset the password)
+   - **Timestamp** — when the action occurred (UTC)
+
+### Filtering the audit log
+
+Use the query controls to narrow results:
+
+- **By actor:** Filter to actions by a specific super-user
+- **By target:** Filter to actions affecting a specific user
+- **By action type:** Filter to a specific action (e.g. all impersonation
+  events)
+- **Pagination:** Default 50 rows/page; adjust as needed
+
+Example: to see all password resets, filter action = `password_reset_admin`.
+To see all activities by a specific super-user, filter actor = that super's ID.
 
 ## Sending a broadcast email
 

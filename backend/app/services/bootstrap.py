@@ -102,6 +102,22 @@ async def _ensure_canonical_user(
         await session.commit()
 
 
+# Set of user_handles that are bootstrap-pinned super-users.  Used by
+# the impersonation guard to prevent a super from impersonating another
+# super whose credentials are baked into code.
+_BOOTSTRAP_SUPER_HANDLES: frozenset[str] = frozenset({_SUPER_HANDLE, _SUPER2_HANDLE})
+
+
+def is_protected_super(user: "User") -> bool:  # type: ignore[name-defined]  # noqa: F821
+    """Return True if *user* is a bootstrap-pinned super-user.
+
+    Impersonation of these accounts is blocked: they hold canonical
+    credentials that cannot be revoked or deleted, so impersonating them
+    would defeat the safety model entirely.
+    """
+    return user.is_super and user.user_handle in _BOOTSTRAP_SUPER_HANDLES
+
+
 async def bootstrap(session: AsyncSession) -> None:
     """Run on every startup: seed setting defaults + ensure canonical users."""
     await settings_service.seed_defaults(session)

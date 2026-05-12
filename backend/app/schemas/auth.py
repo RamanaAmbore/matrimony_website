@@ -60,6 +60,25 @@ class DeleteAccountRequest(msgspec.Struct):
     confirmation: str
 
 
+class ForgotPasswordRequest(msgspec.Struct):
+    email: str
+
+
+class ResetPasswordRequest(msgspec.Struct):
+    token: str
+    new_password: str
+
+
+class ImpersonatorInfo(msgspec.Struct):
+    """Minimal info about the real super-user behind the wheel when impersonating."""
+    id: str
+    full_name: str
+    email: str
+    user_handle: str
+    is_admin: bool
+    is_super: bool
+
+
 class ErrorDetail(msgspec.Struct):
     code: str
     message: str

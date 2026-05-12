@@ -5,7 +5,7 @@
 	import { auth as authApi, type User } from '$lib/api';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
-	import { Menu, X, ChevronDown } from 'lucide-svelte';
+	import { Menu, X, ChevronDown, ShieldAlert } from 'lucide-svelte';
 	import { T, tx } from '$lib/i18n';
 	import { langStore, LANGS } from '$lib/stores/lang.svelte';
 
@@ -16,6 +16,36 @@
 	let drawerOpen = $state(false);
 	let langOpen = $state(false);
 	let drawerEl = $state<HTMLElement | null>(null);
+
+	// ── must_change_password guard ─────────────────────────────────────────────
+	// Runs whenever user or page changes. If the user must change their password,
+	// redirect them — unless they are already on an exempt page.
+	const EXEMPT_PATHS = ['/account/change-password', '/login', '/logout'];
+	$effect(() => {
+		if (user?.must_change_password) {
+			const path = currentPath;
+			const exempt = EXEMPT_PATHS.some((p) => path.startsWith(p)) || path.startsWith('/auth');
+			if (!exempt) {
+				goto('/account/change-password');
+			}
+		}
+	});
+
+	// ── impersonation: stop-impersonating handler ──────────────────────────────
+	let stopImpLoading = $state(false);
+
+	async function stopImpersonating() {
+		stopImpLoading = true;
+		try {
+			await authApi.stopImpersonating();
+			await invalidateAll();
+			goto('/admin');
+		} catch {
+			toastStore.error('Failed to stop impersonating');
+		} finally {
+			stopImpLoading = false;
+		}
+	}
 
 	function openDrawer() {
 		drawerOpen = true;
@@ -120,6 +150,35 @@
 	     Avoid emitting duplicates here. -->
 </svelte:head>
 
+<!-- ── Impersonation banner — ABOVE the header, full-width, sticky ─────────── -->
+{#if user?.impersonator}
+	<div class="sticky top-0 z-50 border-b-2 border-amber-600 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 shadow-md">
+		<div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2">
+			<div class="flex items-center gap-2 min-w-0">
+				<ShieldAlert size={18} class="shrink-0 text-amber-700" />
+				<span class="truncate">
+					You are <strong>{user.impersonator.full_name}</strong> acting as <strong>{user.full_name}</strong> (@{user.user_id})
+				</span>
+			</div>
+			<button
+				type="button"
+				onclick={stopImpersonating}
+				disabled={stopImpLoading}
+				class="shrink-0 rounded border border-maroon px-3 py-1 text-xs font-semibold text-maroon hover:bg-maroon hover:text-cream disabled:opacity-50 transition-colors"
+			>
+				{stopImpLoading ? 'Returning…' : tx('returnToYourAccount', langStore.current)}
+			</button>
+		</div>
+	</div>
+{/if}
+
+<!-- ── must_change_password banner — shown on /account/change-password too ─── -->
+{#if user?.must_change_password}
+	<div class="z-40 border-b border-amber-400 bg-amber-50 px-4 py-2 text-center text-xs font-semibold text-amber-800">
+		{tx('mustChangePassword', langStore.current)}
+	</div>
+{/if}
+
 <!-- ── Header (sticky at top) ─────────────────────────────────────────────── -->
 <header class="sticky top-0 z-30 shadow-sm border-t-4 border-saffron border-b border-cream/10" style="background: linear-gradient(135deg, #6B0F1A 0%, #6B0F1A 100%);">
 	<div class="mx-auto flex w-full max-w-5xl items-center justify-center gap-2 px-4 py-2">
@@ -164,6 +223,11 @@
 					<a href="/admin/broadcast" class="whitespace-nowrap text-sm {navLinkClass('/admin/broadcast')}" aria-current={isActive('/admin/broadcast') ? 'page' : undefined}>
 						{T.broadcast.en} <span lang={langStore.current}>{tx('broadcast', langStore.current)}</span>
 					</a>
+					{#if user.is_super}
+						<a href="/admin/audit-log" class="whitespace-nowrap text-sm {navLinkClass('/admin/audit-log')}" aria-current={isActive('/admin/audit-log') ? 'page' : undefined}>
+							{T.auditLog.en} <span lang={langStore.current}>{tx('auditLog', langStore.current)}</span>
+						</a>
+					{/if}
 				{/if}
 				<span class="hidden xl:inline" title={user.email}>
 					<span class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 {user.is_admin ? 'border-cream/30 bg-maroon/20' : 'border-cream/20'}">
@@ -308,6 +372,11 @@
 					<a href="/admin/broadcast" class={drawerLinkClass('/admin/broadcast')} aria-current={isActive('/admin/broadcast') ? 'page' : undefined} onclick={closeDrawer}>
 						{T.broadcast.en} <span lang={langStore.current}>{tx('broadcast', langStore.current)}</span>
 					</a>
+					{#if user.is_super}
+						<a href="/admin/audit-log" class={drawerLinkClass('/admin/audit-log')} aria-current={isActive('/admin/audit-log') ? 'page' : undefined} onclick={closeDrawer}>
+							{T.auditLog.en} <span lang={langStore.current}>{tx('auditLog', langStore.current)}</span>
+						</a>
+					{/if}
 				{/if}
 				<div class="my-2 h-px bg-gold/20"></div>
 				<div class="px-3 py-1 text-sm text-ink/60 truncate" title={user.email}>
