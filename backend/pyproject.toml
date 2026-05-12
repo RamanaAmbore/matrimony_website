@@ -51,6 +51,14 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+# All tests share one event loop for the whole session so that the module-level
+# SQLAlchemy async engine (app/db.py) — which holds an asyncpg connection pool —
+# stays valid across tests.  With the default function-scoped loop each new test
+# creates a fresh loop, leaving pool connections stranded on the closed previous
+# loop and causing "RuntimeError: Event loop is closed" 500s on the second test
+# that follows any real DB-commit.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 testpaths = ["tests"]
 
 [tool.ruff.format]
